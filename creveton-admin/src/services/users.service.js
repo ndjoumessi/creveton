@@ -1,4 +1,4 @@
-import api, { withMock } from './api';
+import api, { withMock, cleanParams } from './api';
 import mockUsers from '../mocks/mockUsers';
 
 const page = (data) => ({ data, page: { limit: data.length, next_cursor: null, has_more: false } });
@@ -6,7 +6,7 @@ const page = (data) => ({ data, page: { limit: data.length, next_cursor: null, h
 /** GET /admin/users (filtres : ville, level, role, status, q). */
 export function list(params = {}) {
   return withMock(
-    () => api.get('/admin/users', { params }).then((r) => r.data),
+    () => api.get('/admin/users', { params: cleanParams({ limit: 100, ...params }) }).then((r) => r.data),
     () => {
       let data = [...mockUsers];
       if (params.ville) data = data.filter((u) => u.ville === params.ville);

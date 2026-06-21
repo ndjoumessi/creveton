@@ -115,6 +115,15 @@ api.interceptors.response.use(
 );
 
 /**
+ * Retire les paramètres vides ('' / null / undefined) avant l'envoi : les
+ * validateurs Joi du backend rejettent une valeur enum vide (?status=) → 400.
+ * Garder uniquement les filtres réellement renseignés.
+ */
+export function cleanParams(params = {}) {
+  return Object.fromEntries(Object.entries(params).filter(([, v]) => v !== '' && v != null));
+}
+
+/**
  * Exécute un appel API ; en mode démo (USE_MOCKS), retombe sur les données mock
  * si le backend est injoignable — l'app reste utilisable sans backend.
  */

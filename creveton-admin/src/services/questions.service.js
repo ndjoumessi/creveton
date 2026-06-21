@@ -1,12 +1,14 @@
-import api, { withMock } from './api';
+import api, { withMock, cleanParams } from './api';
 import mockQuestions from '../mocks/mockQuestions';
 
 const page = (data) => ({ data, page: { limit: data.length, next_cursor: null, has_more: false } });
 
 /** GET /admin/questions (filtres : status, theme, level, q, limit, cursor). */
 export function list(params = {}) {
+  // limit=100 (max backend) : on charge tout le contenu et la table pagine
+  // côté client (20/page). Une vraie pagination serveur viendra si le volume croît.
   return withMock(
-    () => api.get('/admin/questions', { params }).then((r) => r.data),
+    () => api.get('/admin/questions', { params: cleanParams({ limit: 100, ...params }) }).then((r) => r.data),
     () => {
       let data = [...mockQuestions];
       if (params.status) data = data.filter((q) => q.status === params.status);
