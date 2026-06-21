@@ -8,6 +8,11 @@
     "scheme": "creveton",
     "userInterfaceStyle": "light",
     "backgroundColor": "#0b2e1a",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#0b2e1a",
+      "resizeMode": "contain"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "cm.creveton.app",
@@ -18,10 +23,8 @@
     "android": {
       "package": "cm.creveton.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0b2e1a",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#d4a017"
       },
       "permissions": ["NOTIFICATIONS"]
     },
