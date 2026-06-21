@@ -1,32 +1,32 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  Plus, AlertTriangle, Play, Ban, Award,
+  Plus, AlertTriangle, Play, X,
 } from 'lucide-react';
 import tournamentsService from '../services/tournaments.service';
 import { useApiData } from '../hooks/useApiData';
-import { THEME_KEYS, TOURNAMENT_TYPE_KEYS, tournamentTypeLabels } from '../constants/enums';
+import { THEME_KEYS, tournamentTypeLabels } from '../constants/enums';
 import { themeLabels } from '../constants/theme';
-import { fcfa, num, dateFr } from '../utils/format';
+import { dateFr } from '../utils/format';
 import PageHeader from '../components/PageHeader';
-import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import Modal from '../components/Modal';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { notify } from '../components/Toast';
 
-// Statuts non terminaux : on peut encore agir dessus (annuler / démarrer / valider).
-const NON_TERMINAL = ['scheduled', 'open', 'running', 'closed'];
+// Statuts terminaux : on ne peut plus annuler le tournoi.
+const TERMINAL = ['paid', 'cancelled'];
 
-/** Formulaire de création de tournoi (mode gratuit forcé — mise = 0). */
+/** Formulaire de création de tournoi (mode gratuit forcé — tournois payants désactivés). */
 function TournamentForm({ onSubmit }) {
   const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: { type: 'free', theme: 'culture', max_players: 64 },
+    defaultValues: { theme: 'culture', max_players: 64 },
   });
 
   const submit = (values) => {
     onSubmit({
       name: values.name,
-      type: values.type,
+      type: 'free',
       theme: values.theme,
       max_players: Number(values.max_players),
       entry_fee: 0, // tournois payants désactivés (feature flag)
@@ -46,7 +46,11 @@ function TournamentForm({ onSubmit }) {
       <div className="row" style={{ gap: 12 }}>
         <div className="field" style={{ flex: 1 }}>
           <label>Type</label>
-          <select className="select" {...register('type')}>{TOURNAMENT_TYPE_KEYS.map((t) => <option key={t} value={t}>{tournamentTypeLabels[t]}</option>)}</select>
+          <select className="select" defaultValue="free" disabled>
+            <option value="free">Gratuit</option>
+            <option value="premium" disabled>Premium — Bientôt</option>
+          </select>
+          <span className="muted" style={{ fontSize: 12, marginTop: 4 }}>Payant — Bientôt</span>
         </div>
         <div className="field" style={{ flex: 1 }}>
           <label>Thème</label>
@@ -56,20 +60,15 @@ function TournamentForm({ onSubmit }) {
 
       <div className="row" style={{ gap: 12 }}>
         <div className="field" style={{ flex: 1 }}>
-          <label>Joueurs max</label>
+          <label>Nombre max de joueurs</label>
           <input className="input" type="number" {...register('max_players', { required: 'Requis', min: { value: 2, message: '2 joueurs min' } })} />
           {errors.max_players && <span className="field-error">{errors.max_players.message}</span>}
         </div>
         <div className="field" style={{ flex: 1 }}>
-          <label>Début</label>
+          <label>Date / heure de début</label>
           <input className="input" type="datetime-local" {...register('starts_at', { required: 'Date de début requise' })} />
           {errors.starts_at && <span className="field-error">{errors.starts_at.message}</span>}
         </div>
-      </div>
-
-      <div className="field" style={{ marginBottom: 0 }}>
-        <label>Mise d’inscription</label>
-        <input className="input" value="Gratuit (tournois payants désactivés)" disabled readOnly />
       </div>
     </form>
   );
@@ -80,7 +79,7 @@ export default function Tournois() {
   const [submitting, setSubmitting] = useState(false);
 
   const { data, loading, refetch } = useApiData(() => tournamentsService.list(), []);
-  const rows = data?.data || [];
+  const rows = useMemo(() => data?.data || [], [data]);
 
   // Actions admin : on appelle le service, on notifie, puis on rafraîchit.
   const doStart = async (t) => {
@@ -100,14 +99,6 @@ export default function Tournois() {
     } catch { notify.error('Annulation impossible.'); }
   };
 
-  const doPayout = async (t) => {
-    try {
-      await tournamentsService.payout(t.id);
-      notify.success('Résultats validés.');
-      refetch();
-    } catch { notify.error('Validation impossible.'); }
-  };
-
   const createTournament = async (payload) => {
     setSubmitting(true);
     try {
@@ -119,46 +110,55 @@ export default function Tournois() {
     finally { setSubmitting(false); }
   };
 
-  const Action = ({ icon: Icon, label, onClick, danger }) => (
-    <button className={`btn btn-sm ${danger ? 'btn-danger' : ''}`} onClick={(e) => { e.stopPropagation(); onClick(); }} title={label}>
-      <Icon size={14} /> {label}
-    </button>
-  );
+  const renderCard = (t) => {
+    const canStart = t.status === 'scheduled' || t.status === 'open';
+    const canCancel = !TERMINAL.includes(t.status);
+    return (
+      <div className="card t-card" key={t.id}>
+        <div className="t-card-head">
+          <span className="t-card-name">{t.name}</span>
+          <StatusBadge status={t.status} kind="tournament" />
+        </div>
 
-  const columns = [
-    { accessorKey: 'name', header: 'Nom', cell: (c) => <span style={{ fontWeight: 500 }}>{c.getValue()}</span> },
-    { accessorKey: 'type', header: 'Type', cell: (c) => <span className="tag">{tournamentTypeLabels[c.getValue()] || c.getValue()}</span> },
-    { accessorKey: 'entry_fee', header: 'Mise', cell: (c) => (c.getValue() ? fcfa(c.getValue()) : 'Gratuit') },
-    { id: 'players', header: 'Joueurs', enableSorting: false, cell: ({ row }) => `${num(row.original.registered_players)}/${num(row.original.max_players)} joueurs` },
-    { accessorKey: 'prize_pool', header: 'Cagnotte', cell: (c) => fcfa(c.getValue()) },
-    { accessorKey: 'status', header: 'Statut', cell: (c) => <StatusBadge status={c.getValue()} kind="tournament" /> },
-    { accessorKey: 'starts_at', header: 'Début', cell: (c) => dateFr(c.getValue()) },
-    {
-      id: 'actions', header: 'Actions', enableSorting: false,
-      cell: ({ row }) => {
-        const t = row.original;
-        return (
-          <div className="row" style={{ gap: 6, flexWrap: 'nowrap' }}>
-            {(t.status === 'scheduled' || t.status === 'open') && <Action icon={Play} label="Démarrer" onClick={() => doStart(t)} />}
-            {(t.status === 'running' || t.status === 'closed') && <Action icon={Award} label="Valider résultats" onClick={() => doPayout(t)} />}
-            {NON_TERMINAL.includes(t.status) && <Action icon={Ban} label="Annuler" danger onClick={() => doCancel(t)} />}
-          </div>
-        );
-      },
-    },
-  ];
+        <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span className="badge" style={{ background: '#ede9fe', color: '#7c3aed' }}>{tournamentTypeLabels[t.type] || t.type}</span>
+          <span className="muted" style={{ fontSize: 13 }}>{themeLabels[t.theme] || t.theme}</span>
+        </div>
+
+        <div className="t-meta">
+          <div><div className="m-label">Joueurs</div><div className="m-value">{`${t.registered_players}/${t.max_players}`}</div></div>
+          <div><div className="m-label">Cagnotte</div><div className="m-value">{t.prize_pool > 0 ? `${t.prize_pool} FCFA` : 'XP & badges'}</div></div>
+          <div><div className="m-label">Début</div><div className="m-value">{dateFr(t.starts_at)}</div></div>
+          <div><div className="m-label">Type</div><div className="m-value">{tournamentTypeLabels[t.type] || t.type}</div></div>
+        </div>
+
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          {canStart && (
+            <button className="btn btn-sm btn-success" onClick={() => doStart(t)}>
+              <Play size={14} /> Démarrer
+            </button>
+          )}
+          {canCancel && (
+            <button className="btn btn-sm btn-danger" onClick={() => doCancel(t)}>
+              <X size={14} /> Annuler
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
       {/* Bandeau d'avertissement : tournois payants désactivés (feature flag). */}
       <div className="banner">
         <AlertTriangle size={16} />
-        Tournois payants désactivés (feature flag) — disponibles dans une prochaine version.
+        Les tournois payants seront disponibles dans une prochaine version. Vous pouvez créer des tournois gratuits (XP & badges uniquement).
       </div>
 
       <PageHeader
         title="Tournois"
-        description="Gestion des tournois : création, démarrage, annulation et validation des résultats."
+        description="Gestion des tournois : création, démarrage et annulation."
         actions={<button className="btn btn-primary" onClick={() => setShowForm(true)}><Plus size={16} /> Créer un tournoi</button>}
       />
 
@@ -169,7 +169,13 @@ export default function Tournois() {
         <div className="card kpi"><div className="kpi-label">Programmés</div><div className="kpi-value">{rows.filter((r) => r.status === 'scheduled').length}</div></div>
       </div>
 
-      <DataTable columns={columns} data={rows} loading={loading} emptyMessage="Aucun tournoi pour le moment." />
+      {loading ? (
+        <div className="card"><LoadingSpinner label="Chargement…" /></div>
+      ) : rows.length === 0 ? (
+        <div className="card"><div className="empty"><h3>Aucun tournoi</h3><span style={{ fontSize: 14 }}>Aucun tournoi pour le moment.</span></div></div>
+      ) : (
+        <div className="cards-grid">{rows.map(renderCard)}</div>
+      )}
 
       <Modal
         open={showForm}

@@ -1,48 +1,76 @@
 import { useState, useMemo } from 'react';
 import {
-  Search, UserX, Ban, KeyRound, Trash2, ShieldCheck,
+  Search, Eye, UserX, KeyRound, Trash2,
 } from 'lucide-react';
 import usersService from '../services/users.service';
 import { useApiData } from '../hooks/useApiData';
-import { USER_STATUS_KEYS, ROLE_KEYS, roleLabels } from '../constants/enums';
-import { userStatusColors } from '../constants/theme';
-import { fcfa, num, dateFr } from '../utils/format';
+import { USER_STATUS_KEYS } from '../constants/enums';
+import { userStatusColors, themeLabels } from '../constants/theme';
+import { num, dateFr } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import Drawer from '../components/Drawer';
 import { notify } from '../components/Toast';
 
-const EMPTY_FILTERS = { ville: '', role: '', status: '', level: '', q: '' };
+const EMPTY_FILTERS = { ville: '', level: '', status: '' };
 const LEVELS = [1, 2, 3, 4, 5];
 // Villes par défaut si aucune n'est dérivable des données chargées.
 const FALLBACK_VILLES = ['Douala', 'Yaoundé', 'Bafoussam', 'Garoua', 'Kribi', 'Bertoua'];
+// Seuils d'XP cumulés par niveau (1 → 5).
+const LEVEL_XP = [0, 500, 2000, 5000, 12000];
+const THEME_KEYS = Object.keys(themeLabels);
 
-/** KYC requis dès que les gains dépassent 10 000 FCFA (CDC §3.2). */
-const needsKyc = (u) => u.kyc || u.wallet_balance > 10000;
-
-/** Petit badge vert « KYC » affiché près du nom. */
-const KycBadge = () => (
-  <span className="badge" style={{ background: '#dcf3e4', color: '#1a7a3f' }}>KYC</span>
-);
-
-/** Génère un petit historique de parties fictives pour la fiche détail. */
-function mockGames(user) {
-  const themes = ['Culture', 'Géographie', 'Histoire', 'Sport', 'Science', 'Industrie'];
-  return Array.from({ length: 6 }).map((_, i) => ({
-    theme: themes[i % themes.length],
-    score: Math.max(0, Math.round((user.level || 1) * 180 - i * 90)),
-    date: `2026-06-${String(20 - i).padStart(2, '0')}T18:00:00Z`,
-  }));
+/** Initiales (2 max) à partir du nom. */
+function initials(name) {
+  return (name || '?')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('');
 }
 
-/** Génère un court relevé de transactions fictives pour la fiche détail. */
-function mockTransactions(user) {
-  return [
-    { type: 'Dépôt', amount: 5000, status: 'success' },
-    { type: 'Inscription tournoi', amount: 1000, status: 'success' },
-    { type: 'Retrait', amount: Math.min(user.wallet_balance || 0, 8000), status: 'pending' },
-  ];
+/** Hash déterministe simple à partir de l'id, pour des valeurs mock stables. */
+function seedFrom(id) {
+  let h = 0;
+  const s = String(id || '');
+  for (let i = 0; i < s.length; i += 1) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+/** Statistiques fictives mais déterministes par utilisateur. */
+function mockStats(user) {
+  const seed = seedFrom(user.id);
+  return {
+    games: 40 + (seed % 160), // 40..199 parties
+    avgScore: 320 + (seed % 480), // 320..799 pts
+    favTheme: themeLabels[THEME_KEYS[seed % THEME_KEYS.length]],
+  };
+}
+
+/** 5 dernières parties fictives (déterministes) pour la fiche détail. */
+function mockGames(user) {
+  const seed = seedFrom(user.id);
+  return Array.from({ length: 5 }).map((_, i) => {
+    const s = seed + i * 97;
+    return {
+      theme: themeLabels[THEME_KEYS[(s >> 2) % THEME_KEYS.length]],
+      level: 1 + (s % 5),
+      score: 200 + (s % 700),
+      date: `2026-06-${String(20 - i).padStart(2, '0')}T18:00:00Z`,
+    };
+  });
+}
+
+/** Largeur (%) de la barre d'XP dans la bande du niveau courant. */
+function levelProgress(level, xp) {
+  if (level >= 5) return { pct: 100, remaining: 0, max: true };
+  const start = LEVEL_XP[level - 1] ?? 0;
+  const end = LEVEL_XP[level] ?? start + 1;
+  const ratio = ((xp - start) / (end - start)) * 100;
+  const clamped = Math.max(0, Math.min(100, ratio));
+  return { pct: Math.round(clamped), remaining: Math.max(0, end - xp), max: false };
 }
 
 export default function Utilisateurs() {
@@ -51,7 +79,7 @@ export default function Utilisateurs() {
 
   const { data, loading, refetch } = useApiData(
     () => usersService.list(filters),
-    [filters.ville, filters.role, filters.status, filters.level, filters.q],
+    [filters.ville, filters.level, filters.status],
   );
   const rows = useMemo(() => data?.data || [], [data]);
 
@@ -72,16 +100,6 @@ export default function Utilisateurs() {
       setSelected(null);
       refetch();
     } catch { notify.error('Suspension impossible.'); }
-  };
-
-  const doBan = async (u) => {
-    const reason = window.prompt('Motif du bannissement (optionnel) :') || undefined;
-    try {
-      await usersService.ban(u.id, reason);
-      notify.success(`${u.name} banni.`);
-      setSelected(null);
-      refetch();
-    } catch { notify.error('Bannissement impossible.'); }
   };
 
   const doResetPassword = async (u) => {
@@ -105,54 +123,87 @@ export default function Utilisateurs() {
 
   const columns = [
     {
-      accessorKey: 'name',
-      header: 'Nom',
+      id: 'avatar',
+      header: '',
+      enableSorting: false,
+      cell: ({ row }) => <div className="avatar-sm">{initials(row.original.name)}</div>,
+    },
+    { accessorKey: 'name', header: 'Nom', cell: (c) => <span style={{ fontWeight: 500 }}>{c.getValue()}</span> },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'ville', header: 'Ville' },
+    {
+      accessorKey: 'level',
+      header: 'Niveau',
       cell: ({ row }) => {
         const u = row.original;
         return (
-          <span className="row" style={{ gap: 6, alignItems: 'center' }}>
-            <span style={{ fontWeight: 500 }}>{u.name}</span>
-            {needsKyc(u) && <KycBadge />}
+          <span className="badge" style={{ background: '#ecfdf3', color: '#15803d' }}>
+            Niv. {u.level} · {num(u.total_xp)} XP
           </span>
         );
       },
     },
-    { accessorKey: 'email', header: 'Email' },
-    { accessorKey: 'phone', header: 'Téléphone' },
-    { accessorKey: 'ville', header: 'Ville', cell: (c) => <span className="tag">{c.getValue()}</span> },
-    { accessorKey: 'level', header: 'Niveau' },
-    { accessorKey: 'total_xp', header: 'XP', cell: (c) => num(c.getValue()) },
-    { accessorKey: 'wallet_balance', header: 'Wallet', cell: (c) => fcfa(c.getValue()) },
     { accessorKey: 'status', header: 'Statut', cell: (c) => <StatusBadge status={c.getValue()} kind="user" /> },
-    { accessorKey: 'created_at', header: 'Inscrit le', cell: (c) => dateFr(c.getValue()) },
+    { accessorKey: 'created_at', header: 'Date inscription', cell: (c) => dateFr(c.getValue()) },
+    {
+      id: 'actions',
+      header: 'Actions',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <button
+          className="icon-action"
+          title="Voir la fiche"
+          onClick={(e) => { e.stopPropagation(); setSelected(row.original); }}
+        >
+          <Eye size={17} />
+        </button>
+      ),
+    },
   ];
+
+  const actifs = rows.filter((u) => u.status === 'active').length;
+  const bloques = rows.filter((u) => u.status === 'suspended' || u.status === 'banned').length;
 
   return (
     <>
       <PageHeader
         title="Utilisateurs"
-        description="Gestion des comptes joueurs : profils, modération et conformité KYC/RGPD."
+        description="Gestion des comptes joueurs : profils, progression et modération."
       />
 
       {/* Stats */}
       <div className="grid grid-3" style={{ marginBottom: 18 }}>
-        <div className="card kpi"><div className="kpi-label">Total chargés</div><div className="kpi-value">{rows.length}</div></div>
-        <div className="card kpi"><div className="kpi-label">Comptes actifs</div><div className="kpi-value">{rows.filter((u) => u.status === 'active').length}</div></div>
-        <div className="card kpi"><div className="kpi-label">KYC requis</div><div className="kpi-value">{rows.filter(needsKyc).length}</div></div>
+        <div className="card kpi"><div className="kpi-label">Total</div><div className="kpi-value">{rows.length}</div></div>
+        <div className="card kpi"><div className="kpi-label">Actifs</div><div className="kpi-value">{actifs}</div></div>
+        <div className="card kpi"><div className="kpi-label">Suspendus / Bannis</div><div className="kpi-value">{bloques}</div></div>
       </div>
 
       {/* Filtres */}
       <div className="card card-pad" style={{ marginBottom: 16 }}>
         <div className="filters">
-          <div className="search"><Search size={16} /><input className="input" placeholder="Rechercher (nom, email, téléphone)…" value={filters.q} onChange={(e) => setF('q', e.target.value)} /></div>
-          <select className="select" value={filters.ville} onChange={(e) => setF('ville', e.target.value)}><option value="">Toutes villes</option>{villes.map((v) => <option key={v} value={v}>{v}</option>)}</select>
-          <select className="select" value={filters.role} onChange={(e) => setF('role', e.target.value)}><option value="">Tous rôles</option>{ROLE_KEYS.map((r) => <option key={r} value={r}>{roleLabels[r]}</option>)}</select>
-          <select className="select" value={filters.status} onChange={(e) => setF('status', e.target.value)}><option value="">Tous statuts</option>{USER_STATUS_KEYS.map((s) => <option key={s} value={s}>{userStatusColors[s].label}</option>)}</select>
-          <select className="select" value={filters.level} onChange={(e) => setF('level', e.target.value)}><option value="">Tous niveaux</option>{LEVELS.map((l) => <option key={l} value={l}>Niveau {l}</option>)}</select>
+          <div className="search"><Search size={16} /><span className="muted" style={{ fontSize: 13 }}>Filtrer les comptes</span></div>
+          <select className="select" value={filters.ville} onChange={(e) => setF('ville', e.target.value)}>
+            <option value="">Toutes villes</option>
+            {villes.map((v) => <option key={v} value={v}>{v}</option>)}
+          </select>
+          <select className="select" value={filters.level} onChange={(e) => setF('level', e.target.value)}>
+            <option value="">Tous niveaux</option>
+            {LEVELS.map((l) => <option key={l} value={l}>Niveau {l}</option>)}
+          </select>
+          <select className="select" value={filters.status} onChange={(e) => setF('status', e.target.value)}>
+            <option value="">Tous statuts</option>
+            {USER_STATUS_KEYS.map((s) => <option key={s} value={s}>{userStatusColors[s].label}</option>)}
+          </select>
         </div>
       </div>
 
-      <DataTable columns={columns} data={rows} loading={loading} onRowClick={setSelected} emptyMessage="Aucun utilisateur pour ces filtres." />
+      <DataTable
+        columns={columns}
+        data={rows}
+        loading={loading}
+        onRowClick={setSelected}
+        emptyMessage="Aucun utilisateur pour ces filtres."
+      />
 
       <Drawer
         open={!!selected}
@@ -161,61 +212,77 @@ export default function Utilisateurs() {
         footer={selected && (
           <>
             <button className="btn" onClick={() => doSuspend(selected)}><UserX size={14} /> Suspendre</button>
-            <button className="btn btn-danger" onClick={() => doBan(selected)}><Ban size={14} /> Bannir</button>
-            <button className="btn" onClick={() => doResetPassword(selected)}><KeyRound size={14} /> Reset mot de passe</button>
+            <button className="btn" onClick={() => doResetPassword(selected)}><KeyRound size={14} /> Réinitialiser mot de passe</button>
             <button className="btn btn-danger" onClick={() => doRemove(selected)}><Trash2 size={14} /> Supprimer (RGPD)</button>
           </>
         )}
       >
-        {selected && (
-          <>
-            {/* Profil complet */}
-            <dl className="kv">
-              <dt>Nom</dt>
-              <dd className="row" style={{ gap: 6, alignItems: 'center' }}>{selected.name}{needsKyc(selected) && <KycBadge />}</dd>
-              <dt>Email</dt><dd>{selected.email}</dd>
-              <dt>Téléphone</dt><dd>{selected.phone}</dd>
-              <dt>Ville</dt><dd>{selected.ville}</dd>
-              <dt>Rôle</dt><dd>{roleLabels[selected.role] || selected.role}</dd>
-              <dt>Niveau</dt><dd>{selected.level}</dd>
-              <dt>XP</dt><dd>{num(selected.total_xp)}</dd>
-              <dt>Wallet</dt><dd>{fcfa(selected.wallet_balance)}</dd>
-              <dt>Statut</dt><dd><StatusBadge status={selected.status} kind="user" /></dd>
-              <dt>Inscrit le</dt><dd>{dateFr(selected.created_at)}</dd>
-            </dl>
-
-            {needsKyc(selected) && (
-              <p className="muted row" style={{ gap: 6, alignItems: 'center', marginTop: 10 }}>
-                <ShieldCheck size={15} /> KYC requis (gains &gt; 10 000 FCFA).
-              </p>
-            )}
-
-            {/* Historique des parties */}
-            <h4 className="card-title" style={{ fontSize: 14, marginTop: 22, marginBottom: 10 }}>Historique (10 dernières parties)</h4>
-            <div className="stack" style={{ gap: 8 }}>
-              {mockGames(selected).map((g, i) => (
-                <div className="between row" key={i} style={{ fontSize: 14 }}>
-                  <span className="row" style={{ gap: 8, alignItems: 'center' }}><span className="tag">{g.theme}</span><span className="muted">{dateFr(g.date)}</span></span>
-                  <strong>{num(g.score)} pts</strong>
+        {selected && (() => {
+          const prog = levelProgress(selected.level, selected.total_xp);
+          const stats = mockStats(selected);
+          const games = mockGames(selected);
+          return (
+            <div className="stack" style={{ gap: 20 }}>
+              {/* En-tête */}
+              <div className="row" style={{ gap: 14, alignItems: 'center' }}>
+                <div className="avatar-sm" style={{ width: 52, height: 52, fontSize: 18 }}>{initials(selected.name)}</div>
+                <div className="stack" style={{ gap: 6 }}>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 18, color: 'var(--ink)' }}>{selected.name}</div>
+                  <StatusBadge status={selected.status} kind="user" />
                 </div>
-              ))}
-            </div>
+              </div>
 
-            {/* Transactions */}
-            <h4 className="card-title" style={{ fontSize: 14, marginTop: 22, marginBottom: 10 }}>Transactions</h4>
-            <div className="stack" style={{ gap: 8 }}>
-              {mockTransactions(selected).map((t, i) => (
-                <div className="between row" key={i} style={{ fontSize: 14 }}>
-                  <span>{t.type}</span>
-                  <span className="row" style={{ gap: 10, alignItems: 'center' }}>
-                    <strong>{fcfa(t.amount)}</strong>
-                    <StatusBadge status={t.status} kind="transaction" />
-                  </span>
+              {/* Infos */}
+              <dl className="kv">
+                <dt>Nom</dt><dd>{selected.name}</dd>
+                <dt>Email</dt><dd>{selected.email}</dd>
+                <dt>Téléphone</dt><dd>{selected.phone}</dd>
+                <dt>Ville</dt><dd>{selected.ville}</dd>
+                <dt>Âge</dt><dd>{selected.age ?? '—'}</dd>
+                <dt>Langue</dt><dd>{selected.lang ?? 'fr'}</dd>
+              </dl>
+
+              {/* Niveau & XP */}
+              <div>
+                <h4 className="card-title" style={{ fontSize: 14, marginBottom: 10 }}>Niveau &amp; XP</h4>
+                <div className="between row" style={{ marginBottom: 8 }}>
+                  <strong>Niveau {selected.level}</strong>
+                  <span className="muted">{num(selected.total_xp)} XP</span>
                 </div>
-              ))}
+                <div className="progress"><span style={{ width: `${prog.pct}%` }} /></div>
+                <div className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>
+                  {prog.max
+                    ? 'Niveau max atteint'
+                    : `${num(prog.remaining)} XP avant le niveau ${selected.level + 1}`}
+                </div>
+              </div>
+
+              {/* Statistiques (mock) */}
+              <div>
+                <h4 className="card-title" style={{ fontSize: 14, marginBottom: 10 }}>Statistiques <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>(démo)</span></h4>
+                <dl className="kv">
+                  <dt>Parties jouées</dt><dd>{num(stats.games)}</dd>
+                  <dt>Score moyen</dt><dd>{num(stats.avgScore)} pts</dd>
+                  <dt>Thème favori</dt><dd>{stats.favTheme}</dd>
+                </dl>
+              </div>
+
+              {/* 5 dernières parties (mock) */}
+              <div>
+                <h4 className="card-title" style={{ fontSize: 14, marginBottom: 6 }}>5 dernières parties <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>(démo)</span></h4>
+                {games.map((g, i) => (
+                  <div className="list-row" key={i}>
+                    <div className="grow">
+                      <div className="list-name">{g.theme}</div>
+                      <div className="list-sub">Niveau {g.level} · {dateFr(g.date)}</div>
+                    </div>
+                    <strong>{num(g.score)} pts</strong>
+                  </div>
+                ))}
+              </div>
             </div>
-          </>
-        )}
+          );
+        })()}
       </Drawer>
     </>
   );

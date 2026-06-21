@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Plus, Upload, Search, Check, Eye, Pencil, Trash2, Send, ThumbsUp, ThumbsDown,
-  Archive, RotateCcw, Zap,
+  Archive, RotateCcw, Zap, Download,
 } from 'lucide-react';
 import questionsService from '../services/questions.service';
 import { useApiData } from '../hooks/useApiData';
@@ -94,6 +94,21 @@ function QuestionForm({ initial, onSubmit }) {
 }
 
 /* ---------- Import CSV ---------- */
+const CSV_TEMPLATE = [
+  'question,option_a,option_b,option_c,option_d,correct,difficulty,category,explanation,language',
+  'Quelle est la capitale du Cameroun ?,Douala,Yaoundé,Bafoussam,Garoua,B,beginner,geographie,Yaoundé est la capitale.,fr',
+].join('\n');
+
+function downloadTemplate() {
+  const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'modele-questions-creveton.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function ImportModal({ open, onClose, onDone }) {
   const [drag, setDrag] = useState(false);
   const [report, setReport] = useState(null);
@@ -111,8 +126,23 @@ function ImportModal({ open, onClose, onDone }) {
     } catch { notify.error('Échec de l’import.'); } finally { setBusy(false); }
   };
 
+  const runForceSync = async () => {
+    try {
+      const r = await questionsService.forceSync([]);
+      notify.success(`Force sync envoyé · ${r.devices_targeted?.toLocaleString('fr-FR') || '—'} appareils`);
+    } catch { notify.error('Force sync indisponible.'); }
+  };
+
   return (
-    <Modal open={open} onClose={onClose} title="Import CSV de questions" footer={<button className="btn" onClick={onClose}>Fermer</button>}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Import CSV de questions"
+      footer={<>
+        <button className="btn" onClick={downloadTemplate}><Download size={15} /> Télécharger le modèle</button>
+        <button className="btn" onClick={onClose}>Fermer</button>
+      </>}
+    >
       <div
         className={`dropzone ${drag ? 'drag' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
@@ -134,6 +164,11 @@ function ImportModal({ open, onClose, onDone }) {
             <div className="import-stat" style={{ background: '#fef2f2' }}><div className="n" style={{ color: '#dc2626' }}>{report.rejected}</div><div className="muted">Rejetées</div></div>
           </div>
           {report.errors?.length > 0 && <div className="errors-list">{report.errors.map((e, i) => <div className="err" key={i}>Ligne {e.row} — {e.issue}</div>)}</div>}
+          {report.accepted > 0 && (
+            <button className="btn btn-primary btn-block" style={{ marginTop: 16 }} onClick={runForceSync}>
+              <Zap size={15} /> Force sync (push silencieux)
+            </button>
+          )}
         </>
       )}
     </Modal>
@@ -188,11 +223,13 @@ export default function Questions() {
   };
 
   const columns = [
+    { id: 'idx', header: '#', enableSorting: false, cell: ({ row }) => <span className="muted">{row.index + 1}</span> },
     { accessorKey: 'text_fr', header: 'Énoncé', cell: (c) => <span style={{ fontWeight: 500, color: 'var(--ink)' }}>{truncate(c.getValue())}</span> },
     { accessorKey: 'theme', header: 'Thème', cell: (c) => <ThemeBadge theme={c.getValue()} /> },
     { accessorKey: 'level', header: 'Niveau', cell: (c) => <LevelBadge level={c.getValue()} /> },
     { accessorKey: 'status', header: 'Statut', cell: (c) => <StatusBadge status={c.getValue()} kind="question" /> },
     { accessorKey: 'success_rate', header: 'Taux réussite', cell: (c) => pct(c.getValue()) },
+    { accessorKey: 'created_at', header: 'Créée le', cell: (c) => dateFr(c.getValue()) },
     {
       id: 'actions', header: 'Actions', enableSorting: false,
       cell: ({ row }) => {
@@ -212,7 +249,7 @@ export default function Questions() {
     <div className="row wrap" style={{ gap: 8 }}>
       {q.status === 'draft' && <button className="btn btn-sm btn-primary" onClick={() => doTransition(q, 'pending_review')}><Send size={14} /> Soumettre</button>}
       {q.status === 'pending_review' && <>
-        <button className="btn btn-sm btn-primary" onClick={() => doTransition(q, 'approved')}><ThumbsUp size={14} /> Approuver</button>
+        <button className="btn btn-sm btn-success" onClick={() => doTransition(q, 'approved')}><ThumbsUp size={14} /> Approuver</button>
         <button className="btn btn-sm btn-danger" onClick={() => doTransition(q, 'rejected')}><ThumbsDown size={14} /> Rejeter</button>
       </>}
       {q.status === 'approved' && <>

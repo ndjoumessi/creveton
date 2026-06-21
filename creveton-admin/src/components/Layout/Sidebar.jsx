@@ -1,13 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, FileQuestion, Trophy, Users, ArrowLeftRight, Settings } from 'lucide-react';
+import { LayoutDashboard, FileQuestion, Trophy, Users, Settings } from 'lucide-react';
 
 const NAV = [
   {
     title: 'Vue générale',
-    items: [
-      { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-      { to: '/analytics', label: 'Analytique', icon: BarChart3 },
-    ],
+    items: [{ to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true }],
   },
   {
     title: 'Contenu',
@@ -19,10 +16,6 @@ const NAV = [
   {
     title: 'Utilisateurs',
     items: [{ to: '/users', label: 'Utilisateurs', icon: Users }],
-  },
-  {
-    title: 'Finances',
-    items: [{ to: '/transactions', label: 'Transactions', icon: ArrowLeftRight }],
   },
   {
     title: 'Paramètres',

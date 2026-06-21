@@ -10,17 +10,25 @@ import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import LoadingSpinner from './LoadingSpinner';
 import EmptyState from './EmptyState';
 
+/** Fenêtre de numéros de page autour de la page courante. */
+function pageWindow(current, count) {
+  if (count <= 7) return Array.from({ length: count }, (_, i) => i);
+  const pages = new Set([0, count - 1, current, current - 1, current + 1]);
+  const sorted = [...pages].filter((p) => p >= 0 && p < count).sort((a, b) => a - b);
+  const out = [];
+  let prev = -1;
+  for (const p of sorted) {
+    if (p - prev > 1) out.push('…');
+    out.push(p);
+    prev = p;
+  }
+  return out;
+}
+
 /**
- * Table de données générique : colonnes configurables (def @tanstack/react-table),
- * tri par colonne, pagination cliente. `onRowClick` rend les lignes cliquables.
- *
- * @param {Array}  columns   définitions de colonnes (@tanstack/react-table).
- * @param {Array}  data
- * @param {boolean} loading
- * @param {number} pageSize
- * @param {(row)=>void} onRowClick
+ * Table générique : colonnes configurables, tri, pagination cliente (numéros).
  */
-export default function DataTable({ columns, data = [], loading, pageSize = 10, onRowClick, emptyMessage }) {
+export default function DataTable({ columns, data = [], loading, pageSize = 20, onRowClick, emptyMessage }) {
   const [sorting, setSorting] = useState([]);
   const table = useReactTable({
     data,
@@ -34,9 +42,7 @@ export default function DataTable({ columns, data = [], loading, pageSize = 10, 
   });
 
   if (loading) return <div className="card"><LoadingSpinner label="Chargement…" /></div>;
-  if (!data.length) {
-    return <div className="card"><EmptyState message={emptyMessage} /></div>;
-  }
+  if (!data.length) return <div className="card"><EmptyState message={emptyMessage} /></div>;
 
   const { pageIndex } = table.getState().pagination;
   const pageCount = table.getPageCount();
@@ -52,11 +58,7 @@ export default function DataTable({ columns, data = [], loading, pageSize = 10, 
                   const canSort = header.column.getCanSort();
                   const dir = header.column.getIsSorted();
                   return (
-                    <th
-                      key={header.id}
-                      className={canSort ? 'sortable' : ''}
-                      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                    >
+                    <th key={header.id} className={canSort ? 'sortable' : ''} onClick={canSort ? header.column.getToggleSortingHandler() : undefined}>
                       <span className="row" style={{ gap: 4 }}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {dir === 'asc' && <ChevronUp size={13} />}
@@ -70,11 +72,7 @@ export default function DataTable({ columns, data = [], loading, pageSize = 10, 
           </thead>
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className={onRowClick ? 'clickable' : ''}
-                onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-              >
+              <tr key={row.id} className={onRowClick ? 'clickable' : ''} onClick={onRowClick ? () => onRowClick(row.original) : undefined}>
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                 ))}
@@ -86,16 +84,24 @@ export default function DataTable({ columns, data = [], loading, pageSize = 10, 
 
       {pageCount > 1 && (
         <div className="table-pagination">
-          <span className="page-info">
-            Page {pageIndex + 1} / {pageCount} · {data.length} éléments
-          </span>
-          <div className="row" style={{ gap: 6 }}>
-            <button className="icon-btn" disabled={!table.getCanPreviousPage()} onClick={() => table.previousPage()}>
-              <ChevronLeft size={16} />
-            </button>
-            <button className="icon-btn" disabled={!table.getCanNextPage()} onClick={() => table.nextPage()}>
-              <ChevronRight size={16} />
-            </button>
+          <span className="page-info">{data.length} éléments · {pageSize} par page</span>
+          <div className="row" style={{ gap: 5 }}>
+            <button className="icon-btn" disabled={!table.getCanPreviousPage()} onClick={() => table.previousPage()} aria-label="Précédent"><ChevronLeft size={16} /></button>
+            {pageWindow(pageIndex, pageCount).map((p, i) =>
+              p === '…' ? (
+                <span key={`e${i}`} className="muted" style={{ padding: '0 4px' }}>…</span>
+              ) : (
+                <button
+                  key={p}
+                  className={`btn btn-sm ${p === pageIndex ? 'btn-primary' : ''}`}
+                  style={{ minWidth: 34, justifyContent: 'center' }}
+                  onClick={() => table.setPageIndex(p)}
+                >
+                  {p + 1}
+                </button>
+              ),
+            )}
+            <button className="icon-btn" disabled={!table.getCanNextPage()} onClick={() => table.nextPage()} aria-label="Suivant"><ChevronRight size={16} /></button>
           </div>
         </div>
       )}

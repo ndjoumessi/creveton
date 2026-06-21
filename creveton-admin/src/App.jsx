@@ -4,14 +4,9 @@ import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Questions from './pages/Questions';
-import Utilisateurs from './pages/Utilisateurs';
 import Tournois from './pages/Tournois';
-import Analytics from './pages/Analytics';
-import Transactions from './pages/Transactions';
-import ComingSoon from './pages/ComingSoon';
-
-// Seule section restante non implémentée → placeholder (évite un lien mort).
-const SOON = ['/settings'];
+import Utilisateurs from './pages/Utilisateurs';
+import Parametres from './pages/Parametres';
 
 export default function App() {
   return (
@@ -27,13 +22,9 @@ export default function App() {
       >
         <Route path="/" element={<Dashboard />} />
         <Route path="/questions" element={<Questions />} />
-        <Route path="/users" element={<Utilisateurs />} />
         <Route path="/tournaments" element={<Tournois />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/transactions" element={<Transactions />} />
-        {SOON.map((p) => (
-          <Route key={p} path={p} element={<ComingSoon />} />
-        ))}
+        <Route path="/users" element={<Utilisateurs />} />
+        <Route path="/settings" element={<Parametres />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
