@@ -31,16 +31,16 @@ const LANG_PILLS = [
 ];
 
 // Badges dérivés honnêtement du niveau atteint.
-function deriveBadges(level) {
+function deriveBadges(level, t) {
   return [
-    { key: 'first', emoji: '🎯', label: 'Première partie', min: 1 },
-    { key: 'regular', emoji: '🔥', label: 'Habitué', min: 3 },
-    { key: 'expert', emoji: '🧠', label: 'Cerveau', min: 5 },
-    { key: 'champion', emoji: '👑', label: 'Champion', min: 10 },
+    { key: 'first', emoji: '🎯', label: t('profile.badges.first'), min: 1 },
+    { key: 'regular', emoji: '🔥', label: t('profile.badges.regular'), min: 3 },
+    { key: 'expert', emoji: '🧠', label: t('profile.badges.expert'), min: 5 },
+    { key: 'champion', emoji: '👑', label: t('profile.badges.champion'), min: 10 },
   ].map((b) => ({
     ...b,
     unlocked: level >= b.min,
-    req: `Atteins le niveau ${b.min} pour débloquer`,
+    req: t('profile.badges.lockedByLevel', { min: b.min }),
   }));
 }
 
@@ -115,13 +115,13 @@ export default function ProfileScreen() {
       if (updated) setUser(updated);
       else await refreshProfile?.();
       setEditOpen(false);
-      toast.show({ type: 'success', message: 'Profil mis à jour' });
+      toast.show({ type: 'success', message: t('profile.notify.updated') });
     } catch (e) {
       toast.show({ type: 'error', message: parseApiError(e).message });
     } finally {
       setSaving(false);
     }
-  }, [ville, age, sexe, lang, setUser, refreshProfile, toast]);
+  }, [ville, age, sexe, lang, setUser, refreshProfile, toast, t]);
 
   // Bascule de langue : applique instantanément (i18n + AsyncStorage) puis,
   // si connecté, persiste le choix côté backend (PATCH /users/me { lang }).
@@ -168,7 +168,7 @@ export default function ProfileScreen() {
   // Niveau effectif dérivé de l'XP (cohérent même si user.level est périmé).
   const level = progress.level;
   const remaining = progress.remaining;
-  const badges = deriveBadges(level);
+  const badges = deriveBadges(level, t);
 
   return (
     <Screen dark={false} scroll padded={false} refreshing={refreshing} onRefresh={onRefresh}>
@@ -186,7 +186,7 @@ export default function ProfileScreen() {
         </Pressable>
         <Avatar name={user?.name || ''} size={80} gold />
         <Text style={styles.headerName} numberOfLines={1}>
-          {user?.name || 'Joueur'}
+          {user?.name || t('profile.misc.defaultName')}
         </Text>
         <Body color={colors.textOnDarkMuted}>
           {t('profile.level', { n: level, name: t(`profile.levelNames.${level}`) })}
@@ -202,17 +202,17 @@ export default function ProfileScreen() {
           radius={radius.xl}
           style={styles.infoCard}
         >
-          <InfoRow emoji="📧" label="Email" value={user?.email} first />
-          <InfoRow emoji="📱" label="Téléphone" value={user?.phone} />
-          <InfoRow emoji="📍" label="Ville" value={user?.ville} />
-          <InfoRow emoji="🌐" label="Langue" value={LANG_LABEL(user?.lang)} />
+          <InfoRow emoji="📧" label={t('profile.fields.email')} value={user?.email} first />
+          <InfoRow emoji="📱" label={t('profile.fields.phone')} value={user?.phone} />
+          <InfoRow emoji="📍" label={t('profile.fields.city')} value={user?.ville} />
+          <InfoRow emoji="🌐" label={t('profile.fields.language')} value={LANG_LABEL(user?.lang)} />
         </AppCard>
 
         {/* Progression */}
         <AppCard tone="light" padding="md" elevation="soft" radius={radius.xl} style={styles.card}>
           <Text style={styles.cardTitle}>{t('profile.myLevel')}</Text>
           <View style={styles.progressHead}>
-            <Text style={styles.progressLevel}>Niveau {level}</Text>
+            <Text style={styles.progressLevel}>{t('profile.misc.level', { level })}</Text>
             <Text style={styles.progressXp}>
               {progress.current.toLocaleString('fr-FR')} /{' '}
               {progress.needed.toLocaleString('fr-FR')} {t('common.xp')}
@@ -236,15 +236,15 @@ export default function ProfileScreen() {
           </AppCard>
         ) : walletState === 'loading' ? null : (
           <AppCard tone="light" padding="md" elevation="soft" radius={radius.xl} style={styles.card}>
-            <Text style={styles.cardTitle}>💰 Wallet</Text>
+            <Text style={styles.cardTitle}>💰 {t('profile.wallet.label')}</Text>
             <Text style={styles.walletBalance}>{formatFcfa(walletState.balance)}</Text>
             <View style={styles.walletBtn}>
               <AppButton
                 variant="secondary"
                 size="sm"
-                title="Recharger"
+                title={t('profile.wallet.topUp')}
                 onPress={() =>
-                  toast.show({ type: 'info', message: 'Recharge bientôt disponible' })
+                  toast.show({ type: 'info', message: t('profile.wallet.topUpSoon') })
                 }
               />
             </View>
@@ -337,14 +337,14 @@ export default function ProfileScreen() {
             label={t('profile.editModal.city')}
             value={ville}
             onChangeText={setVille}
-            placeholder="Ta ville"
+            placeholder={t('profile.placeholder.city')}
           />
           <AppInput
             label={t('profile.editModal.age')}
             value={age}
             onChangeText={setAge}
             keyboardType="number-pad"
-            placeholder="Ton âge"
+            placeholder={t('profile.placeholder.age')}
           />
 
           <Text style={styles.fieldLabel}>{t('profile.editModal.gender')}</Text>
@@ -358,7 +358,7 @@ export default function ProfileScreen() {
                   style={[styles.pill, sel && styles.pillActive]}
                 >
                   <Text style={[styles.pillText, sel && styles.pillTextActive]}>
-                    {s.label}
+                    {t(`profile.misc.gender.${s.key}`)}
                   </Text>
                 </Pressable>
               );

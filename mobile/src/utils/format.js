@@ -1,6 +1,7 @@
 // Helpers de formatage (FCFA, dates, niveaux, etc.)
 
 import { LEVELS, THEMES } from '../constants/config';
+import i18n from '../i18n';
 
 // Montants en FCFA — entiers, pas de sous-unité (API §1)
 export function formatFcfa(amount) {
@@ -15,14 +16,14 @@ export function timeAgo(iso) {
   const diff = Date.now() - then;
   if (Number.isNaN(diff)) return '';
   const min = Math.floor(diff / 60000);
-  if (min < 1) return "à l'instant";
-  if (min < 60) return `il y a ${min} min`;
+  if (min < 1) return i18n.t('common.justNow');
+  if (min < 60) return i18n.t('common.agoMinutes', { n: min });
   const h = Math.floor(min / 60);
-  if (h < 24) return `il y a ${h} h`;
+  if (h < 24) return i18n.t('common.agoHours', { n: h });
   const d = Math.floor(h / 24);
-  if (d < 30) return `il y a ${d} j`;
+  if (d < 30) return i18n.t('common.agoDays', { n: d });
   const mo = Math.floor(d / 30);
-  return `il y a ${mo} mois`;
+  return i18n.t('common.agoMonths', { n: mo });
 }
 
 // Date ISO → format court FR (ex. 25 juin, 19:00)

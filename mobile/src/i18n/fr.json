@@ -32,7 +32,27 @@
       "back": "← Retour",
       "create": "Créer mon compte",
       "alreadyAccount": "Déjà un compte ?",
-      "loginLink": "Se connecter"
+      "loginLink": "Se connecter",
+      "validation": {
+        "name": "Nom requis (2 à 100 caractères).",
+        "phone": "Numéro invalide (9 chiffres après +237).",
+        "email": "Adresse email invalide.",
+        "password": "8 caractères min., 1 chiffre, 1 majuscule.",
+        "passwordMismatch": "Les mots de passe ne correspondent pas."
+      },
+      "placeholder": {
+        "city": "Choisis ta ville",
+        "phone": "6XX XXX XXX"
+      },
+      "notify": {
+        "emailUsed": "Email déjà utilisé.",
+        "phoneUsed": "Numéro déjà utilisé.",
+        "registerFailed": "Inscription impossible."
+      },
+      "misc": {
+        "stepCounter": "Étape {{n}}",
+        "cityPickerTitle": "Choisis ta ville"
+      }
     },
     "otp": {
       "title": "Vérifie ton téléphone 📱",
@@ -41,7 +61,20 @@
       "resend": "Renvoyer le code",
       "resendIn": "Renvoi possible dans",
       "invalidCode": "Code incorrect",
-      "expiredCode": "Code expiré"
+      "expiredCode": "Code expiré",
+      "notify": {
+        "invalidCode": "Code invalide. Réessaie.",
+        "resent": "Nouveau code envoyé.",
+        "resendFailed": "Renvoi impossible. Réessaie."
+      },
+      "misc": {
+        "expiresIn": "Expire dans",
+        "resending": "Renvoi en cours…"
+      }
+    },
+    "notify": {
+      "credentialsRequired": "Email et mot de passe requis.",
+      "loginFailed": "Connexion impossible."
     }
   },
   "home": {
@@ -72,6 +105,23 @@
       "avgScore": "Score moyen",
       "successRate": "Taux réussite",
       "maxStreak": "Streak max"
+    },
+    "misc": {
+      "lastGames": "Dernières parties",
+      "seeAll": "Voir tout →",
+      "todayGames": "+{{count}} aujourd'hui",
+      "outOfGames": "sur {{count}} parties",
+      "currentStreak": "🔥 Actuel : {{count}}",
+      "players": "{{count}} joueurs",
+      "statusFull": "Complet",
+      "statusPaid": "Payant",
+      "statusFree": "Gratuit"
+    },
+    "empty": {
+      "leaderboard": "Classement indisponible."
+    },
+    "a11y": {
+      "openProfile": "Ouvrir le profil"
     }
   },
   "gameStart": {
@@ -93,6 +143,15 @@
       "beginner": "Débutant",
       "intermediate": "Intermédiaire",
       "expert": "Expert"
+    },
+    "misc": {
+      "questionsPerGame": "{{count}} questions / partie",
+      "hint": "Sélectionne un thème pour lancer une partie.",
+      "challengeFriend": "⚔️ Défier un ami"
+    },
+    "notify": {
+      "noQuestions": "Aucune question disponible pour ce thème.",
+      "startFailed": "Impossible de démarrer la partie."
     }
   },
   "quiz": {
@@ -106,7 +165,11 @@
     "goodAnswer": "✓ Bonne réponse",
     "next": "Suivant →",
     "streak": "🔥 ×{{n}}",
-    "timeout": "Temps écoulé !"
+    "timeout": "Temps écoulé !",
+    "misc": {
+      "submitting": "Calcul du score…",
+      "wrongAnswer": "✗ Mauvaise réponse."
+    }
   },
   "results": {
     "finalScore": "Score final",
@@ -124,7 +187,21 @@
     "share": "Partager 📤",
     "shareMessage": "J'ai scoré {{score}} pts sur Creveton ! 🇨🇲 Quiz. Compétition. Cameroun.",
     "correct_label": "Correct",
-    "wrong_label": "Faux"
+    "wrong_label": "Faux",
+    "notify": {
+      "notSavedTitle": "Score non enregistré",
+      "notSavedMessage": "La partie n'a pas pu être soumise. Réessaie."
+    },
+    "empty": {
+      "recap": "Récapitulatif indisponible."
+    },
+    "misc": {
+      "heroSubtitle": "{{correct}}/{{total}} bonnes réponses · {{pct}}%",
+      "questionN": "Question {{n}}",
+      "progression": "Ma progression",
+      "levelUpTitle": "Niveau supérieur !",
+      "difficultyUnlocked": "Difficulté « {{difficulty}} » débloquée"
+    }
   },
   "tournaments": {
     "title": "Tournois",
@@ -151,14 +228,38 @@
       "cancel": "Annuler"
     },
     "empty": "Aucun tournoi ouvert.",
-    "emptySubtitle": "Reviens bientôt pour de nouveaux tournois"
+    "emptySubtitle": "Reviens bientôt pour de nouveaux tournois",
+    "notify": {
+      "joinSoon": "Inscription bientôt disponible."
+    },
+    "error": {
+      "title": "Chargement impossible"
+    },
+    "misc": {
+      "dateTbd": "Date à venir",
+      "status": {
+        "soon": "Bientôt disponible",
+        "full": "Complet",
+        "running": "Tournoi en cours",
+        "unavailable": "Indisponible"
+      },
+      "type": {
+        "free": "Gratuit",
+        "flash": "Flash",
+        "mini": "Mini",
+        "grand": "Grand",
+        "premium": "Premium"
+      }
+    }
   },
   "challenge": {
     "title": "Challenges",
     "friend": {
       "title": "Défier un ami",
       "subtitle": "Partagez les mêmes questions",
-      "button": "Choisir un ami"
+      "button": "Choisir un ami",
+      "cardTitle": "Envoie un défi à un ami",
+      "send": "Envoyer le défi"
     },
     "random": {
       "title": "Adversaire aléatoire",
@@ -170,7 +271,23 @@
     "accept": "Relever le défi",
     "pending": "En attente",
     "won": "Victoire",
-    "lost": "Défaite"
+    "lost": "Défaite",
+    "validation": {
+      "friendIdHint": "Indique l'identifiant de ton ami.",
+      "friendIdRequired": "Identifiant de l'ami requis."
+    },
+    "empty": {
+      "active": "Aucun défi en cours pour l’instant.",
+      "recent": "Tes derniers défis apparaîtront ici."
+    },
+    "misc": {
+      "subtitle": "Affronte un ami ou un joueur de ton niveau sur les mêmes questions.",
+      "theme": "Thème",
+      "level": "Niveau"
+    },
+    "placeholder": {
+      "friendId": "Identifiant de l'ami"
+    }
   },
   "stats": {
     "title": "Statistiques",
@@ -191,6 +308,28 @@
       "up": "↑ +{{n}} cette semaine",
       "down": "↓ {{n}} cette semaine",
       "stable": "→ stable"
+    },
+    "empty": {
+      "statsTitle": "Tu n'as pas encore joué !",
+      "statsText": "Lance ta première partie pour voir tes stats, ta courbe de progression et ton classement.",
+      "play": "Jouer maintenant",
+      "rankTitle": "Classement indisponible",
+      "rankText": "Réessaie dans un instant.",
+      "rankNoPosition": "Joue ta première partie pour apparaître !"
+    },
+    "misc": {
+      "chartEmpty": "Aucune partie pour tracer ta courbe.",
+      "chartAxisAgo": "il y a {{n}}",
+      "chartAxisPlayMore": "Joue plus pour voir ta courbe",
+      "chartAxisLast": "Dernière",
+      "headerLevel": "Niveau {{level}} — Joueur",
+      "levelMax": "Niveau max",
+      "scoreEvolution": "Évolution du score",
+      "themeGames": "{{games}} partie(s)",
+      "themeNotPlayed": "Pas encore joué",
+      "outOfPlayers": "sur {{totalPlayers}} joueurs",
+      "globalRank": "Classement global",
+      "mePill": "Vous"
     }
   },
   "profile": {
@@ -202,11 +341,19 @@
     "maxLevel": "Niveau maximum atteint 🏆",
     "wallet": {
       "title": "Wallet FCFA",
-      "unavailable": "Disponible avec les tournois payants."
+      "unavailable": "Disponible avec les tournois payants.",
+      "label": "Wallet",
+      "topUp": "Recharger",
+      "topUpSoon": "Recharge bientôt disponible"
     },
     "badges": {
       "title": "Mes badges",
-      "locked": "Joue {{n}} parties pour débloquer"
+      "locked": "Joue {{n}} parties pour débloquer",
+      "first": "Première partie",
+      "regular": "Habitué",
+      "expert": "Cerveau",
+      "champion": "Champion",
+      "lockedByLevel": "Atteins le niveau {{min}} pour débloquer"
     },
     "invite": "Inviter un ami",
     "inviteMessage": "Rejoins-moi sur Creveton ! Code : {{code}} 🇨🇲",
@@ -226,6 +373,28 @@
       "3": "Joueur",
       "4": "Expert",
       "5": "Champion"
+    },
+    "fields": {
+      "email": "Email",
+      "phone": "Téléphone",
+      "city": "Ville",
+      "language": "Langue"
+    },
+    "notify": {
+      "updated": "Profil mis à jour"
+    },
+    "placeholder": {
+      "city": "Ta ville",
+      "age": "Ton âge"
+    },
+    "misc": {
+      "defaultName": "Joueur",
+      "level": "Niveau {{level}}",
+      "gender": {
+        "H": "Homme",
+        "F": "Femme",
+        "N": "Non précisé"
+      }
     }
   },
   "common": {
@@ -247,8 +416,9 @@
     "games": "parties",
     "questions": "questions",
     "agoMinutes": "il y a {{n}} min",
-    "agoHours": "il y a {{n}}h",
-    "agoDays": "il y a {{n}}j",
+    "agoHours": "il y a {{n}} h",
+    "agoDays": "il y a {{n}} j",
+    "agoMonths": "il y a {{n}} mois",
     "justNow": "à l'instant",
     "today": "Aujourd'hui",
     "yesterday": "Hier"

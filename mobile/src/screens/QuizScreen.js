@@ -299,7 +299,7 @@ export default function QuizScreen({ navigation }) {
     }
   }, [correctStreak, streakBounce]);
 
-  if (submitting) return <LoadingScreen message="Calcul du score…" />;
+  if (submitting) return <LoadingScreen message={t('quiz.misc.submitting')} />;
   if (!question) return <LoadingScreen message={t('common.loading')} />;
 
   const streakScale = streakBounce.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] });
@@ -380,7 +380,7 @@ export default function QuizScreen({ navigation }) {
               ? `💡 ${answered.explanation}`
               : answered.isCorrect
                 ? t('quiz.goodAnswer')
-                : '✗ Mauvaise réponse.'}
+                : t('quiz.misc.wrongAnswer')}
           </Text>
           <View style={styles.autoTrack}>
             <Animated.View style={[styles.autoFill, { width: autoNextWidth }]} />

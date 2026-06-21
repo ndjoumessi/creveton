@@ -53,12 +53,13 @@ function rateColor(pct) {
 
 // ── Courbe d'évolution du score (SVG, ligne + aire + points) ───────────────
 function ScoreChart({ data }) {
+  const { t } = useTranslation();
   if (!data || data.length === 0) {
     return (
       <View style={styles.chartEmpty}>
         <Text style={styles.chartEmptyEmoji}>📈</Text>
         <Body muted style={styles.chartEmptyText}>
-          Aucune partie pour tracer ta courbe.
+          {t('stats.misc.chartEmpty')}
         </Body>
       </View>
     );
@@ -146,10 +147,10 @@ function ScoreChart({ data }) {
       </Svg>
       <View style={styles.chartAxis}>
         <Text style={styles.chartAxisLabel}>
-          {n > 1 ? `il y a ${n - 1}` : ''}
+          {n > 1 ? t('stats.misc.chartAxisAgo', { n: n - 1 }) : ''}
         </Text>
         <Text style={styles.chartAxisLabel}>
-          {n === 1 ? 'Joue plus pour voir ta courbe' : 'Dernière'}
+          {n === 1 ? t('stats.misc.chartAxisPlayMore') : t('stats.misc.chartAxisLast')}
         </Text>
       </View>
     </View>
@@ -245,9 +246,9 @@ export default function StatsScreen({ navigation }) {
           <Avatar name={user?.name || ''} size={72} gold />
           <View style={styles.headerInfo}>
             <Text style={styles.headerName} numberOfLines={1}>
-              {user?.name || 'Joueur'}
+              {user?.name || t('profile.misc.defaultName')}
             </Text>
-            <Body color={colors.textOnDarkMuted}>Niveau {level} — Joueur</Body>
+            <Body color={colors.textOnDarkMuted}>{t('stats.misc.headerLevel', { level })}</Body>
           </View>
         </View>
         <View style={styles.xpRow}>
@@ -255,7 +256,7 @@ export default function StatsScreen({ navigation }) {
           <View style={styles.xpLabels}>
             <Text style={styles.xpLabel}>{fmt(progress.current)} {t('common.xp')}</Text>
             <Text style={styles.xpLabel}>
-              {progress.isMax ? 'Niveau max' : `${fmt(progress.needed)} ${t('common.xp')}`}
+              {progress.isMax ? t('stats.misc.levelMax') : `${fmt(progress.needed)} ${t('common.xp')}`}
             </Text>
           </View>
         </View>
@@ -322,12 +323,11 @@ function StatsTab({ stats, history, loading, streak, onPlay }) {
     return (
       <View style={styles.empty}>
         <Text style={styles.emptyEmoji}>🎮</Text>
-        <Text style={styles.emptyTitle}>Tu n’as pas encore joué !</Text>
+        <Text style={styles.emptyTitle}>{t('stats.empty.statsTitle')}</Text>
         <Body muted style={styles.emptyText}>
-          Lance ta première partie pour voir tes stats, ta courbe de progression et
-          ton classement.
+          {t('stats.empty.statsText')}
         </Body>
-        <AppButton title="Jouer maintenant" variant="primary" size="lg" onPress={onPlay} style={styles.emptyBtn} />
+        <AppButton title={t('stats.empty.play')} variant="primary" size="lg" onPress={onPlay} style={styles.emptyBtn} />
       </View>
     );
   }
@@ -374,7 +374,7 @@ function StatsTab({ stats, history, loading, streak, onPlay }) {
       </View>
 
       {/* Évolution du score */}
-      <Text style={styles.sectionTitle}>Évolution du score</Text>
+      <Text style={styles.sectionTitle}>{t('stats.misc.scoreEvolution')}</Text>
       <View style={styles.card}>
         <ScoreChart data={stats.scoreEvolution} />
       </View>
@@ -394,7 +394,7 @@ function StatsTab({ stats, history, loading, streak, onPlay }) {
                   {theme.emoji} {theme.label}
                 </Text>
                 <Text style={styles.themeMeta}>
-                  {games > 0 ? `${games} partie${games > 1 ? 's' : ''}` : 'Pas encore joué'}
+                  {games > 0 ? t('stats.misc.themeGames', { games }) : t('stats.misc.themeNotPlayed')}
                 </Text>
               </View>
               <View style={styles.themeBarRow}>
@@ -485,11 +485,11 @@ function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay })
     return (
       <View style={styles.empty}>
         <Text style={styles.emptyEmoji}>🏆</Text>
-        <Text style={styles.emptyTitle}>Classement indisponible</Text>
+        <Text style={styles.emptyTitle}>{t('stats.empty.rankTitle')}</Text>
         <Body muted style={styles.emptyText}>
-          Réessaie dans un instant.
+          {t('stats.empty.rankText')}
         </Body>
-        <AppButton title="Jouer maintenant" variant="primary" size="lg" onPress={onPlay} style={styles.emptyBtn} />
+        <AppButton title={t('stats.empty.play')} variant="primary" size="lg" onPress={onPlay} style={styles.emptyBtn} />
       </View>
     );
   }
@@ -508,14 +508,14 @@ function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay })
           <>
             <Text style={styles.myRankValue}>{t('common.rank', { n: fmt(myRank.rank) })}</Text>
             {totalPlayers ? (
-              <Text style={styles.myRankSub}>sur {fmt(totalPlayers)} joueurs</Text>
+              <Text style={styles.myRankSub}>{t('stats.misc.outOfPlayers', { totalPlayers: fmt(totalPlayers) })}</Text>
             ) : (
-              <Text style={styles.myRankSub}>Classement global</Text>
+              <Text style={styles.myRankSub}>{t('stats.misc.globalRank')}</Text>
             )}
             <Text style={styles.myRankScore}>{fmt(myRank.score)} {t('common.pts')}</Text>
           </>
         ) : (
-          <Text style={styles.myRankEmpty}>Joue ta première partie pour apparaître !</Text>
+          <Text style={styles.myRankEmpty}>{t('stats.empty.rankNoPosition')}</Text>
         )}
       </View>
 
@@ -567,7 +567,7 @@ function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay })
                     </Text>
                     {isMe ? (
                       <View style={styles.mePill}>
-                        <Text style={styles.mePillText}>Vous</Text>
+                        <Text style={styles.mePillText}>{t('stats.misc.mePill')}</Text>
                       </View>
                     ) : null}
                   </View>

@@ -32,7 +32,27 @@
       "back": "← Back",
       "create": "Create my account",
       "alreadyAccount": "Already have an account?",
-      "loginLink": "Sign in"
+      "loginLink": "Sign in",
+      "validation": {
+        "name": "Name required (2 to 100 characters).",
+        "phone": "Invalid number (9 digits after +237).",
+        "email": "Invalid email address.",
+        "password": "8 characters min., 1 digit, 1 uppercase.",
+        "passwordMismatch": "Passwords do not match."
+      },
+      "placeholder": {
+        "city": "Choose your city",
+        "phone": "6XX XXX XXX"
+      },
+      "notify": {
+        "emailUsed": "Email already in use.",
+        "phoneUsed": "Number already in use.",
+        "registerFailed": "Sign-up failed."
+      },
+      "misc": {
+        "stepCounter": "Step {{n}}",
+        "cityPickerTitle": "Choose your city"
+      }
     },
     "otp": {
       "title": "Verify your phone 📱",
@@ -41,7 +61,20 @@
       "resend": "Resend code",
       "resendIn": "Resend available in",
       "invalidCode": "Incorrect code",
-      "expiredCode": "Code expired"
+      "expiredCode": "Code expired",
+      "notify": {
+        "invalidCode": "Invalid code. Try again.",
+        "resent": "New code sent.",
+        "resendFailed": "Resend failed. Try again."
+      },
+      "misc": {
+        "expiresIn": "Expires in",
+        "resending": "Resending…"
+      }
+    },
+    "notify": {
+      "credentialsRequired": "Email and password required.",
+      "loginFailed": "Sign-in failed."
     }
   },
   "home": {
@@ -72,6 +105,23 @@
       "avgScore": "Average score",
       "successRate": "Success rate",
       "maxStreak": "Max streak"
+    },
+    "misc": {
+      "lastGames": "Recent games",
+      "seeAll": "See all →",
+      "todayGames": "+{{count}} today",
+      "outOfGames": "out of {{count}} games",
+      "currentStreak": "🔥 Current: {{count}}",
+      "players": "{{count}} players",
+      "statusFull": "Full",
+      "statusPaid": "Paid",
+      "statusFree": "Free"
+    },
+    "empty": {
+      "leaderboard": "Leaderboard unavailable."
+    },
+    "a11y": {
+      "openProfile": "Open profile"
     }
   },
   "gameStart": {
@@ -93,6 +143,15 @@
       "beginner": "Beginner",
       "intermediate": "Intermediate",
       "expert": "Expert"
+    },
+    "misc": {
+      "questionsPerGame": "{{count}} questions / game",
+      "hint": "Select a theme to start a game.",
+      "challengeFriend": "⚔️ Challenge a friend"
+    },
+    "notify": {
+      "noQuestions": "No questions available for this theme.",
+      "startFailed": "Could not start the game."
     }
   },
   "quiz": {
@@ -106,7 +165,11 @@
     "goodAnswer": "✓ Correct answer",
     "next": "Next →",
     "streak": "🔥 ×{{n}}",
-    "timeout": "Time's up!"
+    "timeout": "Time's up!",
+    "misc": {
+      "submitting": "Calculating score…",
+      "wrongAnswer": "✗ Wrong answer."
+    }
   },
   "results": {
     "finalScore": "Final score",
@@ -124,7 +187,21 @@
     "share": "Share 📤",
     "shareMessage": "I scored {{score}} pts on Creveton! 🇨🇲 Quiz. Competition. Cameroon.",
     "correct_label": "Correct",
-    "wrong_label": "Wrong"
+    "wrong_label": "Wrong",
+    "notify": {
+      "notSavedTitle": "Score not saved",
+      "notSavedMessage": "The game could not be submitted. Try again."
+    },
+    "empty": {
+      "recap": "Recap unavailable."
+    },
+    "misc": {
+      "heroSubtitle": "{{correct}}/{{total}} correct answers · {{pct}}%",
+      "questionN": "Question {{n}}",
+      "progression": "My progress",
+      "levelUpTitle": "Level up!",
+      "difficultyUnlocked": "Difficulty “{{difficulty}}” unlocked"
+    }
   },
   "tournaments": {
     "title": "Tournaments",
@@ -151,14 +228,38 @@
       "cancel": "Cancel"
     },
     "empty": "No open tournaments.",
-    "emptySubtitle": "Come back soon for new tournaments"
+    "emptySubtitle": "Come back soon for new tournaments",
+    "notify": {
+      "joinSoon": "Registration coming soon."
+    },
+    "error": {
+      "title": "Unable to load"
+    },
+    "misc": {
+      "dateTbd": "Date to come",
+      "status": {
+        "soon": "Coming soon",
+        "full": "Full",
+        "running": "Tournament in progress",
+        "unavailable": "Unavailable"
+      },
+      "type": {
+        "free": "Free",
+        "flash": "Flash",
+        "mini": "Mini",
+        "grand": "Grand",
+        "premium": "Premium"
+      }
+    }
   },
   "challenge": {
     "title": "Challenges",
     "friend": {
       "title": "Challenge a friend",
       "subtitle": "Share the same questions",
-      "button": "Choose a friend"
+      "button": "Choose a friend",
+      "cardTitle": "Send a challenge to a friend",
+      "send": "Send challenge"
     },
     "random": {
       "title": "Random opponent",
@@ -170,7 +271,23 @@
     "accept": "Take the challenge",
     "pending": "Pending",
     "won": "Win",
-    "lost": "Loss"
+    "lost": "Loss",
+    "validation": {
+      "friendIdHint": "Enter your friend's ID.",
+      "friendIdRequired": "Friend's ID required."
+    },
+    "empty": {
+      "active": "No challenge in progress yet.",
+      "recent": "Your latest challenges will appear here."
+    },
+    "misc": {
+      "subtitle": "Take on a friend or a player at your level on the same questions.",
+      "theme": "Theme",
+      "level": "Level"
+    },
+    "placeholder": {
+      "friendId": "Friend's ID"
+    }
   },
   "stats": {
     "title": "Statistics",
@@ -191,6 +308,28 @@
       "up": "↑ +{{n}} this week",
       "down": "↓ {{n}} this week",
       "stable": "→ stable"
+    },
+    "empty": {
+      "statsTitle": "You haven't played yet!",
+      "statsText": "Start your first game to see your stats, your progress curve and your ranking.",
+      "play": "Play now",
+      "rankTitle": "Leaderboard unavailable",
+      "rankText": "Try again in a moment.",
+      "rankNoPosition": "Play your first game to appear here!"
+    },
+    "misc": {
+      "chartEmpty": "No game yet to draw your curve.",
+      "chartAxisAgo": "{{n}} ago",
+      "chartAxisPlayMore": "Play more to see your curve",
+      "chartAxisLast": "Latest",
+      "headerLevel": "Level {{level}} — Player",
+      "levelMax": "Max level",
+      "scoreEvolution": "Score evolution",
+      "themeGames": "{{games}} game(s)",
+      "themeNotPlayed": "Not played yet",
+      "outOfPlayers": "out of {{totalPlayers}} players",
+      "globalRank": "Global ranking",
+      "mePill": "You"
     }
   },
   "profile": {
@@ -202,11 +341,19 @@
     "maxLevel": "Maximum level reached 🏆",
     "wallet": {
       "title": "FCFA Wallet",
-      "unavailable": "Available with paid tournaments."
+      "unavailable": "Available with paid tournaments.",
+      "label": "Wallet",
+      "topUp": "Top up",
+      "topUpSoon": "Top-up coming soon"
     },
     "badges": {
       "title": "My badges",
-      "locked": "Play {{n}} games to unlock"
+      "locked": "Play {{n}} games to unlock",
+      "first": "First game",
+      "regular": "Regular",
+      "expert": "Brain",
+      "champion": "Champion",
+      "lockedByLevel": "Reach level {{min}} to unlock"
     },
     "invite": "Invite a friend",
     "inviteMessage": "Join me on Creveton! Code: {{code}} 🇨🇲",
@@ -226,6 +373,28 @@
       "3": "Player",
       "4": "Expert",
       "5": "Champion"
+    },
+    "fields": {
+      "email": "Email",
+      "phone": "Phone",
+      "city": "City",
+      "language": "Language"
+    },
+    "notify": {
+      "updated": "Profile updated"
+    },
+    "placeholder": {
+      "city": "Your city",
+      "age": "Your age"
+    },
+    "misc": {
+      "defaultName": "Player",
+      "level": "Level {{level}}",
+      "gender": {
+        "H": "Male",
+        "F": "Female",
+        "N": "Not specified"
+      }
     }
   },
   "common": {
@@ -247,8 +416,9 @@
     "games": "games",
     "questions": "questions",
     "agoMinutes": "{{n}} min ago",
-    "agoHours": "{{n}}h ago",
-    "agoDays": "{{n}}d ago",
+    "agoHours": "{{n}} h ago",
+    "agoDays": "{{n}} d ago",
+    "agoMonths": "{{n}} mo ago",
     "justNow": "just now",
     "today": "Today",
     "yesterday": "Yesterday"

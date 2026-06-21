@@ -106,7 +106,7 @@ export default function GameStartScreen({ navigation, route }) {
         }
       }
       if (!qs || !qs.length) {
-        toast.show({ type: 'error', message: 'Aucune question disponible pour ce thème.' });
+        toast.show({ type: 'error', message: t('gameStart.notify.noQuestions') });
         setLoading(false);
         return;
       }
@@ -115,7 +115,7 @@ export default function GameStartScreen({ navigation, route }) {
       navigation.navigate('Quiz');
     } catch {
       setLoading(false);
-      toast.show({ type: 'error', message: 'Impossible de démarrer la partie.' });
+      toast.show({ type: 'error', message: t('gameStart.notify.startFailed') });
     }
   };
 
@@ -168,7 +168,7 @@ export default function GameStartScreen({ navigation, route }) {
                     {t(`gameStart.themes.${th.key}`, th.label)}
                   </Text>
                   <Text style={styles.themeMeta}>
-                    {GAME.questionsPerSession} questions / partie
+                    {t('gameStart.misc.questionsPerGame', { count: GAME.questionsPerSession })}
                   </Text>
                 </LinearGradient>
               </Pressable>
@@ -216,7 +216,7 @@ export default function GameStartScreen({ navigation, route }) {
         </Animated.View>
       ) : (
         <Body muted style={styles.hint}>
-          Sélectionne un thème pour lancer une partie.
+          {t('gameStart.misc.hint')}
         </Body>
       )}
 
@@ -232,7 +232,7 @@ export default function GameStartScreen({ navigation, route }) {
         />
       </Animated.View>
       <AppButton
-        title="⚔️ Défier un ami"
+        title={t('gameStart.misc.challengeFriend')}
         variant="ghost"
         size="md"
         onPress={() => navigation.navigate('Challenge')}

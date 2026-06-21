@@ -68,15 +68,15 @@ export default function RegisterScreen({ navigation }) {
   const validateStep = () => {
     const e = {};
     if (step === 0) {
-      if (!isValidName(values.current.name)) e.name = 'Nom requis (2 à 100 caractères).';
+      if (!isValidName(values.current.name)) e.name = t('auth.register.validation.name');
       if (!isValidPhone(`+237${values.current.phone9}`))
-        e.phone = 'Numéro invalide (9 chiffres après +237).';
+        e.phone = t('auth.register.validation.phone');
     } else if (step === 1) {
-      if (!isValidEmail(values.current.email)) e.email = 'Adresse email invalide.';
+      if (!isValidEmail(values.current.email)) e.email = t('auth.register.validation.email');
       if (!isValidPassword(values.current.password))
-        e.password = '8 caractères min., 1 chiffre, 1 majuscule.';
+        e.password = t('auth.register.validation.password');
       else if (values.current.password !== values.current.confirm)
-        e.confirm = 'Les mots de passe ne correspondent pas.';
+        e.confirm = t('auth.register.validation.passwordMismatch');
     }
     setErr(e);
     return Object.keys(e).length === 0;
@@ -113,13 +113,13 @@ export default function RegisterScreen({ navigation }) {
     }
     const code = res.error?.code;
     if (code === 'EMAIL_ALREADY_USED') {
-      setErr({ email: 'Email déjà utilisé.' });
+      setErr({ email: t('auth.register.notify.emailUsed') });
       setStep(1);
     } else if (code === 'PHONE_ALREADY_USED') {
-      setErr({ phone: 'Numéro déjà utilisé.' });
+      setErr({ phone: t('auth.register.notify.phoneUsed') });
       setStep(0);
     } else {
-      setErr({ _global: res.error?.message || 'Inscription impossible.' });
+      setErr({ _global: res.error?.message || t('auth.register.notify.registerFailed') });
     }
   };
 
@@ -147,7 +147,7 @@ export default function RegisterScreen({ navigation }) {
             ))}
           </View>
 
-          <Text style={styles.stepN}>Étape {STEPS[step].n}</Text>
+          <Text style={styles.stepN}>{t('auth.register.misc.stepCounter', { n: STEPS[step].n })}</Text>
           <Text style={styles.title}>{t(STEPS[step].titleKey)}</Text>
 
           {step === 0 ? (
@@ -168,7 +168,8 @@ export default function RegisterScreen({ navigation }) {
                 <View style={[styles.phoneField, errors.phone && styles.phoneFieldError]}>
                   <PhoneInput
                     defaultValue={values.current.phone9}
-                    onChangeText={(t) => (values.current.phone9 = t.replace(/\D/g, '').slice(0, 9))}
+                    placeholder={t('auth.register.placeholder.phone')}
+                    onChangeText={(v) => (values.current.phone9 = v.replace(/\D/g, '').slice(0, 9))}
                   />
                 </View>
               </View>
@@ -213,7 +214,7 @@ export default function RegisterScreen({ navigation }) {
               <Text style={styles.fieldLabel}>{t('auth.register.city')}</Text>
               <Pressable style={styles.select} onPress={() => setCityOpen(true)}>
                 <Text style={[styles.selectText, !ville && styles.selectPlaceholder]}>
-                  {ville || 'Choisis ta ville'}
+                  {ville || t('auth.register.placeholder.city')}
                 </Text>
                 <Text style={styles.chevron}>▾</Text>
               </Pressable>
@@ -261,8 +262,7 @@ export default function RegisterScreen({ navigation }) {
       <Modal visible={cityOpen} transparent animationType="slide" onRequestClose={() => setCityOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setCityOpen(false)}>
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Choisis ta ville</Text>
-            {/* TODO i18n: pas de clé pour le titre/placeholder du sélecteur de ville */}
+            <Text style={styles.modalTitle}>{t('auth.register.misc.cityPickerTitle')}</Text>
             <FlatList
               data={CITIES}
               keyExtractor={(c) => c}
@@ -287,7 +287,7 @@ export default function RegisterScreen({ navigation }) {
 }
 
 // Saisie téléphone non contrôlée (9 chiffres).
-function PhoneInput({ defaultValue, onChangeText }) {
+function PhoneInput({ defaultValue, onChangeText, placeholder }) {
   return (
     <AuthField
       style={styles.phoneInner}
@@ -295,7 +295,7 @@ function PhoneInput({ defaultValue, onChangeText }) {
       defaultValue={defaultValue}
       onChangeText={onChangeText}
       keyboardType="phone-pad"
-      placeholder="6XX XXX XXX"
+      placeholder={placeholder}
       maxLength={9}
     />
   );

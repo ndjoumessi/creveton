@@ -129,12 +129,16 @@ function LastGameRow({ game }) {
   );
 }
 
-function StatusPill({ tournament }) {
+function StatusPill({ tournament, t }) {
   const full =
     tournament.max_players &&
     tournament.registered_players >= tournament.max_players;
   const paid = tournament.entry_fee > 0;
-  const label = full ? 'Complet' : paid ? 'Payant' : 'Gratuit';
+  const label = full
+    ? t('home.misc.statusFull')
+    : paid
+      ? t('home.misc.statusPaid')
+      : t('home.misc.statusFree');
   return (
     <View
       style={[
@@ -225,7 +229,7 @@ export default function HomeScreen({ navigation }) {
             <Pressable
               onPress={() => navigation.navigate('Profile')}
               hitSlop={6}
-              accessibilityLabel="Ouvrir le profil"
+              accessibilityLabel={t('home.a11y.openProfile')}
             >
               <Avatar name={user?.name || firstName} size={48} gold />
             </Pressable>
@@ -298,7 +302,7 @@ export default function HomeScreen({ navigation }) {
                   iconBg={ICON_BG.games}
                   value={fmtNum(stats.totalGames)}
                   label={t('home.myStats.games')}
-                  sub={stats.todayGames > 0 ? `+${stats.todayGames} aujourd'hui` : null}
+                  sub={stats.todayGames > 0 ? t('home.misc.todayGames', { count: stats.todayGames }) : null}
                 />
                 <StatCard
                   icon="⭐"
@@ -306,7 +310,7 @@ export default function HomeScreen({ navigation }) {
                   value={fmtNum(stats.avgScore)}
                   valueColor={stats.avgScore > 500 ? colors.gold500 : colors.green900}
                   label={t('home.myStats.avgScore')}
-                  sub={stats.totalGames > 0 ? `sur ${stats.totalGames} parties` : null}
+                  sub={stats.totalGames > 0 ? t('home.misc.outOfGames', { count: stats.totalGames }) : null}
                 />
                 <StatCard
                   icon="📈"
@@ -320,7 +324,7 @@ export default function HomeScreen({ navigation }) {
                   iconBg={ICON_BG.streak}
                   value={streak.max ?? '—'}
                   label={t('home.myStats.maxStreak')}
-                  sub={streak.current ? `🔥 Actuel : ${streak.current}` : null}
+                  sub={streak.current ? t('home.misc.currentStreak', { count: streak.current }) : null}
                 />
               </>
             )}
@@ -330,9 +334,9 @@ export default function HomeScreen({ navigation }) {
           {recent.length > 0 ? (
             <>
               <View style={styles.sectionHeader}>
-                <Heading color={colors.green900}>Dernières parties</Heading>
+                <Heading color={colors.green900}>{t('home.misc.lastGames')}</Heading>
                 <Pressable onPress={() => navigation.navigate('Stats')} hitSlop={6}>
-                  <Body style={styles.seeAll}>Voir tout →</Body>
+                  <Body style={styles.seeAll}>{t('home.misc.seeAll')}</Body>
                 </Pressable>
               </View>
               <View style={styles.lastList}>
@@ -377,27 +381,27 @@ export default function HomeScreen({ navigation }) {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.hScroll}
             >
-              {activeTournaments.map((t) => (
+              {activeTournaments.map((tournament) => (
                 <Pressable
-                  key={t.id}
+                  key={tournament.id}
                   onPress={() => navigation.navigate('Tournaments')}
                   style={styles.tCard}
                 >
-                  <ThemeBadge theme={t.theme} size="sm" showLabel={false} />
+                  <ThemeBadge theme={tournament.theme} size="sm" showLabel={false} />
                   <Body
                     color={colors.white}
                     numberOfLines={2}
                     style={styles.tName}
                   >
-                    {t.name}
+                    {tournament.name}
                   </Body>
                   <View style={styles.tFooter}>
                     <Label color={colors.textOnDarkMuted}>
-                      {t.registered_players ?? 0} joueurs
+                      {t('home.misc.players', { count: tournament.registered_players ?? 0 })}
                     </Label>
-                    <StatusPill tournament={t} />
+                    <StatusPill tournament={tournament} t={t} />
                     <Label color={colors.textOnDarkFaint} style={styles.tDate}>
-                      {formatDateTime(t.starts_at)}
+                      {formatDateTime(tournament.starts_at)}
                     </Label>
                   </View>
                 </Pressable>
@@ -465,7 +469,7 @@ export default function HomeScreen({ navigation }) {
             </View>
           ) : (
             <AppCard tone="cream" padding="md" elevation="soft">
-              <Body muted>Classement indisponible.</Body>
+              <Body muted>{t('home.empty.leaderboard')}</Body>
             </AppCard>
           )}
 

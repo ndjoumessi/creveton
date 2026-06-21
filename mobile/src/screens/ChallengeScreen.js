@@ -37,8 +37,8 @@ export default function ChallengeScreen({ navigation }) {
     const oppId = friend ? opponentId.trim() : null;
 
     if (friend && !oppId) {
-      setInputError("Indique l'identifiant de ton ami.");
-      toast.show({ type: 'error', message: "Identifiant de l'ami requis." });
+      setInputError(tr('challenge.validation.friendIdHint'));
+      toast.show({ type: 'error', message: tr('challenge.validation.friendIdRequired') });
       return;
     }
 
@@ -71,20 +71,20 @@ export default function ChallengeScreen({ navigation }) {
         {tr('challenge.title')}
       </Title>
       <Body color={colors.textOnDarkMuted} style={styles.subtitle}>
-        Affronte un ami ou un joueur de ton niveau sur les mêmes questions.
+        {tr('challenge.misc.subtitle')}
       </Body>
 
       {/* Option : défier un ami */}
       <AppCard tone="dark" style={styles.optionCard}>
         <Text style={styles.optionEmoji}>🤝</Text>
-        <Text style={styles.optionTitleDark}>Envoie un défi à un ami</Text>
+        <Text style={styles.optionTitleDark}>{tr('challenge.friend.cardTitle')}</Text>
         <Body color={colors.textOnDarkMuted} style={styles.optionDesc}>
           {tr('challenge.friend.subtitle')}
         </Body>
         {mode === 'friend' ? (
           <View style={styles.friendInput}>
             <AppInput
-              label="Identifiant de l'ami"
+              label={tr('challenge.placeholder.friendId')}
               value={opponentId}
               onChangeText={setOpponentId}
               error={inputError}
@@ -95,7 +95,7 @@ export default function ChallengeScreen({ navigation }) {
         ) : null}
         <AppButton
           variant="primary"
-          title={mode === 'friend' ? 'Envoyer le défi' : tr('challenge.friend.button')}
+          title={mode === 'friend' ? tr('challenge.friend.send') : tr('challenge.friend.button')}
           loading={launching && mode === 'friend'}
           onPress={() => {
             if (mode !== 'friend') {
@@ -125,7 +125,7 @@ export default function ChallengeScreen({ navigation }) {
       </AppCard>
 
       {/* Thème */}
-      <Text style={styles.sectionTitle}>Thème</Text>
+      <Text style={styles.sectionTitle}>{tr('challenge.misc.theme')}</Text>
       <View style={styles.chips}>
         {THEMES.map((t) => {
           const active = t.key === theme;
@@ -144,7 +144,7 @@ export default function ChallengeScreen({ navigation }) {
       </View>
 
       {/* Niveau */}
-      <Text style={styles.sectionTitle}>Niveau</Text>
+      <Text style={styles.sectionTitle}>{tr('challenge.misc.level')}</Text>
       <View style={styles.chips}>
         {LEVELS.map((l) => {
           const active = l.key === level;
@@ -167,7 +167,7 @@ export default function ChallengeScreen({ navigation }) {
       <View style={styles.emptyBox}>
         <Text style={styles.emptyEmoji}>⚔️</Text>
         <Body color={colors.textOnDarkMuted} style={styles.emptyText}>
-          Aucun défi en cours pour l’instant.
+          {tr('challenge.empty.active')}
         </Body>
       </View>
 
@@ -176,7 +176,7 @@ export default function ChallengeScreen({ navigation }) {
       <View style={styles.emptyBox}>
         <Text style={styles.emptyEmoji}>🏁</Text>
         <Body color={colors.textOnDarkMuted} style={styles.emptyText}>
-          Tes derniers défis apparaîtront ici.
+          {tr('challenge.empty.recent')}
         </Body>
       </View>
 

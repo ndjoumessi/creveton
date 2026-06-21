@@ -130,13 +130,13 @@ export default function OTPScreen({ route, navigation }) {
       if (!res.ok) {
         triggerShake();
         resetBoxes();
-        const msg = res.error?.message || 'Code invalide. Réessaie.';
+        const msg = res.error?.message || t('auth.otp.notify.invalidCode');
         setError(msg);
         toast.show({ type: 'error', message: msg });
       }
       // Succès : authStore bascule isAuthenticated → le navigateur change seul.
     },
-    [verifyOtp, phone, triggerShake, resetBoxes, toast]
+    [verifyOtp, phone, triggerShake, resetBoxes, toast, t]
   );
 
   const onChange = (text, i) => {
@@ -181,9 +181,9 @@ export default function OTPScreen({ route, navigation }) {
       setExpiresAt(res.data?.otp_expires_at);
       if (!res.data?.otp_expires_at) setRemaining(FALLBACK_SECONDS);
       resetBoxes();
-      toast.show({ type: 'success', message: 'Nouveau code envoyé.' });
+      toast.show({ type: 'success', message: t('auth.otp.notify.resent') });
     } else {
-      const msg = res.error?.message || 'Renvoi impossible. Réessaie.';
+      const msg = res.error?.message || t('auth.otp.notify.resendFailed');
       setError(msg);
       toast.show({ type: 'error', message: msg });
     }
@@ -269,7 +269,7 @@ export default function OTPScreen({ route, navigation }) {
           <Label color={colors.errorText}>{t('auth.otp.expiredCode')}</Label>
         ) : (
           <>
-            <Label muted>Expire dans </Label>
+            <Label muted>{t('auth.otp.misc.expiresIn')} </Label>
             <Body style={styles.timer}>{formatTimer(remaining)}</Body>
           </>
         )}
@@ -294,7 +294,7 @@ export default function OTPScreen({ route, navigation }) {
           style={styles.resend}
           color={canResend ? colors.green700 : colors.textFaint}
         >
-          {resending ? 'Renvoi en cours…' : t('auth.otp.resend')}
+          {resending ? t('auth.otp.misc.resending') : t('auth.otp.resend')}
         </Body>
       </Pressable>
     </Screen>

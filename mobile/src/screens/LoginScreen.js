@@ -38,7 +38,7 @@ export default function LoginScreen({ navigation }) {
     const email = values.current.email.trim().toLowerCase();
     const password = values.current.password;
     if (!isValidEmail(email) || !password) {
-      setError('Email et mot de passe requis.');
+      setError(t('auth.notify.credentialsRequired'));
       return;
     }
     const res = await login(email, password);
@@ -47,7 +47,7 @@ export default function LoginScreen({ navigation }) {
         navigation.navigate('OTP', { phone: res.error?.phone });
         return;
       }
-      setError(res.error?.message || 'Connexion impossible.');
+      setError(res.error?.message || t('auth.notify.loginFailed'));
     }
   };
 

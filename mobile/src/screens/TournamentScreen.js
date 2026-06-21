@@ -30,12 +30,13 @@ const TABS = [
   { key: 'past', labelKey: 'finished', statuses: ['closed', 'paid'] },
 ];
 
+// labelKey → clé i18n (tournaments.misc.type.*) résolue au rendu.
 const TYPE_LABEL = {
-  free: 'Gratuit',
-  flash: 'Flash',
-  mini: 'Mini',
-  grand: 'Grand',
-  premium: 'Premium',
+  free: 'free',
+  flash: 'flash',
+  mini: 'mini',
+  grand: 'grand',
+  premium: 'premium',
 };
 
 // Renvoie « Xh Ymin » si starts_at est dans les 24 prochaines heures, sinon null.
@@ -99,7 +100,7 @@ export default function TournamentScreen() {
   const confirmJoin = () => {
     setConfirm(null);
     // Pas encore d'endpoint d'inscription : on reste honnête.
-    toast.show({ type: 'info', message: 'Inscription bientôt disponible.' });
+    toast.show({ type: 'info', message: tr('tournaments.notify.joinSoon') });
   };
 
   return (
@@ -147,7 +148,7 @@ export default function TournamentScreen() {
             inline
             dark={false}
             emoji="🦐"
-            title="Chargement impossible"
+            title={tr('tournaments.error.title')}
             message={error}
             onRetry={() => load(tab)}
           />
@@ -220,15 +221,15 @@ function TournamentCard({ t, onJoin }) {
   let ctaVariant = 'primary';
   let ctaDisabled = false;
   if (!free) {
-    ctaTitle = 'Bientôt disponible';
+    ctaTitle = tr('tournaments.misc.status.soon');
     ctaVariant = 'ghost';
     ctaDisabled = true;
   } else if (full) {
-    ctaTitle = 'Complet';
+    ctaTitle = tr('tournaments.misc.status.full');
     ctaVariant = 'ghost';
     ctaDisabled = true;
   } else if (!open) {
-    ctaTitle = running ? 'Tournoi en cours' : 'Indisponible';
+    ctaTitle = running ? tr('tournaments.misc.status.running') : tr('tournaments.misc.status.unavailable');
     ctaVariant = 'ghost';
     ctaDisabled = true;
   }
@@ -247,7 +248,9 @@ function TournamentCard({ t, onJoin }) {
             <View style={styles.badgesRow}>
               <ThemeBadge theme={t.theme} size="sm" />
               <View style={styles.typePill}>
-                <Text style={styles.typePillText}>{TYPE_LABEL[t.type] || t.type}</Text>
+                <Text style={styles.typePillText}>
+                  {TYPE_LABEL[t.type] ? tr(`tournaments.misc.type.${TYPE_LABEL[t.type]}`) : t.type}
+                </Text>
               </View>
             </View>
           </View>
@@ -263,7 +266,7 @@ function TournamentCard({ t, onJoin }) {
             <Body style={styles.countdownLine}>⏳ {tr('tournaments.card.startsIn')} {countdown}</Body>
           ) : (
             <Body muted style={styles.metaLineMuted}>
-              📅 {formatDateTime(t.starts_at) || 'Date à venir'}
+              📅 {formatDateTime(t.starts_at) || tr('tournaments.misc.dateTbd')}
             </Body>
           )}
           <Body muted style={styles.metaLineMuted}>

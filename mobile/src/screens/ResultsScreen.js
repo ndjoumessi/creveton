@@ -51,8 +51,8 @@ export default function ResultsScreen({ route, navigation }) {
       <ErrorScreen
         dark
         emoji="😕"
-        title="Score non enregistré"
-        message={error?.message || "La partie n'a pas pu être soumise. Réessaie."}
+        title={t('results.notify.notSavedTitle')}
+        message={error?.message || t('results.notify.notSavedMessage')}
         onRetry={goHome}
         retryLabel={t('results.home')}
       />
@@ -234,7 +234,7 @@ function ResultsContent({ result, onReplay, onHome }) {
         </Label>
         <Text style={styles.score}>{displayScore}</Text>
         <Label color={colors.textOnDarkMuted}>
-          {correct}/{total} bonnes réponses · {pct}%
+          {t('results.misc.heroSubtitle', { correct, total, pct })}
         </Label>
       </View>
 
@@ -267,7 +267,7 @@ function ResultsContent({ result, onReplay, onHome }) {
                 </View>
                 <View style={styles.recapBody}>
                   <Body style={styles.recapTitle} numberOfLines={2}>
-                    Question {i + 1}
+                    {t('results.misc.questionN', { n: i + 1 })}
                   </Body>
                   {item.explanation ? (
                     <Body muted style={styles.recapExpl} numberOfLines={2}>
@@ -284,7 +284,7 @@ function ResultsContent({ result, onReplay, onHome }) {
             );
           })
         ) : (
-          <Body muted>Récapitulatif indisponible.</Body>
+          <Body muted>{t('results.empty.recap')}</Body>
         )}
       </AppCard>
 
@@ -303,7 +303,7 @@ function ResultsContent({ result, onReplay, onHome }) {
       {history === null ? (
         <View style={styles.progressBlock}>
           <Heading color={colors.cream} style={styles.sectionTitle}>
-            Ma progression
+            {t('results.misc.progression')}
           </Heading>
           <AppCard tone="light" padding="md" radius={radius.xl}>
             <Skeleton width="100%" height={80} radius={radius.md} />
@@ -312,7 +312,7 @@ function ResultsContent({ result, onReplay, onHome }) {
       ) : progressScores.length >= 2 ? (
         <View style={styles.progressBlock}>
           <Heading color={colors.cream} style={styles.sectionTitle}>
-            Ma progression
+            {t('results.misc.progression')}
           </Heading>
           <AppCard tone="light" padding="md" radius={radius.xl} style={styles.progressCard}>
             <MiniLineChart data={progressScores} width={300} height={80} color={colors.gold500} />
@@ -324,10 +324,10 @@ function ResultsContent({ result, onReplay, onHome }) {
       {result.level_unlocked ? (
         <Animated.View style={[styles.levelUp, { transform: [{ scale: glowScale }] }]}>
           <Text style={styles.levelUpEmoji}>🎉</Text>
-          <Heading color={colors.gold400}>Niveau supérieur !</Heading>
+          <Heading color={colors.gold400}>{t('results.misc.levelUpTitle')}</Heading>
           {result.unlocked_difficulty ? (
             <Body color={colors.cream} style={styles.levelUpText}>
-              Difficulté « {result.unlocked_difficulty} » débloquée
+              {t('results.misc.difficultyUnlocked', { difficulty: result.unlocked_difficulty })}
             </Body>
           ) : null}
         </Animated.View>

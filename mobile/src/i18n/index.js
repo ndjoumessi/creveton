@@ -1,3 +1,4 @@
+/* eslint-disable import/no-named-as-default-member -- i18next's default export intentionally exposes use()/changeLanguage() */
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
