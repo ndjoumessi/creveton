@@ -61,16 +61,22 @@ function mockAvgScore(id) {
   return 100 + (seedFrom(id) % 301);
 }
 
+/** Config de thème sûre : index borné (>>> non signé) + repli, jamais undefined. */
+function themeCfgAt(n) {
+  const key = THEME_KEYS[(n >>> 0) % THEME_KEYS.length];
+  return themeBadgeColors[key] || { label: key, icon: '' };
+}
+
 /** Statistiques fictives mais déterministes par utilisateur (fiche détail). */
 function mockUserStats(user) {
   const seed = seedFrom(user.id);
-  const themeKey = THEME_KEYS[seed % THEME_KEYS.length];
+  const cfg = themeCfgAt(seed);
   return {
     games: mockGamesPlayed(user.id),
     avgScore: mockAvgScore(user.id),
     successRate: 45 + (seed % 51), // 45..95 %
-    favTheme: themeBadgeColors[themeKey].label,
-    favThemeIcon: themeBadgeColors[themeKey].icon,
+    favTheme: cfg.label,
+    favThemeIcon: cfg.icon,
     streak: 2 + (seed % 18), // 2..19
   };
 }
@@ -82,11 +88,11 @@ function mockGames(user) {
     const s = seed + i * 97;
     const total = 8 + (s % 5); // 8..12 questions
     const correct = s % (total + 1);
-    const themeKey = THEME_KEYS[(s >> 2) % THEME_KEYS.length];
+    const cfg = themeCfgAt(s >>> 2);
     return {
-      themeKey,
-      theme: themeBadgeColors[themeKey].label,
-      icon: themeBadgeColors[themeKey].icon,
+      theme: cfg.label,
+      icon: cfg.icon,
+      bg: cfg.bg || '#f3f4f6',
       level: 1 + (s % 5),
       score: 100 + (s % 301),
       correct,
@@ -244,10 +250,7 @@ function HistoriqueTab({ user }) {
       <div className="u-section-title" style={{ marginBottom: 6 }}>10 dernières parties</div>
       {games.map((g, i) => (
         <div className="u-game-row" key={i}>
-          <div
-            className="u-game-icon"
-            style={{ background: themeBadgeColors[g.themeKey].bg }}
-          >
+          <div className="u-game-icon" style={{ background: g.bg }}>
             {g.icon}
           </div>
           <div className="u-game-main">
