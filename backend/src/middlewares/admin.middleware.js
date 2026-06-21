@@ -35,6 +35,7 @@ const PERMISSIONS = {
   'tournaments:manage': 'admin',
 
   'analytics:read': 'moderator',
+  'dashboard:read': 'admin',
 
   'system:manage': 'super_admin',
 };

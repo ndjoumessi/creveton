@@ -51,6 +51,21 @@ async function findById(id) {
   return rows[0] || null;
 }
 
+/**
+ * Liste tous les tournois vivants (non soft-deletés), du plus récent au plus
+ * ancien, avec le nombre d'inscrits. Sert GET /tournaments (§8).
+ */
+async function findAll() {
+  const { rows } = await db.query(
+    `SELECT t.*,
+            (SELECT count(*)::int FROM tournament_participants p WHERE p.tournament_id = t.id) AS registered_players
+       FROM tournaments t
+      WHERE t.deleted_at IS NULL
+      ORDER BY t.created_at DESC`
+  );
+  return rows;
+}
+
 async function countParticipants(id) {
   const { rows } = await db.query(
     'SELECT count(*)::int AS n FROM tournament_participants WHERE tournament_id = $1',
@@ -96,6 +111,7 @@ module.exports = {
   toView,
   create,
   findById,
+  findAll,
   countParticipants,
   setStatus,
   rankedParticipants,
