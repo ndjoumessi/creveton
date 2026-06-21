@@ -150,11 +150,16 @@ input, select, textarea { font-family: inherit; }
 .card-link:hover { color: var(--green500); gap: 7px; }
 
 /* ===================== KPI premium ===================== */
-.kpi { display: flex; flex-direction: column; gap: 6px; padding: 20px 22px; position: relative; }
+.kpi { display: flex; flex-direction: column; gap: 6px; padding: 20px 22px; position: relative; border-top: 3px solid var(--border); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.kpi:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+.kpi--green { border-top-color: var(--green500); }
+.kpi--gold { border-top-color: var(--gold); }
+.kpi--blue { border-top-color: #3b82f6; }
+.kpi--violet { border-top-color: #8b5cf6; }
 .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .kpi-label { color: var(--muted); font-family: 'Space Grotesk'; font-size: 13px; font-weight: 500; }
-.kpi-value { font-family: 'Outfit'; font-weight: 800; font-size: 40px; color: var(--ink); line-height: 1.05; letter-spacing: -0.6px; font-variant-numeric: tabular-nums; }
-.kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+.kpi-value { font-family: 'Outfit'; font-weight: 800; font-size: 44px; color: var(--ink); line-height: 1.05; letter-spacing: -0.6px; font-variant-numeric: tabular-nums; }
+.kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; flex: none; }
 .kpi-icon.green { background: #e3f3ea; color: var(--green500); }
 .kpi-icon.gold { background: #fcf3da; color: var(--gold); }
 .kpi-icon.blue { background: #e6f0ff; color: #3b82f6; }
