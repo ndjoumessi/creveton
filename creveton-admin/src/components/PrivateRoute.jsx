@@ -3,10 +3,14 @@ import { useAuthStore } from '../store/authStore';
 
 /** Protège les routes : exige une session valide ET un rôle admin (CDC §3.7). */
 export default function PrivateRoute({ children }) {
+  // On s'abonne à `user` pour que le composant RÉAGISSE aux changements d'auth
+  // (login/logout) sans dépendre uniquement d'une navigation.
+  const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isAdmin = useAuthStore((s) => s.isAdmin);
 
-  if (!isAuthenticated()) return <Navigate to="/login" replace />;
-  if (!isAdmin()) return <Navigate to="/login" replace />;
+  if (!user || !isAuthenticated() || !isAdmin()) {
+    return <Navigate to="/login" replace />;
+  }
   return children;
 }

@@ -14,14 +14,24 @@ import { notify } from '../components/Toast';
 const truncate = (s, n = 56) => (s && s.length > n ? `${s.slice(0, n)}…` : s);
 const initials = (name) => (name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
+// Chaque appel est isolé : un endpoint en échec (ex. /tournaments 501,
+// /admin/dashboard 404) ne doit JAMAIS faire planter tout le dashboard.
+const settle = (p, fallback) => Promise.resolve(p).then((r) => r).catch(() => fallback);
+const DEFAULT_SUMMARY = { games_today: 0, system: { api: 'down', database: 'down', redis: 'down' }, last_questions_sync: null };
+
 const fetchAll = async () => {
   const [q, u, t, s] = await Promise.all([
-    questionsService.list({}),
-    usersService.list({}),
-    tournamentsService.list(),
-    dashboardService.summary(),
+    settle(questionsService.list({}), { data: [] }),
+    settle(usersService.list({}), { data: [] }),
+    settle(tournamentsService.list(), { data: [] }),
+    settle(dashboardService.summary(), DEFAULT_SUMMARY),
   ]);
-  return { questions: q.data || [], users: u.data || [], tournaments: t.data || [], summary: s };
+  return {
+    questions: q?.data || [],
+    users: u?.data || [],
+    tournaments: t?.data || [],
+    summary: s || DEFAULT_SUMMARY,
+  };
 };
 
 function KpiTile({ icon, label, value }) {
@@ -50,9 +60,12 @@ function SysPill({ icon, label, state = 'ok', value }) {
 }
 
 export default function Dashboard() {
-  const { data, loading, refetch } = useApiData(fetchAll, [], { pollMs: 30000 });
+  const { data, refetch } = useApiData(fetchAll, [], { pollMs: 30000 });
 
-  if (loading && !data) return <LoadingSpinner label="Chargement du tableau de bord…" />;
+  // Garde défensive : tant que les données ne sont pas prêtes, on affiche le
+  // spinner (data ne devrait jamais être null grâce à `settle`, mais on protège
+  // contre tout déstructuration de null → page blanche).
+  if (!data) return <LoadingSpinner label="Chargement du tableau de bord…" />;
   const { questions, users, tournaments, summary } = data;
 
   const approvedCount = questions.filter((q) => q.status === 'approved').length;
