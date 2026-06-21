@@ -2,13 +2,12 @@ import api, { withMock } from './api';
 import mockDashboard from '../mocks/mockDashboard';
 
 /**
- * Synthèse dashboard (activité du jour + statut système + dernière synchro).
- * Pas d'endpoint agrégé dédié côté backend → repli mock. Les autres chiffres du
- * dashboard (questions approuvées, tournois ouverts, utilisateurs) sont dérivés
- * des vrais endpoints /admin/questions, /tournaments, /admin/users côté page.
+ * Synthèse du tableau de bord en UN SEUL appel (GET /admin/dashboard).
+ * Réponse : { kpis, recent_users, pending_questions, system }. Repli mock en
+ * mode démo (dev sans backend).
  */
-export function summary() {
+export function overview() {
   return withMock(() => api.get('/admin/dashboard').then((r) => r.data), mockDashboard);
 }
 
-export default { summary };
+export default { overview };
