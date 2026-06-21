@@ -1,69 +1,204 @@
 /* Styles spécifiques au Dashboard — préfixés .dash- pour ne pas polluer le DS. */
 
-/* Feed "Activité récente" — item compact avatar | texte | temps relatif. */
-.dash-feed { display: flex; flex-direction: column; }
+.dash-gap { margin-bottom: 20px; }
+
+/* ── En-tête de carte avec action à droite ── */
+.dash-card-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; margin-bottom: 14px;
+}
+
+/* ── État vide centré dans une carte ── */
+.dash-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 7px; padding: 30px 12px; text-align: center; color: var(--muted);
+  font-size: 13px;
+}
+.dash-empty-title { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--ink); font-size: 14.5px; }
+
+/* ── Lien doré (or rare : ≤10% — réservé au CTA de l'activité) ── */
+.dash-gold-link {
+  color: var(--gold); font-weight: 600; font-size: 13px;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: gap var(--t-fast);
+}
+.dash-gold-link:hover { gap: 8px; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   COL 1 — ACTIVITÉ RÉCENTE
+   ───────────────────────────────────────────────────────────────────────── */
+.dash-activity { display: flex; flex-direction: column; }
+.dash-activity .dash-feed { flex: 1; }
+
+.dash-live {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 11px;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--green500);
+  background: #e3f3ea; border-radius: 999px; padding: 3px 9px;
+}
+.dash-live-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--green500);
+  box-shadow: 0 0 0 0 rgba(42, 138, 79, 0.5);
+  animation: dash-pulse 1.7s infinite;
+}
+@keyframes dash-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(42, 138, 79, 0.5); }
+  70% { box-shadow: 0 0 0 6px rgba(42, 138, 79, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(42, 138, 79, 0); }
+}
+
+.dash-feed { display: flex; flex-direction: column; background: #fafdf8; border-radius: 12px; }
 .dash-feed-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 11px 8px; margin: 0 -8px;
-  border-radius: 10px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 10px;
+  border-bottom: 1px solid #eef2ec;
   color: inherit; text-decoration: none;
   transition: background var(--t-fast);
 }
-.dash-feed-item:last-child { border-bottom: none; }
-.dash-feed-item:hover { background: #fff; }
-.dash-feed-text { font-size: 13.5px; color: var(--ink); line-height: 1.4; }
+.dash-feed-item:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+.dash-feed-item:last-child { border-bottom: none; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+.dash-feed-item:hover { background: #f2f8ee; }
+.dash-feed-text { font-size: 13px; color: var(--ink); line-height: 1.4; }
 .dash-feed-text strong { font-weight: 600; }
-.dash-feed-text svg { vertical-align: -2px; margin-right: 2px; }
-.dash-feed-time { margin-left: auto; flex: none; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.dash-feed-ic { margin-right: 5px; font-size: 13px; vertical-align: -1px; }
+.dash-feed-time { margin-left: auto; flex: none; font-size: 11.5px; color: var(--muted); white-space: nowrap; font-family: 'Space Grotesk', sans-serif; }
 
-/* Liste des questions à réviser. */
-.dash-q-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
-.dash-q-item:last-child { border-bottom: none; }
-.dash-q-text { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.4; }
-.dash-q-meta { margin-top: 7px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.dash-q-actions { margin-left: auto; display: inline-flex; gap: 6px; }
+.dash-activity-foot { margin-top: 14px; }
 
-/* Pastille "compteur" orange en haut à droite des cartes de modération. */
+/* ─────────────────────────────────────────────────────────────────────────
+   COL 2 — À MODÉRER
+   ───────────────────────────────────────────────────────────────────────── */
 .dash-count {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 22px; height: 22px; padding: 0 7px;
-  border-radius: var(--radius-pill);
-  background: #fef3c7; color: #a16207;
+  border-radius: 999px;
+  background: #fff4e0; color: #b45309;
   font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px;
   font-variant-numeric: tabular-nums;
 }
 
-/* En-tête de carte avec action à droite. */
-.dash-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.dash-mod-list { display: flex; flex-direction: column; gap: 10px; }
+.dash-q-item {
+  padding: 12px; border: 1px solid var(--border); border-radius: 12px;
+  background: #fff;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+.dash-q-leaving { opacity: 0; transform: translateY(-8px); }
+.dash-q-text { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4; }
+.dash-q-meta { margin-top: 9px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dash-q-level {
+  font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.3px; color: var(--muted);
+  background: #f3f4f6; border-radius: 7px; padding: 3px 8px;
+}
+.dash-q-actions { margin-top: 11px; display: flex; gap: 8px; }
+.dash-q-actions .btn { flex: 1; justify-content: center; }
 
-/* Titre de graphique (Outfit 600 16px, spec). */
-.dash-chart-title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 16px; color: var(--ink); margin: 0; }
+/* ─────────────────────────────────────────────────────────────────────────
+   COL 3 — SYSTÈME (carte sombre)
+   ───────────────────────────────────────────────────────────────────────── */
+.dash-system { display: flex; flex-direction: column; }
+.dash-sys-lines { margin-top: 6px; }
+.dash-sys-line {
+  display: flex; align-items: center; gap: 9px;
+  padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+.dash-sys-line:last-child { border-bottom: none; }
+.dash-sys-ic { display: inline-flex; color: rgba(255, 255, 255, 0.6); }
+.dash-sys-name { color: #fff; font-weight: 500; font-size: 13.5px; }
+.dash-sys-state {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--green300);
+}
+.dash-sys-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green300); }
+.dash-sys-ms {
+  flex: none; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 12px;
+  color: rgba(255, 255, 255, 0.55); font-variant-numeric: tabular-nums;
+  min-width: 48px; text-align: right;
+}
+
+.dash-sys-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.10); display: flex; flex-direction: column; gap: 10px; }
+.dash-sys-frow { display: flex; align-items: center; gap: 9px; }
+.dash-sys-flabel { color: rgba(255, 255, 255, 0.6); font-size: 12.5px; }
+.dash-sys-fval { margin-left: auto; color: rgba(255, 255, 255, 0.9); font-size: 12.5px; }
+.dash-sys-fval--num { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+.dash-online-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--green500);
+  box-shadow: 0 0 0 0 rgba(42, 138, 79, 0.5); animation: dash-pulse 1.7s infinite; flex: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   LIGNE 3 — GRAPHIQUE D'ACTIVITÉ
+   ───────────────────────────────────────────────────────────────────────── */
+.dash-chart-tools { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
+
+.dash-pills { display: inline-flex; gap: 3px; background: #f3f4f6; border-radius: 999px; padding: 3px; }
+.dash-pill {
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px;
+  color: var(--muted); padding: 5px 13px; border-radius: 999px;
+  transition: all var(--t-fast);
+}
+.dash-pill:hover { color: var(--ink); }
+.dash-pill.is-active { background: var(--green900); color: #fff; }
+
 .dash-chart-legend { display: inline-flex; align-items: center; gap: 16px; }
 .dash-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
-.dash-legend-swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.dash-legend-sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 
-/* État vide centré dans une carte. */
-.dash-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 28px 12px; text-align: center; color: var(--muted); }
-.dash-empty-title { font-weight: 600; color: var(--ink); }
-
-/* Statut système sombre. */
-.dash-sys-sync { display: flex; align-items: center; gap: 10px; padding-top: 12px; margin-top: 4px; }
-.dash-sys-sync .sys-name { color: rgba(255, 255, 255, 0.65) !important; font-weight: 400; }
-
-/* Ligne « engagement » : jauge taux de réussite + joueurs en ligne. */
-.dash-row-engage { grid-template-columns: 1fr 1fr; }
-@media (max-width: 1100px) { .dash-row-engage { grid-template-columns: 1fr; } }
-
-/* Carte jauge — centrée sous l'en-tête. */
-.dash-gauge-card { display: flex; flex-direction: column; }
-.dash-gauge-card .gauge { align-self: center; margin-top: 8px; }
-
-/* Carte « en ligne maintenant » (sombre). */
-.dash-online-card { display: flex; flex-direction: column; }
-.dash-online-card .card-title { color: #fff; }
-.dash-online-count {
-  font-family: 'Outfit', sans-serif; font-weight: 700;
-  font-size: 56px; line-height: 1.05; color: #fff;
-  font-variant-numeric: tabular-nums; margin-top: auto;
+/* Tooltip custom du graphe. */
+.dash-tip {
+  background: #fff; border: 1px solid var(--border); border-radius: 10px;
+  padding: 9px 11px; box-shadow: 0 10px 30px rgba(16, 24, 40, 0.12);
+  font-family: 'Space Grotesk', sans-serif; font-size: 12.5px;
 }
-.dash-online-sub { color: rgba(255, 255, 255, 0.6); font-size: 13px; margin-top: 2px; }
+.dash-tip-day { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+.dash-tip-row { display: flex; align-items: center; gap: 6px; color: var(--text); }
+.dash-tip-sw { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   LIGNE 4 — TOP JOUEURS + RÉPARTITION THÈMES
+   ───────────────────────────────────────────────────────────────────────── */
+.dash-row-bottom { grid-template-columns: 1fr 1fr; }
+@media (max-width: 1100px) { .dash-row-bottom { grid-template-columns: 1fr; } }
+
+/* Top joueurs. */
+.dash-top-list { display: flex; flex-direction: column; }
+.dash-top-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.dash-top-row:last-child { border-bottom: none; }
+.dash-rank {
+  width: 24px; height: 24px; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px;
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px;
+  color: var(--muted); background: #f3f4f6; font-variant-numeric: tabular-nums;
+}
+.dash-rank--medal { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+.dash-top-name { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-top-city { font-family: 'Space Grotesk', sans-serif; font-weight: 400; color: var(--muted); font-size: 12px; }
+.dash-top-score { margin-left: auto; flex: none; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; color: var(--green700); font-variant-numeric: tabular-nums; }
+
+/* Donut répartition thèmes. */
+.dash-donut-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.dash-donut { position: relative; width: 160px; height: 160px; flex: none; }
+.dash-donut-center {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; pointer-events: none;
+}
+.dash-donut-num { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 26px; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.dash-donut-lbl { font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+.dash-donut-legend { flex: 1; min-width: 160px; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.dash-donut-legend li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.dash-donut-leg-label { color: var(--text); }
+.dash-donut-leg-pct { margin-left: auto; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dash-donut-leg-count { flex: none; min-width: 34px; text-align: right; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 560px) {
+  .dash-donut-wrap { flex-direction: column; align-items: stretch; }
+  .dash-donut { align-self: center; }
+}

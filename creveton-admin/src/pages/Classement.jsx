@@ -1,6 +1,6 @@
 import './Classement.css';
 import { useState, useMemo } from 'react';
-import { Crown, Trophy } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import leaderboardService from '../services/leaderboard.service';
 import { useApiData } from '../hooks/useApiData';
 import { themeLabels } from '../constants/theme';
@@ -12,26 +12,91 @@ import EmptyState from '../components/EmptyState';
 import { Skeleton, SkeletonTable } from '../components/Skeleton';
 
 const SCOPES = [
-  { key: 'global', label: 'Global' },
-  { key: 'theme', label: 'Par thème' },
-  { key: 'weekly', label: 'Hebdo' },
-  { key: 'monthly', label: 'Mensuel' },
+  { key: 'global', label: 'Global', icon: '🌍' },
+  { key: 'theme', label: 'Par thème', icon: '🎯' },
+  { key: 'weekly', label: 'Hebdomadaire', icon: '📅' },
+  { key: 'monthly', label: 'Mensuel', icon: '📆' },
 ];
 
-/* Une carte du podium (1er / 2e / 3e). */
-function PodiumCard({ player, place }) {
+// Niveaux joueur 1..5 — couleur + libellé (sens doublé : jamais la teinte seule).
+const LEVEL_STYLES = {
+  1: { bg: '#f3f4f6', fg: '#6b7280' },
+  2: { bg: '#e6f0ff', fg: '#3b82f6' },
+  3: { bg: '#e3fbef', fg: '#10b981' },
+  4: { bg: '#fff4e0', fg: '#a16207' },
+  5: { bg: '#f3edff', fg: '#8b5cf6' },
+};
+
+function levelStyle(level) {
+  return LEVEL_STYLES[level] || LEVEL_STYLES[1];
+}
+
+/* Couronne du champion (sway animé en CSS). */
+function CrownSvg() {
   return (
-    <div className={`podium-card p${place}`}>
-      {place === 1 && (
-        <div className="podium-crown" aria-hidden="true">
-          <Crown size={32} fill="currentColor" strokeWidth={1.5} />
-        </div>
-      )}
-      <div className="podium-rank">{place}<sup>{place === 1 ? 'er' : 'e'}</sup></div>
-      <Avatar name={player.name} size="xl" />
-      <div className="podium-name">{player.name}</div>
-      <div className="podium-city">{player.ville}</div>
-      <div className="podium-score">{num(player.score)}</div>
+    <svg className="lb-crown-svg" viewBox="0 0 48 36" width="48" height="36" aria-hidden="true">
+      <path
+        d="M4 30 L8 10 L17 20 L24 6 L31 20 L40 10 L44 30 Z"
+        fill="#ffffff"
+        stroke="#0b2e1a"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <rect x="4" y="30" width="40" height="4" rx="2" fill="#ffffff" stroke="#0b2e1a" strokeWidth="1.5" />
+      <circle cx="8" cy="9" r="2.4" fill="#ffffff" stroke="#0b2e1a" strokeWidth="1.5" />
+      <circle cx="24" cy="5" r="2.4" fill="#ffffff" stroke="#0b2e1a" strokeWidth="1.5" />
+      <circle cx="40" cy="9" r="2.4" fill="#ffffff" stroke="#0b2e1a" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+/* Médaille argent / bronze (inline SVG, sens doublé par le rang affiché). */
+function MedalSvg({ tone }) {
+  const palette = tone === 'silver'
+    ? { ring: '#9ca3af', face: '#e5e7eb', ink: '#374151', label: 'Argent' }
+    : { ring: '#b45309', face: '#fbcf9c', ink: '#7c2d12', label: 'Bronze' };
+  return (
+    <svg className="lb-medal-svg" viewBox="0 0 36 36" width="36" height="36" role="img" aria-label={`Médaille ${palette.label}`}>
+      <path d="M11 2 L18 14 L7 14 Z" fill={palette.ring} opacity="0.55" />
+      <path d="M25 2 L29 14 L18 14 Z" fill={palette.ring} opacity="0.55" />
+      <circle cx="18" cy="24" r="11" fill={palette.face} stroke={palette.ring} strokeWidth="2.5" />
+      <text x="18" y="28" textAnchor="middle" fontFamily="Outfit, sans-serif" fontWeight="800" fontSize="13" fill={palette.ink}>
+        {tone === 'silver' ? '2' : '3'}
+      </text>
+    </svg>
+  );
+}
+
+/* Carte podium pour la 1ʳᵉ place (centre, signature dorée). */
+function PodiumFirst({ player }) {
+  return (
+    <div className="lb-podium-card lb-p1">
+      <div className="lb-crown" aria-hidden="true"><CrownSvg /></div>
+      <div className="lb-avatar-ring lb-ring-gold">
+        <Avatar name={player.name} size="xl" />
+      </div>
+      <div className="lb-podium-name lb-name-light">{player.name}</div>
+      <div className="lb-podium-city lb-city-light">{player.ville || '—'}</div>
+      <div className="lb-podium-score lb-score-light">{num(player.score)}</div>
+      <div className="lb-podium-pts lb-pts-light">pts</div>
+      <span className="lb-champ-badge">🏆 Champion</span>
+    </div>
+  );
+}
+
+/* Carte podium pour 2e (argent) / 3e (bronze). */
+function PodiumSide({ player, place }) {
+  const tone = place === 2 ? 'silver' : 'bronze';
+  return (
+    <div className={`lb-podium-card lb-p${place}`}>
+      <div className="lb-medal" aria-hidden="true"><MedalSvg tone={tone} /></div>
+      <div className={`lb-avatar-ring lb-ring-${tone}`}>
+        <Avatar name={player.name} size="lg" />
+      </div>
+      <div className="lb-podium-name">{player.name}</div>
+      <div className="lb-podium-city">{player.ville || '—'}</div>
+      <div className="lb-podium-score">{num(player.score)}</div>
+      <div className="lb-podium-pts">pts</div>
     </div>
   );
 }
@@ -46,16 +111,18 @@ export default function Classement() {
   );
 
   const rows = useMemo(() => data?.data || [], [data]);
+  const me = data?.me || null;
 
-  const top3 = rows.slice(0, 3);
-  const podium = useMemo(() => {
-    if (!top3.length) return [];
-    const byRank = (r) => top3.find((p) => p.rank === r);
-    // Ordre DOM = [2e, 1er, 3e] pour la disposition (CSS gère les hauteurs).
-    return [byRank(2), byRank(1), byRank(3)].filter(Boolean);
-  }, [top3]);
+  const byRank = useMemo(() => {
+    const map = {};
+    rows.forEach((p) => { map[p.rank] = p; });
+    return map;
+  }, [rows]);
 
-  const rest = rows.slice(3);
+  const first = byRank[1];
+  const second = byRank[2];
+  const third = byRank[3];
+  const rest = useMemo(() => rows.filter((p) => p.rank > 3), [rows]);
   const isEmpty = !loading && rows.length === 0;
 
   return (
@@ -65,50 +132,58 @@ export default function Classement() {
         description="Les meilleurs joueurs Creveton selon la portée et le thème sélectionnés."
       />
 
-      <div className="c-controls">
-        <div className="scope-pills" role="tablist" aria-label="Portée du classement">
+      <div className="lb-controls">
+        <div className="lb-pills" role="tablist" aria-label="Portée du classement">
           {SCOPES.map((s) => (
             <button
               key={s.key}
               type="button"
               role="tab"
               aria-selected={scope === s.key}
-              className={`scope-pill${scope === s.key ? ' active' : ''}`}
+              className={`lb-pill${scope === s.key ? ' active' : ''}`}
               onClick={() => setScope(s.key)}
             >
+              <span className="lb-pill-icon" aria-hidden="true">{s.icon}</span>
               {s.label}
             </button>
           ))}
         </div>
 
         {scope === 'theme' && (
-          <select
-            className="select c-theme-select"
-            aria-label="Thème du classement"
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-          >
-            {THEME_KEYS.map((t) => (
-              <option key={t} value={t}>{themeLabels[t]}</option>
-            ))}
-          </select>
+          <div className="lb-theme-slide">
+            <select
+              className="select lb-theme-select"
+              aria-label="Thème du classement"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+            >
+              {THEME_KEYS.map((t) => (
+                <option key={t} value={t}>{themeLabels[t]}</option>
+              ))}
+            </select>
+          </div>
         )}
       </div>
 
-      {data?.me && (
-        <p className="muted" style={{ fontSize: 13, marginBottom: 18 }}>
-          Votre position : <strong>#{data.me.rank}</strong> · {num(data.me.score)} pts
-        </p>
+      {me && (
+        <div className="lb-me-card">
+          <span className="lb-me-label">Votre position</span>
+          <span className="lb-me-value">
+            #{me.rank} · {num(me.score)} pts
+          </span>
+        </div>
       )}
 
       {loading ? (
         <>
-          <div className="c-podium-skel">
-            <Skeleton h={200} r={16} style={{ marginBottom: 14 }} />
-            <Skeleton h={236} r={16} />
-            <Skeleton h={200} r={16} style={{ marginBottom: 14 }} />
+          <div className="lb-podium-skel">
+            <Skeleton h={208} r={20} />
+            <Skeleton h={256} r={20} />
+            <Skeleton h={208} r={20} />
           </div>
-          <SkeletonTable rows={8} cols={3} />
+          <div className="lb-table-card card">
+            <SkeletonTable rows={8} cols={4} />
+          </div>
         </>
       ) : isEmpty ? (
         <EmptyState
@@ -118,40 +193,67 @@ export default function Classement() {
         />
       ) : (
         <>
-          {podium.length > 0 && (
-            <div className="podium">
-              {podium.map((p) => (
-                <PodiumCard key={p.user_id || p.rank} player={p} place={p.rank} />
-              ))}
+          {(first || second || third) && (
+            <div className="lb-podium">
+              <div className="lb-podium-slot lb-slot-2">
+                {second ? <PodiumSide player={second} place={2} /> : <div className="lb-podium-ghost" />}
+              </div>
+              <div className="lb-podium-slot lb-slot-1">
+                {first ? <PodiumFirst player={first} /> : <div className="lb-podium-ghost" />}
+              </div>
+              <div className="lb-podium-slot lb-slot-3">
+                {third ? <PodiumSide player={third} place={3} /> : <div className="lb-podium-ghost" />}
+              </div>
             </div>
           )}
 
           {rest.length > 0 && (
-            <div className="card c-table-card">
-              <table className="data">
+            <div className="lb-table-card card">
+              <table className="data lb-table">
                 <thead>
                   <tr>
-                    <th style={{ width: 80 }}>Rang</th>
+                    <th className="lb-th-rank">Rang</th>
                     <th>Joueur</th>
-                    <th style={{ textAlign: 'right' }}>Score</th>
+                    <th className="lb-th-city">Ville</th>
+                    <th className="lb-th-level">Niveau</th>
+                    <th className="lb-th-score">Score</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rest.map((p) => (
-                    <tr key={p.user_id || p.rank}>
-                      <td><span className="rank-cell">{p.rank}</span></td>
-                      <td>
-                        <div className="c-player">
-                          <Avatar name={p.name} size="sm" />
-                          <div>
-                            <div className="cell-strong c-player-name">{p.name}</div>
-                            <div className="c-player-city">{p.ville}</div>
+                  {rest.map((p) => {
+                    const isMe = me && p.rank === me.rank;
+                    const lvl = levelStyle(p.level);
+                    return (
+                      <tr key={p.user_id || p.rank} className={isMe ? 'lb-row-me' : ''}>
+                        <td>
+                          <span className="lb-rank">{p.rank}</span>
+                        </td>
+                        <td>
+                          <div className="lb-player">
+                            <Avatar name={p.name} size="sm" />
+                            <div className="lb-player-meta">
+                              <div className="lb-player-name">
+                                {p.name}
+                                {isMe && <span className="lb-you-badge">Vous</span>}
+                              </div>
+                              <div className="lb-player-sub">{p.ville || '—'}</div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td><div className="c-score">{num(p.score)}</div></td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="lb-td-city">{p.ville || '—'}</td>
+                        <td className="lb-td-level">
+                          {p.level != null ? (
+                            <span className="lb-level-badge" style={{ background: lvl.bg, color: lvl.fg }}>
+                              Niv. {p.level}
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td className="lb-td-score">
+                          <span className="lb-score">{num(p.score)}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

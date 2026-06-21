@@ -1,64 +1,356 @@
-/* Classement — compléments de présentation (le DS vit dans index.css). */
+/* Classement — refonte premium « Cockpit Émeraude ».
+   Le design system vit dans index.css ; ici uniquement le spécifique (.lb-…). */
 
-/* Barre de contrôles : pills de scope + sélecteur de thème conditionnel. */
-.c-controls {
+/* ─── Contrôles : pills de portée + sélecteur de thème ─────────────────── */
+.lb-controls {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.lb-pills {
+  display: flex;
   flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lb-pill:hover {
+  border-color: #cbd5d0;
+  background: var(--surface-2);
+}
+
+.lb-pill.active {
+  background: var(--green900);
+  border-color: var(--green900);
+  color: #fff;
+}
+
+.lb-pill-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Slide-down du sélecteur de thème. */
+.lb-theme-slide {
+  overflow: hidden;
+  animation: lb-slide-down 0.18s ease;
+}
+
+@keyframes lb-slide-down {
+  from { opacity: 0; transform: translateY(-6px); max-height: 0; }
+  to { opacity: 1; transform: translateY(0); max-height: 64px; }
+}
+
+.lb-theme-select {
+  max-width: 240px;
+}
+
+/* ─── Ma position (carte crème, bordure or) ────────────────────────────── */
+.lb-me-card {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
   margin-bottom: 22px;
+  padding: 12px 18px;
+  background: var(--cream);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* Apparition douce du second sélecteur (scope = thème). */
-.c-theme-select {
-  animation: c-fade-in 0.22s ease;
+.lb-me-label {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #8a6d12;
 }
 
-@keyframes c-fade-in {
-  from { opacity: 0; transform: translateX(-6px); }
-  to { opacity: 1; transform: translateX(0); }
+.lb-me-value {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--green900);
+  font-variant-numeric: tabular-nums;
 }
 
-/* Cellule joueur : avatar + nom + ville. */
-.c-player {
+/* ─── Podium signature ─────────────────────────────────────────────────── */
+.lb-podium {
+  display: grid;
+  grid-template-columns: 1fr 1.14fr 1fr;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 26px;
+}
+
+.lb-podium-slot {
+  min-width: 0;
+}
+
+.lb-podium-ghost {
+  min-height: 160px;
+}
+
+.lb-podium-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Carte 1ʳᵉ place — fond or, surélevée. */
+.lb-p1 {
+  background: var(--gold);
+  border-radius: 20px;
+  padding: 28px 22px 24px;
+  margin-top: 36px;
+}
+
+/* Cartes 2e / 3e — blanches, bordées de la teinte du métal. */
+.lb-p2,
+.lb-p3 {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 22px 18px 20px;
+}
+
+.lb-p2 { border: 2px solid #9ca3af; }
+.lb-p3 { border: 2px solid #b45309; }
+
+/* Couronne du champion. */
+.lb-crown {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  transform-origin: bottom center;
+  animation: lb-sway 2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18));
+}
+
+.lb-crown-svg { display: block; }
+
+@keyframes lb-sway {
+  0%, 100% { transform: translateX(-50%) rotate(-5deg); }
+  50% { transform: translateX(-50%) rotate(5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lb-crown { animation: none; }
+}
+
+/* Médaille argent / bronze. */
+.lb-medal {
+  margin-bottom: 8px;
+}
+
+.lb-medal-svg { display: block; }
+
+/* Anneau autour de l'avatar. */
+.lb-avatar-ring {
+  border-radius: 22px;
+  padding: 3px;
+  margin-bottom: 12px;
+}
+
+.lb-ring-gold { background: #fff; box-shadow: 0 0 0 3px var(--gold); }
+.lb-ring-silver { box-shadow: 0 0 0 3px #9ca3af; }
+.lb-ring-bronze { box-shadow: 0 0 0 3px #b45309; }
+
+/* Textes du podium. */
+.lb-podium-name {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--green900);
+}
+
+.lb-name-light { font-size: 20px; color: #fff; }
+
+.lb-podium-city {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.lb-city-light { color: rgba(255, 255, 255, 0.7); }
+
+.lb-podium-score {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #374151;
+  font-variant-numeric: tabular-nums;
+  margin-top: 10px;
+  line-height: 1;
+}
+
+.lb-score-light { font-weight: 800; font-size: 32px; color: #fff; }
+
+.lb-podium-pts {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.lb-pts-light { color: rgba(255, 255, 255, 0.75); }
+
+.lb-champ-badge {
+  margin-top: 12px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ─── Table (rangs 4 → N) ──────────────────────────────────────────────── */
+.lb-table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.lb-th-rank { width: 80px; }
+.lb-th-city { width: 140px; }
+.lb-th-level { width: 110px; }
+.lb-th-score { width: 120px; text-align: right; }
+
+.lb-rank {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-player {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.c-player-name {
+.lb-player-meta { min-width: 0; }
+
+.lb-player-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--green900);
   line-height: 1.25;
 }
 
-.c-player-city {
+.lb-player-sub {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 12px;
   color: var(--muted);
 }
 
-/* Score aligné à droite, chiffres Outfit. */
-.c-score {
+.lb-td-city {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.lb-level-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 7px;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lb-td-score { text-align: right; }
+
+.lb-score {
   font-family: 'Outfit', system-ui, sans-serif;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 18px;
   color: var(--green700);
   font-variant-numeric: tabular-nums;
-  text-align: right;
 }
 
-.c-table-card {
-  padding: 0;
-  overflow: hidden;
+/* Ma ligne surlignée. */
+.lb-row-me td {
+  background: rgba(212, 160, 23, 0.08);
 }
 
-/* Squelette du podium pendant le chargement. */
-.c-podium-skel {
+.lb-row-me td:first-child {
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.lb-you-badge {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(212, 160, 23, 0.16);
+  color: #8a6d12;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Squelette du podium. */
+.lb-podium-skel {
   display: grid;
-  grid-template-columns: 1fr 1.1fr 1fr;
+  grid-template-columns: 1fr 1.14fr 1fr;
   gap: 16px;
   align-items: end;
-  margin-bottom: 24px;
+  margin-bottom: 26px;
+}
+
+/* ─── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .lb-th-city { display: none; }
+  .lb-td-city { display: none; }
 }
 
 @media (max-width: 760px) {
-  .c-podium-skel { grid-template-columns: 1fr; }
+  .lb-podium,
+  .lb-podium-skel {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .lb-p1 { margin-top: 0; }
+
+  .lb-podium-ghost { display: none; }
+
+  /* Ordre vertical naturel : 1er, 2e, 3e. */
+  .lb-slot-1 { order: 1; }
+  .lb-slot-2 { order: 2; }
+  .lb-slot-3 { order: 3; }
 }

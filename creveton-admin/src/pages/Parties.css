@@ -1,141 +1,316 @@
-/* Présentation page Parties — classes .p-… (le design system reste dans index.css). */
+/* Page Parties (sessions de jeu) — classes préfixées .ses-… (le design system reste dans index.css). */
 
-/* Score coloré dans la table (couleur passée en inline selon performance). */
-.p-score {
-  font-family: 'Outfit';
-  font-weight: 700;
+/* ── Bande KPI sombre ─────────────────────────────────────────────── */
+.ses-kpi-band {
+  background: var(--green900);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 22px 26px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 16px;
+}
+.ses-kpi {
+  position: relative;
+  padding-left: 0;
+}
+.ses-kpi + .ses-kpi { border-left: 1px solid rgba(255, 255, 255, 0.1); padding-left: 22px; }
+.ses-kpi-v {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 40px;
+  line-height: 1;
+  color: #fff;
+  letter-spacing: -0.8px;
   font-variant-numeric: tabular-nums;
 }
+.ses-kpi-l {
+  color: rgba(255, 255, 255, 0.82);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 9px;
+}
+.ses-kpi-sub {
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11.5px;
+  margin-top: 2px;
+}
+@media (max-width: 880px) {
+  .ses-kpi-band { grid-template-columns: repeat(2, 1fr); row-gap: 22px; }
+  .ses-kpi:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .ses-kpi:nth-child(even) { border-left: 1px solid rgba(255, 255, 255, 0.1); padding-left: 22px; }
+}
+@media (max-width: 520px) {
+  .ses-kpi-band { grid-template-columns: 1fr; }
+  .ses-kpi { border-left: 0 !important; padding-left: 0 !important; }
+  .ses-kpi + .ses-kpi { padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+}
 
-/* Fraction Bonnes/Total. */
-.p-fraction {
-  font-family: 'Outfit';
-  font-weight: 700;
-  font-size: 13.5px;
+/* ── Graphiques ───────────────────────────────────────────────────── */
+.ses-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+@media (max-width: 880px) {
+  .ses-charts { grid-template-columns: 1fr; }
+}
+.ses-chart-card {
+  display: flex;
+  flex-direction: column;
+}
+.ses-chart-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
   color: var(--ink);
+  margin-bottom: 12px;
+}
+.ses-chart-empty {
+  color: var(--muted);
+  font-size: 13.5px;
+  text-align: center;
+  padding: 64px 14px;
+}
+
+/* Donut + légende. */
+.ses-donut {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.ses-donut > :first-child { flex: 1 1 180px; min-width: 170px; }
+.ses-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 150px;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ses-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.ses-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.ses-legend-name { color: var(--ink); font-weight: 500; }
+.ses-legend-val {
+  margin-left: auto;
+  color: var(--muted);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-/* XP avec éclair. */
-.p-xp {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'Outfit';
-  font-weight: 700;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
+/* ── Filtres ──────────────────────────────────────────────────────── */
+.ses-filters-card { margin-bottom: 18px; }
+.ses-pills {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
 }
-.p-xp-icon {
-  color: var(--gold);
-  flex: none;
-}
-
-/* Drawer : nom du joueur. */
-.p-drawer-name {
-  font-family: 'Outfit';
-  font-weight: 700;
-  font-size: 17px;
-  color: var(--ink);
-  line-height: 1.1;
-}
-
-/* Carte score sombre du drawer. */
-.p-score-card {
-  text-align: center;
-  padding: 22px 20px;
-}
-.p-score-card-label {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.p-score-card-value {
-  font-family: 'Outfit';
-  font-weight: 800;
-  font-size: 48px;
-  line-height: 1.05;
-  color: var(--gold);
-  font-variant-numeric: tabular-nums;
-  margin-top: 6px;
-}
-.p-score-card-unit {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 13px;
-  margin-top: 2px;
-}
-
-/* Ligne de stats du drawer. */
-.p-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-.p-stat {
-  background: var(--surface-2);
+.ses-pill {
+  padding: 7px 15px;
+  border-radius: 999px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 8px;
-  text-align: center;
+  background: var(--surface);
+  color: var(--muted);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all var(--t-fast, 150ms);
 }
-.p-stat-v {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-family: 'Outfit';
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--ink);
+.ses-pill:hover { border-color: #d1d5db; color: var(--ink); }
+.ses-pill.active {
+  background: var(--green900);
+  border-color: var(--green900);
+  color: #fff;
+}
+
+/* ── Table ────────────────────────────────────────────────────────── */
+.ses-idx {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
-.p-stat-l {
+.ses-ville {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
   color: var(--muted);
-  font-size: 11.5px;
+}
+.ses-score {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.ses-fraction {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.ses-bar {
+  display: block;
+  width: 60px;
+  height: 4px;
+  border-radius: 999px;
+  background: #e8efe9;
+  overflow: hidden;
+}
+.ses-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width var(--t-modal, 220ms);
+}
+.ses-xp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.ses-xp-ico { color: var(--gold); flex: none; }
+.ses-dur, .ses-date {
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.ses-date { color: var(--muted); font-size: 13px; }
+
+/* ── Drawer : détail ──────────────────────────────────────────────── */
+.ses-detail { display: flex; flex-direction: column; gap: 16px; }
+
+/* En-tête sombre. */
+.ses-dhead {
+  background: var(--green900);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin: -2px 0 0;
+}
+.ses-dname {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  color: #fff;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ses-dhead-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--gold);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: gap var(--t-fast, 150ms);
+}
+.ses-dhead-link:hover { gap: 6px; }
+.ses-ddate {
+  color: rgba(255, 255, 255, 0.55);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+}
+
+/* Bannière de triche. */
+.ses-cheat {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  padding: 11px 14px;
+  color: #b91c1c;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.ses-cheat svg { flex: none; }
+
+/* Carte score blanche. */
+.ses-score-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 24px 20px 18px;
+  text-align: center;
+}
+.ses-score-big {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 64px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.ses-score-unit {
+  color: var(--muted);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
   margin-top: 4px;
 }
-@media (max-width: 520px) {
-  .p-stats { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* En-tête : KPIs sombres + carte de répartition par thème côte à côte. */
-.p-header-grid {
+.ses-score-stats {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 14px;
-  align-items: stretch;
-  margin-bottom: 18px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
 }
-@media (max-width: 880px) {
-  .p-header-grid { grid-template-columns: 1fr; }
-}
-
-/* Carte blanche du donut « Répartition par thème ». */
-.p-theme-card {
-  display: flex;
-  flex-direction: column;
+.ses-sstat { text-align: center; }
+.ses-sstat-v {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-}
-.p-theme-title {
-  font-family: 'Outfit';
-  font-weight: 600;
-  font-size: 14px;
+  gap: 3px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
   color: var(--ink);
-  margin-bottom: 8px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
-.p-theme-empty {
+.ses-sstat-v.ok { color: #15803d; }
+.ses-sstat-v.ko { color: #dc2626; }
+.ses-sstat-v.xp { color: var(--gold); }
+.ses-sstat-v svg { flex: none; }
+.ses-sstat-l {
   color: var(--muted);
-  font-size: 13.5px;
-  text-align: center;
-  padding: 60px 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  margin-top: 5px;
 }
 
 /* Récapitulatif Q par Q. */
-.p-recap-title {
-  font-family: 'Space Grotesk';
+.ses-recap-title {
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -143,7 +318,19 @@
   color: var(--muted);
   margin-bottom: 10px;
 }
-.p-recap-num {
+.ses-ans {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 13px;
+  background: var(--surface);
+}
+.ses-ans:nth-child(even) { background: var(--surface-2); }
+.ses-ans-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.ses-ans-num {
   flex: none;
   width: 22px;
   height: 22px;
@@ -152,44 +339,99 @@
   justify-content: center;
   border-radius: 7px;
   background: rgba(0, 0, 0, 0.06);
-  font-family: 'Outfit';
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 12px;
   color: var(--ink);
 }
-.p-recap-ico {
+.ses-ans-badge {
   flex: none;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
 }
-.opt-review.correct .p-recap-ico { color: #15803d; }
-.opt-review.wrong .p-recap-ico { color: #b91c1c; }
-.p-recap-q {
+.ses-ans-badge--ok { background: #dcfce7; color: #15803d; }
+.ses-ans-badge--ko { background: #fee2e2; color: #dc2626; }
+.ses-ans-badge--skip { background: #fef9c3; color: #92711a; }
+.ses-ans-q {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 500;
+  font-size: 13.5px;
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.p-recap-a {
-  font-size: 13px;
-  color: var(--muted);
-  font-weight: 400;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.p-recap-time {
+.ses-ans-time {
   flex: none;
-  font-size: 13px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
   color: var(--muted);
-  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
-.p-recap-empty {
-  color: var(--muted);
+.ses-ans-body {
+  margin-top: 8px;
+  padding-left: 31px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+.ses-ans-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12.5px;
+}
+.ses-ans-line svg { flex: none; }
+.ses-ans-line--ok { color: #15803d; }
+.ses-ans-line--ko { color: #b91c1c; }
+.ses-ans-line--good { color: #15803d; }
+.ses-ans-line--skip { color: #92711a; font-style: italic; }
+.ses-ans-bonus {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fcf3da;
+  color: var(--gold);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+}
+.ses-ans-bonus svg { flex: none; }
+
+/* Lien profil (footer + remplace l'ancien bouton). */
+.ses-profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 0;
+  padding: 8px 4px;
+  color: var(--gold);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
   font-size: 14px;
-  text-align: center;
-  padding: 22px 14px;
-  background: var(--surface-2);
-  border: 1px dashed var(--border);
-  border-radius: 12px;
+  cursor: pointer;
+  transition: gap var(--t-fast, 150ms);
+}
+.ses-profile-link:hover { gap: 8px; }
+.ses-profile-link svg { flex: none; }
+
+@media (max-width: 520px) {
+  .ses-score-stats { grid-template-columns: repeat(2, 1fr); row-gap: 14px; }
+  .ses-score-big { font-size: 54px; }
 }

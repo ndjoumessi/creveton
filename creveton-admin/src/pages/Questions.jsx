@@ -3,16 +3,17 @@ import {
   Plus, Upload, Search, Check, Eye, Send, ThumbsUp, ThumbsDown,
   Archive, RotateCcw, Zap, Download, ChevronUp, ChevronDown, ChevronsUpDown,
   ChevronLeft, ChevronRight, X, FileText, ListChecks, Tags, Copy, AlertCircle,
-  AlertTriangle, CheckCircle2, XCircle,
+  AlertTriangle, CheckCircle2, XCircle, Pencil, BarChart3, History, Lock,
 } from 'lucide-react';
+import Papa from 'papaparse';
 import questionsService from '../services/questions.service';
 import { useApiData } from '../hooks/useApiData';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
 import { themeLabels, levelLabels, questionStatusColors } from '../constants/theme';
 import { pct, dateFr } from '../utils/format';
 import PageHeader from '../components/PageHeader';
-import StatusBadge from '../components/StatusBadge';
 import ThemeBadge from '../components/ThemeBadge';
+import Gauge from '../components/Gauge';
 import Modal from '../components/Modal';
 import Drawer from '../components/Drawer';
 import EmptyState from '../components/EmptyState';
@@ -24,19 +25,55 @@ const STATUSES = ['draft', 'pending_review', 'approved', 'rejected', 'archived']
 const EMPTY_FILTERS = { theme: '', level: '', status: '', q: '' };
 const PAGE_SIZE = 20;
 const LETTERS = ['A', 'B', 'C', 'D'];
+const STATEMENT_MAX = 70;
 
+/* ---------- Helpers d'affichage (purs : aucun Date.now()/new Date() implicite) ---------- */
+function truncate(s, max) {
+  const t = String(s ?? '').trim();
+  return t.length > max ? `${t.slice(0, max - 1).trimEnd()}…` : t;
+}
+
+/* Diagnostic de difficulté à partir du seul success_rate disponible. */
+function difficultyVerdict(rate) {
+  if (rate == null) return null;
+  if (rate < 0.30) return { tone: 'hard', icon: '⚠️', label: 'Trop difficile' };
+  if (rate <= 0.70) return { tone: 'balanced', icon: '✓', label: 'Difficulté équilibrée' };
+  return { tone: 'easy', icon: 'ℹ️', label: 'Facile' };
+}
+
+/* Pilule de niveau (Débutant vert clair / Intermédiaire or / Expert rouge doux). */
+function LevelPill({ level }) {
+  return (
+    <span className={`q-level-pill q-level-${level}`}>{levelLabels[level] || level}</span>
+  );
+}
+/* Alias conservé pour la plomberie de l'aperçu mobile de CreateModal. */
 const LevelBadge = ({ level }) => (
   <span className="badge badge-level">{levelLabels[level] || level}</span>
 );
 
-/* ---------- En-tête de statut avec point pulsé si approuvée ---------- */
-function QuestionStatus({ status }) {
-  if (status !== 'approved') return <StatusBadge status={status} kind="question" />;
-  const cfg = questionStatusColors.approved;
+/* Statut : point coloré + libellé (sens doublé couleur + texte). */
+function StatusDot({ status }) {
+  const cfg = questionStatusColors[status] || { bg: '#f3f4f6', fg: '#6b7280', label: status };
   return (
-    <span className="badge" style={{ background: cfg.bg, color: cfg.fg }}>
-      <span className="badge-dot pulse" style={{ background: cfg.fg }} />
+    <span className="q-status-dot" style={{ color: cfg.fg }}>
+      <span className="dot" style={{ background: cfg.fg }} />
       {cfg.label}
+    </span>
+  );
+}
+
+/* Mini-barre de taux de réussite (rouge <40 % / or 40–70 % / vert >70 %). */
+function SuccessBar({ rate }) {
+  if (rate == null) return <span className="q-rate-empty">—</span>;
+  const v = Math.max(0, Math.min(1, rate));
+  const tone = v < 0.40 ? 'low' : v <= 0.70 ? 'mid' : 'high';
+  return (
+    <span className="q-rate">
+      <span className="q-rate-track">
+        <span className={`q-rate-fill ${tone}`} style={{ width: `${Math.round(v * 100)}%` }} />
+      </span>
+      <span className="q-rate-val">{pct(rate, 0)}</span>
     </span>
   );
 }
@@ -490,6 +527,74 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   );
 }
 
+/* ---------- Modal de rejet (motif obligatoire) ---------- */
+function RejectModal({ open, onClose, onConfirm, busy }) {
+  const [reason, setReason] = useState('');
+  useEffect(() => { if (open) setReason(''); }, [open]);
+  const ok = reason.trim().length >= 3;
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Rejeter la question"
+      footer={(
+        <>
+          <button className="btn btn-ghost-soft" onClick={onClose}>Annuler</button>
+          <button className="btn btn-danger" disabled={!ok || busy} onClick={() => onConfirm(reason.trim())}>
+            <ThumbsDown size={15} /> Confirmer le rejet
+          </button>
+        </>
+      )}
+    >
+      <div className="field" style={{ marginBottom: 0 }}>
+        <label>Motif du rejet (visible par l’auteur)</label>
+        <textarea
+          className="textarea"
+          placeholder="Expliquez pourquoi cette question est rejetée…"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          autoFocus
+        />
+        <div className={`valid-hint ${ok ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
+          {ok ? <><Check size={13} /> Motif suffisant</> : <><AlertCircle size={13} /> Indiquez un motif (3 caractères min.)</>}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* ---------- Modal de confirmation destructrice ---------- */
+function ConfirmModal({ open, title, message, confirmLabel, onConfirm, onClose, busy }) {
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      footer={(
+        <>
+          <button className="btn btn-ghost-soft" onClick={onClose}>Annuler</button>
+          <button className="btn btn-danger" disabled={busy} onClick={onConfirm}>
+            <Archive size={15} /> {confirmLabel}
+          </button>
+        </>
+      )}
+    >
+      <p className="muted" style={{ margin: 0, fontSize: 14 }}>{message}</p>
+    </Modal>
+  );
+}
+
+/* ---------- Aperçu mobile (drawer) — option lue, bonne réponse mise en valeur ---------- */
+function PreviewOption({ letter, text, correct }) {
+  return (
+    <div className={`q-mp-opt ${correct ? 'correct' : ''}`}>
+      <span className="q-mp-letter">{letter}</span>
+      <span className="q-mp-opt-text">{text || `Option ${letter}`}</span>
+      {correct && <Check size={15} className="q-mp-check" />}
+    </div>
+  );
+}
+
 /* ---------- Page ---------- */
 export default function Questions() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -497,10 +602,14 @@ export default function Questions() {
   const [creating, setCreating] = useState(false);
   const [prefill, setPrefill] = useState(null);
   const [detail, setDetail] = useState(null);
+  const [tab, setTab] = useState('overview');
   const [submitting, setSubmitting] = useState(false);
   const [selected, setSelected] = useState(() => new Set());
   const [sort, setSort] = useState({ key: 'created_at', dir: 'desc' });
   const [page, setPage] = useState(0);
+  const [reject, setReject] = useState(null); // question en cours de rejet
+  const [confirm, setConfirm] = useState(null); // { title, message, confirmLabel, run }
+  const [actionBusy, setActionBusy] = useState(false);
 
   const { data, loading, refetch } = useApiData(
     () => questionsService.list(filters),
@@ -543,19 +652,42 @@ export default function Questions() {
   );
 
   // --- Transitions / actions unitaires (plomberie préservée) ---
-  const doTransition = async (q, to) => {
-    let reason;
-    if (to === 'rejected') { reason = window.prompt('Motif du rejet :'); if (reason == null) return; }
+  const doTransition = async (q, to, reason) => {
+    setActionBusy(true);
     try {
       await questionsService.transition(q.id, to, reason);
       notify.success(`Statut → ${questionStatusColors[to]?.label || to}`);
-      setDetail(null); refetch();
-    } catch { notify.error('Transition impossible.'); }
+      setDetail(null); setReject(null); refetch();
+    } catch { notify.error('Transition impossible.'); } finally { setActionBusy(false); }
   };
+  const askReject = (q) => setReject(q);
   const doForceSync = async (q) => {
     try { const r = await questionsService.forceSync([q.id]); notify.success(`Force sync · ${r.devices_targeted?.toLocaleString('fr-FR') || '—'} appareils`); }
     catch { notify.error('Échec du force sync.'); }
   };
+  const headerForceSync = async () => {
+    const ids = selectedRows.length ? selectedRows.map((q) => q.id) : rows.filter((q) => q.status === 'approved').map((q) => q.id);
+    if (!ids.length) { notify.info('Aucune question approuvée à synchroniser.'); return; }
+    try {
+      const r = await questionsService.forceSync(ids);
+      notify.success(`Force sync de ${ids.length} question(s) · ${r.devices_targeted?.toLocaleString('fr-FR') || '—'} appareils`);
+    } catch { notify.error('Échec du force sync.'); }
+  };
+  const doArchive = async (q) => {
+    setActionBusy(true);
+    try {
+      await questionsService.remove(q.id);
+      notify.success('Question archivée.');
+      setDetail(null); setConfirm(null); refetch();
+    } catch { notify.error('Archivage impossible.'); } finally { setActionBusy(false); }
+  };
+  const askArchive = (q) => setConfirm({
+    title: 'Archiver la question',
+    message: 'Cette question sera retirée du quiz. Aucun endpoint de restauration n’existe — l’archivage est définitif côté console.',
+    confirmLabel: 'Archiver',
+    run: () => doArchive(q),
+  });
+
   const createQuestion = async (payload, resetForm) => {
     setSubmitting(true);
     try {
@@ -565,8 +697,11 @@ export default function Questions() {
     } catch { notify.error('Enregistrement impossible.'); } finally { setSubmitting(false); }
   };
   const startCreate = () => { setPrefill(null); setCreating(true); };
+  const startEdit = (q) => { setPrefill(q); setDetail(null); setCreating(true); };
   const startDuplicate = (q) => { setPrefill(q); setDetail(null); setCreating(true); };
   const closeCreate = () => { setCreating(false); setPrefill(null); };
+
+  const openDetail = (q) => { setTab('overview'); setDetail(q); };
 
   // --- Sélection multiple + actions groupées (préservé) ---
   const allSelected = pageRows.length > 0 && pageRows.every((r) => selected.has(r.id));
@@ -579,20 +714,45 @@ export default function Questions() {
   });
   const clearSel = () => setSelected(new Set());
 
-  const bulkTransition = async (to) => {
-    const items = rows.filter((r) => selected.has(r.id));
-    if (!items.length) return;
+  const selectedRows = rows.filter((r) => selected.has(r.id));
+  const eligibleApprove = selectedRows.filter((r) => r.status === 'pending_review');
+
+  const bulkApprove = async () => {
+    if (!eligibleApprove.length) { notify.info('Aucune question éligible (en révision) dans la sélection.'); return; }
+    setActionBusy(true);
     try {
-      await Promise.all(items.map((q) => questionsService.transition(q.id, to, to === 'rejected' ? 'Rejet groupé' : undefined)));
-      notify.success(`${items.length} question(s) → ${questionStatusColors[to]?.label || to}`);
+      await Promise.all(eligibleApprove.map((q) => questionsService.transition(q.id, 'approved')));
+      notify.success(`${eligibleApprove.length} question(s) approuvée(s).`);
       clearSel(); refetch();
-    } catch { notify.error('Action groupée impossible.'); }
+    } catch { notify.error('Approbation groupée impossible.'); } finally { setActionBusy(false); }
   };
+  const bulkArchive = async () => {
+    const items = selectedRows;
+    setActionBusy(true);
+    try {
+      await Promise.all(items.map((q) => questionsService.remove(q.id)));
+      notify.success(`${items.length} question(s) archivée(s).`);
+      clearSel(); setConfirm(null); refetch();
+    } catch { notify.error('Archivage groupé impossible.'); } finally { setActionBusy(false); }
+  };
+  const askBulkArchive = () => setConfirm({
+    title: 'Archiver la sélection',
+    message: `${selected.size} question(s) seront archivées et retirées du quiz. Action sans restauration côté console.`,
+    confirmLabel: `Archiver ${selected.size}`,
+    run: bulkArchive,
+  });
+
   const exportCsv = () => {
-    const cols = ['id', 'text_fr', 'theme', 'level', 'status', 'success_rate', 'created_at'];
-    const esc = (v) => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-    const picked = selected.size ? rows.filter((r) => selected.has(r.id)) : rows;
-    const csv = [cols.join(',')].concat(picked.map((q) => cols.map((k) => esc(q[k])).join(','))).join('\n');
+    const picked = selected.size ? selectedRows : rows;
+    const csv = Papa.unparse(picked.map((q) => ({
+      id: q.id,
+      enonce: q.text_fr,
+      theme: themeLabels[q.theme] || q.theme,
+      niveau: levelLabels[q.level] || q.level,
+      statut: questionStatusColors[q.status]?.label || q.status,
+      taux_reussite: q.success_rate == null ? '' : Math.round(q.success_rate * 100),
+      creee_le: q.created_at || '',
+    })));
     downloadCsv(csv, 'questions-creveton.csv');
     notify.success(`${picked.length} question(s) exportée(s)`);
   };
@@ -609,31 +769,62 @@ export default function Questions() {
     );
   };
 
-  const renderWorkflow = (q) => (
-    <div className="stack" style={{ gap: 8 }}>
-      {q.status === 'draft' && (
-        <button className="btn btn-primary btn-block" onClick={() => doTransition(q, 'pending_review')}><Send size={15} /> Soumettre à révision</button>
-      )}
-      {q.status === 'pending_review' && (
-        <>
-          <button className="btn btn-success btn-block" onClick={() => doTransition(q, 'approved')}><ThumbsUp size={15} /> Approuver</button>
-          <button className="btn btn-danger-ghost btn-block" onClick={() => doTransition(q, 'rejected')}><ThumbsDown size={15} /> Rejeter</button>
-        </>
-      )}
-      {q.status === 'approved' && (
-        <>
-          <button className="btn btn-block" onClick={() => doForceSync(q)}><Zap size={15} /> Force sync</button>
-          <button className="btn btn-block" onClick={() => doTransition(q, 'archived')}><Archive size={15} /> Archiver</button>
-        </>
-      )}
-      {q.status === 'rejected' && (
-        <button className="btn btn-primary btn-block" onClick={() => doTransition(q, 'pending_review')}><RotateCcw size={15} /> Resoumettre</button>
-      )}
-      {q.status === 'archived' && (
-        <button className="btn btn-block" onClick={() => doForceSync(q)}><Zap size={15} /> Force sync</button>
-      )}
-    </div>
-  );
+  // --- Drawer : workflow contextuel ---
+  const renderWorkflow = (q) => {
+    if (q.status === 'draft') {
+      return (
+        <button className="btn btn-gold btn-block" disabled={actionBusy} onClick={() => doTransition(q, 'pending_review')}>
+          <Send size={15} /> Soumettre à révision
+        </button>
+      );
+    }
+    if (q.status === 'pending_review') {
+      return (
+        <div className="q-wf-split">
+          <button className="btn btn-success" disabled={actionBusy} onClick={() => doTransition(q, 'approved')}>
+            <ThumbsUp size={15} /> Approuver
+          </button>
+          <button className="btn btn-danger" disabled={actionBusy} onClick={() => askReject(q)}>
+            <ThumbsDown size={15} /> Rejeter
+          </button>
+        </div>
+      );
+    }
+    if (q.status === 'approved') {
+      return (
+        <div className="stack" style={{ gap: 8 }}>
+          <div className="q-wf-split">
+            <button className="btn btn-ghost" onClick={() => startEdit(q)}><Pencil size={15} /> Modifier</button>
+            <button className="btn btn-ghost" onClick={() => startDuplicate(q)}><Copy size={15} /> Dupliquer</button>
+          </div>
+          <button className="btn btn-danger-ghost btn-block" disabled={actionBusy} onClick={() => askArchive(q)}>
+            <Archive size={15} /> Archiver
+          </button>
+        </div>
+      );
+    }
+    if (q.status === 'rejected') {
+      return (
+        <button className="btn btn-gold btn-block" disabled={actionBusy} onClick={() => doTransition(q, 'pending_review')}>
+          <RotateCcw size={15} /> Resoumettre à révision
+        </button>
+      );
+    }
+    // archived → pas d'endpoint de restauration
+    return (
+      <div className="q-archived-note">
+        <Lock size={15} />
+        <span>Question archivée{q.updated_at ? ` le ${dateFr(q.updated_at)}` : ''}. La restauration n’est pas disponible.</span>
+      </div>
+    );
+  };
+
+  const activePills = [
+    filters.theme && { k: 'theme', label: `Thème : ${themeLabels[filters.theme] || filters.theme}` },
+    filters.level && { k: 'level', label: `Niveau : ${levelLabels[filters.level] || filters.level}` },
+    filters.status && { k: 'status', label: `Statut : ${questionStatusColors[filters.status]?.label || filters.status}` },
+    filters.q && { k: 'q', label: `Recherche : « ${filters.q} »` },
+  ].filter(Boolean);
 
   return (
     <>
@@ -643,34 +834,41 @@ export default function Questions() {
           title={(
             <span className="q-title-line">
               Questions
-              {!loading && <span className="q-count-inline"><strong>{total}</strong> chargées · <strong>{pendingCount}</strong> en attente</span>}
+              {!loading && (
+                <span className="q-count-inline">
+                  <strong>{total}</strong> chargées · <strong>{approvedCount}</strong> approuvées · <strong>{pendingCount}</strong> en attente
+                </span>
+              )}
             </span>
           )}
           description="Gérez le contenu et le workflow de modération des questions du quiz."
           actions={(
             <>
-              <button className="btn" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
+              <button className="btn q-btn-sync" onClick={headerForceSync} title="Pousser les questions approuvées (ou la sélection) vers les appareils">
+                <Zap size={16} /> Force sync
+              </button>
+              <button className="btn btn-ghost" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
               <button className="btn btn-primary" onClick={startCreate}><Plus size={16} /> Nouvelle question</button>
             </>
           )}
         />
 
-        {/* KPI strip (3 blocs, chiffres Outfit 700, traits verticaux) */}
+        {/* KPI strip (3 blocs, chiffres Outfit 800 36px, traits verticaux) */}
         {loading ? (
-          <div className="kpi-strip"><span className="muted">Chargement…</span></div>
+          <div className="q-kpi-strip"><span className="muted">Chargement…</span></div>
         ) : (
-          <div className="kpi-strip">
-            <div className="item"><span className="n">{total}</span><span className="l">questions</span></div>
-            <div className="item"><span className="n">{approvedCount}</span><span className="l">approuvées</span></div>
-            <div className="item"><span className="n">{pendingCount}</span><span className="l">en attente</span></div>
+          <div className="q-kpi-strip">
+            <div className="q-kpi"><span className="n">{total}</span><span className="l">chargées</span></div>
+            <div className="q-kpi"><span className="n">{approvedCount}</span><span className="l">approuvées</span></div>
+            <div className="q-kpi"><span className="n">{pendingCount}</span><span className="l">en attente</span></div>
           </div>
         )}
       </div>
 
       {/* Barre filtres sticky */}
       <div className="q-filters">
-        <div className="filters">
-          <div className="search">
+        <div className="q-filter-row">
+          <div className="q-search">
             <Search size={16} />
             <input className="input" placeholder="Rechercher un énoncé…" value={filters.q} onChange={(e) => setF('q', e.target.value)} />
           </div>
@@ -687,14 +885,23 @@ export default function Questions() {
             {STATUSES.map((s) => <option key={s} value={s}>{questionStatusColors[s].label}</option>)}
           </select>
           {hasFilters && (
-            <button className="btn btn-ghost-soft" onClick={resetFilters}>Réinitialiser filtres</button>
+            <button className="btn btn-ghost-soft" onClick={resetFilters}>Réinitialiser</button>
           )}
         </div>
+        {activePills.length > 0 && (
+          <div className="q-pills">
+            {activePills.map((p) => (
+              <button key={p.k} className="q-pill" onClick={() => setF(p.k, '')}>
+                {p.label}<X size={12} />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Table */}
       {loading ? (
-        <SkeletonTable rows={8} cols={7} />
+        <SkeletonTable rows={8} cols={8} />
       ) : sortedRows.length === 0 ? (
         <div className="card">
           {hasFilters ? (
@@ -709,7 +916,7 @@ export default function Questions() {
               message="Aucune question pour l’instant. Créez-en une ou importez un lot CSV."
               action={(
                 <div className="row" style={{ gap: 10 }}>
-                  <button className="btn" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
+                  <button className="btn btn-ghost" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
                   <button className="btn btn-primary" onClick={startCreate}><Plus size={16} /> Nouvelle question</button>
                 </div>
               )}
@@ -717,46 +924,52 @@ export default function Questions() {
           )}
         </div>
       ) : (
-        <div className="card">
+        <div className="card q-table-card">
           <div className="table-wrap">
-            <table className="data">
+            <table className="data q-table">
               <thead>
                 <tr>
                   <th className="q-th-sel">
                     <span className={`checkbox ${allSelected ? 'on' : ''}`} onClick={toggleAll}>{allSelected && <Check size={12} />}</span>
                   </th>
+                  <th className="q-th-num">#</th>
                   <th>{sortHead('Énoncé', 'text_fr')}</th>
                   <th>{sortHead('Thème', 'theme')}</th>
                   <th>{sortHead('Niveau', 'level')}</th>
                   <th>{sortHead('Statut', 'status')}</th>
-                  <th>{sortHead('Taux réussite', 'success_rate')}</th>
-                  <th>{sortHead('Créée le', 'created_at')}</th>
+                  <th>{sortHead('Taux', 'success_rate')}</th>
+                  <th>{sortHead('Créée', 'created_at')}</th>
                   <th className="q-th-actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {pageRows.map((q) => {
+                {pageRows.map((q, i) => {
                   const on = selected.has(q.id);
                   return (
-                    <tr key={q.id} className="clickable" onClick={() => setDetail(q)}>
+                    <tr key={q.id} className={`clickable ${on ? 'q-row-on' : ''}`} onClick={() => openDetail(q)}>
                       <td onClick={(e) => e.stopPropagation()}>
                         <span className={`checkbox ${on ? 'on' : ''}`} onClick={() => toggleOne(q.id)}>{on && <Check size={12} />}</span>
                       </td>
-                      <td><span className="cell-strong q-statement">{q.text_fr}</span></td>
+                      <td className="q-cell-num">{page * PAGE_SIZE + i + 1}</td>
+                      <td className="q-cell-statement">
+                        <span className="q-statement-text">{truncate(q.text_fr, STATEMENT_MAX)}</span>
+                        {q.explanation && <span className="q-statement-sub">{truncate(q.explanation, 90)}</span>}
+                      </td>
                       <td><ThemeBadge theme={q.theme} /></td>
-                      <td><LevelBadge level={q.level} /></td>
-                      <td><QuestionStatus status={q.status} /></td>
-                      <td>{pct(q.success_rate)}</td>
+                      <td><LevelPill level={q.level} /></td>
+                      <td><StatusDot status={q.status} /></td>
+                      <td><SuccessBar rate={q.success_rate} /></td>
                       <td className="muted">{dateFr(q.created_at)}</td>
                       <td className="q-td-actions" onClick={(e) => e.stopPropagation()}>
                         <div className="row nowrap" style={{ gap: 2 }}>
-                          <button className="icon-action" title="Voir" onClick={() => setDetail(q)}><Eye size={17} /></button>
+                          <button className="icon-action" title="Voir" onClick={() => openDetail(q)}><Eye size={17} /></button>
+                          <button className="icon-action" title="Éditer" onClick={() => startEdit(q)}><Pencil size={16} /></button>
                           <button className="icon-action" title="Dupliquer" onClick={() => startDuplicate(q)}><Copy size={16} /></button>
-                          {q.status === 'pending_review' && (
-                            <button className="icon-action" title="Approuver" onClick={() => doTransition(q, 'approved')}><ThumbsUp size={16} /></button>
-                          )}
-                          {q.status === 'approved' && (
+                          {(q.status === 'approved' || q.status === 'archived') && (
                             <button className="icon-action" title="Force sync" onClick={() => doForceSync(q)}><Zap size={16} /></button>
+                          )}
+                          {q.status !== 'archived' && (
+                            <button className="icon-action danger" title="Archiver" onClick={() => askArchive(q)}><Archive size={16} /></button>
                           )}
                         </div>
                       </td>
@@ -782,84 +995,183 @@ export default function Questions() {
 
       {/* Barre d'actions groupées (sticky bottom) */}
       {selected.size > 0 && (
-        <div className="bulk-bar">
-          <span>{selected.size} question(s) sélectionnée(s)</span>
+        <div className="q-bulk-bar">
+          <span className="q-bulk-count">{selected.size} sélectionnée(s)</span>
           <div className="row wrap" style={{ gap: 8, marginLeft: 'auto' }}>
-            <button className="btn btn-sm btn-success" onClick={() => bulkTransition('approved')}><ThumbsUp size={14} /> Approuver tout</button>
-            <button className="btn btn-sm" onClick={() => bulkTransition('archived')}><Archive size={14} /> Archiver tout</button>
-            <button className="btn btn-sm" onClick={exportCsv}><Download size={14} /> Export CSV</button>
-            <button className="btn btn-sm btn-ghost" onClick={clearSel}>Désélectionner</button>
+            <button className="btn btn-sm btn-success" disabled={actionBusy} onClick={bulkApprove}>
+              <ThumbsUp size={14} /> Approuver tout{eligibleApprove.length ? ` (${eligibleApprove.length})` : ''}
+            </button>
+            <button className="btn btn-sm" disabled={actionBusy} onClick={askBulkArchive}><Archive size={14} /> Archiver tout</button>
+            <button className="btn btn-sm" onClick={exportCsv}><Download size={14} /> Exporter CSV</button>
+            <button className="btn btn-sm btn-ghost" onClick={clearSel}><X size={14} /> Désélectionner</button>
           </div>
         </div>
       )}
 
-      {/* Modal de création par étapes */}
+      {/* Modal de création / édition par étapes */}
       <CreateModal open={creating} onClose={closeCreate} onCreate={createQuestion} submitting={submitting} prefill={prefill} />
 
-      {/* Drawer vue question */}
-      <Drawer open={Boolean(detail)} onClose={() => setDetail(null)} title="Détail de la question" width={480}>
-        {detail && (
-          <div className="stack" style={{ gap: 22 }}>
-            <div className="row wrap" style={{ gap: 8 }}>
-              <ThemeBadge theme={detail.theme} />
-              <LevelBadge level={detail.level} />
-              <QuestionStatus status={detail.status} />
-            </div>
+      {/* Modal rejet (motif obligatoire) */}
+      <RejectModal
+        open={Boolean(reject)}
+        busy={actionBusy}
+        onClose={() => setReject(null)}
+        onConfirm={(reason) => doTransition(reject, 'rejected', reason)}
+      />
 
-            <div>
-              <div className="q-section-label">Énoncé</div>
-              <div className="q-drawer-q">{detail.text_fr}</div>
-            </div>
+      {/* Confirmation destructrice (archivage unitaire ou groupé) */}
+      <ConfirmModal
+        open={Boolean(confirm)}
+        busy={actionBusy}
+        title={confirm?.title}
+        message={confirm?.message}
+        confirmLabel={confirm?.confirmLabel}
+        onConfirm={() => confirm?.run()}
+        onClose={() => setConfirm(null)}
+      />
 
-            <div>
-              <div className="q-section-label">Réponses</div>
-              {(detail.options || []).map((o, i) => {
-                const ok = o.is_correct || i === detail.correct_index;
-                return (
-                  <div className={`opt-review ${ok ? 'correct' : ''}`} key={`${detail.id}-${i}`}>
-                    <span className="q-opt-letter">{LETTERS[i]}</span>
-                    <span className="q-opt-text">{o.text}</span>
-                    {ok ? <Check size={16} className="q-opt-check" /> : <span className="q-opt-radio" />}
+      {/* Drawer détail question */}
+      <Drawer open={Boolean(detail)} onClose={() => setDetail(null)} title="Détail de la question" width={560}>
+        {detail && (() => {
+          const opts = detail.options || [];
+          const correctIdx = detail.correct_index != null
+            ? detail.correct_index
+            : opts.findIndex((o) => o.is_correct);
+          const verdict = difficultyVerdict(detail.success_rate);
+          return (
+            <div className="q-drawer">
+              {/* Hero sombre */}
+              <div className="q-hero">
+                <div className="q-hero-badges">
+                  <ThemeBadge theme={detail.theme} />
+                  <LevelPill level={detail.level} />
+                  <StatusDot status={detail.status} />
+                </div>
+                <div className="q-hero-meta">
+                  Créée le {detail.created_at ? dateFr(detail.created_at) : '—'} · Modifiée le {detail.updated_at ? dateFr(detail.updated_at) : '—'}
+                </div>
+              </div>
+
+              {/* Onglets */}
+              <div className="q-tabs" role="tablist">
+                <button role="tab" aria-selected={tab === 'overview'} className={`q-tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>
+                  <Eye size={15} /> Aperçu
+                </button>
+                <button role="tab" aria-selected={tab === 'stats'} className={`q-tab ${tab === 'stats' ? 'active' : ''}`} onClick={() => setTab('stats')}>
+                  <BarChart3 size={15} /> Statistiques
+                </button>
+                <button role="tab" aria-selected={tab === 'history'} className={`q-tab ${tab === 'history' ? 'active' : ''}`} onClick={() => setTab('history')}>
+                  <History size={15} /> Historique
+                </button>
+              </div>
+
+              {/* APERÇU */}
+              {tab === 'overview' && (
+                <div className="q-tabpane">
+                  {detail.status === 'rejected' && (
+                    <div className="q-banner-reject">
+                      <XCircle size={16} /> Cette question a été rejetée. Resoumettez-la après correction.
+                    </div>
+                  )}
+
+                  <div className="q-phone">
+                    <div className="q-phone-top">
+                      <span className="q-phone-step">Q 3/10</span>
+                      <span className="q-phone-pts">● 350 pts</span>
+                    </div>
+                    <div className="q-phone-timer"><span style={{ width: '60%' }} /></div>
+                    <div className="q-phone-q">{detail.text_fr}</div>
+                    <div className="q-phone-opts">
+                      {opts.map((o, i) => (
+                        <PreviewOption key={`${detail.id}-mp-${i}`} letter={LETTERS[i]} text={o.text} correct={i === correctIdx} />
+                      ))}
+                    </div>
+                    {correctIdx >= 0 && (
+                      <div className="q-phone-answer">✓ Bonne réponse : {LETTERS[correctIdx]}. {opts[correctIdx]?.text}</div>
+                    )}
+                    {detail.explanation && (
+                      <div className="q-phone-explain"><span>💡</span><span>{detail.explanation}</span></div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
 
-            {detail.explanation && (
-              <div>
-                <div className="q-section-label">Explication</div>
-                <div className="explain">{detail.explanation}</div>
-              </div>
-            )}
+                  <div className="q-section-label">Énoncé (brut)</div>
+                  <textarea className="textarea q-raw" readOnly value={detail.text_fr || ''} rows={3} />
 
-            <div>
-              <div className="q-section-label">Statistiques</div>
-              <div className="kpi-strip">
-                <div className="item"><span className="n">{detail.times_asked ?? '—'}</span><span className="l">Posée</span></div>
-                <div className="item"><span className="n">{detail.times_correct ?? '—'}</span><span className="l">Réussie</span></div>
-                <div className="item"><span className="n" style={{ color: 'var(--green700)' }}>{pct(detail.success_rate)}</span><span className="l">Taux</span></div>
-              </div>
-            </div>
+                  {detail.explanation && (
+                    <>
+                      <div className="q-section-label">Explication complète</div>
+                      <div className="explain">{detail.explanation}</div>
+                    </>
+                  )}
 
-            <div>
-              <div className="q-section-label">Historique</div>
-              <dl className="kv">
-                <dt>Version</dt><dd>{detail.version ?? '—'}</dd>
-                <dt>Créée le</dt><dd>{detail.created_at ? dateFr(detail.created_at) : '—'}</dd>
-                <dt>Modifiée le</dt><dd>{detail.updated_at ? dateFr(detail.updated_at) : '—'}</dd>
-                <dt>Approuvée le</dt><dd>{detail.approved_at ? dateFr(detail.approved_at) : '—'}</dd>
-              </dl>
-            </div>
+                  {detail.source && (
+                    <>
+                      <div className="q-section-label">Source</div>
+                      <div className="q-source">{detail.source}</div>
+                    </>
+                  )}
+                </div>
+              )}
 
-            <div>
-              <div className="q-section-label">Workflow</div>
-              {renderWorkflow(detail)}
-              <button className="btn btn-block" style={{ marginTop: 8 }} onClick={() => startDuplicate(detail)}>
-                <Copy size={15} /> Dupliquer
-              </button>
+              {/* STATISTIQUES */}
+              {tab === 'stats' && (
+                <div className="q-tabpane">
+                  {detail.success_rate == null ? (
+                    <EmptyState
+                      icon={BarChart3}
+                      title="Pas encore de données de partie"
+                      message="Cette question n’a pas encore été posée en partie."
+                    />
+                  ) : (
+                    <>
+                      <div className="q-gauge-wrap">
+                        <Gauge value={detail.success_rate * 100} size={200} label="Taux de réussite" />
+                        {verdict && (
+                          <div className={`q-verdict q-verdict-${verdict.tone}`}>
+                            <span>{verdict.icon}</span> {verdict.label}
+                          </div>
+                        )}
+                      </div>
+                      <div className="q-stats-note">
+                        <AlertCircle size={15} />
+                        <span>
+                          Seul le taux de réussite global est remonté par l’API. Le détail (nombre de parties,
+                          distracteur le plus choisi, évolution hebdomadaire) n’est pas encore disponible.
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* HISTORIQUE */}
+              {tab === 'history' && (
+                <div className="q-tabpane">
+                  <ol className="q-timeline">
+                    <li>
+                      <span className="q-tl-dot" />
+                      <div>
+                        <div className="q-tl-title">Créée</div>
+                        <div className="q-tl-meta">{detail.created_at ? dateFr(detail.created_at) : '—'}</div>
+                      </div>
+                    </li>
+                    <li>
+                      <span className="q-tl-dot q-tl-dot-gold" />
+                      <div>
+                        <div className="q-tl-title">Dernière modification</div>
+                        <div className="q-tl-meta">{detail.updated_at ? dateFr(detail.updated_at) : '—'}{detail.version != null ? ` · version ${detail.version}` : ''}</div>
+                      </div>
+                    </li>
+                  </ol>
+                  <p className="q-tl-empty">Aucun autre événement enregistré. L’historique d’audit détaillé n’est pas encore disponible.</p>
+                </div>
+              )}
+
+              {/* Workflow (sticky bottom) */}
+              <div className="q-drawer-actions">{renderWorkflow(detail)}</div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </Drawer>
 
       <ImportModal open={showImport} onClose={() => setShowImport(false)} onDone={refetch} />
