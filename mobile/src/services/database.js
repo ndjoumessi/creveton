@@ -13,28 +13,41 @@ function getDb() {
   return dbPromise;
 }
 
-// Schéma : on garde la vue joueur (sans correct_index). Le soft-delete se
-// fait via la colonne deleted (1) — la question reste pour audit mais est
-// exclue des tirages.
+// Schéma : vue joueur + (mode normal uniquement) correct_index/explanation
+// pour le feedback immédiat. En tournoi/challenge ces champs restent absents
+// (anti-triche serveur). Soft-delete via la colonne deleted (1).
 export async function initDatabase() {
   const db = await getDb();
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS questions (
-      id          TEXT PRIMARY KEY NOT NULL,
-      type        TEXT,
-      text        TEXT,
-      options     TEXT,          -- JSON: [{ index, text }]
-      theme       TEXT,
-      level       TEXT,
-      media_url   TEXT,
-      version     INTEGER DEFAULT 1,
-      deleted     INTEGER DEFAULT 0,
-      updated_at  TEXT
+      id            TEXT PRIMARY KEY NOT NULL,
+      type          TEXT,
+      text          TEXT,
+      options       TEXT,          -- JSON: [{ index, text }]
+      theme         TEXT,
+      level         TEXT,
+      media_url     TEXT,
+      correct_index INTEGER,       -- présent en mode normal, NULL sinon
+      explanation   TEXT,
+      version       INTEGER DEFAULT 1,
+      deleted       INTEGER DEFAULT 0,
+      updated_at    TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_questions_theme_level
       ON questions (theme, level, deleted);
   `);
+  // Migration douce : ajoute les colonnes si une ancienne base existe déjà.
+  for (const col of [
+    'correct_index INTEGER',
+    'explanation TEXT',
+  ]) {
+    try {
+      await db.execAsync(`ALTER TABLE questions ADD COLUMN ${col};`);
+    } catch {
+      /* colonne déjà présente */
+    }
+  }
   return db;
 }
 
@@ -45,8 +58,8 @@ export async function upsertQuestions(questions = []) {
   await db.withTransactionAsync(async () => {
     for (const q of questions) {
       await db.runAsync(
-        `INSERT INTO questions (id, type, text, options, theme, level, media_url, version, deleted, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        `INSERT INTO questions (id, type, text, options, theme, level, media_url, correct_index, explanation, version, deleted, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
          ON CONFLICT(id) DO UPDATE SET
            type=excluded.type,
            text=excluded.text,
@@ -54,6 +67,8 @@ export async function upsertQuestions(questions = []) {
            theme=excluded.theme,
            level=excluded.level,
            media_url=excluded.media_url,
+           correct_index=excluded.correct_index,
+           explanation=excluded.explanation,
            version=excluded.version,
            deleted=0,
            updated_at=excluded.updated_at`,
@@ -65,6 +80,8 @@ export async function upsertQuestions(questions = []) {
           q.theme || null,
           q.level || null,
           q.media_url || null,
+          Number.isInteger(q.correct_index) ? q.correct_index : null,
+          q.explanation || null,
           q.version || 1,
           q.updated_at || q.synced_at || null,
         ]
@@ -133,6 +150,9 @@ function rowToQuestion(row) {
     theme: row.theme,
     level: row.level,
     media_url: row.media_url,
+    // Présents en mode normal (feedback immédiat), NULL/undefined sinon.
+    correct_index: Number.isInteger(row.correct_index) ? row.correct_index : undefined,
+    explanation: row.explanation || undefined,
     version: row.version,
   };
 }

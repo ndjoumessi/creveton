@@ -1,22 +1,22 @@
-// RegisterScreen — inscription multi-étapes (API §4 POST /auth/register).
-// 3 étapes (identité / compte / profil), barre de progression dorée, transitions animées.
-// Fond bicolore (vert profond / cream) + carte blanche flottante.
+// RegisterScreen — inscription en 3 étapes.
+// Même fix clavier que Login : KeyboardAvoidingView (padding iOS / height
+// Android), pas de ScrollView, champs non contrôlés (valeurs en ref) → le
+// formulaire ne se réinitialise pas quand le clavier s'ouvre.
 
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
-  Animated,
-  Easing,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Modal,
+  FlatList,
   StatusBar,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Title, Body, AppCard, AppInput, AppButton } from '../components';
+import { Logo, AppButton, AuthField } from '../components';
 import { useAuthStore } from '../store/authStore';
 import {
   normalizePhone,
@@ -26,304 +26,274 @@ import {
   isValidPassword,
 } from '../utils/validation';
 import { SEXES, LANGS } from '../constants/config';
-import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 
 const STEPS = [
-  { title: 'Qui es-tu ?', label: 'Étape 1/3' },
-  { title: 'Ton compte', label: 'Étape 2/3' },
-  { title: 'Ton profil', label: 'Étape 3/3' },
+  { title: 'Qui es-tu ?', n: '1/3' },
+  { title: 'Ton compte', n: '2/3' },
+  { title: 'Ton profil', n: '3/3' },
+];
+
+const CITIES = [
+  'Yaoundé', 'Douala', 'Bafoussam', 'Bamenda', 'Garoua', 'Maroua',
+  'Ngaoundéré', 'Bertoua', 'Ebolowa', 'Buea', 'Kribi', 'Limbe',
+  'Edéa', 'Kumba', 'Dschang', 'Foumban', 'Autre',
 ];
 
 export default function RegisterScreen({ navigation }) {
   const register = useAuthStore((s) => s.register);
   const loading = useAuthStore((s) => s.loading);
 
-  const [step, setStep] = useState(0);
-  const [showPwd, setShowPwd] = useState(false);
-  const [form, setForm] = useState({
+  const values = useRef({
     name: '',
+    phone9: '', // 9 chiffres après +237
     email: '',
-    phone: '+237',
     password: '',
     confirm: '',
-    ville: '',
     age: '',
-    sexe: 'N',
-    lang: 'fr',
   });
+
+  const [step, setStep] = useState(0);
+  const [showPwd, setShowPwd] = useState(false);
+  const [ville, setVille] = useState('');
+  const [sexe, setSexe] = useState('N');
+  const [lang, setLang] = useState('fr');
+  const [cityOpen, setCityOpen] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const fade = useRef(new Animated.Value(1)).current;
-  const slide = useRef(new Animated.Value(0)).current;
+  const setErr = (e) => setErrors(e);
 
-  const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
-
-  // Transition animée vers une nouvelle étape (slide + fade ≤ 300 ms).
-  const transitionTo = (next, direction) => {
-    Animated.parallel([
-      Animated.timing(fade, {
-        toValue: 0,
-        duration: 120,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(slide, {
-        toValue: -direction * 24,
-        duration: 120,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setStep(next);
-      slide.setValue(direction * 24);
-      Animated.parallel([
-        Animated.timing(fade, {
-          toValue: 1,
-          duration: 220,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(slide, {
-          toValue: 0,
-          duration: 220,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    });
-  };
-
-  // Validation minimale par étape.
   const validateStep = () => {
-    const errs = {};
+    const e = {};
     if (step === 0) {
-      if (!isValidName(form.name)) errs.name = 'Nom requis (2 à 100 caractères).';
-      if (!isValidPhone(normalizePhone(form.phone)))
-        errs.phone = 'Numéro invalide (format +237XXXXXXXXX).';
+      if (!isValidName(values.current.name)) e.name = 'Nom requis (2 à 100 caractères).';
+      if (!isValidPhone(`+237${values.current.phone9}`))
+        e.phone = 'Numéro invalide (9 chiffres après +237).';
     } else if (step === 1) {
-      if (!isValidEmail(form.email)) errs.email = 'Adresse email invalide.';
-      if (!isValidPassword(form.password))
-        errs.password = '8 caractères min., 1 chiffre, 1 majuscule.';
-      else if (form.password !== form.confirm)
-        errs.confirm = 'Les mots de passe ne correspondent pas.';
+      if (!isValidEmail(values.current.email)) e.email = 'Adresse email invalide.';
+      if (!isValidPassword(values.current.password))
+        e.password = '8 caractères min., 1 chiffre, 1 majuscule.';
+      else if (values.current.password !== values.current.confirm)
+        e.confirm = 'Les mots de passe ne correspondent pas.';
     }
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+    setErr(e);
+    return Object.keys(e).length === 0;
   };
 
   const onNext = () => {
     if (!validateStep()) return;
-    if (step < STEPS.length - 1) {
-      transitionTo(step + 1, 1);
-    } else {
-      onSubmit();
-    }
+    if (step < STEPS.length - 1) setStep((s) => s + 1);
+    else onSubmit();
   };
 
   const onBack = () => {
-    setErrors({});
-    if (step > 0) transitionTo(step - 1, -1);
+    setErr({});
+    if (step > 0) setStep((s) => s - 1);
     else navigation.goBack();
   };
 
   const onSubmit = async () => {
-    const phone = normalizePhone(form.phone);
+    const phone = normalizePhone(`+237${values.current.phone9}`);
     const payload = {
-      name: form.name.trim(),
-      email: form.email.trim().toLowerCase(),
+      name: values.current.name.trim(),
+      email: values.current.email.trim().toLowerCase(),
       phone,
-      password: form.password,
-      ville: form.ville.trim() || undefined,
-      age: form.age ? Number(form.age) : undefined,
-      sexe: form.sexe,
-      lang: form.lang,
+      password: values.current.password,
+      ville: ville || undefined,
+      age: values.current.age ? Number(values.current.age) : undefined,
+      sexe,
+      lang,
     };
     const res = await register(payload);
     if (res.ok) {
-      navigation.navigate('OTP', {
-        phone,
-        otpExpiresAt: res.data.otp_expires_at,
-      });
+      navigation.navigate('OTP', { phone, otpExpiresAt: res.data.otp_expires_at });
       return;
     }
-    // Mappe les erreurs serveur connues sur le champ et l'étape concernés.
     const code = res.error?.code;
     if (code === 'EMAIL_ALREADY_USED') {
-      setErrors({ email: 'Email déjà utilisé.' });
-      if (step !== 1) transitionTo(1, step < 1 ? 1 : -1);
+      setErr({ email: 'Email déjà utilisé.' });
+      setStep(1);
     } else if (code === 'PHONE_ALREADY_USED') {
-      setErrors({ phone: 'Numéro déjà utilisé.' });
-      if (step !== 0) transitionTo(0, -1);
+      setErr({ phone: 'Numéro déjà utilisé.' });
+      setStep(0);
     } else {
-      setErrors({ _global: res.error?.message || 'Inscription impossible.' });
+      setErr({ _global: res.error?.message || 'Inscription impossible.' });
     }
   };
 
   const isLast = step === STEPS.length - 1;
 
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
+    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" />
-      <View style={styles.topZone} />
-
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.kav}
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <Title style={styles.heroTitle} color={colors.cream}>
-            Crée ton compte
-          </Title>
-          <Body style={styles.heroSub} color={colors.textOnDarkMuted}>
-            {STEPS[step].label} · {STEPS[step].title}
-          </Body>
+        <View style={styles.brand}>
+          <Logo size={48} />
+        </View>
 
-          <AppCard
-            tone="light"
-            elevation="floating"
-            padding="lg"
-            radius={radius.xxl}
-            style={styles.card}
-          >
-            <View style={styles.progress}>
-              {STEPS.map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.progressSeg,
-                    { backgroundColor: i <= step ? colors.gold500 : colors.border },
-                  ]}
-                />
-              ))}
-            </View>
+        <View style={styles.card}>
+          {/* Progress 3 segments */}
+          <View style={styles.progress}>
+            {STEPS.map((_, i) => (
+              <View
+                key={i}
+                style={[styles.seg, { backgroundColor: i <= step ? colors.gold500 : colors.border }]}
+              />
+            ))}
+          </View>
 
-            <Animated.View
-              style={{ opacity: fade, transform: [{ translateX: slide }] }}
-            >
-              {step === 0 ? (
-                <>
-                  <AppInput
-                    label="Nom complet"
-                    value={form.name}
-                    onChangeText={set('name')}
-                    error={errors.name}
-                    autoCapitalize="words"
-                    textContentType="name"
-                  />
-                  <AppInput
-                    label="Téléphone"
-                    value={form.phone}
-                    onChangeText={set('phone')}
-                    error={errors.phone}
-                    keyboardType="phone-pad"
-                    textContentType="telephoneNumber"
-                  />
-                </>
-              ) : null}
+          <Text style={styles.stepN}>Étape {STEPS[step].n}</Text>
+          <Text style={styles.title}>{STEPS[step].title}</Text>
 
-              {step === 1 ? (
-                <>
-                  <AppInput
-                    label="Email"
-                    value={form.email}
-                    onChangeText={set('email')}
-                    error={errors.email}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    keyboardType="email-address"
-                    textContentType="emailAddress"
+          {step === 0 ? (
+            <>
+              <AuthField
+                label="Nom complet"
+                defaultValue={values.current.name}
+                onChangeText={(t) => (values.current.name = t)}
+                error={errors.name}
+                autoCapitalize="words"
+                textContentType="name"
+              />
+              <Text style={styles.fieldLabel}>Téléphone</Text>
+              <View style={styles.phoneRow}>
+                <View style={styles.prefix}>
+                  <Text style={styles.prefixText}>+237</Text>
+                </View>
+                <View style={[styles.phoneField, errors.phone && styles.phoneFieldError]}>
+                  <PhoneInput
+                    defaultValue={values.current.phone9}
+                    onChangeText={(t) => (values.current.phone9 = t.replace(/\D/g, '').slice(0, 9))}
                   />
-                  <AppInput
-                    label="Mot de passe"
-                    value={form.password}
-                    onChangeText={set('password')}
-                    error={errors.password}
-                    secureTextEntry={!showPwd}
-                    autoCapitalize="none"
-                    rightIcon={
-                      <Text style={styles.eye}>{showPwd ? '🙈' : '👁'}</Text>
-                    }
-                    onRightIconPress={() => setShowPwd((v) => !v)}
-                  />
-                  <AppInput
-                    label="Confirmer le mot de passe"
-                    value={form.confirm}
-                    onChangeText={set('confirm')}
-                    error={errors.confirm}
-                    secureTextEntry
-                    autoCapitalize="none"
-                  />
-                </>
-              ) : null}
+                </View>
+              </View>
+              {errors.phone ? <Text style={styles.err}>{errors.phone}</Text> : null}
+            </>
+          ) : null}
 
-              {step === 2 ? (
-                <>
-                  <AppInput
-                    label="Ville (optionnel)"
-                    value={form.ville}
-                    onChangeText={set('ville')}
-                    autoCapitalize="words"
-                  />
-                  <AppInput
-                    label="Âge (optionnel)"
-                    value={String(form.age)}
-                    onChangeText={set('age')}
-                    keyboardType="number-pad"
-                  />
-                  <Text style={styles.groupLabel}>Sexe</Text>
-                  <PillRow
-                    options={SEXES}
-                    value={form.sexe}
-                    onChange={set('sexe')}
-                  />
-                  <Text style={styles.groupLabel}>Langue</Text>
-                  <PillRow
-                    options={LANGS}
-                    value={form.lang}
-                    onChange={set('lang')}
-                  />
-                </>
-              ) : null}
-            </Animated.View>
+          {step === 1 ? (
+            <>
+              <AuthField
+                label="Email"
+                defaultValue={values.current.email}
+                onChangeText={(t) => (values.current.email = t)}
+                error={errors.email}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="emailAddress"
+              />
+              <AuthField
+                label="Mot de passe"
+                defaultValue={values.current.password}
+                onChangeText={(t) => (values.current.password = t)}
+                error={errors.password}
+                secureTextEntry={!showPwd}
+                autoCapitalize="none"
+                rightToggle={{ active: showPwd, onToggle: () => setShowPwd((v) => !v) }}
+              />
+              <AuthField
+                label="Confirmer le mot de passe"
+                defaultValue={values.current.confirm}
+                onChangeText={(t) => (values.current.confirm = t)}
+                error={errors.confirm}
+                secureTextEntry={!showPwd}
+                autoCapitalize="none"
+              />
+            </>
+          ) : null}
 
-            {errors._global ? (
-              <Body color={colors.red400} style={styles.globalError}>
-                {errors._global}
-              </Body>
-            ) : null}
+          {step === 2 ? (
+            <>
+              <Text style={styles.fieldLabel}>Ville</Text>
+              <Pressable style={styles.select} onPress={() => setCityOpen(true)}>
+                <Text style={[styles.selectText, !ville && styles.selectPlaceholder]}>
+                  {ville || 'Choisis ta ville'}
+                </Text>
+                <Text style={styles.chevron}>▾</Text>
+              </Pressable>
 
-            <AppButton
-              title={isLast ? 'Créer mon compte' : 'Suivant →'}
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={loading}
-              onPress={onNext}
-              style={styles.next}
-            />
-            <AppButton
-              title="← Retour"
-              variant="ghost"
-              size="md"
-              fullWidth
-              onPress={onBack}
-              style={styles.backBtn}
-            />
-          </AppCard>
-        </ScrollView>
+              <AuthField
+                label="Âge"
+                defaultValue={values.current.age}
+                onChangeText={(t) => (values.current.age = t.replace(/\D/g, '').slice(0, 2))}
+                keyboardType="number-pad"
+                style={styles.ageField}
+              />
+
+              <Text style={styles.fieldLabel}>Sexe</Text>
+              <Pills options={SEXES} value={sexe} onChange={setSexe} />
+
+              <Text style={[styles.fieldLabel, styles.mt]}>Langue</Text>
+              <Pills options={LANGS} value={lang} onChange={setLang} />
+            </>
+          ) : null}
+
+          {errors._global ? <Text style={styles.err}>{errors._global}</Text> : null}
+
+          <AppButton
+            title={isLast ? 'Créer mon compte' : 'Suivant →'}
+            variant="primary"
+            size="lg"
+            loading={loading && isLast}
+            onPress={onNext}
+            style={styles.submit}
+          />
+          <Pressable style={styles.backBtn} onPress={onBack} hitSlop={8}>
+            <Text style={styles.backText}>← Retour</Text>
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
+
+      {/* Sélecteur de ville */}
+      <Modal visible={cityOpen} transparent animationType="slide" onRequestClose={() => setCityOpen(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setCityOpen(false)}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Choisis ta ville</Text>
+            <FlatList
+              data={CITIES}
+              keyExtractor={(c) => c}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.cityRow}
+                  onPress={() => {
+                    setVille(item);
+                    setCityOpen(false);
+                  }}
+                >
+                  <Text style={styles.cityText}>{item}</Text>
+                  {ville === item ? <Text style={styles.cityCheck}>✓</Text> : null}
+                </Pressable>
+              )}
+            />
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-// Rangée de pilules segmentées (sexe / langue).
-function PillRow({ options, value, onChange }) {
+// Saisie téléphone non contrôlée (9 chiffres).
+function PhoneInput({ defaultValue, onChangeText }) {
   return (
-    <View style={styles.pillRow}>
+    <AuthField
+      style={styles.phoneInner}
+      label={null}
+      defaultValue={defaultValue}
+      onChangeText={onChangeText}
+      keyboardType="phone-pad"
+      placeholder="6XX XXX XXX"
+      maxLength={9}
+    />
+  );
+}
+
+function Pills({ options, value, onChange }) {
+  return (
+    <View style={styles.pills}>
       {options.map((o) => {
         const active = o.key === value;
         return (
@@ -332,9 +302,7 @@ function PillRow({ options, value, onChange }) {
             onPress={() => onChange(o.key)}
             style={[styles.pill, active && styles.pillActive]}
           >
-            <Text style={[styles.pillText, active && styles.pillTextActive]}>
-              {o.label}
-            </Text>
+            <Text style={[styles.pillText, active && styles.pillTextActive]}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -343,62 +311,86 @@ function PillRow({ options, value, onChange }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.cream },
-  flex: { flex: 1 },
-  topZone: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '40%',
-    backgroundColor: colors.green900,
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-  },
-  heroTitle: { marginBottom: spacing.xs },
-  heroSub: { marginBottom: spacing.lg },
-  card: { width: '100%' },
-  progress: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  progressSeg: {
-    flex: 1,
-    height: 6,
-    borderRadius: radius.pill,
-  },
-  eye: { fontSize: fontSizes.lg },
-  groupLabel: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.sm,
-    color: colors.textMuted,
-    marginBottom: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  pillRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
-  pill: {
-    flex: 1,
-    height: 46,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: colors.borderInput,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.white,
-  },
-  pillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
-  pillText: {
+  root: { flex: 1, backgroundColor: colors.green900 },
+  kav: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.lg },
+  brand: { alignItems: 'center', marginBottom: spacing.lg },
+  card: { backgroundColor: colors.white, borderRadius: radius.xxl, padding: 24, ...shadow.floating },
+  progress: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
+  seg: { flex: 1, height: 6, borderRadius: radius.pill },
+  stepN: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.gold500 },
+  title: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.green900, marginBottom: spacing.lg },
+  fieldLabel: {
     fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.sm,
-    color: colors.textMuted,
+    color: colors.textBody,
+    marginBottom: spacing.sm,
   },
+  mt: { marginTop: spacing.md },
+  phoneRow: { flexDirection: 'row', gap: spacing.sm },
+  prefix: {
+    height: 52,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: colors.green900,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prefixText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.base, color: colors.cream },
+  phoneField: { flex: 1 },
+  phoneFieldError: {},
+  phoneInner: { marginBottom: 0 },
+  ageField: { marginTop: spacing.xs },
+  err: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.red400, marginBottom: spacing.md },
+  select: {
+    height: 52,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.borderInput,
+    backgroundColor: '#f9fafb',
+    paddingHorizontal: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  selectText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textDark },
+  selectPlaceholder: { color: colors.textFaint },
+  chevron: { fontSize: fontSizes.base, color: colors.textMuted },
+  pills: { flexDirection: 'row', gap: spacing.sm },
+  pill: {
+    flex: 1,
+    height: 44,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.borderInput,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
+  pillText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
   pillTextActive: { color: colors.cream },
-  globalError: { marginBottom: spacing.md },
-  next: { marginTop: spacing.sm },
-  backBtn: { marginTop: spacing.md },
+  submit: { marginTop: spacing.lg },
+  backBtn: { alignItems: 'center', marginTop: spacing.md },
+  backText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textMuted },
+  modalBackdrop: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    paddingTop: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    maxHeight: '60%',
+  },
+  modalTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.green900, marginBottom: spacing.md },
+  cityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  cityText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textDark },
+  cityCheck: { fontFamily: fonts.bodyBold, fontSize: fontSizes.base, color: colors.green500 },
 });

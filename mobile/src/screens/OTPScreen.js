@@ -15,7 +15,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import { Screen, Title, Body, Label, AppButton, useToast } from '../components';
+import { Screen, Logo, Title, Body, Label, AppButton, useToast } from '../components';
 import { useAuthStore } from '../store/authStore';
 import {
   colors,
@@ -209,13 +209,15 @@ export default function OTPScreen({ route, navigation }) {
       </Pressable>
 
       <View style={styles.center}>
+        <Logo size={40} />
+
         <Animated.View
           style={[styles.badge, { transform: [{ translateY: badgeTranslate }] }]}
         >
           <Body style={styles.badgeEmoji}>📱</Body>
         </Animated.View>
 
-        <Title style={styles.title}>Vérification</Title>
+        <Title style={styles.heading}>Vérifie ton téléphone 📱</Title>
         <Body muted style={styles.subtitle}>
           Code envoyé au{'\n'}
           <Body style={styles.phone}>{prettyPhone(phone)}</Body>
@@ -311,10 +313,17 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(42, 138, 79, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: spacing.lg,
     marginBottom: spacing.lg,
   },
   badgeEmoji: { fontSize: 38, lineHeight: 46 },
-  title: { marginBottom: spacing.sm, textAlign: 'center' },
+  heading: {
+    fontFamily: fonts.titleBold,
+    fontSize: 22,
+    color: colors.green900,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
   subtitle: { textAlign: 'center', lineHeight: 22 },
   phone: { fontFamily: fonts.bodyBold, color: colors.green700 },
   boxes: {

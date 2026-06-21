@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
+  Logo,
   Heading,
   Body,
   Label,
@@ -147,7 +148,10 @@ export default function HomeScreen({ navigation }) {
         {/* En-tête sombre */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Body style={styles.greeting}>Bonjour, {firstName} 👋</Body>
+            <View style={styles.greetingRow}>
+              <Logo size={40} />
+              <Body style={styles.greeting}>Bonjour, {firstName} 👋</Body>
+            </View>
             <View style={styles.levelWrap}>
               <LevelBadge level={user?.level ?? 1} xp={user?.total_xp ?? 0} />
             </View>
@@ -375,7 +379,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   headerLeft: { flex: 1, paddingRight: spacing.md },
+  greetingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   greeting: {
+    flexShrink: 1,
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.xl,
     color: colors.white,

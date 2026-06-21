@@ -1,11 +1,13 @@
-// LoginScreen — connexion email + mot de passe (API §4 POST /auth/login).
-// Fond bicolore (vert profond / cream) + carte blanche flottante chevauchante.
+// LoginScreen — connexion email + mot de passe.
+// BUG 1 corrigé : pas de ScrollView (qui remontait le composant), un seul
+// KeyboardAvoidingView (padding iOS / height Android), champs NON contrôlés
+// dont les valeurs vivent dans un ref → la frappe ne réinitialise jamais le
+// formulaire quand le clavier s'ouvre.
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,27 +15,31 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Title, Body, AppCard, AppInput, AppButton } from '../components';
+import { Logo, AppButton, AuthField } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { isValidEmail } from '../utils/validation';
-import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 
 export default function LoginScreen({ navigation }) {
   const login = useAuthStore((s) => s.login);
   const loading = useAuthStore((s) => s.loading);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Valeurs en ref : aucune mise à jour d'état à la frappe (anti-reset).
+  const values = useRef({ email: '', password: '' });
+  const passwordRef = useRef(null);
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
 
   const onSubmit = async () => {
     setError(null);
+    const email = values.current.email.trim().toLowerCase();
+    const password = values.current.password;
     if (!isValidEmail(email) || !password) {
       setError('Email et mot de passe requis.');
       return;
     }
-    const res = await login(email.trim().toLowerCase(), password);
+    const res = await login(email, password);
     if (!res.ok) {
       if (res.error?.code === 'PHONE_NOT_VERIFIED') {
         navigation.navigate('OTP', { phone: res.error?.phone });
@@ -44,130 +50,107 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
+    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" />
-      <View style={styles.topZone} />
-
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.kav}
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <View style={styles.brand}>
+          <Logo size={56} />
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.title}>Bon retour 👋</Text>
+          <Text style={styles.subtitle}>Joue et bats tes records.</Text>
+
+          <AuthField
+            label="Email"
+            defaultValue=""
+            onChangeText={(t) => (values.current.email = t)}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            blurOnSubmit={false}
+          />
+          <AuthField
+            ref={passwordRef}
+            label="Mot de passe"
+            defaultValue=""
+            onChangeText={(t) => (values.current.password = t)}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            textContentType="password"
+            returnKeyType="done"
+            onSubmitEditing={onSubmit}
+            rightToggle={{ active: showPassword, onToggle: () => setShowPassword((v) => !v) }}
+          />
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <AppButton
+            title="Se connecter"
+            variant="primary"
+            size="lg"
+            loading={loading}
+            onPress={onSubmit}
+            style={styles.submit}
+          />
+        </View>
+
+        <Pressable
+          style={styles.linkRow}
+          onPress={() => navigation.navigate('Register')}
+          hitSlop={8}
         >
-          <Pressable
-            style={styles.back}
-            onPress={() => navigation.goBack()}
-            hitSlop={8}
-          >
-            <Text style={styles.backText}>← Retour</Text>
-          </Pressable>
-
-          <AppCard
-            tone="light"
-            elevation="floating"
-            padding="lg"
-            radius={radius.xxl}
-            style={styles.card}
-          >
-            <Title style={styles.title} color={colors.green900}>
-              Bon retour 👋
-            </Title>
-            <Body muted style={styles.subtitle}>
-              Connecte-toi pour reprendre la partie.
-            </Body>
-
-            <AppInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              textContentType="emailAddress"
-            />
-            <AppInput
-              label="Mot de passe"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              textContentType="password"
-              rightIcon={
-                <Text style={styles.eye}>{showPassword ? '🙈' : '👁'}</Text>
-              }
-              onRightIconPress={() => setShowPassword((v) => !v)}
-            />
-
-            {error ? (
-              <Body color={colors.red400} style={styles.error}>
-                {error}
-              </Body>
-            ) : null}
-
-            <AppButton
-              title="Se connecter"
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={loading}
-              onPress={onSubmit}
-              style={styles.submit}
-            />
-
-            <Pressable
-              style={styles.linkRow}
-              onPress={() => navigation.navigate('Register')}
-              hitSlop={8}
-            >
-              <Text style={styles.linkText}>
-                Pas encore de compte ?{' '}
-                <Text style={styles.linkAccent}>S&apos;inscrire</Text>
-              </Text>
-            </Pressable>
-          </AppCard>
-        </ScrollView>
+          <Text style={styles.linkText}>
+            Pas encore de compte ?{' '}
+            <Text style={styles.linkAccent}>S&apos;inscrire</Text>
+          </Text>
+        </Pressable>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.cream },
-  flex: { flex: 1 },
-  topZone: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '40%',
-    backgroundColor: colors.green900,
+  root: { flex: 1, backgroundColor: colors.green900 },
+  kav: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.lg },
+  brand: { alignItems: 'center', marginBottom: spacing.xl },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.xxl,
+    padding: 28,
+    ...shadow.floating,
   },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
+  title: {
+    fontFamily: fonts.titleBold,
+    fontSize: 26,
+    color: colors.green900,
+    marginBottom: spacing.xs,
   },
-  back: { alignSelf: 'flex-start', marginBottom: spacing.lg },
-  backText: {
-    fontFamily: fonts.bodySemiBold,
+  subtitle: {
+    fontFamily: fonts.bodyRegular,
     fontSize: fontSizes.md,
-    color: colors.cream,
+    color: colors.grey,
+    marginBottom: spacing.xl,
   },
-  card: { width: '100%' },
-  title: { marginBottom: spacing.xs },
-  subtitle: { marginBottom: spacing.xl },
-  eye: { fontSize: fontSizes.lg },
-  error: { marginBottom: spacing.md, marginTop: -spacing.sm },
+  error: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.sm,
+    color: colors.red400,
+    marginBottom: spacing.md,
+    marginTop: -spacing.sm,
+  },
   submit: { marginTop: spacing.sm },
   linkRow: { alignItems: 'center', marginTop: spacing.xl },
   linkText: {
     fontFamily: fonts.bodyRegular,
     fontSize: fontSizes.md,
-    color: colors.textMuted,
+    color: colors.textOnDarkMuted,
   },
-  linkAccent: { fontFamily: fonts.bodyBold, color: colors.green700 },
+  linkAccent: { fontFamily: fonts.bodyBold, color: colors.gold500 },
 });

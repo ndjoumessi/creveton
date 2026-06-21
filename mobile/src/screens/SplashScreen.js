@@ -1,113 +1,66 @@
 // SplashScreen — ouverture « Cockpit Émeraude ».
-// Logo or animé, wordmark CREVETON, slogan, barre de progression dorée.
-// Bascule vers Login après ~2 s (les utilisateurs connectés ne montent jamais cet écran).
+// Logo (carré or + C), wordmark, slogan, barre de progression dorée, puis
+// bascule vers Login après ~2 s (les connectés vont directement sur Home via
+// le navigateur racine).
 
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated, Easing, StatusBar, StyleSheet } from 'react-native';
+import { View, Animated, Easing, StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Logo } from '../components';
 import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
 
 export default function SplashScreen({ navigation }) {
-  const logoScale = useRef(new Animated.Value(0.5)).current;
+  const logoScale = useRef(new Animated.Value(0)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const wordmarkY = useRef(new Animated.Value(20)).current;
-  const wordmarkOpacity = useRef(new Animated.Value(0)).current;
+  const wordY = useRef(new Animated.Value(20)).current;
+  const wordOpacity = useRef(new Animated.Value(0)).current;
   const sloganOpacity = useRef(new Animated.Value(0)).current;
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const animation = Animated.parallel([
-      Animated.timing(logoScale, {
-        toValue: 1,
-        duration: 400,
-        easing: Easing.out(Easing.back(1.4)),
-        useNativeDriver: true,
-      }),
-      Animated.timing(logoOpacity, {
-        toValue: 1,
-        duration: 400,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(wordmarkY, {
-        toValue: 0,
-        duration: 300,
-        delay: 300,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(wordmarkOpacity, {
-        toValue: 1,
-        duration: 300,
-        delay: 300,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(sloganOpacity, {
-        toValue: 1,
-        duration: 400,
-        delay: 500,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(progress, {
-        toValue: 1,
-        duration: 1800,
-        easing: Easing.inOut(Easing.cubic),
-        useNativeDriver: false,
-      }),
+    const anim = Animated.sequence([
+      // 0ms : logo scale 0→1 + fade (spring)
+      Animated.parallel([
+        Animated.spring(logoScale, { toValue: 1, useNativeDriver: true, friction: 6, tension: 80 }),
+        Animated.timing(logoOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      ]),
+      // 400ms : wordmark slide-up + fade
+      Animated.parallel([
+        Animated.timing(wordY, { toValue: 0, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(wordOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      ]),
+      // 700ms : slogan fade
+      Animated.timing(sloganOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      // 1000ms : barre or fill left→right (1000ms)
+      Animated.timing(progress, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }),
     ]);
-    animation.start();
+    anim.start();
 
     const timer = setTimeout(() => navigation.replace('Login'), 2000);
-
     return () => {
       clearTimeout(timer);
-      animation.stop();
+      anim.stop();
     };
-  }, [
-    logoScale,
-    logoOpacity,
-    wordmarkY,
-    wordmarkOpacity,
-    sloganOpacity,
-    progress,
-    navigation,
-  ]);
+  }, [logoScale, logoOpacity, wordY, wordOpacity, sloganOpacity, progress, navigation]);
 
-  const fillWidth = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
+  const fillWidth = progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="light-content" />
-
       <View style={styles.center}>
-        <Animated.View
-          style={[
-            styles.logo,
-            { opacity: logoOpacity, transform: [{ scale: logoScale }] },
-          ]}
-        >
-          <Text style={styles.logoLetter}>C</Text>
+        <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
+          <Logo size={80} />
         </Animated.View>
-
         <Animated.Text
-          style={[
-            styles.wordmark,
-            { opacity: wordmarkOpacity, transform: [{ translateY: wordmarkY }] },
-          ]}
+          style={[styles.word, { opacity: wordOpacity, transform: [{ translateY: wordY }] }]}
         >
           CREVETON
         </Animated.Text>
-
         <Animated.Text style={[styles.slogan, { opacity: sloganOpacity }]}>
-          Quiz. Compétition. Cameroun.
+          Quiz. Compétition. Cameroun. 🇨🇲
         </Animated.Text>
       </View>
-
       <View style={styles.progressTrack}>
         <Animated.View style={[styles.progressFill, { width: fillWidth }]} />
       </View>
@@ -116,53 +69,28 @@ export default function SplashScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.green900,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 96,
-    height: 96,
-    borderRadius: radius.xxl,
-    backgroundColor: colors.gold500,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-  },
-  logoLetter: {
-    fontFamily: fonts.titleBlack,
-    fontSize: 56,
-    lineHeight: 64,
-    color: colors.green900,
-  },
-  wordmark: {
+  root: { flex: 1, backgroundColor: colors.green900 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  word: {
     fontFamily: fonts.titleBlack,
     fontSize: 32,
     letterSpacing: 2,
     color: colors.cream,
-    marginBottom: spacing.md,
+    marginTop: spacing.xl,
   },
   slogan: {
     fontFamily: fonts.bodyRegular,
     fontSize: fontSizes.md,
     color: colors.textOnDarkMuted,
+    marginTop: spacing.md,
   },
   progressTrack: {
     height: 3,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     marginHorizontal: spacing.xxl,
     marginBottom: spacing.xxl,
     overflow: 'hidden',
   },
-  progressFill: {
-    height: '100%',
-    borderRadius: radius.pill,
-    backgroundColor: colors.gold500,
-  },
+  progressFill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.gold500 },
 });

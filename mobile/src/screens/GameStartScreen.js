@@ -1,103 +1,52 @@
-// GameStartScreen (onglet Jouer) — carrousel de thèmes (snap), sélection de
-// niveau, puis tirage des questions depuis le cache local (repli live) et
-// lancement du quiz. Anti-triche : aucune bonne réponse côté client.
+// GameStartScreen (onglet Jouer) — grille de thèmes 2 colonnes + niveau, récap,
+// puis tirage depuis le cache local (mode normal : questions avec correct_index)
+// et lancement du quiz.
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  View,
-  StyleSheet,
-  Pressable,
-  Text,
-  ScrollView,
-  Dimensions,
-} from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Screen, Title, Body, Label, AppButton, useToast } from '../components';
+import { Screen, Title, Body, AppButton, useToast } from '../components';
 import { THEMES, LEVELS, GAME } from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
 import { useGameStore } from '../store/gameStore';
 import { questions as questionsApi } from '../services/endpoints';
-import {
-  colors,
-  fonts,
-  fontSizes,
-  radius,
-  spacing,
-  shadow,
-  themeGradients,
-} from '../constants/theme';
+import { themeGradients, colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { themeLabel, levelLabel } from '../utils/format';
 
-const SCREEN_W = Dimensions.get('window').width;
-const CARD_GAP = spacing.lg;
-const CARD_W = SCREEN_W - spacing.lg * 2; // marge écran (Screen padded = 16)
-const SNAP = CARD_W + CARD_GAP;
+const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
 
 export default function GameStartScreen({ navigation, route }) {
   const preset = route.params?.presetTheme;
-  const presetIndex = Math.max(
-    0,
-    THEMES.findIndex((t) => t.key === preset),
-  );
-
-  const [index, setIndex] = useState(presetIndex >= 0 ? presetIndex : 0);
-  const [level, setLevel] = useState(null);
+  const toast = useToast();
+  const [theme, setTheme] = useState(preset || null);
+  const [level, setLevel] = useState('beginner');
   const [loading, setLoading] = useState(false);
 
-  const scrollRef = useRef(null);
-  const toast = useToast();
-
-  const cacheCount = useQuestionsStore((s) => s.count);
   const drawQuestions = useQuestionsStore((s) => s.drawQuestions);
   const startGame = useGameStore((s) => s.startGame);
 
-  const theme = THEMES[index]?.key ?? null;
+  const recap = useMemo(() => {
+    if (!theme) return null;
+    const t = TIME_BY_LEVEL[level] || 30;
+    return `${themeLabel(theme)} · ${levelLabel(level)} · ${GAME.questionsPerSession} questions · ${t}s/Q`;
+  }, [theme, level]);
 
-  // Positionne le carrousel sur le thème présélectionné au montage.
-  useEffect(() => {
-    if (presetIndex > 0 && scrollRef.current) {
-      scrollRef.current.scrollTo({ x: presetIndex * SNAP, animated: false });
-      setIndex(presetIndex);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onMomentumEnd = useCallback((e) => {
-    const x = e.nativeEvent.contentOffset.x;
-    const i = Math.round(x / SNAP);
-    setIndex(Math.max(0, Math.min(THEMES.length - 1, i)));
-  }, []);
-
-  const ready = theme !== null && level !== null;
-
-  const onStart = useCallback(async () => {
-    if (!ready) return;
+  const onStart = async () => {
+    if (!theme || !level) return;
     setLoading(true);
     try {
-      // Mode hybride : on pioche d'abord dans le cache local (SQLite).
-      let qs = await drawQuestions({
-        theme,
-        level,
-        count: GAME.questionsPerSession,
-      });
-      // Repli live si le cache est insuffisant.
+      let qs = await drawQuestions({ theme, level, count: GAME.questionsPerSession });
       if (!qs || qs.length < GAME.questionsPerSession) {
         try {
-          const resp = await questionsApi.fetch({
-            theme,
-            level,
-            count: GAME.questionsPerSession,
-          });
+          const resp = await questionsApi.fetch({ theme, level, count: GAME.questionsPerSession });
           if (resp?.data?.length) qs = resp.data;
         } catch {
-          /* on garde ce qu'on a en local */
+          /* on garde le cache local */
         }
       }
       if (!qs || !qs.length) {
+        toast.show({ type: 'error', message: 'Aucune question disponible pour ce thème.' });
         setLoading(false);
-        toast.show({
-          type: 'error',
-          message: 'Aucune question disponible pour ce thème.',
-        });
         return;
       }
       startGame({ mode: 'normal', theme, level, questions: qs });
@@ -107,85 +56,48 @@ export default function GameStartScreen({ navigation, route }) {
       setLoading(false);
       toast.show({ type: 'error', message: 'Impossible de démarrer la partie.' });
     }
-  }, [ready, theme, level, drawQuestions, startGame, navigation, toast]);
+  };
 
   return (
-    <Screen dark scroll>
-      {/* En-tête */}
+    <Screen scroll>
       <View style={styles.header}>
-        <Pressable
-          onPress={() => navigation.navigate('Home')}
-          hitSlop={10}
-          style={styles.back}
-        >
-          <Text style={styles.backText}>← Retour</Text>
+        <Pressable onPress={() => navigation.navigate('Home')} hitSlop={8}>
+          <Text style={styles.back}>←</Text>
         </Pressable>
-        <Title color={colors.cream} style={styles.title}>
-          Nouvelle partie
-        </Title>
+        <Title style={styles.headerTitle}>Nouvelle partie</Title>
       </View>
 
-      {/* Carrousel de thèmes */}
-      <Label color={colors.textOnDarkFaint} style={styles.sectionLabel}>
-        THÈME
-      </Label>
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={SNAP}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        disableIntervalMomentum
-        onMomentumScrollEnd={onMomentumEnd}
-        contentContainerStyle={styles.carousel}
-        style={styles.carouselWrap}
-      >
-        {THEMES.map((t, i) => {
-          const active = i === index;
+      <Text style={styles.section}>Choisis ton thème</Text>
+      <View style={styles.grid}>
+        {THEMES.map((t) => {
+          const active = t.key === theme;
           return (
-            <LinearGradient
+            <Pressable
               key={t.key}
-              colors={themeGradients[t.key]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.themeCard,
-                { width: CARD_W },
-                active && styles.themeCardActive,
-              ]}
+              onPress={() => setTheme(t.key)}
+              style={styles.gridItem}
             >
-              {active ? (
-                <View style={styles.check}>
-                  <Text style={styles.checkText}>✓</Text>
-                </View>
-              ) : null}
-              <Text style={styles.themeEmoji}>{t.emoji}</Text>
-              <Text style={styles.themeName}>{t.label}</Text>
-              <Text style={styles.themeMeta}>
-                {cacheCount > 0
-                  ? `${cacheCount} questions disponibles`
-                  : 'Prêt à jouer'}
-              </Text>
-            </LinearGradient>
+              <LinearGradient
+                colors={themeGradients[t.key] || themeGradients.industrie}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.themeCard, active && styles.themeCardActive]}
+              >
+                {active ? (
+                  <View style={styles.check}>
+                    <Text style={styles.checkText}>✓</Text>
+                  </View>
+                ) : null}
+                <Text style={styles.themeEmoji}>{t.emoji}</Text>
+                <Text style={styles.themeName}>{t.label}</Text>
+                <Text style={styles.themeMeta}>{GAME.questionsPerSession} questions</Text>
+              </LinearGradient>
+            </Pressable>
           );
         })}
-      </ScrollView>
-
-      {/* Indicateur de page du carrousel */}
-      <View style={styles.pager}>
-        {THEMES.map((t, i) => (
-          <View
-            key={t.key}
-            style={[styles.pagerDot, i === index && styles.pagerDotActive]}
-          />
-        ))}
       </View>
 
-      {/* Niveau */}
-      <Label color={colors.textOnDarkFaint} style={styles.sectionLabel}>
-        NIVEAU
-      </Label>
+      <Text style={styles.section}>Choisis ton niveau</Text>
       <View style={styles.levels}>
         {LEVELS.map((l) => {
           const active = l.key === level;
@@ -193,35 +105,37 @@ export default function GameStartScreen({ navigation, route }) {
             <Pressable
               key={l.key}
               onPress={() => setLevel(l.key)}
-              style={[styles.pill, active && styles.pillActive]}
+              style={[styles.levelPill, active && styles.levelPillActive]}
             >
-              <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                {l.label}
-              </Text>
+              <Text style={[styles.levelText, active && styles.levelTextActive]}>{l.label}</Text>
             </Pressable>
           );
         })}
       </View>
-      {level ? (
-        <Body color={colors.textOnDarkMuted} style={styles.levelMeta}>
-          {GAME.questionsPerSession} questions · {GAME.timePerQuestionS}s/Q
-        </Body>
-      ) : null}
 
-      {/* CTA */}
+      {recap ? (
+        <View style={styles.recap}>
+          <Body style={styles.recapText}>{recap}</Body>
+        </View>
+      ) : (
+        <Body muted style={styles.hint}>
+          Sélectionne un thème pour lancer une partie.
+        </Body>
+      )}
+
       <AppButton
-        title="Lancer la partie"
+        title="Lancer ▶"
         variant="primary"
         size="lg"
-        iconLeft={<Text style={styles.ctaIcon}>▶</Text>}
-        disabled={!ready}
         loading={loading}
+        disabled={!theme || !level}
         onPress={onStart}
         style={styles.cta}
       />
       <AppButton
         title="⚔️ Défier un ami"
         variant="ghost"
+        size="md"
         onPress={() => navigation.navigate('Challenge')}
         style={styles.challenge}
       />
@@ -229,106 +143,74 @@ export default function GameStartScreen({ navigation, route }) {
   );
 }
 
+const COL_GAP = spacing.md;
+
 const styles = StyleSheet.create({
-  header: { marginBottom: spacing.lg },
-  back: { alignSelf: 'flex-start', marginBottom: spacing.sm },
-  backText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.md,
-    color: colors.textOnDarkMuted,
-  },
-  title: { fontSize: fontSizes.xxl },
-  sectionLabel: {
-    letterSpacing: 1.2,
-    marginBottom: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  carouselWrap: {
-    marginHorizontal: -spacing.lg, // déborde sur les marges du Screen
-  },
-  carousel: {
-    paddingHorizontal: spacing.lg,
-    gap: CARD_GAP,
-  },
-  themeCard: {
-    height: 200,
-    borderRadius: radius.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderWidth: 3,
-    borderColor: 'transparent',
-    ...shadow.card,
-  },
-  themeCardActive: {
-    borderColor: colors.gold400,
-  },
-  check: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.gold400,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkText: {
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg },
+  back: { fontSize: fontSizes.xxl, color: colors.green900 },
+  headerTitle: { fontSize: fontSizes.xl },
+  section: {
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.lg,
     color: colors.green900,
-  },
-  themeEmoji: { fontSize: 48 },
-  themeName: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl,
-    color: colors.white,
-  },
-  themeMeta: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.sm,
-    color: 'rgba(255, 255, 255, 0.7)',
-  },
-  pager: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.xs,
     marginTop: spacing.md,
+    marginBottom: spacing.md,
   },
-  pagerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.borderOnDark,
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: COL_GAP },
+  gridItem: { width: '47.8%' },
+  themeCard: {
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    minHeight: 120,
+    justifyContent: 'flex-end',
+    gap: 2,
+    borderWidth: 3,
+    borderColor: 'transparent',
+    overflow: 'hidden',
   },
-  pagerDotActive: {
-    width: 22,
-    backgroundColor: colors.gold400,
-  },
-  levels: { flexDirection: 'row', gap: spacing.sm },
-  pill: {
-    flex: 1,
-    height: 48,
-    borderRadius: radius.pill,
+  themeCardActive: { borderColor: colors.gold500 },
+  check: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.gold500,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
+  },
+  checkText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.sm, color: colors.green900 },
+  themeEmoji: { fontSize: 32 },
+  themeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.white, marginTop: spacing.xs },
+  themeMeta: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: 'rgba(255,255,255,0.7)' },
+
+  levels: { flexDirection: 'row', gap: spacing.sm },
+  levelPill: {
+    flex: 1,
+    height: 46,
+    borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.borderInput,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  pillActive: {
-    backgroundColor: colors.green900,
-    borderColor: colors.green900,
+  levelPillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
+  levelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
+  levelTextActive: { color: colors.white },
+
+  recap: {
+    backgroundColor: colors.cream,
+    borderRadius: radius.sm,
+    padding: spacing.md,
+    marginTop: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  pillText: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.md,
-    color: colors.textMuted,
-  },
-  pillTextActive: { color: colors.cream },
-  levelMeta: { marginTop: spacing.sm, textAlign: 'center' },
-  ctaIcon: { color: colors.green900, fontSize: fontSizes.md },
+  recapText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.grey, textAlign: 'center' },
+  hint: { marginTop: spacing.lg, textAlign: 'center' },
+
   cta: { marginTop: spacing.xl },
   challenge: { marginTop: spacing.md },
 });

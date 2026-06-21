@@ -23,6 +23,7 @@ export const colors = {
   // — Neutres
   white: '#ffffff',
   black: '#000000',
+  grey: '#6b7280',
 
   // — Texte
   textDark: '#0b2e1a',

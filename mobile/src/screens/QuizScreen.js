@@ -1,128 +1,94 @@
-// QuizScreen — question + 4 options (A–D), timer animé dégressif, progress dots,
-// série d'engagement, score provisoire. Le serveur recalcule le score officiel à
-// la soumission ; ici on ne révèle JAMAIS la bonne réponse (anti-triche, API §5) :
-// l'appui ne fait que surligner la sélection puis enchaîne.
+// QuizScreen — immersif (#0b2e1a).
+// BUG 2 : timer prominent (barre animée + compte à rebours 28px or, rouge ≤10s,
+//          pulsation ≤5s, durée selon niveau, reset par question).
+// BUG 3 : feedback réponses très visible à partir de question.correct_index
+//          (mode normal). Bonne réponse révélée, options bloquées, puis
+//          explication + « Suivant ». Timeout → révélation 2 s puis auto-next.
+// Anti-triche : si correct_index est absent (tournoi/challenge), on retombe
+// sur une simple surbrillance de sélection, sans rien révéler.
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   Pressable,
-  Text,
   Animated,
   Easing,
   BackHandler,
   Alert,
 } from 'react-native';
-import { Screen, AppCard, Body, ProgressDots, LoadingScreen } from '../components';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LoadingScreen, ProgressDots, AppButton } from '../components';
 import { useGameStore } from '../store/gameStore';
-import { GAME, LEVELS } from '../constants/config';
-import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { LEVELS } from '../constants/config';
+import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
 
-const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
-const DURATION_MS = GAME.timePerQuestionS * 1000;
-const URGENT_S = 10;
-const TRANSITION_MS = 220;
+const LETTERS = ['A', 'B', 'C', 'D'];
+const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
+const BLOCK_MS = 1500;
+const TIMEOUT_REVEAL_MS = 2000;
 
-function provisionalPoints(answers, level) {
-  const base = LEVELS.find((l) => l.key === level)?.points ?? 50;
-  return answers.reduce((sum, a) => {
-    if (a.skipped || a.selected_index === null) return sum;
-    const bonus = a.elapsed_ms <= GAME.speedBonusThresholdMs ? 1.5 : 1;
-    return sum + Math.round(base * bonus);
-  }, 0);
+function basePoints(level) {
+  return LEVELS.find((l) => l.key === level)?.points || 50;
 }
 
 export default function QuizScreen({ navigation }) {
   const questions = useGameStore((s) => s.questions);
   const currentIndex = useGameStore((s) => s.currentIndex);
-  const level = useGameStore((s) => s.level);
-  const streak = useGameStore((s) => s.streak);
-  const answers = useGameStore((s) => s.answers);
   const answerCurrent = useGameStore((s) => s.answerCurrent);
   const next = useGameStore((s) => s.next);
   const isLastQuestion = useGameStore((s) => s.isLastQuestion);
   const submit = useGameStore((s) => s.submit);
+  const level = useGameStore((s) => s.level);
 
   const question = questions[currentIndex];
   const total = questions.length;
+  const timeLimit = TIME_BY_LEVEL[level] || 30;
 
-  const [selected, setSelected] = useState(null);
-  const [secondsLeft, setSecondsLeft] = useState(GAME.timePerQuestionS);
-  const [locked, setLocked] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(timeLimit);
+  const [answered, setAnswered] = useState(null); // { selectedIndex, correctIndex, isCorrect, timedOut }
+  const [dotStates, setDotStates] = useState([]);
+  const [score, setScore] = useState(0);
+  const [correctStreak, setCorrectStreak] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  const questionStart = useRef(Date.now());
+  const timerAnim = useRef(new Animated.Value(1)).current;
+  const pulse = useRef(new Animated.Value(1)).current;
+  const streakBounce = useRef(new Animated.Value(0)).current;
+  const explainY = useRef(new Animated.Value(40)).current;
+  const explainOpacity = useRef(new Animated.Value(0)).current;
   const intervalRef = useRef(null);
-
-  // Animations
-  const barAnim = useRef(new Animated.Value(1)).current; // 1 → 0
-  const pulse = useRef(new Animated.Value(1)).current; // pulse urgence
+  const advanceRef = useRef(null);
+  const questionStart = useRef(Date.now());
   const pulseLoop = useRef(null);
-  const streakScale = useRef(new Animated.Value(0)).current; // bounce série
-  const optScales = useRef(OPTION_LETTERS.map(() => new Animated.Value(1))).current;
 
-  const elapsedMs = useCallback(() => Date.now() - questionStart.current, []);
+  const correctIndex = Number.isInteger(question?.correct_index)
+    ? question.correct_index
+    : null;
 
-  const stopPulse = useCallback(() => {
-    if (pulseLoop.current) {
-      pulseLoop.current.stop();
-      pulseLoop.current = null;
-    }
-    pulse.setValue(1);
-  }, [pulse]);
+  const clearTimers = useCallback(() => {
+    clearInterval(intervalRef.current);
+    clearTimeout(advanceRef.current);
+    timerAnim.stopAnimation();
+    pulseLoop.current?.stop();
+  }, [timerAnim]);
 
-  // Avance : enregistre, court feedback, puis question suivante ou soumission.
-  const advance = useCallback(
-    async ({ selectedIndex, skipped }) => {
-      if (locked) return;
-      setLocked(true);
-      clearInterval(intervalRef.current);
-      barAnim.stopAnimation();
-      stopPulse();
-      answerCurrent({ selectedIndex, elapsedMs: elapsedMs(), skipped });
-
-      if (isLastQuestion()) {
-        setSubmitting(true);
-        const res = await submit();
-        setSubmitting(false);
-        navigation.replace('Results', { ok: res.ok, error: res.error });
-        return;
-      }
-
-      setTimeout(() => {
-        next();
-        setSelected(null);
-        setSecondsLeft(GAME.timePerQuestionS);
-        questionStart.current = Date.now();
-        setLocked(false);
-      }, TRANSITION_MS);
-    },
-    [
-      locked,
-      barAnim,
-      stopPulse,
-      answerCurrent,
-      elapsedMs,
-      isLastQuestion,
-      submit,
-      next,
-      navigation,
-    ],
-  );
-
+  // Confirmation de sortie (✕ et bouton retour Android).
   const confirmQuit = useCallback(() => {
     Alert.alert('Quitter la partie ?', 'Ta progression sera perdue.', [
       { text: 'Continuer', style: 'cancel' },
       {
         text: 'Quitter',
         style: 'destructive',
-        onPress: () => navigation.navigate('Tabs', { screen: 'Home' }),
+        onPress: () => {
+          clearTimers();
+          navigation.navigate('Tabs', { screen: 'Home' });
+        },
       },
     ]);
-  }, [navigation]);
+  }, [clearTimers, navigation]);
 
-  // Confirmation de sortie sur retour matériel Android.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       confirmQuit();
@@ -131,327 +97,424 @@ export default function QuizScreen({ navigation }) {
     return () => sub.remove();
   }, [confirmQuit]);
 
-  // Timer par question : barre animée + décompte JS + timeout.
+  // Avance à la question suivante ou soumet la partie.
+  const goNext = useCallback(async () => {
+    clearTimers();
+    if (isLastQuestion()) {
+      setSubmitting(true);
+      const res = await submit();
+      navigation.replace('Results', { ok: res.ok, error: res.error });
+      return;
+    }
+    next();
+  }, [clearTimers, isLastQuestion, submit, next, navigation]);
+
+  // Enregistre la réponse (tap, timeout ou passer) et déclenche le feedback.
+  const handleAnswer = useCallback(
+    ({ selectedIndex, skipped = false, timedOut = false }) => {
+      if (answered) return;
+      clearTimers();
+      const elapsed = Date.now() - questionStart.current;
+      answerCurrent({ selectedIndex, elapsedMs: elapsed, skipped });
+
+      const isCorrect =
+        correctIndex !== null && selectedIndex === correctIndex && !skipped;
+
+      // Score provisoire (le serveur fait foi) — uniquement si on connaît la réponse.
+      if (isCorrect) {
+        const pts = Math.round(
+          basePoints(level) * (elapsed <= 5000 ? 1.5 : 1)
+        );
+        setScore((s) => s + pts);
+        setCorrectStreak((s) => s + 1);
+      } else {
+        setCorrectStreak(0);
+      }
+
+      setDotStates((d) => {
+        const copy = [...d];
+        copy[currentIndex] = skipped
+          ? 'skipped'
+          : isCorrect
+            ? 'correct'
+            : 'wrong';
+        return copy;
+      });
+
+      // Passer : on avance tout de suite, sans rien révéler.
+      if (skipped) {
+        goNext();
+        return;
+      }
+
+      setAnswered({ selectedIndex, correctIndex, isCorrect, timedOut });
+
+      // Carte d'explication (slide-up) si on a la réponse.
+      if (correctIndex !== null) {
+        Animated.parallel([
+          Animated.timing(explainY, {
+            toValue: 0,
+            duration: motion.enter,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(explainOpacity, {
+            toValue: 1,
+            duration: motion.enter,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+
+      // Timeout : révélation 2 s puis auto-next. Réponse tapée sans réponse
+      // connue : court blocage puis auto-next. Sinon : « Suivant » manuel.
+      if (timedOut) {
+        advanceRef.current = setTimeout(goNext, TIMEOUT_REVEAL_MS);
+      } else if (correctIndex === null) {
+        advanceRef.current = setTimeout(goNext, BLOCK_MS);
+      }
+    },
+    [
+      answered,
+      clearTimers,
+      answerCurrent,
+      correctIndex,
+      level,
+      currentIndex,
+      goNext,
+      explainY,
+      explainOpacity,
+    ]
+  );
+
+  // Démarre le timer à chaque nouvelle question.
   useEffect(() => {
+    setAnswered(null);
+    setSecondsLeft(timeLimit);
     questionStart.current = Date.now();
-    barAnim.setValue(1);
-    Animated.timing(barAnim, {
+    explainY.setValue(40);
+    explainOpacity.setValue(0);
+
+    timerAnim.setValue(1);
+    Animated.timing(timerAnim, {
       toValue: 0,
-      duration: DURATION_MS,
+      duration: timeLimit * 1000,
       easing: Easing.linear,
       useNativeDriver: false,
     }).start();
 
-    setSecondsLeft(GAME.timePerQuestionS);
     intervalRef.current = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
           clearInterval(intervalRef.current);
-          advance({ selectedIndex: null, skipped: false });
+          handleAnswer({ selectedIndex: null, timedOut: true });
           return 0;
         }
         return s - 1;
       });
     }, 1000);
 
-    return () => clearInterval(intervalRef.current);
+    return () => {
+      clearInterval(intervalRef.current);
+      clearTimeout(advanceRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
 
-  // Pulse rouge dans les dernières secondes.
+  // Pulsation du timer sous les 5 s.
   useEffect(() => {
-    if (secondsLeft <= URGENT_S && secondsLeft > 0 && !pulseLoop.current) {
+    if (secondsLeft <= 5 && secondsLeft > 0 && !answered) {
       pulseLoop.current = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulse, {
-            toValue: 0.4,
-            duration: 500,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulse, {
-            toValue: 1,
-            duration: 500,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ]),
+          Animated.timing(pulse, { toValue: 1.05, duration: 400, useNativeDriver: true }),
+          Animated.timing(pulse, { toValue: 1, duration: 400, useNativeDriver: true }),
+        ])
       );
       pulseLoop.current.start();
+      return () => pulseLoop.current?.stop();
     }
-  }, [secondsLeft, pulse]);
+  }, [secondsLeft, answered, pulse]);
 
-  // Bounce du badge série quand il (ré)apparaît.
-  const showStreak = streak >= GAME.streakX15;
+  // Bounce du badge de série.
   useEffect(() => {
-    if (showStreak) {
-      streakScale.setValue(0.6);
-      Animated.spring(streakScale, {
-        toValue: 1,
-        speed: 16,
-        bounciness: 12,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      streakScale.setValue(0);
+    if (correctStreak >= 3) {
+      streakBounce.setValue(0);
+      Animated.spring(streakBounce, { toValue: 1, useNativeDriver: true, friction: 4 }).start();
     }
-  }, [showStreak, streak, streakScale]);
-
-  // Nettoyage au démontage.
-  useEffect(
-    () => () => {
-      clearInterval(intervalRef.current);
-      if (pulseLoop.current) pulseLoop.current.stop();
-    },
-    [],
-  );
-
-  const onSelect = (optIndex, slot) => {
-    if (locked || selected !== null) return;
-    setSelected(optIndex);
-    Animated.sequence([
-      Animated.spring(optScales[slot], {
-        toValue: 0.97,
-        speed: 40,
-        bounciness: 0,
-        useNativeDriver: true,
-      }),
-      Animated.spring(optScales[slot], {
-        toValue: 1,
-        speed: 30,
-        bounciness: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    setTimeout(() => advance({ selectedIndex: optIndex, skipped: false }), TRANSITION_MS);
-  };
-
-  const onSkip = () => {
-    if (locked || selected !== null) return;
-    advance({ selectedIndex: null, elapsedMs: elapsedMs(), skipped: true });
-  };
+  }, [correctStreak, streakBounce]);
 
   if (submitting) return <LoadingScreen message="Calcul du score…" />;
   if (!question) return <LoadingScreen message="Chargement…" />;
 
-  const urgent = secondsLeft <= URGENT_S;
-  const score = provisionalPoints(answers, level);
-
-  // États des points (visuel « répondu », pas une révélation de justesse).
-  const dotStates = answers.map((a) =>
-    a.skipped ? 'skipped' : a.selected_index === null ? 'wrong' : 'correct',
-  );
+  const danger = secondsLeft <= 10;
+  const barWidth = timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const streakScale = streakBounce.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] });
 
   return (
-    <Screen dark edges={['top', 'bottom']}>
-      {/* En-tête : progression + score provisoire + quitter */}
+    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+      {/* Top bar */}
       <View style={styles.topBar}>
-        <Body color={colors.textOnDarkMuted}>
-          Question {currentIndex + 1}/{total}
-        </Body>
-        <View style={styles.topRight}>
-          <Text style={styles.score}>{score} pts</Text>
-          <Pressable onPress={confirmQuit} hitSlop={10} style={styles.close}>
-            <Text style={styles.closeText}>✕</Text>
-          </Pressable>
-        </View>
+        <Pressable onPress={confirmQuit} hitSlop={10} style={styles.quit}>
+          <Text style={styles.quitText}>✕</Text>
+        </Pressable>
+        <Text style={styles.counter}>Q {currentIndex + 1}/{total}</Text>
+        <Text style={styles.score}>{score} pts ⚡</Text>
       </View>
 
-      {showStreak ? (
-        <Animated.View
-          style={[styles.streakPill, { transform: [{ scale: streakScale }] }]}
-        >
-          <Text style={styles.streakText}>🔥 x{streak}</Text>
-        </Animated.View>
-      ) : null}
-
-      <ProgressDots total={total} current={currentIndex} states={dotStates} />
-
-      {/* Barre de temps */}
+      {/* TIMER prominent */}
       <View style={styles.timerRow}>
         <View style={styles.timerTrack}>
           <Animated.View
             style={[
               styles.timerFill,
-              {
-                width: barAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0%', '100%'],
-                }),
-                backgroundColor: urgent ? colors.red400 : colors.gold400,
-                opacity: urgent ? pulse : 1,
-              },
+              { width: barWidth, backgroundColor: danger ? colors.red400 : colors.gold500 },
             ]}
           />
         </View>
-        <Text style={[styles.timerNum, urgent && styles.timerNumUrgent]}>
+        <Animated.Text
+          style={[
+            styles.timerValue,
+            { color: danger ? colors.red400 : colors.gold500, transform: [{ scale: pulse }] },
+          ]}
+        >
           {secondsLeft}s
-        </Text>
+        </Animated.Text>
       </View>
+
+      {/* Progress dots */}
+      <View style={styles.dots}>
+        <ProgressDots total={total} current={currentIndex} states={dotStates} />
+      </View>
+
+      {/* Streak badge */}
+      {correctStreak >= 3 && !answered ? (
+        <Animated.View style={[styles.streak, { transform: [{ scale: streakScale }] }]}>
+          <Text style={styles.streakText}>🔥 ×{correctStreak}</Text>
+        </Animated.View>
+      ) : null}
 
       {/* Question */}
-      <AppCard tone="light" padding="lg" radius={radius.xl} style={styles.qCard}>
-        <Text style={styles.qText}>{question.text}</Text>
-        <View style={styles.qUnderline} />
-      </AppCard>
-
-      {/* Options A–D */}
-      <View style={styles.options}>
-        {(question.options || []).map((opt, i) => {
-          const optIndex = opt.index ?? i;
-          const active = selected === optIndex;
-          return (
-            <Animated.View
-              key={optIndex}
-              style={{ transform: [{ scale: optScales[i] }] }}
-            >
-              <Pressable
-                onPress={() => onSelect(optIndex, i)}
-                disabled={locked || selected !== null}
-                style={[styles.option, active && styles.optionActive]}
-              >
-                <View style={[styles.letter, active && styles.letterActive]}>
-                  <Text
-                    style={[styles.letterText, active && styles.letterTextActive]}
-                  >
-                    {OPTION_LETTERS[i]}
-                  </Text>
-                </View>
-                <Text style={styles.optionText}>{opt.text}</Text>
-              </Pressable>
-            </Animated.View>
-          );
-        })}
+      <View style={styles.card}>
+        <Text style={styles.question}>{question.text}</Text>
+        <View style={styles.underline} />
       </View>
 
+      {/* Options */}
+      <View style={styles.options}>
+        {(question.options || []).map((opt, i) => (
+          <OptionRow
+            key={opt.index ?? i}
+            letter={LETTERS[i]}
+            text={opt.text}
+            optionIndex={opt.index ?? i}
+            answered={answered}
+            onPress={() => handleAnswer({ selectedIndex: opt.index ?? i })}
+          />
+        ))}
+      </View>
+
+      {/* Passer (avant réponse) */}
+      {!answered ? (
+        <Pressable
+          onPress={() => handleAnswer({ selectedIndex: null, skipped: true })}
+          style={styles.skip}
+          hitSlop={8}
+        >
+          <Text style={styles.skipText}>Passer</Text>
+        </Pressable>
+      ) : null}
+
+      {/* Explication + Suivant (slide-up) */}
+      {answered && correctIndex !== null ? (
+        <Animated.View
+          style={[
+            styles.explain,
+            { opacity: explainOpacity, transform: [{ translateY: explainY }] },
+          ]}
+        >
+          {question.explanation ? (
+            <Text style={styles.explainText}>💡 {question.explanation}</Text>
+          ) : (
+            <Text style={styles.explainText}>
+              {answered.isCorrect ? '✓ Bonne réponse !' : '✗ Mauvaise réponse.'}
+            </Text>
+          )}
+          {!answered.timedOut ? (
+            <AppButton
+              title="Suivant →"
+              variant="primary"
+              size="md"
+              onPress={goNext}
+              style={styles.nextBtn}
+            />
+          ) : null}
+        </Animated.View>
+      ) : null}
+    </SafeAreaView>
+  );
+}
+
+// Option A–D avec états de feedback bien visibles.
+function OptionRow({ letter, text, optionIndex, answered, onPress }) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const isSelected = answered && answered.selectedIndex === optionIndex;
+  const isCorrectOpt = answered && answered.correctIndex === optionIndex;
+  const revealing = answered && answered.correctIndex !== null;
+
+  let container = styles.optDefault;
+  let badge = styles.badgeDefault;
+  let badgeText = styles.badgeTextDefault;
+  let label = styles.optTextDefault;
+  let glyph = letter;
+  let showGoodLabel = false;
+
+  if (revealing) {
+    if (isCorrectOpt) {
+      container = styles.optCorrect;
+      badge = styles.badgeCorrect;
+      badgeText = styles.badgeTextOnColor;
+      label = styles.optTextCorrect;
+      glyph = '✓';
+      showGoodLabel = !isSelected; // bonne réponse non choisie
+    } else if (isSelected) {
+      container = styles.optWrong;
+      badge = styles.badgeWrong;
+      badgeText = styles.badgeTextOnColor;
+      label = styles.optTextWrong;
+      glyph = '✗';
+    }
+  } else if (isSelected) {
+    // Sans réponse connue (anti-triche) : simple surbrillance de sélection.
+    container = styles.optSelected;
+  }
+
+  const onPressIn = () =>
+    Animated.timing(scale, { toValue: 0.97, duration: 50, useNativeDriver: true }).start();
+  const onPressOut = () =>
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
+
+  return (
+    <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
-        onPress={onSkip}
-        disabled={locked || selected !== null}
-        style={styles.skip}
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={!!answered}
+        style={[styles.option, container]}
       >
-        <Text style={styles.skipText}>Passer</Text>
+        <View style={[styles.badge, badge]}>
+          <Text style={[styles.badgeText, badgeText]}>{glyph}</Text>
+        </View>
+        <View style={styles.optBody}>
+          {showGoodLabel ? <Text style={styles.goodLabel}>✓ Bonne réponse</Text> : null}
+          <Text style={[styles.optText, label]}>{text}</Text>
+        </View>
       </Pressable>
-    </Screen>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.green900, paddingHorizontal: spacing.lg },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    paddingVertical: spacing.md,
   },
-  topRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  score: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.lg,
-    color: colors.gold400,
-  },
-  close: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeText: {
-    fontFamily: fonts.titleMedium,
-    fontSize: fontSizes.lg,
-    color: colors.cream,
-  },
-  streakPill: {
-    alignSelf: 'flex-end',
-    backgroundColor: colors.goldVeil,
-    borderWidth: 1,
-    borderColor: colors.goldVeilBorder,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
-    marginBottom: spacing.sm,
-  },
-  streakText: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.md,
-    color: colors.gold400,
-  },
-  timerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
-  },
+  quit: { width: 32 },
+  quitText: { fontSize: fontSizes.lg, color: colors.textOnDarkMuted },
+  counter: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkMuted },
+  score: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.gold500 },
+
+  timerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.xs },
   timerTrack: {
     flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     overflow: 'hidden',
   },
-  timerFill: { height: '100%', borderRadius: 2 },
-  timerNum: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.md,
-    color: colors.cream,
-    minWidth: 34,
-    textAlign: 'right',
+  timerFill: { height: '100%', borderRadius: 4 },
+  timerValue: { fontFamily: fonts.titleBold, fontSize: 28, minWidth: 56, textAlign: 'right' },
+
+  dots: { marginTop: spacing.lg },
+
+  streak: {
+    position: 'absolute',
+    top: 64,
+    right: spacing.lg,
+    backgroundColor: colors.gold500,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    zIndex: 5,
+    ...shadow.gold,
   },
-  timerNumUrgent: { color: colors.red400 },
-  qCard: { marginBottom: spacing.lg },
-  qText: {
+  streakText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.green900 },
+
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: 20,
+    marginTop: spacing.xl,
+  },
+  question: {
     fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.lg,
+    fontSize: 17,
     lineHeight: 26,
     color: colors.green900,
   },
-  qUnderline: {
-    width: 48,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.gold500,
-    marginTop: spacing.md,
-  },
-  options: { gap: spacing.sm },
+  underline: { width: 44, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.md },
+
+  options: { marginTop: spacing.xl, gap: spacing.md },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    height: 56,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    minHeight: 56,
     borderRadius: radius.base,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1.5,
   },
-  optionActive: {
-    backgroundColor: colors.successBgSoft,
-    borderColor: colors.green500,
-  },
-  letter: {
-    width: 28,
-    height: 28,
+  optDefault: { backgroundColor: colors.white, borderColor: colors.border },
+  optSelected: { backgroundColor: colors.successBgSoft, borderColor: colors.green500 },
+  optCorrect: { backgroundColor: colors.successBg, borderWidth: 3, borderColor: colors.green500 },
+  optWrong: { backgroundColor: colors.errorBg, borderWidth: 3, borderColor: colors.red400 },
+  badge: {
+    width: 32,
+    height: 32,
     borderRadius: radius.sm,
-    backgroundColor: '#f3f4f6',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  letterActive: { backgroundColor: colors.green500 },
-  letterText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: fontSizes.sm,
-    color: colors.textBody,
+  badgeDefault: { backgroundColor: '#f3f4f6' },
+  badgeCorrect: { backgroundColor: colors.green500 },
+  badgeWrong: { backgroundColor: colors.red400 },
+  badgeText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.md },
+  badgeTextDefault: { color: '#374151' },
+  badgeTextOnColor: { color: colors.white },
+  optBody: { flex: 1 },
+  optText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md },
+  optTextDefault: { color: '#374151' },
+  optTextCorrect: { color: colors.successText, fontFamily: fonts.bodySemiBold },
+  optTextWrong: { color: colors.red600 },
+  goodLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.successText, marginBottom: 2 },
+
+  skip: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: 'auto' },
+  skipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: 'rgba(253,246,233,0.4)' },
+
+  explain: {
+    marginTop: 'auto',
+    marginBottom: spacing.md,
+    backgroundColor: colors.cream,
+    borderRadius: radius.lg,
+    borderTopWidth: 3,
+    borderTopColor: colors.gold500,
+    padding: spacing.lg,
   },
-  letterTextActive: { color: colors.white },
-  optionText: {
-    flex: 1,
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.md,
-    color: colors.textDark,
-  },
-  skip: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: spacing.sm },
-  skipText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.md,
-    color: 'rgba(253, 246, 233, 0.5)',
-  },
+  explainText: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.md, color: colors.textDark, lineHeight: 21 },
+  nextBtn: { marginTop: spacing.md },
 });

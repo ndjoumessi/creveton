@@ -3,7 +3,14 @@
 // sur un thème/niveau. Le challenger joue en premier (set figé, même seed — API §9).
 
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Text } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { Screen, Title, Body, AppCard, AppButton, AppInput, useToast } from '../components';
 import { THEMES, LEVELS } from '../constants/config';
 import { challenges } from '../services/endpoints';
@@ -51,8 +58,12 @@ export default function ChallengeScreen({ navigation }) {
   };
 
   return (
-    <Screen dark scroll>
-      <View style={styles.handle} />
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <Screen dark scroll>
+        <View style={styles.handle} />
 
       <Title color={colors.cream} style={styles.title}>
         Challenges
@@ -172,11 +183,13 @@ export default function ChallengeScreen({ navigation }) {
           Annuler
         </Body>
       </Pressable>
-    </Screen>
+      </Screen>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   handle: {
     width: 40,
     height: 4,
