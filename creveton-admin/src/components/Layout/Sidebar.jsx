@@ -2,6 +2,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings } from 'lucide-react';
 import dashboardService from '../../services/dashboard.service';
 import { useApiData } from '../../hooks/useApiData';
+import Logo from '../Logo';
 
 const NAV = [
   {
@@ -37,7 +38,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <Link to="/dashboard" className="sidebar-brand" aria-label="Tableau de bord Creveton">
-        <div className="sidebar-logo">C</div>
+        <Logo size={40} className="sidebar-logo-svg" />
         <span className="sidebar-brand-name">Creveton</span>
       </Link>
       <nav className="sidebar-nav">

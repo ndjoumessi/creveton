@@ -5,6 +5,7 @@ import { LogIn, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { notify } from '../components/Toast';
 import PasswordInput from '../components/PasswordInput';
+import Logo from '../components/Logo';
 import { USE_MOCKS } from '../services/api';
 
 export default function Login() {
@@ -46,9 +47,9 @@ export default function Login() {
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--green900)', padding: 24 }}>
       <div style={{ width: 'min(420px, 94vw)' }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div className="sidebar-logo" style={{ width: 56, height: 56, margin: '0 auto 14px', fontSize: 26, borderRadius: 16 }}>C</div>
-          <h1 style={{ fontFamily: 'Outfit', color: '#fff', fontSize: 26, margin: 0 }}>Creveton</h1>
-          <p style={{ color: '#7fae93', marginTop: 6, fontSize: 14 }}>Console d’administration</p>
+          <div style={{ display: 'inline-flex', marginBottom: 14 }}><Logo size={64} /></div>
+          <h1 style={{ fontFamily: 'Outfit', fontWeight: 700, color: '#fff', fontSize: 24, margin: 0 }}>Creveton</h1>
+          <p style={{ fontFamily: '"Space Grotesk", sans-serif', color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Console d’administration</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="card" style={{ padding: 26 }}>

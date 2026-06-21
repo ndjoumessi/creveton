@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useCountUp } from '../hooks/useCountUp';
+import Logo from '../components/Logo';
 import './Landing.css';
 
 const features = [
@@ -140,7 +141,7 @@ export default function Landing() {
         <div className="land-container land-hero-inner">
           <div className="land-hero-copy">
             <div className="land-logo" aria-hidden="true">
-              C
+              <Logo size={96} />
             </div>
 
             <h1 className="land-title">Creveton</h1>
@@ -309,9 +310,12 @@ export default function Landing() {
       {/* ─────────────── FOOTER ─────────────── */}
       <footer className="land-footer">
         <div className="land-container land-footer-inner">
-          <p className="land-footer-copy">
-            © 2026 Creveton · Cameroun · Tous droits réservés
-          </p>
+          <div className="land-footer-brand">
+            <Logo size={32} />
+            <p className="land-footer-copy">
+              © 2026 Creveton · Cameroun · Tous droits réservés
+            </p>
+          </div>
 
           <nav className="land-footer-social" aria-label="Réseaux sociaux">
             {reseaux.map(({ icon: Icon, label }) => (
