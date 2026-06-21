@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS tournament_participants (
 
   score         INTEGER NOT NULL DEFAULT 0,
   rank          INTEGER,                                       -- classement final (NULL avant clôture)
-  payout        DECIMAL(10, 2) NOT NULL DEFAULT 0,             -- gain FCFA versé au joueur
+  payout        INTEGER        NOT NULL DEFAULT 0,             -- gain FCFA versé au joueur
 
   joined_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
 

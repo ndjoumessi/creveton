@@ -59,7 +59,7 @@ const adminUpdate = adminCreate.fork(
 
 /** POST /admin/questions/:id/transition */
 const adminTransition = Joi.object({
-  to: Joi.string().valid('review', 'approved', 'rejected', 'archived').required(),
+  to: Joi.string().valid('pending_review', 'approved', 'rejected', 'archived').required(),
   reason: Joi.when('to', {
     is: 'rejected',
     then: Joi.string().min(3).required(),

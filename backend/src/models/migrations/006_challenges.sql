@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS challenges (
   opponent_id      UUID REFERENCES users(id) ON DELETE SET NULL,  -- NULL = matchmaking aléatoire en attente
 
   seed             VARCHAR(64),                                -- graine partagée → même set de questions
-  stake            DECIMAL(10, 2) NOT NULL DEFAULT 0,          -- mise FCFA
+  stake            INTEGER        NOT NULL DEFAULT 0,          -- mise FCFA
 
   status           VARCHAR(20) NOT NULL DEFAULT 'pending'
                      CHECK (status IN ('pending', 'accepted', 'active', 'completed',

@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS users (
   role            VARCHAR(20)  NOT NULL DEFAULT 'player'
                     CHECK (role IN ('player', 'moderator', 'admin', 'super_admin')),
 
-  wallet_balance  DECIMAL(10, 2) NOT NULL DEFAULT 0,           -- solde FCFA (XAF)
+  wallet_balance  INTEGER        NOT NULL DEFAULT 0,           -- solde FCFA (XAF)
 
   referral_code   VARCHAR(20)  UNIQUE,                         -- code de parrainage unique
   referred_by     UUID         REFERENCES users(id) ON DELETE SET NULL,  -- §3.2 parrainage

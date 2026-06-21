@@ -11,7 +11,7 @@ const questionService = require('./questionService');
  * Import de questions par lot CSV (réf. CDC §3.3).
  *
  * Pipeline : parsing → validation de schéma → détection de doublons (intra-lot
- * + base) → insertion des lignes acceptées (statut `review`, source `import`) →
+ * + base) → insertion des lignes acceptées (statut `pending_review`, source `import`) →
  * rapport lignes acceptées / rejetées (avec n° de ligne et motifs).
  *
  * Template attendu (en-têtes) :
@@ -86,7 +86,7 @@ function validateRow(raw) {
       explanation: String(raw.explanation || '').trim() || null,
       media_url: null,
       source: 'import',
-      status: 'review', // jamais publié directement (CDC §3.3)
+      status: 'pending_review', // jamais publié directement (CDC §3.3)
       language,
     },
     normalized: questionService.normalizeText(question),

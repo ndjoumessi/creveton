@@ -202,7 +202,7 @@ async function create(data, executor = db) {
       data.explanation ?? null,
       data.media_url ?? null,
       data.source || 'manual',
-      data.status || 'review',
+      data.status || 'pending_review',
       data.created_by ?? null,
     ]
   );

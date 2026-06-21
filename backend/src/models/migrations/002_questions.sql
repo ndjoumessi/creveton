@@ -37,9 +37,9 @@ CREATE TABLE IF NOT EXISTS questions (
   source        VARCHAR(50) NOT NULL DEFAULT 'manual'
                   CHECK (source IN ('manual', 'import', 'ai_generated')),
 
-  -- Workflow de modération (CDC §3.3). 'review' = pending_review.
+  -- Workflow de modération (CDC §3.3). 'pending_review' = pending_review.
   status        VARCHAR(20) NOT NULL DEFAULT 'draft'
-                  CHECK (status IN ('draft', 'review', 'approved', 'rejected', 'archived')),
+                  CHECK (status IN ('draft', 'pending_review', 'approved', 'rejected', 'archived')),
 
   version       INTEGER     NOT NULL DEFAULT 1,                -- résolution de conflits delta sync
   success_rate  REAL,                                          -- % de réussite (recalculé la nuit)

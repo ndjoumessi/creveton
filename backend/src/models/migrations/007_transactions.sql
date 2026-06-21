@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 
   type          VARCHAR(20) NOT NULL
                   CHECK (type IN ('deposit', 'withdraw', 'payout', 'entry_fee', 'refund')),
-  amount        DECIMAL(12, 2) NOT NULL,
+  amount        INTEGER        NOT NULL,
   currency      VARCHAR(3)  NOT NULL DEFAULT 'XAF',
 
   -- NULL pour les mouvements purement internes au wallet.

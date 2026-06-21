@@ -5,7 +5,7 @@
 const THEMES = ['culture', 'geographie', 'histoire', 'industrie', 'sport', 'science'];
 const LEVELS = ['beginner', 'intermediate', 'expert'];
 const QUESTION_TYPES = ['mcq', 'true_false', 'open', 'order'];
-const QUESTION_STATUSES = ['draft', 'review', 'approved', 'rejected', 'archived'];
+const QUESTION_STATUSES = ['draft', 'pending_review', 'approved', 'rejected', 'archived'];
 
 const GAME_MODES = ['normal', 'tournament', 'challenge'];
 const SEXES = ['H', 'F', 'N'];

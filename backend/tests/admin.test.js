@@ -86,15 +86,15 @@ t('POST /admin/questions : doublon → 409, ≠1 bonne réponse → 422', async 
   expect(bad.body.error.code).toBe('INVALID_CORRECT_OPTION_COUNT');
 });
 
-t('workflow statuts : draft → review → approved ; saut interdit → 400', async () => {
+t('workflow statuts : draft → pending_review → approved ; saut interdit → 400', async () => {
   const { modAuth } = await actors();
   const c = await request(app).post(`${P}/questions`).set('Authorization', modAuth).send(QUESTION);
   const id = c.body.id;
 
-  const r1 = await request(app).post(`${P}/questions/${id}/transition`).set('Authorization', modAuth).send({ to: 'review' });
-  expect(r1.body.status).toBe('review');
+  const r1 = await request(app).post(`${P}/questions/${id}/transition`).set('Authorization', modAuth).send({ to: 'pending_review' });
+  expect(r1.body.status).toBe('pending_review');
 
-  // saut review → archived interdit
+  // saut pending_review → archived interdit
   const bad = await request(app).post(`${P}/questions/${id}/transition`).set('Authorization', modAuth).send({ to: 'archived' });
   expect(bad.status).toBe(400);
   expect(bad.body.error.code).toBe('VALIDATION_ERROR');

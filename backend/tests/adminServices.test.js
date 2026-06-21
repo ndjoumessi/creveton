@@ -66,11 +66,11 @@ describe('questionService.createByAdmin', () => {
 });
 
 describe('questionService.transitionStatus (workflow §12)', () => {
-  test('draft → review autorisé', async () => {
+  test('draft → pending_review autorisé', async () => {
     questionModel.findByIdAny.mockResolvedValue({ id: 'q1', status: 'draft' });
-    questionModel.setStatus.mockResolvedValue({ id: 'q1', status: 'review' });
-    const q = await questionService.transitionStatus('q1', 'review');
-    expect(q.status).toBe('review');
+    questionModel.setStatus.mockResolvedValue({ id: 'q1', status: 'pending_review' });
+    const q = await questionService.transitionStatus('q1', 'pending_review');
+    expect(q.status).toBe('pending_review');
   });
 
   test('draft → approved interdit (saut d’étape)', async () => {
@@ -81,8 +81,8 @@ describe('questionService.transitionStatus (workflow §12)', () => {
     expect(questionModel.setStatus).not.toHaveBeenCalled();
   });
 
-  test('review → approved autorisé ; approved → archived autorisé', async () => {
-    questionModel.findByIdAny.mockResolvedValue({ id: 'q1', status: 'review' });
+  test('pending_review → approved autorisé ; approved → archived autorisé', async () => {
+    questionModel.findByIdAny.mockResolvedValue({ id: 'q1', status: 'pending_review' });
     questionModel.setStatus.mockResolvedValue({ id: 'q1', status: 'approved' });
     expect((await questionService.transitionStatus('q1', 'approved')).status).toBe('approved');
 

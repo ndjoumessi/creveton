@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS tournaments (
                  CHECK (type IN ('free', 'flash', 'mini', 'grand', 'premium')),
   theme        VARCHAR(20),                                    -- NULL = thèmes mixtes
 
-  entry_fee    DECIMAL(10, 2) NOT NULL DEFAULT 0,              -- mise FCFA (0 = gratuit)
+  entry_fee    INTEGER        NOT NULL DEFAULT 0,              -- mise FCFA (0 = gratuit)
   max_players  INTEGER     CHECK (max_players IS NULL OR max_players > 0),
-  prize_pool   DECIMAL(12, 2) NOT NULL DEFAULT 0,              -- cagnotte FCFA
+  prize_pool   INTEGER        NOT NULL DEFAULT 0,              -- cagnotte FCFA
 
   status       VARCHAR(20) NOT NULL DEFAULT 'scheduled'
                  CHECK (status IN ('scheduled', 'open', 'running', 'closed', 'paid', 'cancelled')),

@@ -9,6 +9,7 @@ const scoreService = require('./scoreService');
 const leaderboardService = require('./leaderboardService');
 const questionModel = require('../models/question.model');
 const userModel = require('../models/user.model');
+const sessionModel = require('../models/session.model');
 
 /**
  * Logique serveur-authoritative des sessions de jeu (réf. spec §6).
@@ -75,24 +76,21 @@ async function submitSession({ userId, mode = 'normal', theme, level, startedAt,
     let levels;
     try {
       await client.query('BEGIN');
-      const inserted = await client.query(
-        `INSERT INTO game_sessions
-           (user_id, mode, theme, level, score, correct_count, question_count, xp_earned, answers)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)
-         RETURNING id`,
-        [
-          userId,
+      const session = await sessionModel.create(
+        {
+          user_id: userId,
           mode,
           theme,
           level,
-          result.score,
-          result.correct_count,
-          result.total_questions,
-          result.xp_earned,
-          JSON.stringify(persistedAnswers),
-        ]
+          score: result.score,
+          correct_count: result.correct_count,
+          question_count: result.total_questions,
+          xp_earned: result.xp_earned,
+          answers: persistedAnswers,
+        },
+        client
       );
-      sessionId = inserted.rows[0].id;
+      sessionId = session.id;
       levels = await userModel.creditSessionXp(userId, result.xp_earned, levelFromXp, client);
       await client.query('COMMIT');
     } catch (err) {

@@ -198,10 +198,10 @@ async function recomputeSuccessRates({ windowDays = null } = {}) {
 
 // Transitions de statut autorisées (workflow de modération §12).
 const STATUS_TRANSITIONS = {
-  draft: ['review'],
-  review: ['approved', 'rejected'],
+  draft: ['pending_review'],
+  pending_review: ['approved', 'rejected'],
   approved: ['archived'],
-  rejected: ['review'],
+  rejected: ['pending_review'],
   archived: [],
 };
 

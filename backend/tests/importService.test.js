@@ -5,7 +5,7 @@ process.env.NODE_ENV = 'test';
 // Modèle mocké : pas de Postgres en test.
 jest.mock('../src/models/question.model', () => ({
   existsByNormalizedText: jest.fn().mockResolvedValue(false),
-  create: jest.fn().mockResolvedValue({ id: 'new-id', status: 'review' }),
+  create: jest.fn().mockResolvedValue({ id: 'new-id', status: 'pending_review' }),
 }));
 
 const importService = require('../src/services/importService');
@@ -34,7 +34,7 @@ describe('importService.validateRow', () => {
     expect(r.question.options).toHaveLength(4);
     expect(r.question.options[1]).toEqual({ text: 'Yaoundé', is_correct: true });
     expect(r.question.source).toBe('import');
-    expect(r.question.status).toBe('review'); // jamais publié directement
+    expect(r.question.status).toBe('pending_review'); // jamais publié directement
   });
 
   test('lettre « correct » hors A–D → rejet', () => {
