@@ -32,7 +32,7 @@ function ratio(num, den) {
 async function getAnalytics({ period = '30d' } = {}) {
   const days = periodToDays(period);
 
-  const [active, signups, retention, revenue, tournaments, transactions, byType] = await Promise.all([
+  const [active, signups, retention, revenue, tournaments, transactions, byType, daily] = await Promise.all([
     // DAU (24 h) & MAU (30 j) — sur last_active_at.
     db.query(
       `SELECT
@@ -90,6 +90,20 @@ async function getAnalytics({ period = '30d' } = {}) {
         GROUP BY type`,
       [days]
     ),
+    // Série journalière inscriptions vs parties (graphe d'activité du dashboard).
+    // generate_series garantit une ligne par jour, même à 0.
+    db.query(
+      `WITH d AS (
+         SELECT generate_series(CURRENT_DATE - ($1::int - 1), CURRENT_DATE, interval '1 day')::date AS day
+       )
+       SELECT d.day AS date,
+              (SELECT count(*)::int FROM users u
+                WHERE u.deleted_at IS NULL AND u.created_at::date = d.day) AS signups,
+              (SELECT count(*)::int FROM game_sessions g
+                WHERE g.played_at::date = d.day) AS games
+         FROM d ORDER BY d.day`,
+      [days]
+    ),
   ]);
 
   const { dau, mau } = active.rows[0];
@@ -114,6 +128,11 @@ async function getAnalytics({ period = '30d' } = {}) {
       d30: ratio(r.d30, r.cohort),
     },
     revenue_fcfa: Number(revenue.rows[0].revenue),
+    daily: daily.rows.map((d) => ({
+      date: d.date,
+      signups: d.signups,
+      games: d.games,
+    })),
     tournaments_run: tournaments.rows[0].run,
     transactions: {
       total: transactions.rows[0].total,

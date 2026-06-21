@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { LogIn, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { notify } from '../components/Toast';
+import PasswordInput from '../components/PasswordInput';
 import { USE_MOCKS } from '../services/api';
 
 export default function Login() {
@@ -64,12 +65,7 @@ export default function Login() {
 
           <div className="field">
             <label>Mot de passe</label>
-            <input
-              className="input"
-              type="password"
-              placeholder="••••••••"
-              {...register('password', { required: 'Mot de passe requis' })}
-            />
+            <PasswordInput {...register('password', { required: 'Mot de passe requis' })} />
             {errors.password && <span className="field-error">{errors.password.message}</span>}
           </div>
 

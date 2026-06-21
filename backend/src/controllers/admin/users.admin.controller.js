@@ -79,6 +79,17 @@ const remove = asyncHandler(async (req, res) => {
   return noContent(res);
 });
 
+/**
+ * POST /admin/users/:id/message — enregistre un message admin → joueur.
+ * (Pas d'infra email ici : on valide la cible et on accuse réception ; le canal
+ * réel — email/push — sera branché en v2. Le front retombe sur mailto si besoin.)
+ */
+const message = asyncHandler(async (req, res) => {
+  const user = await userModel.findById(req.params.id);
+  if (!user) throw new ApiError('USER_NOT_FOUND');
+  return ok(res, { sent: true, to: user.email, subject: req.body.subject || '' });
+});
+
 /** PATCH /admin/users/:id/role — change le rôle (super_admin uniquement). */
 const changeRole = asyncHandler(async (req, res) => {
   const updated = await userModel.setRole(req.params.id, req.body.role);
@@ -129,4 +140,4 @@ const referral = asyncHandler(async (req, res) => {
   return ok(res, { code: req.params.code, signups: count });
 });
 
-module.exports = { list, usersStats, get, suspend, ban, resetPassword, remove, changeRole, invite, referral };
+module.exports = { list, usersStats, get, suspend, ban, resetPassword, remove, changeRole, invite, referral, message };

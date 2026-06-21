@@ -16,6 +16,7 @@ router.patch('/:id/role', requirePermission('users:role'), validate(schemas.admi
 router.post('/:id/suspend', requirePermission('users:manage'), validate(schemas.adminSuspend), ctrl.suspend);
 router.post('/:id/ban', requirePermission('users:manage'), validate(schemas.adminBan), ctrl.ban);
 router.post('/:id/reset-password', requirePermission('users:manage'), ctrl.resetPassword);
+router.post('/:id/message', requirePermission('users:manage'), validate(schemas.adminMessage), ctrl.message);
 router.delete('/:id', requirePermission('users:manage'), ctrl.remove);
 
 module.exports = router;

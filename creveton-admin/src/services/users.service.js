@@ -76,4 +76,9 @@ export function changeRole(id, role) {
   return withMock(() => api.patch(`/admin/users/${id}/role`, { role }).then((r) => r.data), () => ({ id, role }));
 }
 
-export default { list, stats, get, suspend, ban, resetPassword, remove, invite, changeRole };
+/** POST /admin/users/:id/message — message admin → joueur. */
+export function message(id, payload) {
+  return withMock(() => api.post(`/admin/users/${id}/message`, payload).then((r) => r.data), () => ({ sent: true }));
+}
+
+export default { list, stats, get, suspend, ban, resetPassword, remove, invite, changeRole, message };

@@ -14,7 +14,10 @@ async function getOverview() {
          (SELECT count(*)::int FROM users           WHERE deleted_at IS NULL)                              AS total_users,
          (SELECT count(*)::int FROM game_sessions   WHERE played_at::date = CURRENT_DATE)                  AS games_today,
          (SELECT count(*)::int FROM questions       WHERE status = 'approved'       AND deleted_at IS NULL) AS active_questions,
-         (SELECT count(*)::int FROM tournaments      WHERE status = 'open'           AND deleted_at IS NULL) AS open_tournaments`
+         (SELECT count(*)::int FROM tournaments      WHERE status = 'open'           AND deleted_at IS NULL) AS open_tournaments,
+         (SELECT count(*)::int FROM users           WHERE deleted_at IS NULL AND last_active_at >= now() - interval '5 minutes') AS online_now,
+         (SELECT COALESCE(round(100.0 * sum(correct_count) / NULLIF(sum(question_count), 0))::int, 0)
+            FROM game_sessions)                                                                            AS success_rate`
     ),
     db.query(
       `SELECT id, name, ville, created_at
@@ -40,6 +43,8 @@ async function getOverview() {
       games_today: c.games_today,
       active_questions: c.active_questions,
       open_tournaments: c.open_tournaments,
+      online_now: c.online_now,
+      success_rate: c.success_rate,
     },
     recent_users: recent.rows,
     pending_questions: pending.rows.map((r) => questionModel.toAdminView(r)),

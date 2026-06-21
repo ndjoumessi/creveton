@@ -98,7 +98,7 @@
 .opt-review.correct .q-opt-letter { color: var(--green700); }
 .q-opt-text { flex: 1; }
 
-/* Modal création : grille 2 colonnes (form + preview live) */
+/* Modal création : grille 2 colonnes (form + aperçu mobile live) */
 .q-create-grid {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -106,10 +106,6 @@
 }
 @media (max-width: 720px) { .q-create-grid { grid-template-columns: 1fr; } }
 .q-preview {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
   align-self: start;
   position: sticky;
   top: 0;
@@ -123,32 +119,11 @@
   color: var(--muted);
   margin-bottom: 12px;
 }
-.q-preview-q {
-  font-family: 'Outfit';
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--ink);
-  line-height: 1.35;
-  margin-bottom: 12px;
-  min-height: 20px;
+/* La bonne réponse dans l'aperçu mobile : pastille lettre dorée */
+.q-preview .mobile-preview .mp-opt.correct .mp-letter {
+  background: var(--gold);
+  color: var(--green900);
 }
-.q-preview-q.empty { color: #9ca3af; font-weight: 500; }
-.q-preview-opt {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 6px;
-  font-size: 13px;
-  background: var(--surface);
-}
-.q-preview-opt.correct { background: #f0fdf4; border-color: var(--green500); color: #15803d; font-weight: 600; }
-.q-preview-opt .q-opt-letter { width: 14px; }
-
-/* Compteur de caractères du textarea */
-.q-counter { text-align: right; font-size: 12px; color: var(--muted); margin-top: 4px; }
 
 /* Ligne d'options dans le formulaire (input + radio bonne réponse) */
 .q-opt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }

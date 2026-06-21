@@ -46,4 +46,10 @@ const refresh = Joi.object({
   refresh_token: Joi.string().required(),
 });
 
-module.exports = { register, verifyOtp, resendOtp, login, refresh };
+/** POST /auth/change-password — nouveau mot de passe soumis à la même politique. */
+const changePassword = Joi.object({
+  current_password: Joi.string().required(),
+  new_password: password.required(),
+});
+
+module.exports = { register, verifyOtp, resendOtp, login, refresh, changePassword };

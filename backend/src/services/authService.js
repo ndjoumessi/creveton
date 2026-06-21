@@ -217,6 +217,26 @@ async function logout(userId, sid) {
   }
 }
 
+/**
+ * Change le mot de passe d'un compte authentifié : vérifie le mot de passe
+ * actuel, refuse un nouveau identique à l'ancien, puis stocke le hash bcrypt.
+ */
+async function changePassword(userId, currentPassword, newPassword) {
+  const user = await userModel.findById(userId);
+  if (!user || !user.password_hash) throw new ApiError('USER_NOT_FOUND');
+
+  const match = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!match) throw new ApiError('AUTH_INVALID_CREDENTIALS', { message: 'Mot de passe actuel incorrect.' });
+
+  if (await bcrypt.compare(newPassword, user.password_hash)) {
+    throw new ApiError('VALIDATION_ERROR', { message: "Le nouveau mot de passe doit différer de l'ancien." });
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_COST);
+  await userModel.setPassword(userId, passwordHash);
+  return { changed: true };
+}
+
 module.exports = {
   register,
   verifyOtp,
@@ -224,5 +244,6 @@ module.exports = {
   login,
   refresh,
   logout,
+  changePassword,
   issueTokens,
 };

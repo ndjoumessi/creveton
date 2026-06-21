@@ -56,6 +56,12 @@ const adminAnalytics = Joi.object({
   metrics: Joi.string().optional(),
 });
 
+/** POST /admin/users/:id/message — message admin → joueur. */
+const adminMessage = Joi.object({
+  subject: Joi.string().max(200).allow('').default(''),
+  body: Joi.string().min(1).max(5000).required(),
+});
+
 /** PATCH /admin/users/:id/role (super_admin) — pas de super_admin via l'UI. */
 const adminRole = Joi.object({
   role: Joi.string().valid('player', 'moderator', 'admin').required(),
@@ -91,6 +97,7 @@ module.exports = {
   adminSuspend,
   adminBan,
   adminAnalytics,
+  adminMessage,
   adminRole,
   adminInvite,
   adminSessions,

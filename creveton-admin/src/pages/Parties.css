@@ -101,6 +101,38 @@
   .p-stats { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* En-tête : KPIs sombres + carte de répartition par thème côte à côte. */
+.p-header-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+@media (max-width: 880px) {
+  .p-header-grid { grid-template-columns: 1fr; }
+}
+
+/* Carte blanche du donut « Répartition par thème ». */
+.p-theme-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.p-theme-title {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.p-theme-empty {
+  color: var(--muted);
+  font-size: 13.5px;
+  text-align: center;
+  padding: 60px 14px;
+}
+
 /* Récapitulatif Q par Q. */
 .p-recap-title {
   font-family: 'Space Grotesk';

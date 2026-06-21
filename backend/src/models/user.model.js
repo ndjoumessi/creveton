@@ -182,6 +182,15 @@ async function setStatus(id, status) {
   return rows[0] || null;
 }
 
+/** Met à jour le hash de mot de passe (changement de mot de passe). */
+async function setPassword(id, passwordHash) {
+  const { rows } = await db.query(
+    `UPDATE users SET password_hash = $2 WHERE id = $1 AND deleted_at IS NULL RETURNING id`,
+    [id, passwordHash]
+  );
+  return rows[0] || null;
+}
+
 /** Change le rôle d'un compte (PATCH /admin/users/:id/role — super_admin). */
 async function setRole(id, role) {
   const { rows } = await db.query(
@@ -369,6 +378,7 @@ module.exports = {
   creditSessionXp,
   levelForXp,
   XP_LEVELS,
+  setPassword,
   generateUniqueReferralCode,
   // admin
   listAdmin,

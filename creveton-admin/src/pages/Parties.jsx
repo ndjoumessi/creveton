@@ -1,10 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Eye, Check, X, User, Zap } from 'lucide-react';
+import {
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip, Legend,
+} from 'recharts';
 import sessionsService from '../services/sessions.service';
 import { useApiData } from '../hooks/useApiData';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
-import { themeLabels, levelLabels } from '../constants/theme';
+import { themeLabels, levelLabels, themeBadgeColors } from '../constants/theme';
 import { num, pct, dateFr, dateTimeFr, isToday } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
@@ -12,6 +15,7 @@ import ThemeBadge from '../components/ThemeBadge';
 import Drawer from '../components/Drawer';
 import Avatar from '../components/Avatar';
 import { Skeleton } from '../components/Skeleton';
+import { notify } from '../components/Toast';
 import './Parties.css';
 
 const EMPTY_FILTERS = { theme: '', level: '', q: '', period: '' };
@@ -56,6 +60,10 @@ export default function Parties() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [selected, setSelected] = useState(null);
 
+  // Détail de la partie ouverte (récap question-par-question via GET /admin/sessions/:id).
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
   const { data, loading } = useApiData(
     () => sessionsService.list(filters),
     [filters.theme, filters.level, filters.q],
@@ -76,6 +84,33 @@ export default function Parties() {
     const successRate = sumTotal ? sumCorrect / sumTotal : null;
     return { total, today, avgScore, successRate };
   }, [filtered]);
+
+  // Répartition des parties filtrées par thème, pour le donut recharts.
+  const themeData = useMemo(() => {
+    const counts = new Map();
+    filtered.forEach((s) => counts.set(s.theme, (counts.get(s.theme) || 0) + 1));
+    return [...counts.entries()]
+      .map(([theme, value]) => ({
+        theme,
+        name: themeBadgeColors[theme]?.label || themeLabels[theme] || theme,
+        value,
+        color: themeBadgeColors[theme]?.fg || 'var(--muted)',
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [filtered]);
+
+  // À l'ouverture du drawer : recharge le détail complet (answers fiables) via get(id).
+  useEffect(() => {
+    if (!selected) { setDetail(null); return undefined; }
+    let alive = true;
+    setDetail(null);
+    setDetailLoading(true);
+    sessionsService.get(selected.id)
+      .then((d) => { if (alive) setDetail(d); })
+      .catch(() => { if (alive) notify.error('Impossible de charger le détail de la partie.'); })
+      .finally(() => { if (alive) setDetailLoading(false); });
+    return () => { alive = false; };
+  }, [selected]);
 
   const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
 
@@ -151,23 +186,60 @@ export default function Parties() {
         description="Consultez l’historique des parties jouées et le détail de chaque session."
       />
 
-      {loading ? (
-        <div className="dark-banner">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div className="item" key={i}>
-              <Skeleton w={70} h={30} style={{ background: 'rgba(255,255,255,0.12)' }} />
-              <Skeleton w={100} h={12} style={{ background: 'rgba(255,255,255,0.08)', marginTop: 8 }} />
-            </div>
-          ))}
+      <div className="p-header-grid">
+        {loading ? (
+          <div className="dark-banner">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div className="item" key={i}>
+                <Skeleton w={70} h={30} style={{ background: 'rgba(255,255,255,0.12)' }} />
+                <Skeleton w={100} h={12} style={{ background: 'rgba(255,255,255,0.08)', marginTop: 8 }} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="dark-banner">
+            <div className="item"><div className="v">{num(kpis.total)}</div><div className="l">Total parties</div></div>
+            <div className="item"><div className="v">{num(kpis.today)}</div><div className="l">Aujourd’hui</div></div>
+            <div className="item"><div className="v">{num(kpis.avgScore)}</div><div className="l">Score moyen</div></div>
+            <div className="item"><div className="v">{pct(kpis.successRate)}</div><div className="l">Taux de réussite global</div></div>
+          </div>
+        )}
+
+        <div className="card card-pad p-theme-card">
+          <div className="p-theme-title">Répartition par thème</div>
+          {loading ? (
+            <Skeleton w="100%" h={180} r={12} />
+          ) : themeData.length === 0 ? (
+            <div className="p-theme-empty">Aucune donnée à afficher.</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart>
+                <Pie
+                  data={themeData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={45}
+                  outerRadius={72}
+                  paddingAngle={2}
+                  stroke="none"
+                >
+                  {themeData.map((d) => <Cell key={d.theme} fill={d.color} />)}
+                </Pie>
+                <RTooltip
+                  formatter={(value, name) => [`${num(value)} partie${value > 1 ? 's' : ''}`, name]}
+                />
+                <Legend
+                  iconType="circle"
+                  iconSize={9}
+                  wrapperStyle={{ fontSize: 12 }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
-      ) : (
-        <div className="dark-banner">
-          <div className="item"><div className="v">{num(kpis.total)}</div><div className="l">Total parties</div></div>
-          <div className="item"><div className="v">{num(kpis.today)}</div><div className="l">Aujourd’hui</div></div>
-          <div className="item"><div className="v">{num(kpis.avgScore)}</div><div className="l">Score moyen</div></div>
-          <div className="item"><div className="v">{pct(kpis.successRate)}</div><div className="l">Taux de réussite global</div></div>
-        </div>
-      )}
+      </div>
 
       <div className="card card-pad" style={{ marginBottom: 18 }}>
         <div className="filters">
@@ -192,7 +264,11 @@ export default function Parties() {
         title="Détail de la partie"
         width={520}
         footer={selected && (
-          <button className="btn btn-creveton" onClick={() => navigate('/users')}>
+          <button
+            className="btn btn-creveton"
+            title="Voir le profil du joueur"
+            onClick={() => navigate(selected.user?.id ? `/users?user=${selected.user.id}` : '/users')}
+          >
             <User size={15} /> Voir le profil du joueur
           </button>
         )}
@@ -238,8 +314,14 @@ export default function Parties() {
 
             <div>
               <div className="p-recap-title">Récapitulatif</div>
-              {selected.answers && selected.answers.length > 0 ? (
-                selected.answers.map((a, i) => (
+              {detailLoading ? (
+                <div className="stack" style={{ gap: 8 }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} w="100%" h={50} r={12} />
+                  ))}
+                </div>
+              ) : detail?.answers && detail.answers.length > 0 ? (
+                detail.answers.map((a, i) => (
                   <div className={`opt-review ${a.is_correct ? 'correct' : 'wrong'}`} key={a.question_id || i}>
                     <span className="p-recap-num">{i + 1}</span>
                     {a.is_correct
@@ -249,7 +331,7 @@ export default function Parties() {
                       <div className="p-recap-q">{a.question_text}</div>
                       <div className="p-recap-a">{a.options?.[a.your_index]?.text || '—'}</div>
                     </div>
-                    <span className="p-recap-time">{Math.round(a.elapsed_ms / 1000)}s</span>
+                    <span className="p-recap-time" title="Temps de réponse">{Math.round(a.elapsed_ms / 1000)}s</span>
                   </div>
                 ))
               ) : (

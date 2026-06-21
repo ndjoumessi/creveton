@@ -1,13 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import Papa from 'papaparse';
 import {
-  Search, Eye, UserX, KeyRound, Trash2, UserPlus, ShieldCheck, Trophy,
+  Search, Eye, UserX, KeyRound, Trash2, UserPlus, ShieldCheck, Trophy, Mail, Download,
 } from 'lucide-react';
 import usersService from '../services/users.service';
+import sessionsService from '../services/sessions.service';
 import { useApiData } from '../hooks/useApiData';
 import { useAuthStore } from '../store/authStore';
 import { USER_STATUS_KEYS, roleLabels, THEME_KEYS } from '../constants/enums';
-import { userStatusColors, themeBadgeColors } from '../constants/theme';
+import { userStatusColors, themeBadgeColors, levelLabels } from '../constants/theme';
 import {
   num, dateFr, dateTimeFr, isToday,
 } from '../utils/format';
@@ -67,6 +69,16 @@ function themeCfgAt(n) {
   return themeBadgeColors[key] || { label: key, icon: '' };
 }
 
+/** Config de thème depuis une clé réelle (parties), avec repli gracieux. */
+function themeCfgByKey(key) {
+  return themeBadgeColors[key] || { label: key || 'Thème', icon: '🎯', bg: '#f3f4f6' };
+}
+
+/** Vrai si un compte est administrateur (badge doré). */
+function isAdminRole(role) {
+  return role === 'admin' || role === 'super_admin';
+}
+
 /** Statistiques fictives mais déterministes par utilisateur (fiche détail). */
 function mockUserStats(user) {
   const seed = seedFrom(user.id);
@@ -103,14 +115,21 @@ function mockGames(user) {
   });
 }
 
-/** Filtre période d'inscription (côté client, sur created_at). */
+/** Filtre période (côté client : created_at, ou inactivité via last_active_at). */
 function inPeriod(user, period) {
   if (!period) return true;
+  const DAY = 86400000;
+  const now = Date.now();
+  // Inactifs > 30j : aucune activité depuis 30 jours, ou dernière activité absente.
+  if (period === 'inactive30') {
+    if (!user.last_active_at) return true;
+    const la = new Date(user.last_active_at).getTime();
+    if (Number.isNaN(la)) return true;
+    return now - la > 30 * DAY;
+  }
   if (period === 'today') return isToday(user.created_at);
   const t = new Date(user.created_at).getTime();
   if (Number.isNaN(t)) return false;
-  const DAY = 86400000;
-  const now = Date.now();
   if (period === '7d') return now - t <= 7 * DAY;
   if (period === '30d') return now - t <= 30 * DAY;
   return true;
@@ -244,26 +263,106 @@ function ProgressionTab({ user }) {
 
 /* ---------- Onglet Historique ---------- */
 function HistoriqueTab({ user }) {
-  const games = mockGames(user);
+  // Vraies parties du joueur. fetcher lu via ref dans useApiData → deps littérales.
+  const { data, loading } = useApiData(
+    () => sessionsService.list({ user_id: user.id }),
+    [user.id],
+  );
+  const games = useMemo(() => data?.data || [], [data]);
+
+  // Ordre chronologique (du plus ancien au plus récent) pour la Sparkline ;
+  // affichage de la timeline du plus récent au plus ancien.
+  const chrono = useMemo(
+    () => [...games].sort(
+      (a, b) => new Date(a.played_at).getTime() - new Date(b.played_at).getTime(),
+    ),
+    [games],
+  );
+  const scores = useMemo(() => chrono.map((g) => g.score), [chrono]);
+  const timeline = useMemo(() => [...chrono].reverse(), [chrono]);
+
+  if (loading) {
+    return (
+      <div className="stack" style={{ gap: 16 }}>
+        <Skeleton w="100%" h={64} r={12} />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div className="u-game-row" key={i}>
+            <Skeleton w={36} h={36} r={10} />
+            <div className="u-game-main">
+              <Skeleton w="60%" h={13} />
+              <Skeleton w="40%" h={11} style={{ marginTop: 6 }} />
+            </div>
+            <Skeleton w={48} h={28} r={8} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!games.length) {
+    return <p className="muted" style={{ fontSize: 13 }}>Aucune partie enregistrée pour ce joueur.</p>;
+  }
+
   return (
-    <div className="stack" style={{ gap: 4 }}>
-      <div className="u-section-title" style={{ marginBottom: 6 }}>10 dernières parties</div>
-      {games.map((g, i) => (
-        <div className="u-game-row" key={i}>
-          <div className="u-game-icon" style={{ background: g.bg }}>
-            {g.icon}
-          </div>
-          <div className="u-game-main">
-            <div className="list-name">{g.theme} · Niveau {g.level}</div>
-            <div className="list-sub">{relativeFr(g.date)}</div>
-          </div>
-          <div className="u-game-end">
-            <div className="u-game-score">{num(g.score)} pts</div>
-            <div className="u-game-xp">+{g.xp} XP</div>
+    <div className="stack" style={{ gap: 18 }}>
+      {scores.length >= 2 && (
+        <div>
+          <div className="u-section-title" style={{ marginBottom: 8 }}>Évolution des scores</div>
+          <div className="u-spark" title="Évolution des scores (ordre chronologique)">
+            <Sparkline values={scores} width={200} height={60} fill />
           </div>
         </div>
-      ))}
+      )}
+
+      <div>
+        <div className="u-section-title" style={{ marginBottom: 6 }}>
+          {games.length} {games.length > 1 ? 'parties' : 'partie'}
+        </div>
+        {timeline.map((g) => {
+          const cfg = themeCfgByKey(g.theme);
+          return (
+            <div className="u-game-row" key={g.id}>
+              <div className="u-game-icon" style={{ background: cfg.bg || '#f3f4f6' }} aria-hidden="true">
+                {cfg.icon}
+              </div>
+              <div className="u-game-main">
+                <div className="list-name">
+                  {cfg.label} · {levelLabels[g.level] || g.level}
+                </div>
+                <div className="list-sub" title={dateTimeFr(g.played_at)}>
+                  {num(g.correct_count)}/{num(g.question_count)} bonnes · {relativeFr(g.played_at)}
+                </div>
+              </div>
+              <div className="u-game-end">
+                <div className="u-game-score">{num(g.score)} pts</div>
+                <div className="u-game-xp">+{num(g.xp_earned)} XP</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
+  );
+}
+
+/* ---------- Modal : envoyer un message ---------- */
+function MessageForm({ onSubmit }) {
+  const { register, handleSubmit } = useForm({ defaultValues: { subject: '', body: '' } });
+  return (
+    <form id="message-form" onSubmit={handleSubmit(onSubmit)}>
+      <div className="field">
+        <label>Sujet <span className="muted" style={{ fontWeight: 400 }}>(optionnel)</span></label>
+        <input className="input" placeholder="Objet du message…" {...register('subject')} />
+      </div>
+      <div className="field" style={{ marginBottom: 0 }}>
+        <label>Message</label>
+        <textarea
+          className="textarea"
+          placeholder="Votre message au joueur…"
+          {...register('body', { required: true })}
+        />
+      </div>
+    </form>
   );
 }
 
@@ -317,6 +416,8 @@ export default function Utilisateurs() {
   const [showInvite, setShowInvite] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [tempPassword, setTempPassword] = useState('');
+  const [messageFor, setMessageFor] = useState(null);
+  const [messaging, setMessaging] = useState(false);
 
   const isSuperAdmin = useAuthStore((s) => s.role)() === 'super_admin';
 
@@ -410,6 +511,54 @@ export default function Utilisateurs() {
 
   const closeInvite = () => { setShowInvite(false); setTempPassword(''); };
 
+  // Envoi d'un message au joueur ; repli mailto en cas d'échec réseau.
+  const submitMessage = async ({ subject, body }) => {
+    if (!messageFor) return;
+    setMessaging(true);
+    try {
+      await usersService.message(messageFor.id, { subject: subject?.trim(), body: body.trim() });
+      notify.success(`Message envoyé à ${messageFor.name}.`);
+      setMessageFor(null);
+    } catch {
+      // Fallback : ouvre le client mail de l'admin avec sujet/corps pré-remplis.
+      const params = [
+        subject ? `subject=${encodeURIComponent(subject)}` : '',
+        body ? `body=${encodeURIComponent(body)}` : '',
+      ].filter(Boolean).join('&');
+      notify.error('Envoi indisponible — ouverture du client mail.');
+      window.location.href = `mailto:${messageFor.email}${params ? `?${params}` : ''}`;
+      setMessageFor(null);
+    } finally {
+      setMessaging(false);
+    }
+  };
+
+  // Export CSV de la liste FILTRÉE affichée.
+  const exportCsv = () => {
+    if (!filtered.length) { notify.error('Aucun utilisateur à exporter.'); return; }
+    const csv = Papa.unparse(filtered.map((u) => ({
+      Nom: u.name,
+      Email: u.email,
+      'Téléphone': u.phone || '',
+      Ville: u.ville || '',
+      Niveau: u.level,
+      XP: u.total_xp,
+      Parties: mockGamesPlayed(u.id),
+      'Inscrit le': dateFr(u.created_at),
+    })));
+    // BOM en tête pour qu'Excel ouvre l'UTF-8 correctement.
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `utilisateurs-creveton-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    notify.success(`${filtered.length} utilisateur(s) exporté(s).`);
+  };
+
   const columns = [
     {
       id: 'avatar',
@@ -424,7 +573,14 @@ export default function Utilisateurs() {
         const u = row.original;
         return (
           <div className="u-id">
-            <span className="cell-strong u-id-name">{u.name}</span>
+            <span className="u-id-line">
+              <span className="cell-strong u-id-name">{u.name}</span>
+              {isAdminRole(u.role) && (
+                <span className="badge badge-admin" title={roleLabels[u.role] || 'Admin'}>
+                  <ShieldCheck size={11} /> Admin
+                </span>
+              )}
+            </span>
             <span className="list-sub u-id-mail">{u.email}</span>
           </div>
         );
@@ -494,9 +650,18 @@ export default function Utilisateurs() {
         title="Utilisateurs"
         description="Gestion des comptes joueurs : profils, progression et modération."
         actions={(
-          <button className="btn btn-primary" onClick={() => setShowInvite(true)}>
-            <UserPlus size={16} /> Inviter un admin
-          </button>
+          <>
+            <button
+              className="btn btn-ghost"
+              onClick={exportCsv}
+              title="Exporter la liste filtrée au format CSV"
+            >
+              <Download size={16} /> Exporter
+            </button>
+            <button className="btn btn-primary" onClick={() => setShowInvite(true)}>
+              <UserPlus size={16} /> Inviter un admin
+            </button>
+          </>
         )}
       />
 
@@ -544,6 +709,7 @@ export default function Utilisateurs() {
             <option value="today">Aujourd&apos;hui</option>
             <option value="7d">7 derniers jours</option>
             <option value="30d">30 derniers jours</option>
+            <option value="inactive30">Inactifs &gt; 30j</option>
           </select>
         </div>
       </div>
@@ -603,10 +769,17 @@ export default function Utilisateurs() {
                   <StatusBadge status={selected.status} kind="user" />
                 </div>
                 <div className="u-fiche-quick">
-                  <button className="btn btn-ghost-soft" onClick={() => setSuspendFor(selected)}>
+                  <button
+                    className="btn btn-ghost-soft"
+                    title="Envoyer un message au joueur"
+                    onClick={() => setMessageFor(selected)}
+                  >
+                    <Mail size={14} /> Message
+                  </button>
+                  <button className="btn btn-ghost-soft" title="Suspendre le compte" onClick={() => setSuspendFor(selected)}>
                     <UserX size={14} /> Suspendre
                   </button>
-                  <button className="btn btn-ghost-soft" onClick={() => doResetPassword(selected)}>
+                  <button className="btn btn-ghost-soft" title="Réinitialiser le mot de passe" onClick={() => doResetPassword(selected)}>
                     <KeyRound size={14} /> Reset MDP
                   </button>
                 </div>
@@ -681,6 +854,23 @@ export default function Utilisateurs() {
         ) : (
           <InviteForm onSubmit={submitInvite} />
         )}
+      </Modal>
+
+      {/* Modal : envoyer un message au joueur */}
+      <Modal
+        open={!!messageFor}
+        onClose={() => setMessageFor(null)}
+        title={messageFor ? `Message à ${messageFor.name}` : 'Message'}
+        footer={(
+          <>
+            <button className="btn" onClick={() => setMessageFor(null)}>Annuler</button>
+            <button className="btn btn-primary" type="submit" form="message-form" disabled={messaging}>
+              <Mail size={15} /> Envoyer
+            </button>
+          </>
+        )}
+      >
+        <MessageForm onSubmit={submitMessage} />
       </Modal>
     </>
   );

@@ -36,3 +36,14 @@ export async function login(email, password) {
     throw err;
   }
 }
+
+/** POST /auth/change-password — change le mot de passe du compte connecté. */
+export async function changePassword(currentPassword, newPassword) {
+  const { data } = await api.post('/auth/change-password', {
+    current_password: currentPassword,
+    new_password: newPassword,
+  });
+  return data;
+}
+
+export default { login, changePassword };

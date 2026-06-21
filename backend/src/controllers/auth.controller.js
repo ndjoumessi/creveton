@@ -40,10 +40,16 @@ const refresh = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
+/** POST /auth/change-password → 200 (vérifie l'actuel, applique le nouveau) */
+const changePassword = asyncHandler(async (req, res) => {
+  const result = await authService.changePassword(req.user.id, req.body.current_password, req.body.new_password);
+  return ok(res, result);
+});
+
 /** POST /auth/logout → 204 (révoque la session courante) */
 const logout = asyncHandler(async (req, res) => {
   await authService.logout(req.user.id, req.user.sid);
   return noContent(res);
 });
 
-module.exports = { register, verifyOtp, resendOtp, login, refresh, logout };
+module.exports = { register, verifyOtp, resendOtp, login, refresh, changePassword, logout };

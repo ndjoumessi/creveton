@@ -23,6 +23,7 @@ router.post('/verify-otp', validate(schemas.verifyOtp), ctrl.verifyOtp);
 router.post('/resend-otp', otpLimiter, validate(schemas.resendOtp), ctrl.resendOtp);
 router.post('/login', validate(schemas.login), ctrl.login);
 router.post('/refresh', validate(schemas.refresh), ctrl.refresh);
+router.post('/change-password', authenticate, validate(schemas.changePassword), ctrl.changePassword);
 router.post('/logout', authenticate, ctrl.logout);
 
 module.exports = router;

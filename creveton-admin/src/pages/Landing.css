@@ -357,6 +357,88 @@
 }
 
 /* ============================================================
+   COMMENT ÇA MARCHE
+   ============================================================ */
+.land-steps {
+  background: var(--land-green900);
+  background-image: radial-gradient(
+    900px 500px at 50% -10%,
+    rgba(42, 138, 79, 0.28),
+    transparent 60%
+  );
+  padding-block: 88px;
+}
+.land-steps .land-section-title {
+  color: #fff;
+}
+.land-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: none;
+}
+.land-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 28px 34px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  transition: transform 150ms ease, border-color 150ms ease,
+    background-color 150ms ease;
+}
+.land-step:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 160, 23, 0.55);
+  background: rgba(255, 255, 255, 0.06);
+}
+.land-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--land-gold);
+  color: var(--land-green900);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1;
+  box-shadow: 0 10px 24px -10px rgba(212, 160, 23, 0.7);
+}
+.land-step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  margin: 20px 0 18px;
+  background: rgba(94, 202, 132, 0.16);
+  color: var(--land-green300);
+}
+.land-step-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  color: #fff;
+  margin: 0 0 8px;
+}
+.land-step-desc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.66);
+  margin: 0;
+  max-width: 28ch;
+}
+
+/* ============================================================
    Titres de section partagés
    ============================================================ */
 .land-section-title {
@@ -465,6 +547,84 @@
 }
 
 /* ============================================================
+   TÉMOIGNAGES
+   ============================================================ */
+.land-testimonials {
+  background: #fff;
+  padding-block: 88px;
+}
+.land-testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+.land-testimonial {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0;
+  padding: 32px 30px;
+  background: #fff;
+  border: 1px solid #e7efe9;
+  border-radius: 20px;
+  box-shadow: 0 18px 40px -28px rgba(11, 46, 26, 0.22);
+  transition: transform 150ms ease, box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+.land-testimonial:hover {
+  transform: translateY(-4px);
+  border-color: #d6e6db;
+  box-shadow: 0 26px 50px -24px rgba(11, 46, 26, 0.3);
+}
+.land-testimonial-stars {
+  display: inline-flex;
+  gap: 3px;
+  color: var(--land-gold);
+}
+.land-testimonial-quote {
+  font-size: 16px;
+  line-height: 1.55;
+  color: #3f4f45;
+  margin: 0;
+  flex: 1;
+}
+.land-testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.land-testimonial-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(150deg, var(--land-green500), var(--land-green700));
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+.land-testimonial-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+.land-testimonial-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--land-green900);
+}
+.land-testimonial-city {
+  font-size: 14px;
+  color: var(--land-green500);
+}
+
+/* ============================================================
    CTA FINAL
    ============================================================ */
 .land-cta-final {
@@ -506,6 +666,29 @@
   color: rgba(255, 255, 255, 0.5);
   margin: 0;
 }
+.land-footer-social {
+  display: flex;
+  gap: 12px;
+}
+.land-footer-social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: color 150ms ease, background-color 150ms ease,
+    border-color 150ms ease, transform 150ms ease;
+}
+.land-footer-social-link:hover {
+  color: var(--land-green900);
+  background: var(--land-gold400);
+  border-color: var(--land-gold400);
+  transform: translateY(-2px);
+}
 .land-footer-links {
   display: flex;
   flex-wrap: wrap;
@@ -546,7 +729,9 @@
 
 @media (max-width: 768px) {
   .land-features-grid,
-  .land-stats-grid {
+  .land-stats-grid,
+  .land-steps-grid,
+  .land-testimonials-grid {
     grid-template-columns: 1fr;
   }
   .land-stats-grid {

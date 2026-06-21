@@ -54,6 +54,21 @@
 /* La card laisse de la place sous la bannière pour la pastille débordante. */
 .tour-card-body { padding-top: 30px; }
 
+/* Badge statut « EN COURS » rouge animé (tournoi running) — bien visible.
+   Fond rouge clair + texte rouge accessible (contraste AA) + point pulsant. */
+.tour-live-badge {
+  background: #fee2e2;
+  color: #c0271a;
+  font-weight: 700;
+}
+.tour-live-badge .badge-dot { background: var(--red); }
+
+/* Anneau de focus clavier sur la card cliquable (accessibilité). */
+.tour-card.t-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.35);
+}
+
 /* Ligne participants : libellé + ratio. */
 .tour-players {
   display: flex;
@@ -125,6 +140,12 @@
 @media (max-width: 720px) {
   .tour-modal-grid { grid-template-columns: 1fr; }
   .tour-preview { position: static; }
+}
+
+/* Score du classement live : chiffres Outfit 700 (règle design system). */
+.tour-rank-score {
+  font-family: 'Outfit', sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Icône meta (date) alignée avec la valeur. */

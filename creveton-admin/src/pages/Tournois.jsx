@@ -57,6 +57,22 @@ function Avatar({ name }) {
 }
 
 /**
+ * Statut d'un tournoi. Si `running`, badge rouge animé « EN COURS » bien
+ * visible ; sinon, badge de statut standard du design system.
+ */
+function TournamentStatus({ status }) {
+  if (status === 'running') {
+    return (
+      <span className="badge tour-live-badge" title="Tournoi en cours">
+        <span className="badge-dot pulse" />
+        EN COURS
+      </span>
+    );
+  }
+  return <StatusBadge status={status} kind="tournament" />;
+}
+
+/**
  * Card de présentation d'un tournoi (utilisée dans la grille ET en preview live).
  * `interactive` = card cliquable (ouvre le drawer) avec boutons d'action.
  */
@@ -87,10 +103,7 @@ function TournamentCard({
       <div className="t-card-body tour-card-body">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
           <span className="t-card-name">{t.name || 'Nom du tournoi'}</span>
-          <span className="row" style={{ gap: 6, alignItems: 'center' }}>
-            {t.status === 'running' && <span className="badge-dot pulse" style={{ background: 'var(--gold)' }} />}
-            <StatusBadge status={t.status} kind="tournament" />
-          </span>
+          <TournamentStatus status={t.status} />
         </div>
 
         <div className="row" style={{ gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -151,7 +164,9 @@ function TournamentForm({ onSubmit, onChange }) {
   const {
     register, handleSubmit, watch, formState: { errors },
   } = useForm({
-    defaultValues: { name: '', theme: 'culture', max_players: '64' },
+    defaultValues: {
+      name: '', theme: 'culture', max_players: '64', description: '', starts_at: '',
+    },
   });
   const theme = watch('theme');
 
@@ -392,8 +407,7 @@ export default function Tournois() {
         {sel && (
           <div className="stack" style={{ gap: 18 }}>
             <div className="row wrap" style={{ gap: 8, alignItems: 'center' }}>
-              {sel.status === 'running' && <span className="badge-dot pulse" style={{ background: 'var(--gold)' }} />}
-              <StatusBadge status={sel.status} kind="tournament" />
+              <TournamentStatus status={sel.status} />
               <ThemeBadge theme={sel.theme} />
             </div>
 
@@ -438,12 +452,18 @@ export default function Tournois() {
                 </div>
                 {ranking.map((p, i) => (
                   <div className="list-row" key={`rank-${p.name}-${p.ville}`}>
-                    <span className="avatar-c" style={{ background: i === 0 ? 'var(--gold)' : avatarColor(p.name) }}>{i + 1}</span>
+                    <span
+                      className="avatar-c"
+                      style={{ background: i === 0 ? 'var(--gold)' : avatarColor(p.name) }}
+                      title={`${i + 1}ᵉ place`}
+                    >
+                      {i + 1}
+                    </span>
                     <div className="grow">
                       <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{p.name}</div>
                       <div className="muted" style={{ fontSize: 12.5 }}>{p.ville}</div>
                     </div>
-                    <span style={{ fontWeight: 700, color: 'var(--ink)' }}>{`${p.score} pts`}</span>
+                    <span className="tour-rank-score" style={{ fontWeight: 700, color: 'var(--ink)' }}>{`${num(p.score)} pts`}</span>
                   </div>
                 ))}
               </div>

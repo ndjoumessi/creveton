@@ -3,20 +3,22 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users, Gamepad2, FileCheck2, Trophy, ArrowRight, Check, X,
-  Server, Database, Zap, RefreshCw, UserPlus, Inbox, BarChart3,
+  Server, Database, Zap, RefreshCw, UserPlus, Inbox, BarChart3, Target,
 } from 'lucide-react';
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import dashboardService from '../services/dashboard.service';
 import sessionsService from '../services/sessions.service';
 import questionsService from '../services/questions.service';
+import analyticsService from '../services/analytics.service';
 import { useApiData } from '../hooks/useApiData';
 import { num, dateFr } from '../utils/format';
 import { themeLabels } from '../constants/theme';
 import PageHeader from '../components/PageHeader';
 import Avatar from '../components/Avatar';
 import KpiCard from '../components/KpiCard';
+import Gauge from '../components/Gauge';
 import ThemeBadge from '../components/ThemeBadge';
 import { Skeleton, SkeletonKpis, SkeletonCard } from '../components/Skeleton';
 import { notify } from '../components/Toast';
@@ -55,19 +57,15 @@ function deltaFromSpark(spark) {
   return Math.round(((last - prev) / prev) * 100);
 }
 
-/** Libellés des 7 derniers jours (du plus ancien au plus récent). */
-function lastSevenDays() {
-  const out = [];
-  for (let i = 6; i >= 0; i -= 1) {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - i);
-    out.push(d);
-  }
-  return out;
+/** Date ISO (AAAA-MM-JJ) → libellé court "JJ/MM" pour l'axe du graphe. */
+function shortDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}`;
 }
-
-const DAY_LABELS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
 
 const fetchAll = async () => {
   const settle = (p, fb) => Promise.resolve(p).then((r) => r).catch(() => fb);
@@ -111,6 +109,8 @@ function DashboardSkeleton() {
 
 export default function Dashboard() {
   const { data, loading, refetch } = useApiData(fetchAll, [], { pollMs: 30000 });
+  // Série « 7 jours » (inscriptions vs parties) — source dédiée analytics.
+  const { data: analytics, loading: loadingChart } = useApiData(analyticsService.get7d, [], { pollMs: 30000 });
   // Questions en cours de disparition (animation slide-out avant refetch).
   const [leaving, setLeaving] = useState([]);
 
@@ -158,20 +158,13 @@ export default function Dashboard() {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 8);
 
-  // ─── Graphique activité 7 jours (série déterministe par jour réel) ───
-  const days = lastSevenDays();
-  const chartData = days.map((d) => {
-    const sameDay = (iso) => {
-      if (!iso) return false;
-      const x = new Date(iso);
-      return x.getFullYear() === d.getFullYear() && x.getMonth() === d.getMonth() && x.getDate() === d.getDate();
-    };
-    return {
-      jour: DAY_LABELS[d.getDay()],
-      inscriptions: recentUsers.filter((u) => sameDay(u.created_at)).length,
-      parties: sessions.filter((s) => sameDay(s.played_at)).length,
-    };
-  });
+  // ─── Graphique activité 7 jours (série `daily` du service analytics) ───
+  const daily = (analytics && analytics.daily) || [];
+  const chartData = daily.map((d) => ({
+    label: shortDate(d.date),
+    inscriptions: d.signups ?? 0,
+    parties: d.games ?? 0,
+  }));
   const hasChartData = chartData.some((d) => d.inscriptions > 0 || d.parties > 0);
 
   const decide = async (q, to) => {
@@ -300,7 +293,41 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ─── Ligne 3 : graphique activité 7 jours ─── */}
+      {/* ─── Ligne 3 : Taux de réussite (jauge) + Joueurs en ligne ─── */}
+      <div className="grid dash-row-engage" style={{ marginBottom: 20 }}>
+        {/* Taux de réussite global (jauge semi-circulaire colorée) */}
+        <div className="card card-pad dash-gauge-card">
+          <div className="dash-card-head" style={{ marginBottom: 4 }}>
+            <div>
+              <h3 className="card-title">Taux de réussite global</h3>
+              <p className="card-sub">Bonnes réponses sur l’ensemble des parties</p>
+            </div>
+            <Target size={18} color="#2a8a4f" aria-hidden="true" />
+          </div>
+          <Gauge value={kpis.success_rate ?? 0} size={200} label="Taux de réussite global" />
+        </div>
+
+        {/* Joueurs en ligne maintenant (badge pulsant, rafraîchi 30 s) */}
+        <div className="card card-pad card-dark dash-online-card">
+          <div className="dash-card-head" style={{ marginBottom: 4 }}>
+            <div>
+              <h3 className="card-title">Joueurs connectés</h3>
+              <p className="card-sub" style={{ color: 'rgba(255,255,255,0.6)' }}>Mis à jour toutes les 30 s</p>
+            </div>
+            <span
+              className="online-badge"
+              title="Compteur en temps réel, rafraîchi toutes les 30 secondes"
+            >
+              <span className="online-dot" />
+              <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12.5 }}>En ligne maintenant</span>
+            </span>
+          </div>
+          <div className="dash-online-count">{num(kpis.online_now ?? 0)}</div>
+          <div className="dash-online-sub">joueurs actifs en ce moment</div>
+        </div>
+      </div>
+
+      {/* ─── Ligne 4 : graphique activité 7 jours (AreaChart) ─── */}
       <div className="card card-pad">
         <div className="dash-card-head">
           <div>
@@ -314,21 +341,33 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        {hasChartData ? (
+        {loadingChart && !analytics ? (
+          <SkeletonCard h={240} />
+        ) : hasChartData ? (
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }} barGap={4}>
+            <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+              <defs>
+                <linearGradient id="dashGradSignups" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2a8a4f" stopOpacity={0.22} />
+                  <stop offset="95%" stopColor="#2a8a4f" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="dashGradGames" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#d4a017" stopOpacity={0.22} />
+                  <stop offset="95%" stopColor="#d4a017" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#eef1ee" vertical={false} />
-              <XAxis dataKey="jour" tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: '#e5e7eb' }} />
+              <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: '#e5e7eb' }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={36} />
               <Tooltip
-                cursor={{ fill: 'rgba(42,138,79,0.06)' }}
+                cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }}
                 contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontFamily: 'Space Grotesk', fontSize: 13 }}
                 labelStyle={{ fontFamily: 'Outfit', fontWeight: 600, color: '#0b2e1a' }}
                 formatter={(value, name) => [num(value), name === 'inscriptions' ? 'Inscriptions' : 'Parties']}
               />
-              <Bar dataKey="inscriptions" fill="#2a8a4f" radius={[4, 4, 0, 0]} maxBarSize={26} />
-              <Bar dataKey="parties" fill="#d4a017" radius={[4, 4, 0, 0]} maxBarSize={26} />
-            </BarChart>
+              <Area type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2} fill="url(#dashGradSignups)" dot={false} activeDot={{ r: 4 }} />
+              <Area type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2} fill="url(#dashGradGames)" dot={false} activeDot={{ r: 4 }} />
+            </AreaChart>
           </ResponsiveContainer>
         ) : (
           <div className="dash-empty" style={{ padding: '48px 12px' }}>

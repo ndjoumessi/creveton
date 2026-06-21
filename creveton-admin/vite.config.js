@@ -27,6 +27,11 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:4000',
           changeOrigin: true,
         },
+        // /health est hors /api/v1 (liveness + infos système pour les Paramètres).
+        '/health': {
+          target: 'http://localhost:4000',
+          changeOrigin: true,
+        },
       },
     },
   };

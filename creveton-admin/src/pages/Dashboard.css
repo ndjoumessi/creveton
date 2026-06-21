@@ -49,3 +49,21 @@
 /* Statut système sombre. */
 .dash-sys-sync { display: flex; align-items: center; gap: 10px; padding-top: 12px; margin-top: 4px; }
 .dash-sys-sync .sys-name { color: rgba(255, 255, 255, 0.65) !important; font-weight: 400; }
+
+/* Ligne « engagement » : jauge taux de réussite + joueurs en ligne. */
+.dash-row-engage { grid-template-columns: 1fr 1fr; }
+@media (max-width: 1100px) { .dash-row-engage { grid-template-columns: 1fr; } }
+
+/* Carte jauge — centrée sous l'en-tête. */
+.dash-gauge-card { display: flex; flex-direction: column; }
+.dash-gauge-card .gauge { align-self: center; margin-top: 8px; }
+
+/* Carte « en ligne maintenant » (sombre). */
+.dash-online-card { display: flex; flex-direction: column; }
+.dash-online-card .card-title { color: #fff; }
+.dash-online-count {
+  font-family: 'Outfit', sans-serif; font-weight: 700;
+  font-size: 56px; line-height: 1.05; color: #fff;
+  font-variant-numeric: tabular-nums; margin-top: auto;
+}
+.dash-online-sub { color: rgba(255, 255, 255, 0.6); font-size: 13px; margin-top: 2px; }

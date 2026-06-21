@@ -6,6 +6,8 @@ const mockDashboard = {
     games_today: 342,
     active_questions: 187,
     open_tournaments: 3,
+    online_now: 84,
+    success_rate: 72,
   },
   recent_users: [
     { id: 'u-001', name: 'Junior Kamga', ville: 'Douala', created_at: '2026-06-21T08:30:00Z' },

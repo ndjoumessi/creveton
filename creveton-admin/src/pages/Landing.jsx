@@ -1,6 +1,18 @@
 import { Link } from 'react-router-dom';
-import { Target, Trophy, BarChart3 } from 'lucide-react';
+import {
+  Target,
+  Trophy,
+  BarChart3,
+  UserPlus,
+  LayoutGrid,
+  Gamepad2,
+  Star,
+  MessageCircle,
+  AtSign,
+  Send,
+} from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { useCountUp } from '../hooks/useCountUp';
 import './Landing.css';
 
 const features = [
@@ -30,6 +42,68 @@ const themes = [
   { emoji: '🏛️', nom: 'Histoire', questions: '16 questions' },
   { emoji: '🏭', nom: 'Industrie', questions: '12 questions' },
 ];
+
+const etapes = [
+  {
+    icon: UserPlus,
+    titre: 'Inscris-toi',
+    description:
+      'Crée ton compte en quelques secondes et rejoins la communauté Creveton.',
+  },
+  {
+    icon: LayoutGrid,
+    titre: 'Choisis ton thème',
+    description:
+      'Géographie, culture, histoire ou industrie : sélectionne ton univers favori.',
+  },
+  {
+    icon: Gamepad2,
+    titre: 'Joue et gagne',
+    description:
+      'Réponds vite, marque des points et grimpe au sommet du classement national.',
+  },
+];
+
+const temoignages = [
+  {
+    initiales: 'CF',
+    nom: 'Cédric F.',
+    ville: 'Garoua',
+    citation: 'Je joue chaque soir ! Les questions sont bien pensées et la compétition est addictive.',
+  },
+  {
+    initiales: 'AM',
+    nom: 'Awa M.',
+    ville: 'Douala',
+    citation: 'Enfin un quiz 100 % camerounais. J’apprends plein de choses sur mon pays en m’amusant.',
+  },
+  {
+    initiales: 'JK',
+    nom: 'Junior K.',
+    ville: 'Yaoundé',
+    citation: 'Le mode tournoi est génial. Affronter mes amis en direct, c’est devenu un rituel du week-end.',
+  },
+];
+
+const reseaux = [
+  { icon: MessageCircle, label: 'Facebook' },
+  { icon: AtSign, label: 'Instagram' },
+  { icon: Send, label: 'X (Twitter)' },
+];
+
+/* Une statistique animée au défilement. */
+function StatCountUp({ end, suffix, label }) {
+  const [value, ref] = useCountUp(end);
+  return (
+    <div className="land-stat">
+      <span className="land-stat-num" ref={ref}>
+        {value}
+        {suffix}
+      </span>
+      <span className="land-stat-label">{label}</span>
+    </div>
+  );
+}
 
 export default function Landing() {
   // Cible du CTA console : tableau de bord si déjà connecté admin, sinon login.
@@ -117,21 +191,33 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* ─────────────── CHIFFRES ─────────────── */}
+      {/* ─────────────── CHIFFRES (count-up au scroll) ─────────────── */}
       <section className="land-stats">
         <div className="land-container land-stats-grid">
-          <div className="land-stat">
-            <span className="land-stat-num">60+</span>
-            <span className="land-stat-label">Questions</span>
-          </div>
-          <div className="land-stat">
-            <span className="land-stat-num">4</span>
-            <span className="land-stat-label">Thèmes</span>
-          </div>
-          <div className="land-stat">
-            <span className="land-stat-num">3</span>
-            <span className="land-stat-label">Niveaux</span>
-          </div>
+          <StatCountUp end={60} suffix="+" label="Questions" />
+          <StatCountUp end={9} suffix="" label="Joueurs" />
+          <StatCountUp end={22} suffix="" label="Parties jouées" />
+        </div>
+      </section>
+
+      {/* ─────────────── COMMENT ÇA MARCHE ─────────────── */}
+      <section className="land-steps">
+        <div className="land-container">
+          <h2 className="land-section-title">Comment ça marche</h2>
+          <ol className="land-steps-grid">
+            {etapes.map(({ icon: Icon, titre, description }, i) => (
+              <li className="land-step" key={titre}>
+                <span className="land-step-num" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span className="land-step-icon" aria-hidden="true">
+                  <Icon size={24} strokeWidth={2.2} />
+                </span>
+                <h3 className="land-step-title">{titre}</h3>
+                <p className="land-step-desc">{description}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
@@ -171,6 +257,45 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ─────────────── TÉMOIGNAGES ─────────────── */}
+      <section className="land-testimonials">
+        <div className="land-container">
+          <h2 className="land-section-title">Ils jouent déjà</h2>
+          <div className="land-testimonials-grid">
+            {temoignages.map(({ initiales, nom, ville, citation }) => (
+              <figure className="land-testimonial" key={nom}>
+                <div
+                  className="land-testimonial-stars"
+                  aria-label="Note 5 sur 5"
+                >
+                  {['s1', 's2', 's3', 's4', 's5'].map((s) => (
+                    <Star
+                      key={s}
+                      size={18}
+                      strokeWidth={0}
+                      fill="currentColor"
+                      aria-hidden="true"
+                    />
+                  ))}
+                </div>
+                <blockquote className="land-testimonial-quote">
+                  « {citation} »
+                </blockquote>
+                <figcaption className="land-testimonial-author">
+                  <span className="land-testimonial-avatar" aria-hidden="true">
+                    {initiales}
+                  </span>
+                  <span className="land-testimonial-meta">
+                    <span className="land-testimonial-name">{nom}</span>
+                    <span className="land-testimonial-city">{ville}</span>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─────────────── CTA FINAL ─────────────── */}
       <section className="land-cta-final">
         <div className="land-container land-cta-final-inner">
@@ -187,6 +312,20 @@ export default function Landing() {
           <p className="land-footer-copy">
             © 2026 Creveton · Cameroun · Tous droits réservés
           </p>
+
+          <nav className="land-footer-social" aria-label="Réseaux sociaux">
+            {reseaux.map(({ icon: Icon, label }) => (
+              <a
+                className="land-footer-social-link"
+                href="#"
+                key={label}
+                aria-label={label}
+              >
+                <Icon size={20} strokeWidth={2} aria-hidden="true" />
+              </a>
+            ))}
+          </nav>
+
           <nav className="land-footer-links" aria-label="Liens légaux">
             <a href="#">Mentions légales</a>
             <a href="#">Confidentialité</a>

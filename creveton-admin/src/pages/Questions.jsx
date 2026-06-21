@@ -1,14 +1,14 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Plus, Upload, Search, Check, Eye, Send, ThumbsUp, ThumbsDown,
   Archive, RotateCcw, Zap, Download, ChevronUp, ChevronDown, ChevronsUpDown,
-  ChevronLeft, ChevronRight, X, FileText, ListChecks, Tags,
+  ChevronLeft, ChevronRight, X, FileText, ListChecks, Tags, Copy, AlertCircle,
 } from 'lucide-react';
 import questionsService from '../services/questions.service';
 import { useApiData } from '../hooks/useApiData';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
 import { themeLabels, levelLabels, questionStatusColors } from '../constants/theme';
-import { pct, dateFr, dateTimeFr } from '../utils/format';
+import { pct, dateFr } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
 import ThemeBadge from '../components/ThemeBadge';
@@ -136,7 +136,32 @@ const STEP_META = [
   { icon: Tags, label: 'Métadonnées' },
 ];
 
-function CreateModal({ open, onClose, onCreate, submitting }) {
+const MAX_TEXT = 300;
+const EMPTY_DRAFT = {
+  textFr: '', opts: ['', '', '', ''], correct: 0,
+  explanation: '', theme: 'culture', level: 'beginner', tags: [],
+};
+
+/* Convertit une question existante en brouillon pré-rempli (« Dupliquer »). */
+function draftFromQuestion(q) {
+  if (!q) return EMPTY_DRAFT;
+  const base = (q.options || []).map((o) => o.text || '');
+  const opts = [...base, '', '', '', ''].slice(0, 4);
+  let correct = q.correct_index;
+  if (correct == null) correct = (q.options || []).findIndex((o) => o.is_correct);
+  if (correct == null || correct < 0) correct = 0;
+  return {
+    textFr: `${q.text_fr || ''} (Copie)`,
+    opts,
+    correct,
+    explanation: q.explanation || '',
+    theme: q.theme || 'culture',
+    level: q.level || 'beginner',
+    tags: Array.isArray(q.tags) ? [...q.tags] : [],
+  };
+}
+
+function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const [step, setStep] = useState(0);
   const [textFr, setTextFr] = useState('');
   const [opts, setOpts] = useState(['', '', '', '']);
@@ -151,6 +176,22 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
     setStep(0); setTextFr(''); setOpts(['', '', '', '']); setCorrect(0);
     setExplanation(''); setTheme('culture'); setLevel('beginner'); setTagInput(''); setTags([]);
   };
+
+  // Hydrate le formulaire à l'ouverture (vierge, ou pré-rempli pour « Dupliquer »).
+  useEffect(() => {
+    if (!open) return;
+    const d = draftFromQuestion(prefill);
+    setStep(0);
+    setTextFr(d.textFr);
+    setOpts(d.opts);
+    setCorrect(d.correct);
+    setExplanation(d.explanation);
+    setTheme(d.theme);
+    setLevel(d.level);
+    setTagInput('');
+    setTags(d.tags);
+  }, [open, prefill]);
+
   const close = () => { reset(); onClose(); };
 
   const setOpt = (i, v) => setOpts((o) => o.map((x, idx) => (idx === i ? v : x)));
@@ -160,14 +201,20 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
     setTagInput('');
   };
 
-  const step1Ok = textFr.trim().length >= 3;
-  const step2Ok = opts[0].trim() && opts[1].trim();
-  const canCreate = step1Ok && step2Ok;
+  // --- Validation temps réel ---
+  const trimmed = textFr.trim();
+  const textOk = trimmed.length >= 10;
+  const textOver = textFr.length > MAX_TEXT;
+  const optsOk = Boolean(opts[0].trim() && opts[1].trim());
+  const correctOk = Boolean(opts[correct]?.trim());
+  const canCreate = textOk && !textOver && optsOk && correctOk;
+
+  const step1Ok = trimmed.length >= 3 && !textOver;
 
   const submit = () => {
     if (!canCreate) return;
     onCreate({
-      text_fr: textFr.trim(),
+      text_fr: trimmed,
       type: 'mcq',
       options: opts.map((text, i) => ({ text, is_correct: i === correct })),
       explanation: explanation || null,
@@ -198,8 +245,10 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
     </>
   );
 
+  const title = prefill ? 'Dupliquer la question' : 'Nouvelle question';
+
   return (
-    <Modal open={open} onClose={close} title="Nouvelle question" footer={footer} width={760}>
+    <Modal open={open} onClose={close} title={title} footer={footer} width={820}>
       <div className="steps">
         {STEP_META.map((s, i) => (
           <div key={s.label} style={{ display: 'contents' }}>
@@ -221,10 +270,14 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
                 className="textarea"
                 placeholder="Quelle est la capitale… ?"
                 value={textFr}
-                maxLength={280}
                 onChange={(e) => setTextFr(e.target.value)}
               />
-              <div className="q-counter">{textFr.length} / 280 caractères</div>
+              <div className={`char-count ${textOver ? 'over' : ''}`}>{textFr.length} / {MAX_TEXT}</div>
+              <div className={`valid-hint ${textOk && !textOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
+                {textOk && !textOver
+                  ? <><Check size={13} /> Énoncé valide</>
+                  : <><AlertCircle size={13} /> {textOver ? `Énoncé trop long (max ${MAX_TEXT})` : 'Énoncé trop court (10 caractères min.)'}</>}
+              </div>
             </div>
           )}
 
@@ -245,6 +298,11 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
                     </button>
                   </div>
                 ))}
+                <div className={`valid-hint ${optsOk && correctOk ? 'ok' : 'ko'}`}>
+                  {optsOk && correctOk
+                    ? <><Check size={13} /> Réponses valides</>
+                    : <><AlertCircle size={13} /> {!optsOk ? 'Renseignez au moins 2 options' : 'La bonne réponse doit être renseignée'}</>}
+                </div>
               </div>
               <div className="field" style={{ marginBottom: 0 }}>
                 <label>Explication (affichée après réponse)</label>
@@ -274,7 +332,7 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
                   </select>
                 </div>
               </div>
-              <div className="field" style={{ marginBottom: 0 }}>
+              <div className="field">
                 <label>Tags</label>
                 <input
                   className="input"
@@ -297,27 +355,32 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
                   </div>
                 )}
               </div>
+              <div className={`valid-hint ${canCreate ? 'ok' : 'ko'}`}>
+                {canCreate
+                  ? <><Check size={13} /> Prêt à enregistrer</>
+                  : <><AlertCircle size={13} /> Complétez l’énoncé et les réponses pour enregistrer</>}
+              </div>
             </>
           )}
         </div>
 
-        {/* Preview live */}
+        {/* Aperçu live façon application mobile (fond vert) */}
         <aside className="q-preview">
-          <div className="q-preview-cap">Aperçu</div>
-          <div className="row wrap" style={{ gap: 6, marginBottom: 12 }}>
-            <ThemeBadge theme={theme} />
-            <LevelBadge level={level} />
-          </div>
-          <div className={`q-preview-q ${textFr.trim() ? '' : 'empty'}`}>
-            {textFr.trim() || 'Votre énoncé apparaîtra ici…'}
-          </div>
-          {opts.map((o, i) => (
-            <div className={`q-preview-opt ${i === correct && o.trim() ? 'correct' : ''}`} key={LETTERS[i]}>
-              <span className="q-opt-letter">{LETTERS[i]}</span>
-              <span className="q-opt-text">{o.trim() || <span className="muted">Option {LETTERS[i]}</span>}</span>
-              {i === correct && o.trim() && <Check size={14} className="q-opt-check" />}
+          <div className="q-preview-cap">Aperçu mobile</div>
+          <div className="mobile-preview">
+            <div className="row wrap" style={{ gap: 6 }}>
+              <ThemeBadge theme={theme} />
+              <LevelBadge level={level} />
             </div>
-          ))}
+            <div className="mp-q">{trimmed || 'Votre énoncé apparaîtra ici…'}</div>
+            {opts.map((o, i) => (
+              <div className={`mp-opt ${i === correct && o.trim() ? 'correct' : ''}`} key={LETTERS[i]}>
+                <span className="mp-letter">{LETTERS[i]}</span>
+                <span className="q-opt-text">{o.trim() || `Option ${LETTERS[i]}`}</span>
+                {i === correct && o.trim() && <Check size={15} />}
+              </div>
+            ))}
+          </div>
           {explanation.trim() && <div className="explain" style={{ marginTop: 12 }}>{explanation}</div>}
         </aside>
       </div>
@@ -330,6 +393,7 @@ export default function Questions() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [showImport, setShowImport] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [prefill, setPrefill] = useState(null);
   const [detail, setDetail] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [selected, setSelected] = useState(() => new Set());
@@ -394,10 +458,13 @@ export default function Questions() {
     setSubmitting(true);
     try {
       await questionsService.create(payload);
-      notify.success('Question créée (brouillon).');
-      resetForm(); setCreating(false); refetch();
+      notify.success(prefill ? 'Copie créée (brouillon).' : 'Question créée (brouillon).');
+      resetForm(); setCreating(false); setPrefill(null); refetch();
     } catch { notify.error('Enregistrement impossible.'); } finally { setSubmitting(false); }
   };
+  const startCreate = () => { setPrefill(null); setCreating(true); };
+  const startDuplicate = (q) => { setPrefill(q); setDetail(null); setCreating(true); };
+  const closeCreate = () => { setCreating(false); setPrefill(null); };
 
   // --- Sélection multiple + actions groupées (préservé) ---
   const allSelected = pageRows.length > 0 && pageRows.every((r) => selected.has(r.id));
@@ -481,7 +548,7 @@ export default function Questions() {
           actions={(
             <>
               <button className="btn" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
-              <button className="btn btn-primary" onClick={() => setCreating(true)}><Plus size={16} /> Nouvelle question</button>
+              <button className="btn btn-primary" onClick={startCreate}><Plus size={16} /> Nouvelle question</button>
             </>
           )}
         />
@@ -541,7 +608,7 @@ export default function Questions() {
               action={(
                 <div className="row" style={{ gap: 10 }}>
                   <button className="btn" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
-                  <button className="btn btn-primary" onClick={() => setCreating(true)}><Plus size={16} /> Nouvelle question</button>
+                  <button className="btn btn-primary" onClick={startCreate}><Plus size={16} /> Nouvelle question</button>
                 </div>
               )}
             />
@@ -582,6 +649,7 @@ export default function Questions() {
                       <td className="q-td-actions" onClick={(e) => e.stopPropagation()}>
                         <div className="row nowrap" style={{ gap: 2 }}>
                           <button className="icon-action" title="Voir" onClick={() => setDetail(q)}><Eye size={17} /></button>
+                          <button className="icon-action" title="Dupliquer" onClick={() => startDuplicate(q)}><Copy size={16} /></button>
                           {q.status === 'pending_review' && (
                             <button className="icon-action" title="Approuver" onClick={() => doTransition(q, 'approved')}><ThumbsUp size={16} /></button>
                           )}
@@ -624,7 +692,7 @@ export default function Questions() {
       )}
 
       {/* Modal de création par étapes */}
-      <CreateModal open={creating} onClose={() => setCreating(false)} onCreate={createQuestion} submitting={submitting} />
+      <CreateModal open={creating} onClose={closeCreate} onCreate={createQuestion} submitting={submitting} prefill={prefill} />
 
       {/* Drawer vue question */}
       <Drawer open={Boolean(detail)} onClose={() => setDetail(null)} title="Détail de la question" width={480}>
@@ -671,14 +739,22 @@ export default function Questions() {
               </div>
             </div>
 
-            <dl className="kv">
-              <dt>Version</dt><dd>{detail.version ?? '—'}</dd>
-              <dt>Mise à jour</dt><dd>{dateTimeFr(detail.updated_at)}</dd>
-            </dl>
+            <div>
+              <div className="q-section-label">Historique</div>
+              <dl className="kv">
+                <dt>Version</dt><dd>{detail.version ?? '—'}</dd>
+                <dt>Créée le</dt><dd>{detail.created_at ? dateFr(detail.created_at) : '—'}</dd>
+                <dt>Modifiée le</dt><dd>{detail.updated_at ? dateFr(detail.updated_at) : '—'}</dd>
+                <dt>Approuvée le</dt><dd>{detail.approved_at ? dateFr(detail.approved_at) : '—'}</dd>
+              </dl>
+            </div>
 
             <div>
               <div className="q-section-label">Workflow</div>
               {renderWorkflow(detail)}
+              <button className="btn btn-block" style={{ marginTop: 8 }} onClick={() => startDuplicate(detail)}>
+                <Copy size={15} /> Dupliquer
+              </button>
             </div>
           </div>
         )}
