@@ -2,14 +2,21 @@ import api, { withMock } from './api';
 import mockTournaments from '../mocks/mockTournaments';
 
 /**
- * NB : le backend n'expose pas (encore) de liste admin des tournois ; on tente
- * GET /tournaments et on retombe sur les mocks. Les actions admin existent bien
- * (create / start / cancel / payout — §12).
+ * GET /admin/tournaments — liste admin + synthèse { data, stats }. Repli mock
+ * en mode démo hors-ligne.
  */
 export function list(params = {}) {
   return withMock(
-    () => api.get('/tournaments', { params }).then((r) => ({ data: r.data.data || r.data })),
-    () => ({ data: mockTournaments }),
+    () => api.get('/admin/tournaments', { params }).then((r) => ({ data: r.data.data || [], stats: r.data.stats || null })),
+    () => ({ data: mockTournaments, stats: null }),
+  );
+}
+
+/** GET /admin/tournaments/:id — détail + participants + stats. */
+export function detail(id) {
+  return withMock(
+    () => api.get(`/admin/tournaments/${id}`).then((r) => r.data),
+    () => ({ tournament: mockTournaments.find((t) => t.id === id) || null, participants: [], stats: null }),
   );
 }
 
@@ -26,4 +33,4 @@ export function payout(id) {
   return withMock(() => api.post(`/admin/tournaments/${id}/payout`).then((r) => r.data), () => ({ tournament: { id, status: 'paid' }, results: [] }));
 }
 
-export default { list, create, start, cancel, payout };
+export default { list, detail, create, start, cancel, payout };

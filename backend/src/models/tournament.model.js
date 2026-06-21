@@ -66,6 +66,30 @@ async function findAll() {
   return rows;
 }
 
+/** Participants détaillés (avec infos joueur) classés par score décroissant. */
+async function participantsDetailed(id) {
+  const { rows } = await db.query(
+    `SELECT p.id, p.user_id, p.score, p.rank, p.payout, p.joined_at,
+            u.name, u.ville, u.level
+       FROM tournament_participants p
+       JOIN users u ON u.id = p.user_id
+      WHERE p.tournament_id = $1
+      ORDER BY p.score DESC, p.joined_at ASC`,
+    [id]
+  );
+  return rows.map((r, i) => ({
+    id: r.id,
+    user_id: r.user_id,
+    name: r.name,
+    ville: r.ville ?? null,
+    level: r.level,
+    score: r.score,
+    rank: r.rank ?? i + 1,
+    payout: r.payout != null ? Number(r.payout) : 0,
+    joined_at: r.joined_at,
+  }));
+}
+
 async function countParticipants(id) {
   const { rows } = await db.query(
     'SELECT count(*)::int AS n FROM tournament_participants WHERE tournament_id = $1',
@@ -112,6 +136,7 @@ module.exports = {
   create,
   findById,
   findAll,
+  participantsDetailed,
   countParticipants,
   setStatus,
   rankedParticipants,

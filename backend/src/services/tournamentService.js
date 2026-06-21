@@ -36,6 +36,43 @@ async function create(input, createdBy) {
   return tournamentModel.toView(row, 0);
 }
 
+/** GET /admin/tournaments — liste tous les tournois (vue admin) + synthèse. */
+async function listAll() {
+  const rows = await tournamentModel.findAll();
+  const data = rows.map((r) => tournamentModel.toView(r, r.registered_players));
+  const stats = {
+    total: data.length,
+    scheduled: data.filter((t) => t.status === 'scheduled').length,
+    open: data.filter((t) => t.status === 'open').length,
+    running: data.filter((t) => t.status === 'running').length,
+    closed: data.filter((t) => ['closed', 'paid'].includes(t.status)).length,
+    cancelled: data.filter((t) => t.status === 'cancelled').length,
+    registered_players_total: data.reduce((s, t) => s + (t.registered_players || 0), 0),
+  };
+  return { data, stats };
+}
+
+/** GET /admin/tournaments/:id — détail + participants classés + statistiques. */
+async function getDetail(id) {
+  const t = await tournamentModel.findById(id);
+  if (!t || t.deleted_at) throw new ApiError('TOURNAMENT_NOT_FOUND');
+  const participants = await tournamentModel.participantsDetailed(id);
+  const played = participants.filter((p) => p.score > 0).length;
+  const scores = participants.map((p) => p.score);
+  const stats = {
+    registered: participants.length,
+    played,
+    completion_rate: participants.length ? Number((played / participants.length).toFixed(3)) : 0,
+    avg_score: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0,
+    top_score: scores.length ? Math.max(...scores) : 0,
+  };
+  return {
+    tournament: tournamentModel.toView(t, participants.length),
+    participants,
+    stats,
+  };
+}
+
 /** POST /admin/tournaments/:id/start — lancer (vérifie le minimum de joueurs). */
 async function start(id) {
   const t = await tournamentModel.findById(id);
@@ -115,4 +152,4 @@ async function payout(id) {
   }
 }
 
-module.exports = { create, start, cancel, payout, MIN_PLAYERS_TO_START, PRIZE_SPLIT };
+module.exports = { create, listAll, getDetail, start, cancel, payout, MIN_PLAYERS_TO_START, PRIZE_SPLIT };

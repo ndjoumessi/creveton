@@ -8,6 +8,7 @@ import Classement from './pages/Classement';
 import Questions from './pages/Questions';
 import Parties from './pages/Parties';
 import Tournois from './pages/Tournois';
+import TournoiDetail from './pages/TournoiDetail';
 import Utilisateurs from './pages/Utilisateurs';
 import Parametres from './pages/Parametres';
 
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/classement" element={<Classement />} />
         <Route path="/sessions" element={<Parties />} />
         <Route path="/tournaments" element={<Tournois />} />
+        <Route path="/tournaments/:id" element={<TournoiDetail />} />
         <Route path="/users" element={<Utilisateurs />} />
         <Route path="/settings" element={<Parametres />} />
       </Route>

@@ -1,157 +1,98 @@
-/* Tournois — présentation spécifique « Cockpit Émeraude ».
-   Classes préfixées .tour-… pour ne pas entrer en collision avec le design
-   system (.t-card, .badge, .progress… déjà stylés dans index.css). */
+/* Styles spécifiques aux pages Tournois & détail — préfixés .tour-. */
 
-/* Bannière info tournois payants : icône + texte, sobre, non envahissante. */
-.tour-banner-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
+.tour-head-stats strong { color: var(--ink); font-family: 'Outfit', sans-serif; }
+.tour-btn-on { background: var(--green900); color: var(--gold); border-color: var(--green900); }
 
-/* En-tête coloré de la card : teinté selon le thème (var --tour-fg injectée
-   en inline). On garde la hauteur 70px de .t-card-banner du design system. */
+/* ── Bannière tournois payants ── */
 .tour-banner {
-  background: linear-gradient(135deg, var(--tour-fg, var(--green700)), color-mix(in srgb, var(--tour-fg, var(--green500)) 55%, #ffffff));
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(212, 160, 23, 0.08); border: 1px dashed rgba(212, 160, 23, 0.5);
+  border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; color: #8a6a12;
 }
+.tour-banner-body { flex: 1; }
+.tour-banner-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; }
+.tour-banner-prog { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.tour-banner-prog-bar { flex: 1; max-width: 240px; height: 6px; background: rgba(212,160,23,0.2); border-radius: 999px; overflow: hidden; }
+.tour-banner-prog-bar > span { display: block; height: 100%; background: var(--gold); border-radius: 999px; }
+.tour-banner-prog-lbl { font-size: 12px; font-weight: 600; }
+.tour-banner-cdc { flex: none; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12px; background: rgba(212,160,23,0.2); padding: 3px 10px; border-radius: 999px; }
 
-/* Pastille emoji du thème, posée sur la bannière colorée. */
-.tour-banner-emoji {
-  position: absolute;
-  left: 16px;
-  bottom: -18px;
-  width: 44px;
-  height: 44px;
-  border-radius: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  line-height: 1;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
+/* ── Strip de stats ── */
+.tour-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 20px; }
+.tour-stats-item { display: flex; flex-direction: column; gap: 2px; padding: 0 20px; }
+.tour-stats-item:first-child { padding-left: 0; }
+.tour-stats-item + .tour-stats-item { border-left: 1px solid var(--border); }
+.tour-stats-item .n { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 26px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tour-stats-item .l { font-size: 12.5px; color: var(--muted); }
+@media (max-width: 760px) { .tour-stats { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
 
-/* Badge "LIVE" glissé en haut à droite de la bannière des tournois en cours. */
-.tour-live {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--red);
-  font-size: 11px;
-  font-weight: 700;
-  font-family: 'Outfit', sans-serif;
-  letter-spacing: 0.04em;
-}
+/* ── Toolbar + switch vue ── */
+.tour-toolbar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+.tour-view-switch { display: inline-flex; gap: 2px; background: #f3f4f6; border-radius: 9px; padding: 3px; }
+.tour-view-btn { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; padding: 6px 14px; border-radius: 7px; transition: var(--t-fast); }
+.tour-view-btn.is-active { background: #fff; color: var(--green900); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
 
-/* La card laisse de la place sous la bannière pour la pastille débordante. */
-.tour-card-body { padding-top: 30px; }
+/* ── Grille de cartes ── */
+.tour-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 1100px) { .tour-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px) { .tour-grid { grid-template-columns: 1fr; } }
 
-/* Badge statut « EN COURS » rouge animé (tournoi running) — bien visible.
-   Fond rouge clair + texte rouge accessible (contraste AA) + point pulsant. */
-.tour-live-badge {
-  background: #fee2e2;
-  color: #c0271a;
-  font-weight: 700;
-}
-.tour-live-badge .badge-dot { background: var(--red); }
+.tour-card { display: flex; flex-direction: column; overflow: hidden; padding: 0; transition: transform 0.15s, box-shadow 0.15s; }
+.tour-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.tour-card.is-preview { box-shadow: var(--shadow); }
+.tour-card-head { height: 80px; display: flex; align-items: center; justify-content: center; position: relative; }
+.tour-card-emoji { font-size: 40px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+.tour-status { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; padding: 4px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+.tour-status-dot { width: 7px; height: 7px; border-radius: 50%; }
+.tour-status.is-live { animation: tourPulse 1.6s infinite; }
+.tour-status.is-live .tour-status-dot { animation: tourPulse 1.2s infinite; }
+@keyframes tourPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 
-/* Anneau de focus clavier sur la card cliquable (accessibilité). */
-.tour-card.t-card:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.35);
-}
+.tour-card-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.tour-card-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; color: var(--green900); line-height: 1.25; }
+.tour-card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.tour-badge { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 7px; background: #f3f4f6; color: var(--text); }
+.tour-badge-free { background: #e3f3ea; color: var(--green700); }
+.tour-badge-soft { background: #f3f4f6; color: var(--muted); }
 
-/* Ligne participants : libellé + ratio. */
-.tour-players {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 12.5px;
-  margin-bottom: 6px;
-}
-.tour-players .tour-players-count {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
-  color: var(--ink);
-}
-.tour-players .tour-players-full {
-  color: var(--green500);
-  font-weight: 700;
-  font-size: 11.5px;
-}
+.tour-players-top { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); font-weight: 600; }
+.tour-players-bar { height: 7px; background: #eef1ee; border-radius: 999px; overflow: hidden; margin-top: 6px; }
+.tour-players-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; transition: width var(--t-modal); }
 
-/* Hover de la card cliquable. */
-.tour-card.t-card { cursor: pointer; transition: transform var(--t-fast), box-shadow var(--t-fast); }
-.tour-card.t-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg, 0 12px 28px rgba(11, 46, 26, 0.12)); }
+.tour-card-rewards { font-size: 13.5px; font-weight: 600; color: var(--green700); }
+.tour-card-date { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.tour-card-cd { display: inline-flex; align-items: center; gap: 4px; color: #b45309; font-weight: 600; }
 
-/* Icône de la card "Créer". */
-.tour-create-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(212, 160, 23, 0.14);
-  color: var(--gold);
-}
-.tour-create-sub { font-size: 12.5px; font-weight: 500; color: var(--muted); font-family: 'Space Grotesk', sans-serif; }
+.tour-card-foot { display: flex; gap: 8px; padding: 0 18px 18px; }
+.tour-card-foot .btn { flex: 1; justify-content: center; }
+.tour-card-detail { flex: 1; }
 
-/* Modal création : 2 colonnes (formulaire | preview). */
-.tour-modal-grid {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 24px;
-  align-items: start;
-}
-.tour-preview {
-  position: sticky;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.tour-preview-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.tour-preview-hint {
-  font-size: 12px;
-  color: var(--muted);
-  background: var(--cream);
-  border: 1px solid #f1dca6;
-  border-radius: var(--radius-sm);
-  padding: 9px 11px;
-  line-height: 1.4;
-}
-.tour-preview-hint b { color: var(--green700); font-family: 'Outfit', sans-serif; }
+/* ── Carte « Créer » ── */
+.tour-create { border: 2px dashed var(--gold); background: var(--cream); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 280px; color: var(--green900); cursor: pointer; transition: var(--t-fast); }
+.tour-create:hover { background: rgba(212, 160, 23, 0.06); }
+.tour-create svg { color: var(--gold); }
+.tour-create-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 16px; }
+.tour-create-sub { font-size: 12.5px; color: var(--muted); }
 
-@media (max-width: 720px) {
-  .tour-modal-grid { grid-template-columns: 1fr; }
-  .tour-preview { position: static; }
-}
+/* ── Modal création (2 colonnes) ── */
+.tour-modal-grid { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+@media (max-width: 720px) { .tour-modal-grid { grid-template-columns: 1fr; } }
+.tour-preview-pane { display: flex; flex-direction: column; gap: 8px; }
+.tour-preview-cap { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
+.tour-validate .kv { margin-top: 14px; }
 
-/* Score du classement live : chiffres Outfit 700 (règle design system). */
-.tour-rank-score {
-  font-family: 'Outfit', sans-serif;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Icône meta (date) alignée avec la valeur. */
-.tour-meta-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.tour-meta-row svg { color: var(--green500); }
+/* ── Page détail ── */
+.tour-back { display: inline-flex; align-items: center; gap: 6px; border: none; background: none; cursor: pointer; color: var(--muted); font-weight: 600; font-size: 13px; margin-bottom: 8px; transition: var(--t-fast); }
+.tour-back:hover { color: var(--green700); }
+.tour-detail-title { display: inline-flex; align-items: center; gap: 10px; }
+.tour-detail-emoji { font-size: 26px; }
+.tour-detail-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+@media (max-width: 760px) { .tour-detail-kpis { grid-template-columns: repeat(2, 1fr); } }
+.tour-dkpi { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: var(--shadow); color: var(--green700); }
+.tour-dkpi .n { display: block; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 22px; color: var(--ink); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tour-dkpi .l { font-size: 12px; color: var(--muted); }
+.tour-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .tour-detail-grid { grid-template-columns: 1fr; } }
+.tour-detail-fill { height: 7px; background: #eef1ee; border-radius: 999px; overflow: hidden; margin-bottom: 5px; max-width: 220px; }
+.tour-detail-fill > span { display: block; height: 100%; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; }
+.tour-rank { display: inline-flex; align-items: center; gap: 3px; min-width: 26px; height: 24px; padding: 0 7px; border-radius: 999px; background: #f3f4f6; color: var(--muted); font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px; justify-content: center; font-variant-numeric: tabular-nums; }

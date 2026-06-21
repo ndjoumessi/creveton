@@ -10,6 +10,16 @@ const tournamentService = require('../../services/tournamentService');
  * `tournaments.paid.enabled` (appliqué dans tournamentService).
  */
 
+/** GET /admin/tournaments — liste + synthèse. */
+const list = asyncHandler(async (req, res) => {
+  return ok(res, await tournamentService.listAll());
+});
+
+/** GET /admin/tournaments/:id — détail + participants + stats. */
+const detail = asyncHandler(async (req, res) => {
+  return ok(res, await tournamentService.getDetail(req.params.id));
+});
+
 /** POST /admin/tournaments → 201 */
 const create = asyncHandler(async (req, res) => {
   const tournament = await tournamentService.create(req.body, req.user.id);
@@ -34,4 +44,4 @@ const payout = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
-module.exports = { create, start, cancel, payout };
+module.exports = { list, detail, create, start, cancel, payout };

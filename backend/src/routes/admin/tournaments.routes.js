@@ -9,6 +9,8 @@ const schemas = require('../../validators/tournament.validator');
 const router = express.Router();
 
 // Toutes les opérations tournoi exigent le rôle admin (spec §12).
+router.get('/', requirePermission('tournaments:read'), ctrl.list);
+router.get('/:id', requirePermission('tournaments:read'), ctrl.detail);
 router.post('/', requirePermission('tournaments:manage'), validate(schemas.adminCreate), ctrl.create);
 router.post('/:id/start', requirePermission('tournaments:manage'), ctrl.start);
 router.post('/:id/cancel', requirePermission('tournaments:manage'), ctrl.cancel);
