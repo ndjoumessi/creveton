@@ -9,3 +9,11 @@ build/
 coverage/
 .vscode/
 .idea/
+
+# AI harness — config local + runtime vendored (réinstallable via `npx impeccable install`)
+.claude/
+.github/skills/
+# impeccable : on versionne le contexte de design (PRODUCT.md, DESIGN.md, .impeccable/design.json,
+# .impeccable/live/config.json) mais pas l'état runtime du mode live.
+.impeccable/live/*
+!.impeccable/live/config.json
