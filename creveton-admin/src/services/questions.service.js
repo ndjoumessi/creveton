@@ -69,4 +69,31 @@ export function forceSync(questionIds) {
   );
 }
 
-export default { list, create, update, transition, remove, importCsv, forceSync };
+/** GET /admin/questions/stats — stats globales (par thème + extrêmes). */
+export function globalStats() {
+  return withMock(
+    () => api.get('/admin/questions/stats').then((r) => r.data),
+    () => ({ by_theme: [], hardest: [], easiest: [] }),
+  );
+}
+
+/** GET /admin/questions/:id/stats — distribution des choix + comparaison thème. */
+export function questionStats(id) {
+  return withMock(
+    () => api.get(`/admin/questions/${id}/stats`).then((r) => r.data),
+    () => ({ id, total_answers: 0, success_rate: null, theme_avg_rate: null, distribution: [], main_distractor_index: null, sync_count: 0 }),
+  );
+}
+
+/** GET /admin/questions/:id/history — journal d'audit. */
+export function questionHistory(id) {
+  return withMock(
+    () => api.get(`/admin/questions/${id}/history`).then((r) => r.data),
+    () => ({ id, version: 1, events: [] }),
+  );
+}
+
+export default {
+  list, create, update, transition, remove, importCsv, forceSync,
+  globalStats, questionStats, questionHistory,
+};

@@ -8,6 +8,7 @@ const questionModel = require('../../models/question.model');
 const importService = require('../../services/importService');
 const pushService = require('../../services/pushService');
 const userModel = require('../../models/user.model');
+const questionEvent = require('../../models/questionEvent.model');
 
 /**
  * Administration des questions (spec §12) : CRUD, workflow de statut, import CSV
@@ -36,20 +37,38 @@ const create = asyncHandler(async (req, res) => {
 
 /** PATCH /admin/questions/:id */
 const update = asyncHandler(async (req, res) => {
-  const question = await questionService.updateByAdmin(req.params.id, req.body);
+  const question = await questionService.updateByAdmin(req.params.id, req.body, req.user.id);
   return ok(res, question);
 });
 
 /** POST /admin/questions/:id/transition */
 const transition = asyncHandler(async (req, res) => {
-  const question = await questionService.transitionStatus(req.params.id, req.body.to, req.body.reason);
+  const question = await questionService.transitionStatus(req.params.id, req.body.to, req.body.reason, req.user.id);
   return ok(res, question);
 });
 
 /** DELETE /admin/questions/:id (soft delete) */
 const remove = asyncHandler(async (req, res) => {
-  const question = await questionService.softDeleteByAdmin(req.params.id);
+  const question = await questionService.softDeleteByAdmin(req.params.id, req.user.id);
   return ok(res, question);
+});
+
+/** GET /admin/questions/stats — stats globales (par thème + extrêmes). */
+const globalStats = asyncHandler(async (req, res) => {
+  const result = await questionService.globalStats();
+  return ok(res, result);
+});
+
+/** GET /admin/questions/:id/stats — distribution des choix + comparaison thème. */
+const stats = asyncHandler(async (req, res) => {
+  const result = await questionService.statsForQuestion(req.params.id);
+  return ok(res, result);
+});
+
+/** GET /admin/questions/:id/history — journal d'audit. */
+const history = asyncHandler(async (req, res) => {
+  const result = await questionService.historyForQuestion(req.params.id);
+  return ok(res, result);
 });
 
 /**
@@ -81,7 +100,13 @@ const forceSync = asyncHandler(async (req, res) => {
     pushService.sendForceSync(questionIds),
     userModel.countActive(),
   ]);
+  // Trace l'opération dans l'historique de chaque question (best-effort).
+  await Promise.all(
+    (questionIds || []).map((id) =>
+      questionEvent.record({ questionId: id, event: 'force_sync', actorId: req.user.id, meta: { devices_targeted: devices } }).catch(() => {})
+    )
+  );
   return res.status(202).json({ pushed: result.pushed, devices_targeted: devices });
 });
 
-module.exports = { list, get, create, update, transition, remove, importCsv, forceSync };
+module.exports = { list, get, create, update, transition, remove, importCsv, forceSync, globalStats, stats, history };

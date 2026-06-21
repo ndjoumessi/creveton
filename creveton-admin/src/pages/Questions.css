@@ -639,3 +639,131 @@
   font-size: 13px;
   border: 1px solid #fee2e2;
 }
+
+/* ===================== Stats globales (panneau slide-down) ===================== */
+.q-btn-stats-on { background: var(--green900); color: var(--gold); border-color: var(--green900); }
+.q-stats-panel { margin-top: 14px; background: #f8faf8; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; animation: qSlideDown 0.2s ease; }
+@keyframes qSlideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.q-stats-gauges { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; }
+@media (max-width: 1100px) { .q-stats-gauges { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .q-stats-gauges { grid-template-columns: repeat(2, 1fr); } }
+.q-stats-gauge { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.q-stats-gauge-sub { font-size: 11px; color: var(--muted); text-align: center; }
+.q-stats-extremes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 760px) { .q-stats-extremes { grid-template-columns: 1fr; } }
+.q-stats-ex-title { display: inline-flex; align-items: center; gap: 6px; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13px; color: var(--ink); margin-bottom: 8px; }
+.q-stats-ex-empty { font-size: 12.5px; margin: 0; }
+.q-stats-ex-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.q-stats-ex-row:last-child { border-bottom: none; }
+.q-stats-ex-text { flex: 1; min-width: 0; font-size: 12.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.q-stats-ex-rate { flex: none; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.q-stats-ex-rate.low { color: var(--red); }
+.q-stats-ex-rate.high { color: var(--green500); }
+
+/* ===================== Barre vue (table/kanban) + densité ===================== */
+.q-view-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.q-view-switch { display: inline-flex; gap: 2px; background: #f3f4f6; border-radius: 9px; padding: 3px; }
+.q-view-btn { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; padding: 6px 12px; border-radius: 7px; transition: var(--t-fast); }
+.q-view-btn:hover { color: var(--ink); }
+.q-view-btn.is-active { background: #fff; color: var(--green900); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.q-density { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); }
+.q-density-btn { border: 1px solid var(--border); background: #fff; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; transition: var(--t-fast); }
+.q-density-btn:hover { color: var(--ink); }
+.q-density-btn.is-active { background: var(--green900); color: #fff; border-color: var(--green900); }
+
+/* ===================== Densité de table ===================== */
+.q-table--compact td { height: 42px; }
+.q-table--spacious td { height: 70px; }
+
+/* ===================== Dépliage de ligne + édition inline ===================== */
+.q-th-exp { width: 34px; }
+.q-cell-exp { width: 34px; cursor: pointer; }
+.q-exp-btn { width: 24px; height: 24px; border: none; background: transparent; color: var(--muted); display: grid; place-items: center; border-radius: 6px; cursor: pointer; transition: transform 0.15s ease, background 0.15s ease; }
+.q-exp-btn:hover { background: #eef1ee; color: var(--ink); }
+.q-exp-btn.open { transform: rotate(90deg); color: var(--green500); }
+.q-cell-edit { cursor: pointer; }
+.q-inline-trigger { border: none; background: transparent; padding: 0; cursor: pointer; border-radius: 7px; transition: box-shadow 0.12s; }
+.q-inline-trigger:hover { box-shadow: 0 0 0 2px rgba(42,138,79,0.25); }
+.q-inline-select { width: auto; min-width: 130px; padding: 5px 8px; font-size: 13px; }
+.q-expand-row td { background: #f8faf8; padding: 0 16px 14px 50px !important; height: auto !important; border-bottom: 1px solid var(--border); }
+.q-expand { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; }
+.q-expand-opt { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 9px; background: #fff; font-size: 13px; color: var(--text); }
+.q-expand-opt.correct { background: #f0fdf4; border-color: var(--green500); color: #15803d; font-weight: 600; }
+.q-expand-letter { width: 20px; height: 20px; flex: none; display: grid; place-items: center; border-radius: 6px; background: #eef1ee; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 11px; }
+.q-expand-opt.correct .q-expand-letter { background: var(--green500); color: #fff; }
+.q-expand-text { flex: 1; }
+.q-expand-explain { margin-top: 4px; }
+
+/* ===================== Vue Kanban ===================== */
+.q-kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 1100px) { .q-kanban { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .q-kanban { grid-template-columns: 1fr; } }
+.q-kanban-col { background: #f6f8f6; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; min-height: 160px; transition: background 0.15s, border-color 0.15s; }
+.q-kanban-col.over { background: #eef8f0; border-color: var(--green300); border-style: dashed; }
+.q-kanban-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.q-kanban-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink); }
+.q-kanban-count { min-width: 22px; height: 22px; padding: 0 7px; display: inline-grid; place-items: center; border-radius: 999px; background: #fff; border: 1px solid var(--border); font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12px; color: var(--muted); }
+.q-kanban-body { display: flex; flex-direction: column; gap: 10px; min-height: 40px; }
+.q-kanban-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: grab; box-shadow: var(--shadow); transition: transform 0.12s, box-shadow 0.12s; }
+.q-kanban-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.q-kanban-card.dragging { opacity: 0.5; }
+.q-kanban-card.is-rejected { border-left: 3px solid var(--red); }
+.q-kanban-card-text { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4; margin-bottom: 9px; }
+.q-kanban-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.q-kanban-card-foot { font-size: 11.5px; color: var(--muted); }
+.q-kanban-empty { color: #cbd5e1; text-align: center; padding: 14px 0; font-size: 13px; }
+
+/* ===================== Drawer — onglet Statistiques (distracteurs) ===================== */
+.q-stat-line { display: flex; gap: 0; margin-bottom: 18px; }
+.q-stat-kpi { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 14px; }
+.q-stat-kpi:first-child { padding-left: 0; }
+.q-stat-kpi + .q-stat-kpi { border-left: 1px solid var(--border); }
+.q-stat-kpi .n { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 24px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.q-stat-kpi .l { font-size: 12px; color: var(--muted); }
+.q-dist { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
+.q-dist-row { display: flex; align-items: center; gap: 10px; }
+.q-dist-letter { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 6px; background: #eef1ee; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12px; color: var(--ink); }
+.q-dist-bar-wrap { flex: 1; height: 18px; background: #eef1ee; border-radius: 6px; overflow: hidden; }
+.q-dist-bar { display: block; height: 100%; border-radius: 6px; background: #cbd5e1; transition: width var(--t-modal); }
+.q-dist-bar.correct { background: var(--green500); }
+.q-dist-bar.distractor { background: var(--gold); }
+.q-dist-pct { flex: none; min-width: 38px; text-align: right; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.q-dist-tag { flex: none; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.q-dist-tag.ok { background: #e3f3ea; color: var(--green700); }
+.q-stats-insight { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #92600a; background: var(--cream); border: 1px solid #f1dca6; border-radius: 9px; padding: 10px 12px; margin: 0 0 10px; }
+.q-compare { font-size: 13.5px; font-weight: 500; border-radius: 9px; padding: 10px 12px; margin: 0; }
+.q-compare-hard { background: #fef2f2; color: #b91c1c; }
+.q-compare-easy { background: #eff6ff; color: #1d4ed8; }
+.q-compare-balanced { background: #f0fdf4; color: #15803d; }
+
+/* ===================== Drawer — onglet Historique (audit) ===================== */
+.q-hist-summary { display: flex; gap: 18px; flex-wrap: wrap; padding: 10px 12px; background: #f8faf8; border: 1px solid var(--border); border-radius: 9px; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.q-hist-summary strong { color: var(--ink); font-family: 'Outfit', sans-serif; }
+.q-tl-actor { color: var(--muted); font-weight: 400; }
+.q-tl-dot-green { background: var(--green500) !important; }
+.q-tl-dot-red { background: var(--red) !important; }
+.q-tl-dot-blue { background: #3b82f6 !important; }
+.q-tl-reason { font-size: 12.5px; color: #6b5b2a; background: var(--cream); border-left: 2px solid var(--gold); border-radius: 0 6px 6px 0; padding: 6px 9px; margin-top: 6px; font-style: italic; }
+.q-tl-diff { margin-top: 7px; display: flex; flex-direction: column; gap: 5px; }
+.q-tl-diff-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+.q-tl-diff-field { font-weight: 600; color: var(--ink); min-width: 72px; }
+.q-tl-diff-vals { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
+.q-tl-old { text-decoration: line-through; opacity: 0.7; }
+.q-tl-new { color: var(--green700); font-weight: 600; }
+
+/* ===================== Drawer — Aperçu enrichi (test + mode nuit) ===================== */
+.q-preview-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.q-prev-tool { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 12px; font-weight: 600; padding: 6px 11px; border-radius: 999px; cursor: pointer; transition: var(--t-fast); }
+.q-prev-tool:hover { border-color: var(--green300); color: var(--green700); }
+.q-prev-tool-go { background: var(--green900); color: var(--gold); border-color: var(--green900); }
+.q-prev-tool-go:hover { color: var(--gold); }
+.q-phone--night { background: #0b1f14; }
+.q-phone--night .q-phone-q { color: #f1f5f3; }
+.q-phone--night .q-mp-opt { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: #e5e7eb; }
+.q-phone--night .q-mp-letter { background: rgba(255,255,255,0.12); color: #fff; }
+.q-phone--night .q-phone-answer { color: #5eca84; }
+.q-mp-opt--btn { width: 100%; text-align: left; cursor: pointer; font: inherit; }
+.q-mp-opt--btn:disabled { cursor: default; }
+.q-mp-opt.wrong { background: #fdeceb; border-color: var(--red); color: #b91c1c; }
+.q-phone--night .q-mp-opt.wrong { background: rgba(231,76,60,0.18); }
+.q-phone-hint { font-size: 12px; color: var(--muted); text-align: center; padding: 6px 0; }

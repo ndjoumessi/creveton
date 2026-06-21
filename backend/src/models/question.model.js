@@ -452,12 +452,84 @@ async function findPlayerByIds(ids, lang = 'fr') {
   return ids.map((id) => byId.get(id)).filter(Boolean).map((r) => toPlayerView(r, lang));
 }
 
+/**
+ * Distribution des choix (analyse des distracteurs) pour une question, à partir
+ * des réponses réelles (game_sessions.answers JSONB). Renvoie le nombre de fois
+ * que chaque index d'option a été sélectionné + le total répondu.
+ */
+async function choiceDistribution(id) {
+  const { rows } = await db.query(
+    `SELECT (a->>'selected_index')::int AS idx, count(*)::int AS n
+       FROM game_sessions gs
+       CROSS JOIN LATERAL jsonb_array_elements(gs.answers) AS a
+      WHERE (a->>'question_id') = $1::text
+        AND a->>'selected_index' IS NOT NULL
+      GROUP BY idx`,
+    [id]
+  );
+  const total = rows.reduce((s, r) => s + r.n, 0);
+  return { total, byIndex: rows };
+}
+
+/** Statistiques par thème (questions approuvées) : pool + taux moyen réel. */
+async function themeStats() {
+  const { rows } = await db.query(
+    `SELECT theme,
+            count(*)::int AS approved,
+            avg(success_rate) FILTER (WHERE success_rate IS NOT NULL) AS avg_rate
+       FROM questions
+      WHERE status = 'approved' AND deleted_at IS NULL
+      GROUP BY theme`
+  );
+  return rows.map((r) => ({
+    theme: r.theme,
+    approved: r.approved,
+    avg_rate: r.avg_rate != null ? Number(r.avg_rate) : null,
+  }));
+}
+
+/** Taux moyen réel d'un thème (questions approuvées posées). */
+async function themeAvgRate(theme) {
+  const { rows } = await db.query(
+    `SELECT avg(success_rate) AS avg_rate
+       FROM questions
+      WHERE status = 'approved' AND deleted_at IS NULL
+        AND theme = $1 AND success_rate IS NOT NULL`,
+    [theme]
+  );
+  return rows[0].avg_rate != null ? Number(rows[0].avg_rate) : null;
+}
+
+/** Top N questions par taux de réussite (asc = ratées, desc = réussies). */
+async function byRate(direction = 'asc', limit = 5) {
+  const dir = direction === 'desc' ? 'DESC' : 'ASC';
+  const { rows } = await db.query(
+    `SELECT id, text_fr, theme, level, success_rate
+       FROM questions
+      WHERE status = 'approved' AND deleted_at IS NULL AND success_rate IS NOT NULL
+      ORDER BY success_rate ${dir}, updated_at DESC
+      LIMIT $1`,
+    [limit]
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    text_fr: r.text_fr,
+    theme: r.theme,
+    level: r.level,
+    success_rate: r.success_rate != null ? Number(r.success_rate) : null,
+  }));
+}
+
 module.exports = {
   PLAYER_COLUMNS,
   toPlayerView,
   toAdminView,
   findPlayerByIds,
   pickRandom,
+  choiceDistribution,
+  themeStats,
+  themeAvgRate,
+  byRate,
   recentQuestionIds,
   serverNow,
   changedSince,

@@ -1,9 +1,11 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, Fragment } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus, Upload, Search, Check, Eye, Send, ThumbsUp, ThumbsDown,
   Archive, RotateCcw, Zap, Download, ChevronUp, ChevronDown, ChevronsUpDown,
   ChevronLeft, ChevronRight, X, FileText, ListChecks, Tags, Copy, AlertCircle,
   AlertTriangle, CheckCircle2, XCircle, Pencil, BarChart3, History, Lock,
+  LayoutGrid, Table2, Moon, Sun, Code2, Play, Rows3,
 } from 'lucide-react';
 import Papa from 'papaparse';
 import questionsService from '../services/questions.service';
@@ -33,32 +35,30 @@ function truncate(s, max) {
   return t.length > max ? `${t.slice(0, max - 1).trimEnd()}…` : t;
 }
 
-/* Diagnostic de difficulté à partir du seul success_rate disponible. */
-function difficultyVerdict(rate) {
-  if (rate == null) return null;
-  if (rate < 0.30) return { tone: 'hard', icon: '⚠️', label: 'Trop difficile' };
-  if (rate <= 0.70) return { tone: 'balanced', icon: '✓', label: 'Difficulté équilibrée' };
-  return { tone: 'easy', icon: 'ℹ️', label: 'Facile' };
-}
 
 /* Pilule de niveau (Débutant vert clair / Intermédiaire or / Expert rouge doux). */
 function LevelPill({ level }) {
+  const { t } = useTranslation();
   return (
-    <span className={`q-level-pill q-level-${level}`}>{levelLabels[level] || level}</span>
+    <span className={`q-level-pill q-level-${level}`}>{t(`questions.levels.${level}`, levelLabels[level] || level)}</span>
   );
 }
 /* Alias conservé pour la plomberie de l'aperçu mobile de CreateModal. */
-const LevelBadge = ({ level }) => (
-  <span className="badge badge-level">{levelLabels[level] || level}</span>
-);
+const LevelBadge = ({ level }) => {
+  const { t } = useTranslation();
+  return (
+    <span className="badge badge-level">{t(`questions.levels.${level}`, levelLabels[level] || level)}</span>
+  );
+};
 
 /* Statut : point coloré + libellé (sens doublé couleur + texte). */
 function StatusDot({ status }) {
+  const { t } = useTranslation();
   const cfg = questionStatusColors[status] || { bg: '#f3f4f6', fg: '#6b7280', label: status };
   return (
     <span className="q-status-dot" style={{ color: cfg.fg }}>
       <span className="dot" style={{ background: cfg.fg }} />
-      {cfg.label}
+      {t(`questions.statuses.${status}`, cfg.label)}
     </span>
   );
 }
@@ -113,10 +113,11 @@ function buildReportCsv(report) {
 
 /* Carte de comparaison côte à côte : question importée vs question existante. */
 function CompareRow({ item, tone }) {
+  const { t } = useTranslation();
   return (
     <div className={`import-compare import-compare-${tone}`}>
       <div className="import-compare-head">
-        <span className="import-compare-line">Ligne {item.row}</span>
+        <span className="import-compare-line">{t('questions.misc.lineN', { n: item.row })}</span>
         <span className="import-compare-issue">{item.issue}</span>
         {item.similarity != null && (
           <span className="import-compare-sim">{Math.round(item.similarity * 100)} %</span>
@@ -124,11 +125,11 @@ function CompareRow({ item, tone }) {
       </div>
       <div className="import-compare-grid">
         <div className="import-compare-col">
-          <span className="import-compare-label">Importée</span>
+          <span className="import-compare-label">{t('questions.import.importedCol')}</span>
           <p className="import-compare-text">{item.imported_text || '—'}</p>
         </div>
         <div className="import-compare-col import-compare-col-existing">
-          <span className="import-compare-label">Déjà en base</span>
+          <span className="import-compare-label">{t('questions.import.existingCol')}</span>
           <p className="import-compare-text">{item.existing_text || '—'}</p>
         </div>
       </div>
@@ -137,6 +138,7 @@ function CompareRow({ item, tone }) {
 }
 
 function ImportModal({ open, onClose, onDone }) {
+  const { t } = useTranslation();
   const [drag, setDrag] = useState(false);
   const [report, setReport] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -154,10 +156,10 @@ function ImportModal({ open, onClose, onDone }) {
       // Onglet ouvert par défaut sur la catégorie la plus « actionnable ».
       setTab(res.warnings > 0 ? 'warnings' : res.rejected > 0 ? 'rejected' : 'accepted');
       notify.success(
-        `Import : ${res.accepted} acceptées, ${res.warnings || 0} avertissements, ${res.rejected} rejetées`,
+        `${t('toast.importSuccess')} : ${res.accepted} ${t('questions.import.accepted').toLowerCase()}, ${res.warnings || 0} ${t('questions.import.warnings').toLowerCase()}, ${res.rejected} ${t('questions.import.errors').toLowerCase()}`,
       );
       onDone?.();
-    } catch { notify.error('Échec de l’import.'); } finally { setBusy(false); }
+    } catch { notify.error(t('questions.notify.importFailed')); } finally { setBusy(false); }
   };
 
   const forceWarnings = () => runImport(lastFileRef.current, { force: true });
@@ -175,18 +177,18 @@ function ImportModal({ open, onClose, onDone }) {
     <Modal
       open={open}
       onClose={() => { reset(); onClose(); }}
-      title="Import CSV de questions"
+      title={t('questions.import.title')}
       footer={(
         <>
           <button className="btn" onClick={() => downloadCsv(CSV_TEMPLATE, 'modele-questions-creveton.csv')}>
-            <Download size={15} /> Modèle
+            <Download size={15} /> {t('questions.import.downloadTemplate')}
           </button>
           {report && (errors.length > 0 || warnings.length > 0) && (
             <button className="btn" onClick={downloadReport}>
-              <Download size={15} /> Rapport CSV
+              <Download size={15} /> {t('questions.import.downloadReport')}
             </button>
           )}
-          <button className="btn" onClick={() => { reset(); onClose(); }}>Fermer</button>
+          <button className="btn" onClick={() => { reset(); onClose(); }}>{t('common.close')}</button>
         </>
       )}
     >
@@ -199,52 +201,52 @@ function ImportModal({ open, onClose, onDone }) {
           onClick={() => inputRef.current?.click()}
         >
           <Upload size={26} style={{ marginBottom: 8 }} />
-          <div><strong>Glissez-déposez</strong> un fichier CSV, ou cliquez pour parcourir.</div>
-          <div style={{ fontSize: 12, marginTop: 6 }}>Colonnes : question, option_a…d, correct, difficulty, category</div>
+          <div><strong>{t('questions.import.dropzoneStrong')}</strong> {t('questions.import.dropzoneRest')}</div>
+          <div style={{ fontSize: 12, marginTop: 6 }}>{t('questions.import.columnsHint')}</div>
           <input ref={inputRef} type="file" accept=".csv" hidden onChange={(e) => runImport(e.target.files[0])} />
         </div>
       )}
-      {busy && <p className="muted" style={{ textAlign: 'center', marginTop: 14 }}>Traitement…</p>}
+      {busy && <p className="muted" style={{ textAlign: 'center', marginTop: 14 }}>{t('questions.import.analyzing')}</p>}
 
       {report && !busy && (
         <>
           <div className="import-report">
-            <div className="import-stat"><div className="n">{report.total_rows}</div><div className="muted">Lignes</div></div>
-            <div className="import-stat" style={{ background: '#f3fbf5' }}><div className="n" style={{ color: '#15803d' }}>{report.accepted}</div><div className="muted">Acceptées</div></div>
-            <div className="import-stat" style={{ background: '#fffbeb' }}><div className="n" style={{ color: '#b45309' }}>{report.warnings || 0}</div><div className="muted">Avert.</div></div>
-            <div className="import-stat" style={{ background: '#fef2f2' }}><div className="n" style={{ color: '#dc2626' }}>{report.rejected}</div><div className="muted">Rejetées</div></div>
+            <div className="import-stat"><div className="n">{report.total_rows}</div><div className="muted">{t('questions.import.rows')}</div></div>
+            <div className="import-stat" style={{ background: '#f3fbf5' }}><div className="n" style={{ color: '#15803d' }}>{report.accepted}</div><div className="muted">{t('questions.import.accepted')}</div></div>
+            <div className="import-stat" style={{ background: '#fffbeb' }}><div className="n" style={{ color: '#b45309' }}>{report.warnings || 0}</div><div className="muted">{t('questions.import.warningsShort')}</div></div>
+            <div className="import-stat" style={{ background: '#fef2f2' }}><div className="n" style={{ color: '#dc2626' }}>{report.rejected}</div><div className="muted">{t('questions.import.errors')}</div></div>
           </div>
 
           <div className="import-tabs" role="tablist">
             <button role="tab" aria-selected={tab === 'accepted'} className={`import-tab ${tab === 'accepted' ? 'active' : ''}`} onClick={() => setTab('accepted')}>
-              <CheckCircle2 size={15} /> Acceptées ({report.accepted})
+              <CheckCircle2 size={15} /> {t('questions.import.accepted')} ({report.accepted})
             </button>
             <button role="tab" aria-selected={tab === 'warnings'} className={`import-tab ${tab === 'warnings' ? 'active' : ''}`} onClick={() => setTab('warnings')}>
-              <AlertTriangle size={15} /> Avertissements ({warnings.length})
+              <AlertTriangle size={15} /> {t('questions.import.warnings')} ({warnings.length})
             </button>
             <button role="tab" aria-selected={tab === 'rejected'} className={`import-tab ${tab === 'rejected' ? 'active' : ''}`} onClick={() => setTab('rejected')}>
-              <XCircle size={15} /> Rejetées ({errors.length})
+              <XCircle size={15} /> {t('questions.import.errors')} ({errors.length})
             </button>
           </div>
 
           {tab === 'accepted' && (
             report.accepted > 0
-              ? <p className="muted import-tabnote"><Check size={15} /> {report.accepted} question(s) intégrée(s) en file de modération (statut « à relire »).</p>
-              : <EmptyState title="Aucune ligne acceptée" subtitle="Toutes les lignes ont été rejetées ou signalées." />
+              ? <p className="muted import-tabnote"><Check size={15} /> {t('questions.import.acceptedNote', { n: report.accepted })}</p>
+              : <EmptyState title={t('questions.emptyState.acceptedTitle')} subtitle={t('questions.emptyState.acceptedSub')} />
           )}
 
           {tab === 'warnings' && (
             warnings.length > 0 ? (
               <>
                 <p className="muted import-tabnote">
-                  <AlertTriangle size={15} /> Ressemblance forte (70–85 %) ou options modifiées. Non importées par défaut.
+                  <AlertTriangle size={15} /> {t('questions.import.warningsNote')}
                 </p>
                 {warnings.map((w) => <CompareRow key={`w-${w.row}`} item={w} tone="warn" />)}
                 <button className="btn btn-gold btn-block" style={{ marginTop: 14 }} onClick={forceWarnings}>
-                  <Zap size={15} /> Forcer l’import des {warnings.length} avertissement(s)
+                  <Zap size={15} /> {t('questions.import.forceImport')}
                 </button>
               </>
-            ) : <EmptyState title="Aucun avertissement" subtitle="Aucune question proche détectée." />
+            ) : <EmptyState title={t('questions.emptyState.warningsTitle')} subtitle={t('questions.emptyState.warningsSub')} />
           )}
 
           {tab === 'rejected' && (
@@ -253,14 +255,14 @@ function ImportModal({ open, onClose, onDone }) {
                 {errors.map((e) => (
                   e.imported_text || e.existing_text
                     ? <CompareRow key={`e-${e.row}`} item={e} tone="reject" />
-                    : <div className="err" key={`e-${e.row}`}>Ligne {e.row} — {e.issue}</div>
+                    : <div className="err" key={`e-${e.row}`}>{t('questions.misc.lineN', { n: e.row })} — {e.issue}</div>
                 ))}
               </div>
-            ) : <EmptyState title="Aucun rejet" subtitle="Toutes les lignes sont valides." />
+            ) : <EmptyState title={t('questions.emptyState.rejectedTitle')} subtitle={t('questions.emptyState.rejectedSub')} />
           )}
 
           <button className="btn btn-block" style={{ marginTop: 14 }} onClick={reset}>
-            <RotateCcw size={15} /> Importer un autre fichier
+            <RotateCcw size={15} /> {t('questions.import.importAnother')}
           </button>
         </>
       )}
@@ -270,9 +272,9 @@ function ImportModal({ open, onClose, onDone }) {
 
 /* ---------- Modal de création par étapes + preview live ---------- */
 const STEP_META = [
-  { icon: FileText, label: 'Contenu' },
-  { icon: ListChecks, label: 'Options' },
-  { icon: Tags, label: 'Métadonnées' },
+  { icon: FileText, key: 'step1' },
+  { icon: ListChecks, key: 'step2' },
+  { icon: Tags, key: 'step3' },
 ];
 
 const MAX_TEXT = 300;
@@ -301,6 +303,7 @@ function draftFromQuestion(q) {
 }
 
 function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [textFr, setTextFr] = useState('');
   const [opts, setOpts] = useState(['', '', '', '']);
@@ -368,32 +371,32 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
 
   const footer = (
     <>
-      <button className="btn btn-ghost-soft" onClick={close}>Annuler</button>
+      <button className="btn btn-ghost-soft" onClick={close}>{t('questions.modal.cancel')}</button>
       <div style={{ flex: 1 }} />
-      {step > 0 && <button className="btn" onClick={prev}><ChevronLeft size={15} /> Précédent</button>}
+      {step > 0 && <button className="btn" onClick={prev}><ChevronLeft size={15} /> {t('questions.modal.previous')}</button>}
       {step < 2 && (
         <button className="btn btn-primary" onClick={next} disabled={step === 0 && !step1Ok}>
-          Suivant <ChevronRight size={15} />
+          {t('questions.modal.next')} <ChevronRight size={15} />
         </button>
       )}
       {step === 2 && (
         <button className="btn btn-success" onClick={submit} disabled={!canCreate || submitting}>
-          <Plus size={15} /> Créer (brouillon)
+          <Plus size={15} /> {t('questions.modal.save')}
         </button>
       )}
     </>
   );
 
-  const title = prefill ? 'Dupliquer la question' : 'Nouvelle question';
+  const title = prefill ? t('questions.modal.edit') : t('questions.modal.create');
 
   return (
     <Modal open={open} onClose={close} title={title} footer={footer} width={820}>
       <div className="steps">
         {STEP_META.map((s, i) => (
-          <div key={s.label} style={{ display: 'contents' }}>
+          <div key={s.key} style={{ display: 'contents' }}>
             <span className={`step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
               <span className="num">{i < step ? <Check size={13} /> : i + 1}</span>
-              {s.label}
+              {t(`questions.modal.${s.key}`)}
             </span>
             {i < STEP_META.length - 1 && <span className="step-sep" />}
           </div>
@@ -404,18 +407,18 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
         <div>
           {step === 0 && (
             <div className="field" style={{ marginBottom: 0 }}>
-              <label>Énoncé (FR)</label>
+              <label>{t('questions.modal.statement')}</label>
               <textarea
                 className="textarea"
-                placeholder="Quelle est la capitale… ?"
+                placeholder={t('questions.placeholder.statement')}
                 value={textFr}
                 onChange={(e) => setTextFr(e.target.value)}
               />
               <div className={`char-count ${textOver ? 'over' : ''}`}>{textFr.length} / {MAX_TEXT}</div>
               <div className={`valid-hint ${textOk && !textOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
                 {textOk && !textOver
-                  ? <><Check size={13} /> Énoncé valide</>
-                  : <><AlertCircle size={13} /> {textOver ? `Énoncé trop long (max ${MAX_TEXT})` : 'Énoncé trop court (10 caractères min.)'}</>}
+                  ? <><Check size={13} /> {t('questions.validation.statementOk')}</>
+                  : <><AlertCircle size={13} /> {textOver ? t('questions.validation.statementTooLong', { max: MAX_TEXT }) : t('questions.validation.statementTooShort')}</>}
               </div>
             </div>
           )}
@@ -423,31 +426,31 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
           {step === 1 && (
             <>
               <div className="field">
-                <label>Options — sélectionnez la bonne réponse</label>
+                <label>{t('questions.modal.options')}</label>
                 {opts.map((v, i) => (
                   <div className="q-opt-row" key={LETTERS[i]}>
                     <input
                       className="input"
-                      placeholder={`Option ${LETTERS[i]}`}
+                      placeholder={t('questions.placeholder.option', { letter: LETTERS[i] })}
                       value={v}
                       onChange={(e) => setOpt(i, e.target.value)}
                     />
                     <button type="button" className={`q-opt-pick ${correct === i ? 'on' : ''}`} onClick={() => setCorrect(i)}>
-                      <Check size={13} /> Bonne
+                      <Check size={13} /> {t('questions.modal.goodAnswer')}
                     </button>
                   </div>
                 ))}
                 <div className={`valid-hint ${optsOk && correctOk ? 'ok' : 'ko'}`}>
                   {optsOk && correctOk
-                    ? <><Check size={13} /> Réponses valides</>
-                    : <><AlertCircle size={13} /> {!optsOk ? 'Renseignez au moins 2 options' : 'La bonne réponse doit être renseignée'}</>}
+                    ? <><Check size={13} /> {t('questions.validation.optionsOk')}</>
+                    : <><AlertCircle size={13} /> {!optsOk ? t('questions.validation.optionsMin') : t('questions.validation.correctRequired')}</>}
                 </div>
               </div>
               <div className="field" style={{ marginBottom: 0 }}>
-                <label>Explication (affichée après réponse)</label>
+                <label>{t('questions.modal.explanation')}</label>
                 <textarea
                   className="textarea"
-                  placeholder="Pourquoi cette réponse est correcte…"
+                  placeholder={t('questions.placeholder.explanation')}
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
                 />
@@ -459,23 +462,23 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
             <>
               <div className="row" style={{ gap: 12, alignItems: 'flex-start' }}>
                 <div className="field" style={{ flex: 1 }}>
-                  <label>Thème</label>
+                  <label>{t('questions.modal.theme')}</label>
                   <select className="select" value={theme} onChange={(e) => setTheme(e.target.value)}>
-                    {THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabels[t]}</option>)}
+                    {THEME_KEYS.map((k) => <option key={k} value={k}>{t(`questions.themes.${k}`, themeLabels[k])}</option>)}
                   </select>
                 </div>
                 <div className="field" style={{ flex: 1 }}>
-                  <label>Niveau</label>
+                  <label>{t('questions.modal.level')}</label>
                   <select className="select" value={level} onChange={(e) => setLevel(e.target.value)}>
-                    {LEVEL_KEYS.map((l) => <option key={l} value={l}>{levelLabels[l]}</option>)}
+                    {LEVEL_KEYS.map((k) => <option key={k} value={k}>{t(`questions.levels.${k}`, levelLabels[k])}</option>)}
                   </select>
                 </div>
               </div>
               <div className="field">
-                <label>Tags</label>
+                <label>{t('questions.modal.tags')}</label>
                 <input
                   className="input"
-                  placeholder="Saisissez puis Entrée (ex. capitale)"
+                  placeholder={t('questions.placeholder.tags')}
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
@@ -483,10 +486,10 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                 />
                 {tags.length > 0 && (
                   <div className="q-tags">
-                    {tags.map((t) => (
-                      <span className="q-tag" key={t}>
-                        {t}
-                        <button type="button" onClick={() => setTags((p) => p.filter((x) => x !== t))} aria-label={`Retirer ${t}`}>
+                    {tags.map((tag) => (
+                      <span className="q-tag" key={tag}>
+                        {tag}
+                        <button type="button" onClick={() => setTags((p) => p.filter((x) => x !== tag))} aria-label={t('questions.a11y.removeTag', { tag })}>
                           <X size={12} />
                         </button>
                       </span>
@@ -496,8 +499,8 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
               </div>
               <div className={`valid-hint ${canCreate ? 'ok' : 'ko'}`}>
                 {canCreate
-                  ? <><Check size={13} /> Prêt à enregistrer</>
-                  : <><AlertCircle size={13} /> Complétez l’énoncé et les réponses pour enregistrer</>}
+                  ? <><Check size={13} /> {t('questions.validation.readyToSave')}</>
+                  : <><AlertCircle size={13} /> {t('questions.validation.completeToSave')}</>}
               </div>
             </>
           )}
@@ -505,13 +508,13 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
 
         {/* Aperçu live façon application mobile (fond vert) */}
         <aside className="q-preview">
-          <div className="q-preview-cap">Aperçu mobile</div>
+          <div className="q-preview-cap">{t('questions.misc.mobilePreview')}</div>
           <div className="mobile-preview">
             <div className="row wrap" style={{ gap: 6 }}>
               <ThemeBadge theme={theme} />
               <LevelBadge level={level} />
             </div>
-            <div className="mp-q">{trimmed || 'Votre énoncé apparaîtra ici…'}</div>
+            <div className="mp-q">{trimmed || t('questions.placeholder.statementPreview')}</div>
             {opts.map((o, i) => (
               <div className={`mp-opt ${i === correct && o.trim() ? 'correct' : ''}`} key={LETTERS[i]}>
                 <span className="mp-letter">{LETTERS[i]}</span>
@@ -529,6 +532,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
 
 /* ---------- Modal de rejet (motif obligatoire) ---------- */
 function RejectModal({ open, onClose, onConfirm, busy }) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
   useEffect(() => { if (open) setReason(''); }, [open]);
   const ok = reason.trim().length >= 3;
@@ -536,27 +540,27 @@ function RejectModal({ open, onClose, onConfirm, busy }) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Rejeter la question"
+      title={t('questions.confirm.rejectTitle')}
       footer={(
         <>
-          <button className="btn btn-ghost-soft" onClick={onClose}>Annuler</button>
+          <button className="btn btn-ghost-soft" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn btn-danger" disabled={!ok || busy} onClick={() => onConfirm(reason.trim())}>
-            <ThumbsDown size={15} /> Confirmer le rejet
+            <ThumbsDown size={15} /> {t('questions.confirm.rejectConfirm')}
           </button>
         </>
       )}
     >
       <div className="field" style={{ marginBottom: 0 }}>
-        <label>Motif du rejet (visible par l’auteur)</label>
+        <label>{t('questions.misc.rejectReasonLabel')}</label>
         <textarea
           className="textarea"
-          placeholder="Expliquez pourquoi cette question est rejetée…"
+          placeholder={t('questions.placeholder.rejectReason')}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           autoFocus
         />
         <div className={`valid-hint ${ok ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
-          {ok ? <><Check size={13} /> Motif suffisant</> : <><AlertCircle size={13} /> Indiquez un motif (3 caractères min.)</>}
+          {ok ? <><Check size={13} /> {t('questions.validation.reasonOk')}</> : <><AlertCircle size={13} /> {t('questions.validation.reasonMin')}</>}
         </div>
       </div>
     </Modal>
@@ -565,6 +569,7 @@ function RejectModal({ open, onClose, onConfirm, busy }) {
 
 /* ---------- Modal de confirmation destructrice ---------- */
 function ConfirmModal({ open, title, message, confirmLabel, onConfirm, onClose, busy }) {
+  const { t } = useTranslation();
   return (
     <Modal
       open={open}
@@ -572,7 +577,7 @@ function ConfirmModal({ open, title, message, confirmLabel, onConfirm, onClose, 
       title={title}
       footer={(
         <>
-          <button className="btn btn-ghost-soft" onClick={onClose}>Annuler</button>
+          <button className="btn btn-ghost-soft" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn btn-danger" disabled={busy} onClick={onConfirm}>
             <Archive size={15} /> {confirmLabel}
           </button>
@@ -595,8 +600,292 @@ function PreviewOption({ letter, text, correct }) {
   );
 }
 
+/* Libellés des évènements d'audit (onglet Historique). */
+const EVENT_META = {
+  created: { labelKey: 'created', dot: '' },
+  updated: { labelKey: 'updated', dot: 'q-tl-dot-gold' },
+  submitted: { labelKey: 'submitted', dot: '' },
+  resubmitted: { labelKey: 'resubmitted', dot: '' },
+  approved: { labelKey: 'approved', dot: 'q-tl-dot-green' },
+  rejected: { labelKey: 'rejected', dot: 'q-tl-dot-red' },
+  archived: { labelKey: 'archived', dot: '' },
+  force_sync: { labelKey: 'forceSync', dot: 'q-tl-dot-blue' },
+};
+const FIELD_LABELS = {
+  text_fr: 'textFr', text_en: 'textEn', theme: 'theme', level: 'level',
+  explanation: 'explanation', media_url: 'mediaUrl', options: 'options',
+};
+/* Transitions autorisées (miroir du workflow backend) pour le drag&drop Kanban. */
+const STATUS_TRANSITIONS = {
+  draft: ['pending_review'],
+  pending_review: ['approved', 'rejected'],
+  approved: ['archived'],
+  rejected: ['pending_review'],
+  archived: [],
+};
+
+/* ---------- Panneau « Stats globales » (slide-down) ---------- */
+function GlobalStatsPanel({ open }) {
+  const { t } = useTranslation();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!open) return undefined;
+    let alive = true;
+    setLoading(true);
+    questionsService.globalStats()
+      .then((r) => { if (alive) setData(r); })
+      .catch(() => { if (alive) notify.error(t('questions.notify.globalStatsUnavailable')); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [open, t]);
+  if (!open) return null;
+  const byTheme = data?.by_theme || [];
+  return (
+    <div className="q-stats-panel">
+      {loading && !data ? (
+        <p className="muted" style={{ margin: 0 }}>{t('questions.misc.loadingStats')}</p>
+      ) : (
+        <>
+          <div className="q-stats-gauges">
+            {byTheme.map((th) => (
+              <div className="q-stats-gauge" key={th.theme}>
+                <Gauge value={th.avg_rate != null ? Math.round(th.avg_rate * 100) : 0} size={120} label={themeLabels[th.theme] || th.theme} />
+                <span className="q-stats-gauge-sub">{th.approved} {th.approved > 1 ? t('questions.misc.approvedPlural') : t('questions.misc.approvedSingular')}{th.avg_rate == null ? ` · ${t('questions.misc.neverAsked')}` : ''}</span>
+              </div>
+            ))}
+            {byTheme.length === 0 && <span className="muted">{t('questions.emptyState.noApproved')}</span>}
+          </div>
+          <div className="q-stats-extremes">
+            <div className="q-stats-ex">
+              <div className="q-stats-ex-title"><ThumbsDown size={14} /> {t('questions.misc.mostFailed')}</div>
+              {(data?.hardest || []).length === 0 && <p className="muted q-stats-ex-empty">{t('questions.misc.noDataYet')}</p>}
+              {(data?.hardest || []).map((q) => (
+                <div className="q-stats-ex-row" key={q.id}>
+                  <span className="q-stats-ex-text">{truncate(q.text_fr, 54)}</span>
+                  <span className="q-stats-ex-rate low">{pct(q.success_rate, 0)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="q-stats-ex">
+              <div className="q-stats-ex-title"><ThumbsUp size={14} /> {t('questions.misc.mostSucceeded')}</div>
+              {(data?.easiest || []).length === 0 && <p className="muted q-stats-ex-empty">{t('questions.misc.noDataYet')}</p>}
+              {(data?.easiest || []).map((q) => (
+                <div className="q-stats-ex-row" key={q.id}>
+                  <span className="q-stats-ex-text">{truncate(q.text_fr, 54)}</span>
+                  <span className="q-stats-ex-rate high">{pct(q.success_rate, 0)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Onglet Statistiques du drawer (distracteurs réels) ---------- */
+function StatsPane({ question }) {
+  const { t } = useTranslation();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    questionsService.questionStats(question.id)
+      .then((r) => { if (alive) setData(r); })
+      .catch(() => { if (alive) setData(null); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [question.id]);
+
+  if (loading) return <p className="muted" style={{ padding: '20px 0' }}>{t('questions.misc.loadingStats')}</p>;
+  if (!data || data.total_answers === 0) {
+    return (
+      <EmptyState
+        icon={BarChart3}
+        title={t('questions.emptyState.gameDataTitle')}
+        message={t('questions.emptyState.gameDataSub')}
+      />
+    );
+  }
+
+  const dist = data.distribution || [];
+  const main = data.main_distractor_index != null ? dist.find((d) => d.index === data.main_distractor_index) : null;
+  let comparison = null;
+  if (data.success_rate != null && data.theme_avg_rate != null) {
+    const diff = Math.round((data.success_rate - data.theme_avg_rate) * 100);
+    const themeName = themeLabels[data.theme] || data.theme;
+    if (diff <= -3) comparison = { tone: 'hard', text: t('questions.misc.harderThanAvg', { n: Math.abs(diff), theme: themeName }) };
+    else if (diff >= 3) comparison = { tone: 'easy', text: t('questions.misc.easierThanAvg', { n: diff, theme: themeName }) };
+    else comparison = { tone: 'balanced', text: t('questions.misc.inLineWithAvg', { theme: themeName }) };
+  }
+
+  return (
+    <div className="q-tabpane">
+      <div className="q-stat-line">
+        <div className="q-stat-kpi"><span className="n">{pct(data.success_rate, 0)}</span><span className="l">{t('questions.misc.successLabel')}</span></div>
+        <div className="q-stat-kpi"><span className="n">{data.total_answers.toLocaleString('fr-FR')}</span><span className="l">{t('questions.misc.answersLabel')}</span></div>
+        <div className="q-stat-kpi"><span className="n">{data.theme_avg_rate != null ? pct(data.theme_avg_rate, 0) : '—'}</span><span className="l">{t('questions.misc.themeAvgLabel')}</span></div>
+      </div>
+
+      <div className="q-section-label">{t('questions.misc.distractorAnalysis')}</div>
+      <div className="q-dist">
+        {dist.map((d) => (
+          <div className="q-dist-row" key={d.index}>
+            <span className="q-dist-letter">{LETTERS[d.index]}</span>
+            <span className="q-dist-bar-wrap">
+              <span className={`q-dist-bar ${d.is_correct ? 'correct' : d.index === data.main_distractor_index ? 'distractor' : ''}`} style={{ width: `${Math.max(2, d.pct)}%` }} />
+            </span>
+            <span className="q-dist-pct">{d.pct}%</span>
+            {d.is_correct && <span className="q-dist-tag ok">{t('questions.misc.correctAnswerTag')}</span>}
+          </div>
+        ))}
+      </div>
+      {main && (
+        <p className="q-stats-insight"><AlertTriangle size={15} /> {t('questions.misc.mainDistractorInsight', { letter: LETTERS[main.index], pct: main.pct })}</p>
+      )}
+      {comparison && (
+        <p className={`q-compare q-compare-${comparison.tone}`}>
+          {comparison.tone === 'hard' ? '⚠️' : comparison.tone === 'easy' ? 'ℹ️' : '✓'} {t('questions.misc.questionIs', { text: comparison.text })}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Onglet Historique du drawer (audit réel) ---------- */
+function HistoryPane({ question }) {
+  const { t } = useTranslation();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    questionsService.questionHistory(question.id)
+      .then((r) => { if (alive) setData(r); })
+      .catch(() => { if (alive) setData(null); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [question.id]);
+
+  if (loading) return <p className="muted" style={{ padding: '20px 0' }}>{t('questions.misc.loadingHistory')}</p>;
+  const events = data?.events || [];
+  const syncCount = events.filter((e) => e.event === 'force_sync').length;
+
+  return (
+    <div className="q-tabpane">
+      <div className="q-hist-summary">
+        <span>{t('questions.misc.currentVersion')} <strong>{data?.version ?? question.version ?? 1}</strong></span>
+        <span>{t('questions.misc.syncedPrefix')} <strong>{syncCount}</strong> {t('questions.misc.syncedSuffix')}</span>
+      </div>
+      {events.length === 0 ? (
+        <p className="q-tl-empty">{t('questions.emptyState.historyEventsTitle')}</p>
+      ) : (
+        <ol className="q-timeline">
+          {events.map((e) => {
+            const meta = EVENT_META[e.event] || { labelKey: null, dot: '' };
+            const changed = e.meta?.changed || [];
+            return (
+              <li key={e.id}>
+                <span className={`q-tl-dot ${meta.dot}`} />
+                <div>
+                  <div className="q-tl-title">{meta.labelKey ? t(`questions.events.${meta.labelKey}`) : e.event}{e.actor_name ? <span className="q-tl-actor"> · {e.actor_name}</span> : ''}</div>
+                  <div className="q-tl-meta">{dateFr(e.created_at, "dd MMM yyyy 'à' HH'h'mm")}{e.meta?.version ? ` · ${t('questions.misc.versionN', { n: e.meta.version })}` : ''}</div>
+                  {e.reason && <div className="q-tl-reason">« {e.reason} »</div>}
+                  {e.event === 'updated' && changed.length > 0 && (
+                    <div className="q-tl-diff">
+                      {changed.map((f) => (
+                        <div className="q-tl-diff-row" key={f}>
+                          <span className="q-tl-diff-field">{FIELD_LABELS[f] ? t(`questions.fields.${FIELD_LABELS[f]}`) : f}</span>
+                          {f !== 'options' && (
+                            <span className="q-tl-diff-vals">
+                              <span className="q-tl-old">{truncate(String(e.meta?.before?.[f] ?? '—'), 32)}</span>
+                              <ChevronRight size={12} />
+                              <span className="q-tl-new">{truncate(String(e.meta?.after?.[f] ?? '—'), 32)}</span>
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Vue Kanban (drag & drop entre statuts) ---------- */
+const KANBAN_COLS = [
+  { status: 'draft' },
+  { status: 'pending_review' },
+  { status: 'approved' },
+  { status: 'archived' },
+];
+function KanbanBoard({ rows, onOpen, onMove }) {
+  const { t } = useTranslation();
+  const [dragId, setDragId] = useState(null);
+  const [overCol, setOverCol] = useState(null);
+  const byStatus = useMemo(() => {
+    const map = Object.fromEntries(KANBAN_COLS.map((c) => [c.status, []]));
+    rows.forEach((q) => { if (map[q.status]) map[q.status].push(q); });
+    return map;
+  }, [rows]);
+  const rejected = useMemo(() => rows.filter((q) => q.status === 'rejected'), [rows]);
+
+  return (
+    <div className="q-kanban">
+      {KANBAN_COLS.map((col) => {
+        const items = col.status === 'pending_review' ? [...byStatus[col.status], ...rejected] : byStatus[col.status];
+        return (
+          <div
+            key={col.status}
+            className={`q-kanban-col ${overCol === col.status ? 'over' : ''}`}
+            onDragOver={(e) => { e.preventDefault(); setOverCol(col.status); }}
+            onDragLeave={() => setOverCol((c) => (c === col.status ? null : c))}
+            onDrop={(e) => { e.preventDefault(); setOverCol(null); if (dragId) onMove(dragId, col.status); setDragId(null); }}
+          >
+            <div className="q-kanban-head">
+              <span className="q-kanban-title">{t(`questions.statuses.${col.status}`)}</span>
+              <span className="q-kanban-count">{items.length}</span>
+            </div>
+            <div className="q-kanban-body">
+              {items.map((q) => (
+                <div
+                  key={q.id}
+                  className={`q-kanban-card ${q.status === 'rejected' ? 'is-rejected' : ''} ${dragId === q.id ? 'dragging' : ''}`}
+                  draggable
+                  onDragStart={() => setDragId(q.id)}
+                  onDragEnd={() => { setDragId(null); setOverCol(null); }}
+                  onClick={() => onOpen(q)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') onOpen(q); }}
+                >
+                  <div className="q-kanban-card-text">{truncate(q.text_fr, 60)}</div>
+                  <div className="q-kanban-card-meta">
+                    <ThemeBadge theme={q.theme} />
+                    <LevelPill level={q.level} />
+                  </div>
+                  <div className="q-kanban-card-foot">{t('questions.misc.createdOn', { date: dateFr(q.created_at) })}</div>
+                </div>
+              ))}
+              {items.length === 0 && <div className="q-kanban-empty">—</div>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ---------- Page ---------- */
 export default function Questions() {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [showImport, setShowImport] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -610,6 +899,15 @@ export default function Questions() {
   const [reject, setReject] = useState(null); // question en cours de rejet
   const [confirm, setConfirm] = useState(null); // { title, message, confirmLabel, run }
   const [actionBusy, setActionBusy] = useState(false);
+  // Vue (table/kanban), densité, panneau stats, lignes dépliées, édition inline.
+  const [view, setView] = useState('table');
+  const [density, setDensity] = useState('normal');
+  const [showStats, setShowStats] = useState(false);
+  const [expanded, setExpanded] = useState(() => new Set());
+  const [editing, setEditing] = useState(null); // { id, field }
+  // Aperçu drawer : mode nuit + simulation de réponse.
+  const [previewNight, setPreviewNight] = useState(false);
+  const [testPick, setTestPick] = useState(null);
 
   const { data, loading, refetch } = useApiData(
     () => questionsService.list(filters),
@@ -656,35 +954,35 @@ export default function Questions() {
     setActionBusy(true);
     try {
       await questionsService.transition(q.id, to, reason);
-      notify.success(`Statut → ${questionStatusColors[to]?.label || to}`);
+      notify.success(`${t('questions.columns.status')} → ${t(`questions.statuses.${to}`, questionStatusColors[to]?.label || to)}`);
       setDetail(null); setReject(null); refetch();
-    } catch { notify.error('Transition impossible.'); } finally { setActionBusy(false); }
+    } catch { notify.error(t('questions.notify.transitionFailed')); } finally { setActionBusy(false); }
   };
   const askReject = (q) => setReject(q);
   const doForceSync = async (q) => {
-    try { const r = await questionsService.forceSync([q.id]); notify.success(`Force sync · ${r.devices_targeted?.toLocaleString('fr-FR') || '—'} appareils`); }
-    catch { notify.error('Échec du force sync.'); }
+    try { const r = await questionsService.forceSync([q.id]); notify.success(t('questions.notify.forceSyncOne', { devices: r.devices_targeted?.toLocaleString('fr-FR') || '—' })); }
+    catch { notify.error(t('questions.notify.forceSyncFailed')); }
   };
   const headerForceSync = async () => {
     const ids = selectedRows.length ? selectedRows.map((q) => q.id) : rows.filter((q) => q.status === 'approved').map((q) => q.id);
-    if (!ids.length) { notify.info('Aucune question approuvée à synchroniser.'); return; }
+    if (!ids.length) { notify.info(t('questions.notify.noApprovedToSync')); return; }
     try {
       const r = await questionsService.forceSync(ids);
-      notify.success(`Force sync de ${ids.length} question(s) · ${r.devices_targeted?.toLocaleString('fr-FR') || '—'} appareils`);
-    } catch { notify.error('Échec du force sync.'); }
+      notify.success(t('questions.notify.forceSyncMany', { n: ids.length, devices: r.devices_targeted?.toLocaleString('fr-FR') || '—' }));
+    } catch { notify.error(t('questions.notify.forceSyncFailed')); }
   };
   const doArchive = async (q) => {
     setActionBusy(true);
     try {
       await questionsService.remove(q.id);
-      notify.success('Question archivée.');
+      notify.success(t('toast.archived'));
       setDetail(null); setConfirm(null); refetch();
-    } catch { notify.error('Archivage impossible.'); } finally { setActionBusy(false); }
+    } catch { notify.error(t('questions.notify.archiveFailed')); } finally { setActionBusy(false); }
   };
   const askArchive = (q) => setConfirm({
-    title: 'Archiver la question',
-    message: 'Cette question sera retirée du quiz. Aucun endpoint de restauration n’existe — l’archivage est définitif côté console.',
-    confirmLabel: 'Archiver',
+    title: t('questions.confirm.archiveTitle'),
+    message: t('questions.confirm.archiveMessage'),
+    confirmLabel: t('questions.actions.archive'),
     run: () => doArchive(q),
   });
 
@@ -692,16 +990,49 @@ export default function Questions() {
     setSubmitting(true);
     try {
       await questionsService.create(payload);
-      notify.success(prefill ? 'Copie créée (brouillon).' : 'Question créée (brouillon).');
+      notify.success(prefill ? t('toast.duplicated') : t('toast.saved'));
       resetForm(); setCreating(false); setPrefill(null); refetch();
-    } catch { notify.error('Enregistrement impossible.'); } finally { setSubmitting(false); }
+    } catch { notify.error(t('questions.notify.saveFailed')); } finally { setSubmitting(false); }
   };
   const startCreate = () => { setPrefill(null); setCreating(true); };
   const startEdit = (q) => { setPrefill(q); setDetail(null); setCreating(true); };
   const startDuplicate = (q) => { setPrefill(q); setDetail(null); setCreating(true); };
   const closeCreate = () => { setCreating(false); setPrefill(null); };
 
-  const openDetail = (q) => { setTab('overview'); setDetail(q); };
+  const openDetail = (q) => { setTab('overview'); setTestPick(null); setPreviewNight(false); setDetail(q); };
+
+  // --- Dépliage de ligne + édition inline (thème / niveau) ---
+  const toggleExpand = (id) => setExpanded((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const saveInline = async (q, field, value) => {
+    setEditing(null);
+    if (value === q[field]) return;
+    try {
+      await questionsService.update(q.id, { [field]: value });
+      notify.success(t('questions.notify.updated'));
+      refetch();
+    } catch { notify.error(t('questions.notify.updateFailed')); }
+  };
+
+  // --- Drag & drop Kanban : applique une transition de statut valide ---
+  const kanbanMove = (id, toStatus) => {
+    const q = rows.find((r) => r.id === id);
+    if (!q || q.status === toStatus) return;
+    if (toStatus === 'rejected') { askReject(q); return; }
+    const allowed = STATUS_TRANSITIONS[q.status] || [];
+    if (!allowed.includes(toStatus)) {
+      notify.error(t('questions.notify.transitionNotAllowed', { from: t(`questions.statuses.${q.status}`, q.status), to: t(`questions.statuses.${toStatus}`, toStatus) }));
+      return;
+    }
+    doTransition(q, toStatus);
+  };
+
+  // Copie le JSON de la question dans le presse-papiers (onglet Aperçu).
+  const copyJson = async (q) => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(q, null, 2));
+      notify.success(t('questions.notify.jsonCopied'));
+    } catch { notify.error(t('questions.notify.copyFailed')); }
+  };
 
   // --- Sélection multiple + actions groupées (préservé) ---
   const allSelected = pageRows.length > 0 && pageRows.every((r) => selected.has(r.id));
@@ -718,27 +1049,27 @@ export default function Questions() {
   const eligibleApprove = selectedRows.filter((r) => r.status === 'pending_review');
 
   const bulkApprove = async () => {
-    if (!eligibleApprove.length) { notify.info('Aucune question éligible (en révision) dans la sélection.'); return; }
+    if (!eligibleApprove.length) { notify.info(t('questions.notify.noEligibleApprove')); return; }
     setActionBusy(true);
     try {
       await Promise.all(eligibleApprove.map((q) => questionsService.transition(q.id, 'approved')));
-      notify.success(`${eligibleApprove.length} question(s) approuvée(s).`);
+      notify.success(t('questions.notify.bulkApproved', { n: eligibleApprove.length }));
       clearSel(); refetch();
-    } catch { notify.error('Approbation groupée impossible.'); } finally { setActionBusy(false); }
+    } catch { notify.error(t('questions.notify.bulkApproveFailed')); } finally { setActionBusy(false); }
   };
   const bulkArchive = async () => {
     const items = selectedRows;
     setActionBusy(true);
     try {
       await Promise.all(items.map((q) => questionsService.remove(q.id)));
-      notify.success(`${items.length} question(s) archivée(s).`);
+      notify.success(t('questions.notify.bulkArchived', { n: items.length }));
       clearSel(); setConfirm(null); refetch();
-    } catch { notify.error('Archivage groupé impossible.'); } finally { setActionBusy(false); }
+    } catch { notify.error(t('questions.notify.bulkArchiveFailed')); } finally { setActionBusy(false); }
   };
   const askBulkArchive = () => setConfirm({
-    title: 'Archiver la sélection',
-    message: `${selected.size} question(s) seront archivées et retirées du quiz. Action sans restauration côté console.`,
-    confirmLabel: `Archiver ${selected.size}`,
+    title: t('questions.confirm.bulkArchiveTitle'),
+    message: t('questions.confirm.bulkArchiveMessage', { n: selected.size }),
+    confirmLabel: `${t('questions.actions.archive')} ${selected.size}`,
     run: bulkArchive,
   });
 
@@ -747,14 +1078,14 @@ export default function Questions() {
     const csv = Papa.unparse(picked.map((q) => ({
       id: q.id,
       enonce: q.text_fr,
-      theme: themeLabels[q.theme] || q.theme,
-      niveau: levelLabels[q.level] || q.level,
-      statut: questionStatusColors[q.status]?.label || q.status,
+      theme: t(`questions.themes.${q.theme}`, themeLabels[q.theme] || q.theme),
+      niveau: t(`questions.levels.${q.level}`, levelLabels[q.level] || q.level),
+      statut: t(`questions.statuses.${q.status}`, questionStatusColors[q.status]?.label || q.status),
       taux_reussite: q.success_rate == null ? '' : Math.round(q.success_rate * 100),
       creee_le: q.created_at || '',
     })));
     downloadCsv(csv, 'questions-creveton.csv');
-    notify.success(`${picked.length} question(s) exportée(s)`);
+    notify.success(t('toast.exportSuccess'));
   };
 
   const sortHead = (label, k) => {
@@ -774,7 +1105,7 @@ export default function Questions() {
     if (q.status === 'draft') {
       return (
         <button className="btn btn-gold btn-block" disabled={actionBusy} onClick={() => doTransition(q, 'pending_review')}>
-          <Send size={15} /> Soumettre à révision
+          <Send size={15} /> {t('questions.actions.submit')}
         </button>
       );
     }
@@ -782,10 +1113,10 @@ export default function Questions() {
       return (
         <div className="q-wf-split">
           <button className="btn btn-success" disabled={actionBusy} onClick={() => doTransition(q, 'approved')}>
-            <ThumbsUp size={15} /> Approuver
+            <ThumbsUp size={15} /> {t('questions.actions.approve')}
           </button>
           <button className="btn btn-danger" disabled={actionBusy} onClick={() => askReject(q)}>
-            <ThumbsDown size={15} /> Rejeter
+            <ThumbsDown size={15} /> {t('questions.actions.reject')}
           </button>
         </div>
       );
@@ -794,11 +1125,11 @@ export default function Questions() {
       return (
         <div className="stack" style={{ gap: 8 }}>
           <div className="q-wf-split">
-            <button className="btn btn-ghost" onClick={() => startEdit(q)}><Pencil size={15} /> Modifier</button>
-            <button className="btn btn-ghost" onClick={() => startDuplicate(q)}><Copy size={15} /> Dupliquer</button>
+            <button className="btn btn-ghost" onClick={() => startEdit(q)}><Pencil size={15} /> {t('common.edit')}</button>
+            <button className="btn btn-ghost" onClick={() => startDuplicate(q)}><Copy size={15} /> {t('questions.actions.duplicate')}</button>
           </div>
           <button className="btn btn-danger-ghost btn-block" disabled={actionBusy} onClick={() => askArchive(q)}>
-            <Archive size={15} /> Archiver
+            <Archive size={15} /> {t('questions.actions.archive')}
           </button>
         </div>
       );
@@ -806,7 +1137,7 @@ export default function Questions() {
     if (q.status === 'rejected') {
       return (
         <button className="btn btn-gold btn-block" disabled={actionBusy} onClick={() => doTransition(q, 'pending_review')}>
-          <RotateCcw size={15} /> Resoumettre à révision
+          <RotateCcw size={15} /> {t('questions.actions.resubmit')}
         </button>
       );
     }
@@ -814,16 +1145,16 @@ export default function Questions() {
     return (
       <div className="q-archived-note">
         <Lock size={15} />
-        <span>Question archivée{q.updated_at ? ` le ${dateFr(q.updated_at)}` : ''}. La restauration n’est pas disponible.</span>
+        <span>{q.updated_at ? t('questions.misc.archivedNoteDated', { date: dateFr(q.updated_at) }) : t('questions.misc.archivedNote')}</span>
       </div>
     );
   };
 
   const activePills = [
-    filters.theme && { k: 'theme', label: `Thème : ${themeLabels[filters.theme] || filters.theme}` },
-    filters.level && { k: 'level', label: `Niveau : ${levelLabels[filters.level] || filters.level}` },
-    filters.status && { k: 'status', label: `Statut : ${questionStatusColors[filters.status]?.label || filters.status}` },
-    filters.q && { k: 'q', label: `Recherche : « ${filters.q} »` },
+    filters.theme && { k: 'theme', label: `${t('questions.columns.theme')} : ${t(`questions.themes.${filters.theme}`, themeLabels[filters.theme] || filters.theme)}` },
+    filters.level && { k: 'level', label: `${t('questions.columns.level')} : ${t(`questions.levels.${filters.level}`, levelLabels[filters.level] || filters.level)}` },
+    filters.status && { k: 'status', label: `${t('questions.columns.status')} : ${t(`questions.statuses.${filters.status}`, questionStatusColors[filters.status]?.label || filters.status)}` },
+    filters.q && { k: 'q', label: `${t('common.search')} : « ${filters.q} »` },
   ].filter(Boolean);
 
   return (
@@ -833,36 +1164,62 @@ export default function Questions() {
         <PageHeader
           title={(
             <span className="q-title-line">
-              Questions
+              {t('questions.title')}
               {!loading && (
                 <span className="q-count-inline">
-                  <strong>{total}</strong> chargées · <strong>{approvedCount}</strong> approuvées · <strong>{pendingCount}</strong> en attente
+                  <strong>{total}</strong> {t('questions.loaded')} · <strong>{approvedCount}</strong> {t('questions.approved')} · <strong>{pendingCount}</strong> {t('questions.pending')}
                 </span>
               )}
             </span>
           )}
-          description="Gérez le contenu et le workflow de modération des questions du quiz."
+          description={t('questions.subtitle')}
           actions={(
             <>
-              <button className="btn q-btn-sync" onClick={headerForceSync} title="Pousser les questions approuvées (ou la sélection) vers les appareils">
-                <Zap size={16} /> Force sync
+              <button className="btn q-btn-sync" onClick={headerForceSync} title={t('questions.a11y.forceSyncTitle')}>
+                <Zap size={16} /> {t('questions.forceSync')}
               </button>
-              <button className="btn btn-ghost" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
-              <button className="btn btn-primary" onClick={startCreate}><Plus size={16} /> Nouvelle question</button>
+              <button className={`btn btn-ghost ${showStats ? 'q-btn-stats-on' : ''}`} onClick={() => setShowStats((s) => !s)}>
+                <BarChart3 size={16} /> {t('questions.globalStats')}
+              </button>
+              <button className="btn btn-ghost" onClick={() => setShowImport(true)}><Upload size={16} /> {t('questions.importCsv')}</button>
+              <button className="btn btn-primary" onClick={startCreate}><Plus size={16} /> {t('questions.newQuestion')}</button>
             </>
           )}
         />
 
         {/* KPI strip (3 blocs, chiffres Outfit 800 36px, traits verticaux) */}
         {loading ? (
-          <div className="q-kpi-strip"><span className="muted">Chargement…</span></div>
+          <div className="q-kpi-strip"><span className="muted">{t('common.loading')}</span></div>
         ) : (
           <div className="q-kpi-strip">
-            <div className="q-kpi"><span className="n">{total}</span><span className="l">chargées</span></div>
-            <div className="q-kpi"><span className="n">{approvedCount}</span><span className="l">approuvées</span></div>
-            <div className="q-kpi"><span className="n">{pendingCount}</span><span className="l">en attente</span></div>
+            <div className="q-kpi"><span className="n">{total}</span><span className="l">{t('questions.loaded')}</span></div>
+            <div className="q-kpi"><span className="n">{approvedCount}</span><span className="l">{t('questions.approved')}</span></div>
+            <div className="q-kpi"><span className="n">{pendingCount}</span><span className="l">{t('questions.pending')}</span></div>
           </div>
         )}
+
+        {/* Panneau stats globales (slide-down) */}
+        <GlobalStatsPanel open={showStats} />
+
+        {/* Barre vue (table / kanban) + densité */}
+        <div className="q-view-toolbar">
+          <div className="q-view-switch" role="tablist" aria-label={t('questions.a11y.viewSwitch')}>
+            <button type="button" className={`q-view-btn ${view === 'table' ? 'is-active' : ''}`} onClick={() => setView('table')}>
+              <Table2 size={15} /> {t('questions.viewTable')}
+            </button>
+            <button type="button" className={`q-view-btn ${view === 'kanban' ? 'is-active' : ''}`} onClick={() => setView('kanban')}>
+              <LayoutGrid size={15} /> {t('questions.viewKanban')}
+            </button>
+          </div>
+          {view === 'table' && (
+            <div className="q-density" title={t('questions.a11y.density')}>
+              <Rows3 size={14} />
+              {[['compact', t('questions.misc.densityCompact')], ['normal', t('questions.misc.densityNormal')], ['spacious', t('questions.misc.densitySpacious')]].map(([k, lbl]) => (
+                <button key={k} type="button" className={`q-density-btn ${density === k ? 'is-active' : ''}`} onClick={() => setDensity(k)}>{lbl}</button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Barre filtres sticky */}
@@ -870,22 +1227,22 @@ export default function Questions() {
         <div className="q-filter-row">
           <div className="q-search">
             <Search size={16} />
-            <input className="input" placeholder="Rechercher un énoncé…" value={filters.q} onChange={(e) => setF('q', e.target.value)} />
+            <input className="input" placeholder={t('questions.search')} value={filters.q} onChange={(e) => setF('q', e.target.value)} />
           </div>
           <select className="select" value={filters.theme} onChange={(e) => setF('theme', e.target.value)}>
-            <option value="">Tous thèmes</option>
-            {THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabels[t]}</option>)}
+            <option value="">{t('questions.allThemes')}</option>
+            {THEME_KEYS.map((k) => <option key={k} value={k}>{t(`questions.themes.${k}`, themeLabels[k])}</option>)}
           </select>
           <select className="select" value={filters.level} onChange={(e) => setF('level', e.target.value)}>
-            <option value="">Tous niveaux</option>
-            {LEVEL_KEYS.map((l) => <option key={l} value={l}>{levelLabels[l]}</option>)}
+            <option value="">{t('questions.allLevels')}</option>
+            {LEVEL_KEYS.map((k) => <option key={k} value={k}>{t(`questions.levels.${k}`, levelLabels[k])}</option>)}
           </select>
           <select className="select" value={filters.status} onChange={(e) => setF('status', e.target.value)}>
-            <option value="">Tous statuts</option>
-            {STATUSES.map((s) => <option key={s} value={s}>{questionStatusColors[s].label}</option>)}
+            <option value="">{t('questions.allStatuses')}</option>
+            {STATUSES.map((s) => <option key={s} value={s}>{t(`questions.statuses.${s}`, questionStatusColors[s].label)}</option>)}
           </select>
           {hasFilters && (
-            <button className="btn btn-ghost-soft" onClick={resetFilters}>Réinitialiser</button>
+            <button className="btn btn-ghost-soft" onClick={resetFilters}>{t('questions.reset')}</button>
           )}
         </div>
         {activePills.length > 0 && (
@@ -906,74 +1263,117 @@ export default function Questions() {
         <div className="card">
           {hasFilters ? (
             <EmptyState
-              title="Aucun résultat"
-              message="Aucune question ne correspond à ces filtres."
-              action={<button className="btn" onClick={resetFilters}>Réinitialiser les filtres</button>}
+              title={t('questions.noResults')}
+              message={t('questions.noResultsSubtitle')}
+              action={<button className="btn" onClick={resetFilters}>{t('questions.reset')}</button>}
             />
           ) : (
             <EmptyState
-              title="Importez vos premières questions"
-              message="Aucune question pour l’instant. Créez-en une ou importez un lot CSV."
+              title={t('questions.empty')}
+              message={t('questions.emptySubtitle')}
               action={(
                 <div className="row" style={{ gap: 10 }}>
-                  <button className="btn btn-ghost" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
-                  <button className="btn btn-primary" onClick={startCreate}><Plus size={16} /> Nouvelle question</button>
+                  <button className="btn btn-ghost" onClick={() => setShowImport(true)}><Upload size={16} /> {t('questions.importCsv')}</button>
+                  <button className="btn btn-primary" onClick={startCreate}><Plus size={16} /> {t('questions.newQuestion')}</button>
                 </div>
               )}
             />
           )}
         </div>
+      ) : view === 'kanban' ? (
+        <KanbanBoard rows={sortedRows} onOpen={openDetail} onMove={kanbanMove} />
       ) : (
         <div className="card q-table-card">
           <div className="table-wrap">
-            <table className="data q-table">
+            <table className={`data q-table q-table--${density}`}>
               <thead>
                 <tr>
                   <th className="q-th-sel">
                     <span className={`checkbox ${allSelected ? 'on' : ''}`} onClick={toggleAll}>{allSelected && <Check size={12} />}</span>
                   </th>
-                  <th className="q-th-num">#</th>
-                  <th>{sortHead('Énoncé', 'text_fr')}</th>
-                  <th>{sortHead('Thème', 'theme')}</th>
-                  <th>{sortHead('Niveau', 'level')}</th>
-                  <th>{sortHead('Statut', 'status')}</th>
-                  <th>{sortHead('Taux', 'success_rate')}</th>
-                  <th>{sortHead('Créée', 'created_at')}</th>
-                  <th className="q-th-actions">Actions</th>
+                  <th className="q-th-exp" aria-hidden="true" />
+                  <th className="q-th-num">{t('questions.columns.number')}</th>
+                  <th>{sortHead(t('questions.columns.statement'), 'text_fr')}</th>
+                  <th>{sortHead(t('questions.columns.theme'), 'theme')}</th>
+                  <th>{sortHead(t('questions.columns.level'), 'level')}</th>
+                  <th>{sortHead(t('questions.columns.status'), 'status')}</th>
+                  <th>{sortHead(t('questions.columns.successRate'), 'success_rate')}</th>
+                  <th>{sortHead(t('questions.columns.createdAt'), 'created_at')}</th>
+                  <th className="q-th-actions">{t('questions.columns.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.map((q, i) => {
                   const on = selected.has(q.id);
+                  const isExp = expanded.has(q.id);
+                  const opts = q.options || [];
+                  const cIdx = q.correct_index != null ? q.correct_index : opts.findIndex((o) => o.is_correct);
                   return (
-                    <tr key={q.id} className={`clickable ${on ? 'q-row-on' : ''}`} onClick={() => openDetail(q)}>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <span className={`checkbox ${on ? 'on' : ''}`} onClick={() => toggleOne(q.id)}>{on && <Check size={12} />}</span>
-                      </td>
-                      <td className="q-cell-num">{page * PAGE_SIZE + i + 1}</td>
-                      <td className="q-cell-statement">
-                        <span className="q-statement-text">{truncate(q.text_fr, STATEMENT_MAX)}</span>
-                        {q.explanation && <span className="q-statement-sub">{truncate(q.explanation, 90)}</span>}
-                      </td>
-                      <td><ThemeBadge theme={q.theme} /></td>
-                      <td><LevelPill level={q.level} /></td>
-                      <td><StatusDot status={q.status} /></td>
-                      <td><SuccessBar rate={q.success_rate} /></td>
-                      <td className="muted">{dateFr(q.created_at)}</td>
-                      <td className="q-td-actions" onClick={(e) => e.stopPropagation()}>
-                        <div className="row nowrap" style={{ gap: 2 }}>
-                          <button className="icon-action" title="Voir" onClick={() => openDetail(q)}><Eye size={17} /></button>
-                          <button className="icon-action" title="Éditer" onClick={() => startEdit(q)}><Pencil size={16} /></button>
-                          <button className="icon-action" title="Dupliquer" onClick={() => startDuplicate(q)}><Copy size={16} /></button>
-                          {(q.status === 'approved' || q.status === 'archived') && (
-                            <button className="icon-action" title="Force sync" onClick={() => doForceSync(q)}><Zap size={16} /></button>
+                    <Fragment key={q.id}>
+                      <tr className={`clickable ${on ? 'q-row-on' : ''}`} onClick={() => openDetail(q)}>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <span className={`checkbox ${on ? 'on' : ''}`} onClick={() => toggleOne(q.id)}>{on && <Check size={12} />}</span>
+                        </td>
+                        <td className="q-cell-exp" onClick={(e) => { e.stopPropagation(); toggleExpand(q.id); }}>
+                          <button className={`q-exp-btn ${isExp ? 'open' : ''}`} aria-label={t('questions.a11y.expandOptions')} aria-expanded={isExp}><ChevronRight size={15} /></button>
+                        </td>
+                        <td className="q-cell-num">{page * PAGE_SIZE + i + 1}</td>
+                        <td className="q-cell-statement">
+                          <span className="q-statement-text">{truncate(q.text_fr, STATEMENT_MAX)}</span>
+                          {q.explanation && <span className="q-statement-sub">{truncate(q.explanation, 90)}</span>}
+                        </td>
+                        <td className="q-cell-edit" onClick={(e) => e.stopPropagation()}>
+                          {editing && editing.id === q.id && editing.field === 'theme' ? (
+                            <select className="select q-inline-select" defaultValue={q.theme} autoFocus onChange={(e) => saveInline(q, 'theme', e.target.value)} onBlur={() => setEditing(null)}>
+                              {THEME_KEYS.map((k) => <option key={k} value={k}>{t(`questions.themes.${k}`, themeLabels[k])}</option>)}
+                            </select>
+                          ) : (
+                            <button type="button" className="q-inline-trigger" onClick={() => setEditing({ id: q.id, field: 'theme' })} title={t('questions.a11y.editThemeTitle')}><ThemeBadge theme={q.theme} /></button>
                           )}
-                          {q.status !== 'archived' && (
-                            <button className="icon-action danger" title="Archiver" onClick={() => askArchive(q)}><Archive size={16} /></button>
+                        </td>
+                        <td className="q-cell-edit" onClick={(e) => e.stopPropagation()}>
+                          {editing && editing.id === q.id && editing.field === 'level' ? (
+                            <select className="select q-inline-select" defaultValue={q.level} autoFocus onChange={(e) => saveInline(q, 'level', e.target.value)} onBlur={() => setEditing(null)}>
+                              {LEVEL_KEYS.map((k) => <option key={k} value={k}>{t(`questions.levels.${k}`, levelLabels[k])}</option>)}
+                            </select>
+                          ) : (
+                            <button type="button" className="q-inline-trigger" onClick={() => setEditing({ id: q.id, field: 'level' })} title={t('questions.a11y.editLevelTitle')}><LevelPill level={q.level} /></button>
                           )}
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                        <td><StatusDot status={q.status} /></td>
+                        <td><SuccessBar rate={q.success_rate} /></td>
+                        <td className="muted">{dateFr(q.created_at)}</td>
+                        <td className="q-td-actions" onClick={(e) => e.stopPropagation()}>
+                          <div className="row nowrap" style={{ gap: 2 }}>
+                            <button className="icon-action" title={t('questions.actions.view')} onClick={() => openDetail(q)}><Eye size={17} /></button>
+                            <button className="icon-action" title={t('questions.actions.edit')} onClick={() => startEdit(q)}><Pencil size={16} /></button>
+                            <button className="icon-action" title={t('questions.actions.duplicate')} onClick={() => startDuplicate(q)}><Copy size={16} /></button>
+                            {(q.status === 'approved' || q.status === 'archived') && (
+                              <button className="icon-action" title={t('questions.forceSync')} onClick={() => doForceSync(q)}><Zap size={16} /></button>
+                            )}
+                            {q.status !== 'archived' && (
+                              <button className="icon-action danger" title={t('questions.actions.archive')} onClick={() => askArchive(q)}><Archive size={16} /></button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      {isExp && (
+                        <tr className="q-expand-row">
+                          <td colSpan={10}>
+                            <div className="q-expand">
+                              {opts.map((o, idx) => (
+                                <div className={`q-expand-opt ${idx === cIdx ? 'correct' : ''}`} key={`${q.id}-x-${idx}`}>
+                                  <span className="q-expand-letter">{LETTERS[idx]}</span>
+                                  <span className="q-expand-text">{o.text}</span>
+                                  {idx === cIdx && <Check size={14} />}
+                                </div>
+                              ))}
+                              {q.explanation && <div className="explain q-expand-explain">{q.explanation}</div>}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   );
                 })}
               </tbody>
@@ -982,11 +1382,11 @@ export default function Questions() {
 
           {pageCount > 1 && (
             <div className="q-pager">
-              <span className="page-info">{sortedRows.length} éléments · {PAGE_SIZE} par page</span>
+              <span className="page-info">{t('questions.misc.pagerCount', { n: sortedRows.length, perPage: PAGE_SIZE })}</span>
               <div className="row" style={{ gap: 6 }}>
-                <button className="icon-btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)} aria-label="Précédent"><ChevronLeft size={16} /></button>
-                <span className="muted" style={{ fontSize: 13 }}>Page {page + 1} / {pageCount}</span>
-                <button className="icon-btn" disabled={page >= pageCount - 1} onClick={() => setPage((p) => p + 1)} aria-label="Suivant"><ChevronRight size={16} /></button>
+                <button className="icon-btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)} aria-label={t('common.previous')}><ChevronLeft size={16} /></button>
+                <span className="muted" style={{ fontSize: 13 }}>{t('questions.misc.pageOf', { page: page + 1, total: pageCount })}</span>
+                <button className="icon-btn" disabled={page >= pageCount - 1} onClick={() => setPage((p) => p + 1)} aria-label={t('common.next')}><ChevronRight size={16} /></button>
               </div>
             </div>
           )}
@@ -996,14 +1396,14 @@ export default function Questions() {
       {/* Barre d'actions groupées (sticky bottom) */}
       {selected.size > 0 && (
         <div className="q-bulk-bar">
-          <span className="q-bulk-count">{selected.size} sélectionnée(s)</span>
+          <span className="q-bulk-count">{selected.size} {t('questions.selected')}</span>
           <div className="row wrap" style={{ gap: 8, marginLeft: 'auto' }}>
             <button className="btn btn-sm btn-success" disabled={actionBusy} onClick={bulkApprove}>
-              <ThumbsUp size={14} /> Approuver tout{eligibleApprove.length ? ` (${eligibleApprove.length})` : ''}
+              <ThumbsUp size={14} /> {t('questions.approveAll')}{eligibleApprove.length ? ` (${eligibleApprove.length})` : ''}
             </button>
-            <button className="btn btn-sm" disabled={actionBusy} onClick={askBulkArchive}><Archive size={14} /> Archiver tout</button>
-            <button className="btn btn-sm" onClick={exportCsv}><Download size={14} /> Exporter CSV</button>
-            <button className="btn btn-sm btn-ghost" onClick={clearSel}><X size={14} /> Désélectionner</button>
+            <button className="btn btn-sm" disabled={actionBusy} onClick={askBulkArchive}><Archive size={14} /> {t('questions.archiveAll')}</button>
+            <button className="btn btn-sm" onClick={exportCsv}><Download size={14} /> {t('questions.exportCsv')}</button>
+            <button className="btn btn-sm btn-ghost" onClick={clearSel}><X size={14} /> {t('questions.deselect')}</button>
           </div>
         </div>
       )}
@@ -1031,13 +1431,12 @@ export default function Questions() {
       />
 
       {/* Drawer détail question */}
-      <Drawer open={Boolean(detail)} onClose={() => setDetail(null)} title="Détail de la question" width={560}>
+      <Drawer open={Boolean(detail)} onClose={() => setDetail(null)} title={t('questions.misc.questionDetail')} width={560}>
         {detail && (() => {
           const opts = detail.options || [];
           const correctIdx = detail.correct_index != null
             ? detail.correct_index
             : opts.findIndex((o) => o.is_correct);
-          const verdict = difficultyVerdict(detail.success_rate);
           return (
             <div className="q-drawer">
               {/* Hero sombre */}
@@ -1048,24 +1447,24 @@ export default function Questions() {
                   <StatusDot status={detail.status} />
                 </div>
                 <div className="q-hero-meta">
-                  Créée le {detail.created_at ? dateFr(detail.created_at) : '—'} · Modifiée le {detail.updated_at ? dateFr(detail.updated_at) : '—'}
+                  {t('questions.misc.heroMeta', { created: detail.created_at ? dateFr(detail.created_at) : '—', updated: detail.updated_at ? dateFr(detail.updated_at) : '—' })}
                 </div>
               </div>
 
               {/* Onglets */}
               <div className="q-tabs" role="tablist">
                 <button role="tab" aria-selected={tab === 'overview'} className={`q-tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>
-                  <Eye size={15} /> Aperçu
+                  <Eye size={15} /> {t('questions.drawer.preview')}
                 </button>
                 <button role="tab" aria-selected={tab === 'stats'} className={`q-tab ${tab === 'stats' ? 'active' : ''}`} onClick={() => setTab('stats')}>
-                  <BarChart3 size={15} /> Statistiques
+                  <BarChart3 size={15} /> {t('questions.drawer.statistics')}
                 </button>
                 <button role="tab" aria-selected={tab === 'history'} className={`q-tab ${tab === 'history' ? 'active' : ''}`} onClick={() => setTab('history')}>
-                  <History size={15} /> Historique
+                  <History size={15} /> {t('questions.drawer.history')}
                 </button>
               </div>
 
-              {/* APERÇU */}
+                            {/* APERÇU */}
               {tab === 'overview' && (
                 <div className="q-tabpane">
                   {detail.status === 'rejected' && (
@@ -1074,7 +1473,19 @@ export default function Questions() {
                     </div>
                   )}
 
-                  <div className="q-phone">
+                  <div className="q-preview-tools">
+                    <button type="button" className="q-prev-tool" onClick={() => setPreviewNight((n) => !n)}>
+                      {previewNight ? <Sun size={14} /> : <Moon size={14} />} {previewNight ? 'Mode jour' : 'Mode nuit'}
+                    </button>
+                    <button type="button" className="q-prev-tool" onClick={() => copyJson(detail)}><Code2 size={14} /> Copier le JSON</button>
+                    {testPick != null ? (
+                      <button type="button" className="q-prev-tool" onClick={() => setTestPick(null)}><RotateCcw size={14} /> Réinitialiser</button>
+                    ) : (
+                      <button type="button" className="q-prev-tool q-prev-tool-go" onClick={() => setTestPick(-1)}><Play size={14} /> Tester la question</button>
+                    )}
+                  </div>
+
+                  <div className={`q-phone ${previewNight ? 'q-phone--night' : ''}`}>
                     <div className="q-phone-top">
                       <span className="q-phone-step">Q 3/10</span>
                       <span className="q-phone-pts">● 350 pts</span>
@@ -1082,14 +1493,35 @@ export default function Questions() {
                     <div className="q-phone-timer"><span style={{ width: '60%' }} /></div>
                     <div className="q-phone-q">{detail.text_fr}</div>
                     <div className="q-phone-opts">
-                      {opts.map((o, i) => (
-                        <PreviewOption key={`${detail.id}-mp-${i}`} letter={LETTERS[i]} text={o.text} correct={i === correctIdx} />
-                      ))}
+                      {opts.map((o, i) => {
+                        const testing = testPick != null;
+                        const answered = testPick != null && testPick >= 0;
+                        if (!testing) {
+                          return <PreviewOption key={`${detail.id}-mp-${i}`} letter={LETTERS[i]} text={o.text} correct={i === correctIdx} />;
+                        }
+                        const showCorrect = answered && i === correctIdx;
+                        const showWrong = answered && i === testPick && i !== correctIdx;
+                        return (
+                          <button
+                            type="button"
+                            key={`${detail.id}-mp-${i}`}
+                            className={`q-mp-opt q-mp-opt--btn ${showCorrect ? 'correct' : ''} ${showWrong ? 'wrong' : ''}`}
+                            onClick={() => { if (testPick === -1) setTestPick(i); }}
+                            disabled={answered}
+                          >
+                            <span className="q-mp-letter">{LETTERS[i]}</span>
+                            <span className="q-mp-opt-text">{o.text || `Option ${LETTERS[i]}`}</span>
+                            {showCorrect && <Check size={15} className="q-mp-check" />}
+                            {showWrong && <X size={15} className="q-mp-check" />}
+                          </button>
+                        );
+                      })}
                     </div>
-                    {correctIdx >= 0 && (
+                    {testPick === -1 && <div className="q-phone-hint">Sélectionnez une réponse…</div>}
+                    {(testPick == null || testPick >= 0) && correctIdx >= 0 && (
                       <div className="q-phone-answer">✓ Bonne réponse : {LETTERS[correctIdx]}. {opts[correctIdx]?.text}</div>
                     )}
-                    {detail.explanation && (
+                    {detail.explanation && (testPick == null || testPick >= 0) && (
                       <div className="q-phone-explain"><span>💡</span><span>{detail.explanation}</span></div>
                     )}
                   </div>
@@ -1114,58 +1546,10 @@ export default function Questions() {
               )}
 
               {/* STATISTIQUES */}
-              {tab === 'stats' && (
-                <div className="q-tabpane">
-                  {detail.success_rate == null ? (
-                    <EmptyState
-                      icon={BarChart3}
-                      title="Pas encore de données de partie"
-                      message="Cette question n’a pas encore été posée en partie."
-                    />
-                  ) : (
-                    <>
-                      <div className="q-gauge-wrap">
-                        <Gauge value={detail.success_rate * 100} size={200} label="Taux de réussite" />
-                        {verdict && (
-                          <div className={`q-verdict q-verdict-${verdict.tone}`}>
-                            <span>{verdict.icon}</span> {verdict.label}
-                          </div>
-                        )}
-                      </div>
-                      <div className="q-stats-note">
-                        <AlertCircle size={15} />
-                        <span>
-                          Seul le taux de réussite global est remonté par l’API. Le détail (nombre de parties,
-                          distracteur le plus choisi, évolution hebdomadaire) n’est pas encore disponible.
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
+              {tab === 'stats' && <StatsPane question={detail} />}
 
               {/* HISTORIQUE */}
-              {tab === 'history' && (
-                <div className="q-tabpane">
-                  <ol className="q-timeline">
-                    <li>
-                      <span className="q-tl-dot" />
-                      <div>
-                        <div className="q-tl-title">Créée</div>
-                        <div className="q-tl-meta">{detail.created_at ? dateFr(detail.created_at) : '—'}</div>
-                      </div>
-                    </li>
-                    <li>
-                      <span className="q-tl-dot q-tl-dot-gold" />
-                      <div>
-                        <div className="q-tl-title">Dernière modification</div>
-                        <div className="q-tl-meta">{detail.updated_at ? dateFr(detail.updated_at) : '—'}{detail.version != null ? ` · version ${detail.version}` : ''}</div>
-                      </div>
-                    </li>
-                  </ol>
-                  <p className="q-tl-empty">Aucun autre événement enregistré. L’historique d’audit détaillé n’est pas encore disponible.</p>
-                </div>
-              )}
+              {tab === 'history' && <HistoryPane question={detail} />}
 
               {/* Workflow (sticky bottom) */}
               <div className="q-drawer-actions">{renderWorkflow(detail)}</div>

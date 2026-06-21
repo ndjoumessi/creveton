@@ -4,7 +4,17 @@ const crypto = require('crypto');
 const db = require('../config/database');
 const ApiError = require('../utils/ApiError');
 const questionModel = require('../models/question.model');
+const questionEvent = require('../models/questionEvent.model');
 const deltaSync = require('../utils/deltaSync');
+
+/** Audit best-effort : ne doit jamais faire échouer l'opération métier. */
+async function audit(payload) {
+  try {
+    await questionEvent.record(payload);
+  } catch {
+    /* journal d'audit non bloquant */
+  }
+}
 
 /**
  * Logique métier des questions & synchronisation (réf. spec §5).
@@ -236,6 +246,7 @@ async function createByAdmin(input, createdBy) {
     status: 'draft', // jamais publié directement (spec §12)
     created_by: createdBy,
   });
+  await audit({ questionId: row.id, event: 'created', actorId: createdBy, meta: { version: row.version } });
   return questionModel.toAdminView(row);
 }
 
@@ -243,7 +254,7 @@ async function createByAdmin(input, createdBy) {
  * PATCH /admin/questions/:id — modifie une question (version++, success_rate
  * réinitialisé si la solution change). Recalcule correct_index si options change.
  */
-async function updateByAdmin(id, fields) {
+async function updateByAdmin(id, fields, actorId = null) {
   const existing = await questionModel.findByIdAny(id);
   if (!existing || existing.deleted_at) throw new ApiError('QUESTION_NOT_FOUND');
 
@@ -256,6 +267,19 @@ async function updateByAdmin(id, fields) {
   }
   const row = await questionModel.update(id, patch);
   if (!row) throw new ApiError('QUESTION_NOT_FOUND');
+
+  // Champs effectivement modifiés (diff de versions de l'onglet Historique).
+  const TRACKED = ['text_fr', 'text_en', 'theme', 'level', 'explanation', 'media_url', 'options'];
+  const changed = TRACKED.filter((k) => fields[k] !== undefined && JSON.stringify(fields[k]) !== JSON.stringify(existing[k]));
+  if (changed.length) {
+    const pick = (src) => Object.fromEntries(changed.map((k) => [k, src[k] ?? null]));
+    await audit({
+      questionId: id,
+      event: 'updated',
+      actorId,
+      meta: { version: row.version, changed, before: pick(existing), after: pick(row) },
+    });
+  }
   return questionModel.toAdminView(row);
 }
 
@@ -264,7 +288,7 @@ async function updateByAdmin(id, fields) {
  * @param {string} [_reason]  motif (requis si `to === 'rejected'`, validé en
  *   amont) — accepté pour l'audit, non persisté (pas de colonne dédiée).
  */
-async function transitionStatus(id, to, _reason) {
+async function transitionStatus(id, to, reason, actorId = null) {
   const existing = await questionModel.findByIdAny(id);
   if (!existing || existing.deleted_at) throw new ApiError('QUESTION_NOT_FOUND');
 
@@ -276,16 +300,82 @@ async function transitionStatus(id, to, _reason) {
     });
   }
   const row = await questionModel.setStatus(id, to);
+  // Nom d'évènement précis pour l'historique (soumission vs re-soumission).
+  let event = to;
+  if (to === 'pending_review') event = existing.status === 'rejected' ? 'resubmitted' : 'submitted';
+  await audit({ questionId: id, event, actorId, reason: reason ?? null, meta: { from: existing.status, to } });
   return questionModel.toAdminView(row);
 }
 
 /** DELETE /admin/questions/:id — soft delete (deleted_at + archived). */
-async function softDeleteByAdmin(id) {
+async function softDeleteByAdmin(id, actorId = null) {
   const existing = await questionModel.findByIdAny(id);
   if (!existing) throw new ApiError('QUESTION_NOT_FOUND');
   const row = await questionModel.softDelete(id);
+  if (row) await audit({ questionId: id, event: 'archived', actorId, meta: { from: existing.status, to: 'archived', deleted: true } });
   // Déjà supprimée → idempotent : on renvoie la vue existante.
   return questionModel.toAdminView(row || existing);
+}
+
+/**
+ * Stats détaillées d'une question (onglet Statistiques §12) : distribution des
+ * choix (analyse des distracteurs) + comparaison au taux moyen du thème.
+ */
+async function statsForQuestion(id) {
+  const question = await questionModel.findByIdAny(id);
+  if (!question || question.deleted_at) throw new ApiError('QUESTION_NOT_FOUND');
+
+  const [{ total, byIndex }, themeAvg, syncCount] = await Promise.all([
+    questionModel.choiceDistribution(id),
+    questionModel.themeAvgRate(question.theme),
+    questionEvent.countSync(id),
+  ]);
+
+  const options = Array.isArray(question.options) ? question.options : [];
+  const counts = new Map(byIndex.map((r) => [r.idx, r.n]));
+  const distribution = options.map((opt, index) => {
+    const count = counts.get(index) || 0;
+    return {
+      index,
+      text: opt.text,
+      is_correct: !!opt.is_correct,
+      count,
+      pct: total > 0 ? Math.round((count / total) * 100) : 0,
+    };
+  });
+  // Principal distracteur = mauvaise option la plus choisie.
+  const distractor = distribution
+    .filter((d) => !d.is_correct && d.count > 0)
+    .sort((a, b) => b.count - a.count)[0] || null;
+
+  return {
+    id,
+    theme: question.theme,
+    total_answers: total,
+    success_rate: question.success_rate != null ? Number(question.success_rate) : null,
+    theme_avg_rate: themeAvg,
+    distribution,
+    main_distractor_index: distractor ? distractor.index : null,
+    sync_count: syncCount,
+  };
+}
+
+/** Stats globales (panel « Stats globales » §12) : par thème + extrêmes. */
+async function globalStats() {
+  const [byTheme, hardest, easiest] = await Promise.all([
+    questionModel.themeStats(),
+    questionModel.byRate('asc', 5),
+    questionModel.byRate('desc', 5),
+  ]);
+  return { by_theme: byTheme, hardest, easiest };
+}
+
+/** Historique d'audit d'une question (onglet Historique §12). */
+async function historyForQuestion(id) {
+  const question = await questionModel.findByIdAny(id);
+  if (!question) throw new ApiError('QUESTION_NOT_FOUND');
+  const events = await questionEvent.listByQuestion(id);
+  return { id, version: question.version, events };
 }
 
 /** Liste admin paginée (curseur opaque = offset). */
@@ -315,6 +405,9 @@ module.exports = {
   transitionStatus,
   softDeleteByAdmin,
   listForAdmin,
+  statsForQuestion,
+  globalStats,
+  historyForQuestion,
   STATUS_TRANSITIONS,
 };
 

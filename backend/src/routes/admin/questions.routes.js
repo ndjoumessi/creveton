@@ -10,7 +10,11 @@ const schemas = require('../../validators/question.validator');
 const router = express.Router();
 
 router.get('/', requirePermission('questions:read'), validate(schemas.adminList, 'query'), ctrl.list);
+// `/stats` AVANT `/:id` (sinon « stats » serait interprété comme un id).
+router.get('/stats', requirePermission('questions:read'), ctrl.globalStats);
 router.get('/:id', requirePermission('questions:read'), ctrl.get);
+router.get('/:id/stats', requirePermission('questions:read'), ctrl.stats);
+router.get('/:id/history', requirePermission('questions:read'), ctrl.history);
 router.post('/', requirePermission('questions:create'), validate(schemas.adminCreate), ctrl.create);
 router.patch('/:id', requirePermission('questions:update'), validate(schemas.adminUpdate), ctrl.update);
 router.post(
