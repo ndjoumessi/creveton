@@ -1,0 +1,22 @@
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import App from './App.jsx';
+import { colors } from './constants/theme.js';
+import './index.css';
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <BrowserRouter>
+      <App />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: { fontFamily: "'Space Grotesk', sans-serif", fontSize: '13.5px', borderRadius: '10px' },
+          success: { iconTheme: { primary: colors.green500, secondary: '#fff' } },
+        }}
+      />
+    </BrowserRouter>
+  </StrictMode>,
+);
