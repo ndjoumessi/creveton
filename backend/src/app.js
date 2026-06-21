@@ -37,7 +37,16 @@ app.use(
 app.use(requestId);
 
 // --- Parsers ---
-app.use(express.json({ limit: '1mb' }));
+// On conserve le corps brut (req.rawBody) pour vérifier la signature HMAC des
+// webhooks paiement (spec §14) — le JSON re-sérialisé ne reproduirait pas l'octet exact.
+app.use(
+  express.json({
+    limit: '1mb',
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 
 // --- Logs HTTP ---

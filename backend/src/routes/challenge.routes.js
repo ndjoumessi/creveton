@@ -14,5 +14,6 @@ router.use(authenticate);
 router.post('/create', validate(challengeSchemas.create), ctrl.create);
 router.post('/:id/accept', ctrl.accept);
 router.post('/:id/submit', validate(sessionSchemas.submit), ctrl.submit);
+router.get('/:id', ctrl.get);
 
 module.exports = router;

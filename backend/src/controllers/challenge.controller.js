@@ -1,13 +1,43 @@
 'use strict';
 
-const notImplemented = require('../utils/notImplemented');
+const asyncHandler = require('../utils/asyncHandler');
+const { ok, created } = require('../utils/response');
+const challengeService = require('../services/challengeService');
 
-/** Contrôleurs Challenges 1v1 (spec §9). Même seed pour les deux joueurs. */
-module.exports = {
-  // POST /challenges/create
-  create: notImplemented('POST /challenges/create'),
-  // POST /challenges/:id/accept
-  accept: notImplemented('POST /challenges/:id/accept'),
-  // POST /challenges/:id/submit
-  submit: notImplemented('POST /challenges/:id/submit'),
-};
+/** Contrôleurs Challenges 1v1 (spec §9). Même seed/set pour les deux joueurs. */
+
+/** POST /challenges/create → 201 { challenge_id, status, seed, questions } */
+const create = asyncHandler(async (req, res) => {
+  const result = await challengeService.create({
+    userId: req.user.id,
+    opponentId: req.body.opponent_id,
+    theme: req.body.theme,
+    level: req.body.level,
+    stake: req.body.stake,
+  });
+  return created(res, result);
+});
+
+/** POST /challenges/:id/accept → 200 { challenge_id, status, seed, questions } */
+const accept = asyncHandler(async (req, res) => {
+  const result = await challengeService.accept({ userId: req.user.id, challengeId: req.params.id });
+  return ok(res, result);
+});
+
+/** POST /challenges/:id/submit → 200 (score recalculé serveur ; completed quand 2 joueurs) */
+const submit = asyncHandler(async (req, res) => {
+  const result = await challengeService.submit({
+    userId: req.user.id,
+    challengeId: req.params.id,
+    answers: req.body.answers,
+  });
+  return ok(res, result);
+});
+
+/** GET /challenges/:id → 200 (détail, réservé aux participants) */
+const get = asyncHandler(async (req, res) => {
+  const result = await challengeService.get({ userId: req.user.id, challengeId: req.params.id });
+  return ok(res, result);
+});
+
+module.exports = { create, accept, submit, get };

@@ -10,7 +10,14 @@ CREATE TABLE IF NOT EXISTS challenges (
   opponent_id      UUID REFERENCES users(id) ON DELETE SET NULL,  -- NULL = matchmaking aléatoire en attente
 
   seed             VARCHAR(64),                                -- graine partagée → même set de questions
-  stake            INTEGER        NOT NULL DEFAULT 0,          -- mise FCFA
+  stake            INTEGER        NOT NULL DEFAULT 0,          -- mise FCFA (>0 ⇒ flag payant, v2)
+
+  -- Paramètres du défi (nécessaires pour rejouer le même set côté adversaire).
+  theme            VARCHAR(20),
+  level            VARCHAR(20),
+  -- Set de questions FIGÉ : garantit un tirage identique aux deux joueurs même
+  -- si le pool évolue entre la création et l'acceptation (spec §9 « set figé »).
+  question_ids     UUID[] NOT NULL DEFAULT '{}',
 
   status           VARCHAR(20) NOT NULL DEFAULT 'pending'
                      CHECK (status IN ('pending', 'accepted', 'active', 'completed',
@@ -18,6 +25,8 @@ CREATE TABLE IF NOT EXISTS challenges (
 
   score_challenger INTEGER,
   score_opponent   INTEGER,
+  xp_challenger    INTEGER,                                    -- XP de session de chaque camp
+  xp_opponent      INTEGER,                                    -- (sert au bonus +25% du gagnant)
   winner_id        UUID REFERENCES users(id) ON DELETE SET NULL,
 
   created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),

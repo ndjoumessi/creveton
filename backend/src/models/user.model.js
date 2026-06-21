@@ -116,6 +116,21 @@ async function touchLastActive(id) {
   await db.query('UPDATE users SET last_active_at = now() WHERE id = $1', [id]);
 }
 
+/**
+ * Crédite (ou débite si delta négatif) le wallet d'un compte, de façon atomique.
+ * @param {object} [executor=db] client de transaction si fourni.
+ * @returns {Promise<number|null>} nouveau solde (FCFA), ou null si introuvable.
+ */
+async function incrementWallet(id, delta, executor = db) {
+  const { rows } = await executor.query(
+    `UPDATE users SET wallet_balance = wallet_balance + $2
+      WHERE id = $1 AND deleted_at IS NULL
+      RETURNING wallet_balance`,
+    [id, delta]
+  );
+  return rows[0] ? Number(rows[0].wallet_balance) : null;
+}
+
 // ---------------------------------------------------------------------------
 // Opérations ADMIN (spec §12).
 // ---------------------------------------------------------------------------
@@ -282,6 +297,7 @@ module.exports = {
   create,
   markPhoneVerified,
   touchLastActive,
+  incrementWallet,
   findManyByIds,
   creditSessionXp,
   generateUniqueReferralCode,

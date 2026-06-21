@@ -75,6 +75,17 @@ async function listByUser(userId, { limit = 20, offset = 0 } = {}) {
   return { rows: hasMore ? rows.slice(0, limit) : rows, hasMore };
 }
 
+/** Total des recharges en attente (affiché dans GET /wallet → `pending`). */
+async function pendingTotal(userId) {
+  const { rows } = await db.query(
+    `SELECT COALESCE(SUM(amount), 0)::int AS total
+       FROM transactions
+      WHERE user_id = $1 AND status = 'pending' AND type = 'deposit'`,
+    [userId]
+  );
+  return rows[0].total;
+}
+
 /** Met à jour le statut (transitions Mobile Money). */
 async function setStatus(id, status, executor = db) {
   const { rows } = await executor.query(
@@ -84,4 +95,4 @@ async function setStatus(id, status, executor = db) {
   return rows[0] || null;
 }
 
-module.exports = { toView, create, findById, findByReference, listByUser, setStatus };
+module.exports = { toView, create, findById, findByReference, listByUser, pendingTotal, setStatus };

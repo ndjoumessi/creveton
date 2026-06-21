@@ -362,10 +362,26 @@ async function softDelete(id) {
   return rows[0] || null;
 }
 
+/**
+ * Récupère des questions APPROUVÉES par ids, en vue joueur (sans solution),
+ * dans l'ordre fourni. Utilisé pour rejouer un set figé (challenge §9).
+ */
+async function findPlayerByIds(ids, lang = 'fr') {
+  if (!ids || ids.length === 0) return [];
+  const { rows } = await db.query(
+    `SELECT ${PLAYER_COLUMNS} FROM questions
+      WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL`,
+    [ids]
+  );
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return ids.map((id) => byId.get(id)).filter(Boolean).map((r) => toPlayerView(r, lang));
+}
+
 module.exports = {
   PLAYER_COLUMNS,
   toPlayerView,
   toAdminView,
+  findPlayerByIds,
   pickRandom,
   recentQuestionIds,
   serverNow,
