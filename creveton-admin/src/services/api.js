@@ -13,26 +13,72 @@ const baseURL = import.meta.env.VITE_API_URL || '/api/v1';
 export const USE_MOCKS =
   import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === 'true';
 
-const TOKENS_KEY = 'creveton_admin_tokens';
+/* ----------------------------------------------------------------------------
+ * Stockage des tokens — mitigation XSS (sécurité)
+ *
+ * CHOIX RETENU :
+ *   - access_token  → EN MÉMOIRE uniquement (variable module ci-dessous),
+ *                     jamais persisté. Perdu au rechargement → re-dérivé via
+ *                     /auth/refresh. Inatteignable par lecture de storage.
+ *   - refresh_token → sessionStorage (et NON localStorage) : effacé à la
+ *                     fermeture de l'onglet, non partagé entre onglets → fenêtre
+ *                     d'exposition réduite.
+ *
+ * POURQUOI PAS localStorage : tout script de la page (donc un XSS) peut lire
+ * localStorage et exfiltrer un refresh_token longue durée (30 j). On évite ça.
+ *
+ * IDÉAL (non réalisable côté front seul, à migrer) : refresh_token dans un
+ * cookie HttpOnly + Secure + SameSite=Strict posé par le BACKEND, totalement
+ * invisible au JavaScript. Le backend renvoie aujourd'hui les tokens en JSON ;
+ * dès qu'il posera ce cookie, supprimer le stockage sessionStorage ci-dessous
+ * et laisser le navigateur transporter le refresh_token automatiquement.
+ * ------------------------------------------------------------------------- */
 
-export function getTokens() {
+const RT_KEY = 'creveton_admin_rt';
+let accessToken = null; // mémoire seule — jamais écrit dans un storage
+
+export function getAccessToken() {
+  return accessToken;
+}
+
+export function getRefreshToken() {
   try {
-    return JSON.parse(localStorage.getItem(TOKENS_KEY)) || null;
+    return sessionStorage.getItem(RT_KEY);
   } catch {
     return null;
   }
 }
-export function setTokens(tokens) {
-  if (tokens) localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
-  else localStorage.removeItem(TOKENS_KEY);
+
+/** Une session est considérée présente tant qu'un refresh_token existe. */
+export function hasSession() {
+  return Boolean(getRefreshToken());
+}
+
+export function setSession({ access_token, refresh_token } = {}) {
+  if (access_token !== undefined) accessToken = access_token;
+  if (refresh_token) {
+    try {
+      sessionStorage.setItem(RT_KEY, refresh_token);
+    } catch {
+      /* sessionStorage indisponible — la session restera en mémoire seule */
+    }
+  }
+}
+
+export function clearSession() {
+  accessToken = null;
+  try {
+    sessionStorage.removeItem(RT_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 const api = axios.create({ baseURL, timeout: 15000 });
 
 api.interceptors.request.use((config) => {
-  const tokens = getTokens();
-  if (tokens?.access_token) {
-    config.headers.Authorization = `Bearer ${tokens.access_token}`;
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;
 });
@@ -44,21 +90,21 @@ api.interceptors.response.use(
   async (error) => {
     const { config, response } = error;
     if (response?.status === 401 && !config.__retried) {
-      const tokens = getTokens();
-      if (tokens?.refresh_token) {
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
         try {
           config.__retried = true;
           refreshing =
             refreshing ||
-            axios.post(`${baseURL}/auth/refresh`, { refresh_token: tokens.refresh_token });
+            axios.post(`${baseURL}/auth/refresh`, { refresh_token: refreshToken });
           const { data } = await refreshing;
           refreshing = null;
-          setTokens({ ...tokens, access_token: data.access_token });
-          config.headers.Authorization = `Bearer ${data.access_token}`;
+          accessToken = data.access_token; // re-stocké en mémoire seule
+          config.headers.Authorization = `Bearer ${accessToken}`;
           return api(config);
         } catch (e) {
           refreshing = null;
-          setTokens(null);
+          clearSession();
           if (window.location.pathname !== '/login') window.location.assign('/login');
           return Promise.reject(e);
         }

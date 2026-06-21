@@ -6,15 +6,19 @@ export async function login(email, password) {
     const { data } = await api.post('/auth/login', { email, password });
     return data; // { access_token, refresh_token, token_type, expires_in, user }
   } catch (err) {
-    // Démo locale UNIQUEMENT : session admin fictive pour explorer l'UI quand
-    // aucun backend n'est lancé. Conditions strictes pour éviter tout
-    // contournement d'authentification :
-    //   - USE_MOCKS (déjà borné à import.meta.env.DEV dans api.js)
-    //   - le backend est réellement injoignable (err.response absent). On ne
-    //     retombe JAMAIS sur la démo si le backend a répondu (401/403/…), sinon
-    //     un mauvais mot de passe ouvrirait une session super_admin.
-    const backendUnreachable = !err?.response;
-    if (USE_MOCKS && backendUnreachable) {
+    // ----------------------------------------------------------------------
+    // FAIL-CLOSED — la session démo hors-ligne n'est JAMAIS un contournement
+    // d'authentification. Trois verrous cumulatifs :
+    //   1. import.meta.env.DEV : en PRODUCTION (DEV === false) → throw
+    //      systématique, aucun fallback possible (le code mort est par ailleurs
+    //      éliminé du build).
+    //   2. USE_MOCKS : opt-in explicite (VITE_USE_MOCKS=true), dev uniquement.
+    //   3. backend GENUINEMENT injoignable (!err.response) : si le backend a
+    //      RÉPONDU — y compris 401/403/4xx/5xx — on relaie l'erreur réelle. Un
+    //      mauvais mot de passe ne doit jamais ouvrir de session.
+    // ----------------------------------------------------------------------
+    const backendResponded = Boolean(err?.response);
+    if (import.meta.env.DEV && USE_MOCKS && !backendResponded) {
       return {
         access_token: 'demo-access',
         refresh_token: 'demo-refresh',

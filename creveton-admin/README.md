@@ -67,10 +67,20 @@ src/
 
 ## Authentification & rôles
 
-`POST /auth/login` → JWT stocké en `localStorage`. Les routes sont protégées par
-`PrivateRoute` (session valide **et** rôle ∈ moderator | admin | super_admin, CDC §3.7).
-L'intercepteur axios rafraîchit l'access token sur `401` et redirige vers `/login`
-si le refresh échoue.
+`POST /auth/login` → JWT. Les routes sont protégées par `PrivateRoute` (session
+valide **et** rôle ∈ moderator | admin | super_admin, CDC §3.7). L'intercepteur
+axios rafraîchit l'access token sur `401` et redirige vers `/login` si le refresh
+échoue.
+
+### Stockage des tokens (mitigation XSS)
+
+- **access_token** : en **mémoire** uniquement (variable module dans `api.js`),
+  jamais persisté ; re-dérivé via `/auth/refresh` après un rechargement.
+- **refresh_token** : `sessionStorage` (et non `localStorage`) → effacé à la
+  fermeture de l'onglet, fenêtre d'exposition réduite.
+- **Idéal à venir** (évolution backend) : refresh_token dans un cookie
+  `HttpOnly + Secure + SameSite=Strict` posé par le backend, invisible au JS.
+  Dès que le backend pose ce cookie, retirer le stockage `sessionStorage`.
 
 ## Pages connectées au backend
 

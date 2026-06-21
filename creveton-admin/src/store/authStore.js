@@ -1,12 +1,15 @@
 import { create } from 'zustand';
-import { setTokens, getTokens } from '../services/api';
+import { setSession, clearSession, hasSession } from '../services/api';
 import * as authService from '../services/auth.service';
 
+// Profil admin courant : sessionStorage (lié à la durée de l'onglet, comme le
+// refresh_token). Ce n'est pas un credential, mais on aligne son cycle de vie
+// sur la session. Aucun JWT n'est écrit ici (cf. services/api.js).
 const USER_KEY = 'creveton_admin_user';
 
 function loadUser() {
   try {
-    return JSON.parse(localStorage.getItem(USER_KEY)) || null;
+    return JSON.parse(sessionStorage.getItem(USER_KEY)) || null;
   } catch {
     return null;
   }
@@ -17,27 +20,24 @@ const ADMIN_ROLES = ['moderator', 'admin', 'super_admin'];
 
 export const useAuthStore = create((set, get) => ({
   user: loadUser(),
-  tokens: getTokens(),
 
-  isAuthenticated: () => Boolean(get().tokens?.access_token && get().user),
+  // Authentifié tant qu'un refresh_token est présent (l'access_token, lui, vit
+  // en mémoire et est re-dérivé via /auth/refresh après un rechargement).
+  isAuthenticated: () => hasSession() && Boolean(get().user),
   isAdmin: () => ADMIN_ROLES.includes(get().user?.role),
   role: () => get().user?.role || null,
 
   async login(email, password) {
     const res = await authService.login(email, password);
-    const tokens = {
-      access_token: res.access_token,
-      refresh_token: res.refresh_token,
-    };
-    setTokens(tokens);
-    localStorage.setItem(USER_KEY, JSON.stringify(res.user));
-    set({ user: res.user, tokens });
+    setSession({ access_token: res.access_token, refresh_token: res.refresh_token });
+    sessionStorage.setItem(USER_KEY, JSON.stringify(res.user));
+    set({ user: res.user });
     return res.user;
   },
 
   logout() {
-    setTokens(null);
-    localStorage.removeItem(USER_KEY);
-    set({ user: null, tokens: null });
+    clearSession();
+    sessionStorage.removeItem(USER_KEY);
+    set({ user: null });
   },
 }));
