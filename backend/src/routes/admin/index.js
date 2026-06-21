@@ -10,6 +10,8 @@ const userRoutes = require('./users.routes');
 const tournamentRoutes = require('./tournaments.routes');
 const analyticsRoutes = require('./analytics.routes');
 const dashboardRoutes = require('./dashboard.admin.routes');
+const sessionRoutes = require('./sessions.admin.routes');
+const leaderboardRoutes = require('./leaderboard.admin.routes');
 
 const router = express.Router();
 
@@ -18,6 +20,8 @@ const router = express.Router();
 router.use(authenticate);
 
 router.use('/dashboard', dashboardRoutes);
+router.use('/sessions', sessionRoutes);
+router.use('/leaderboard', leaderboardRoutes);
 router.use('/questions', questionRoutes);
 router.use('/users', userRoutes);
 router.use('/tournaments', tournamentRoutes);

@@ -182,6 +182,30 @@ async function setStatus(id, status) {
   return rows[0] || null;
 }
 
+/** Change le rôle d'un compte (PATCH /admin/users/:id/role — super_admin). */
+async function setRole(id, role) {
+  const { rows } = await db.query(
+    `UPDATE users SET role = $2 WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
+    [id, role]
+  );
+  return rows[0] || null;
+}
+
+/**
+ * Crée un compte admin/modérateur invité (mot de passe temporaire déjà hashé,
+ * téléphone synthétique car la colonne est NOT NULL UNIQUE, phone_verified=true).
+ */
+async function createInvited(data) {
+  const { rows } = await db.query(
+    `INSERT INTO users
+       (name, email, phone, password_hash, role, phone_verified, status, referral_code)
+     VALUES ($1, $2, $3, $4, $5, true, 'active', $6)
+     RETURNING *`,
+    [data.name, data.email, data.phone, data.password_hash, data.role, data.referral_code]
+  );
+  return rows[0];
+}
+
 /** Soft delete RGPD (jamais de DELETE réel ; purge planifiée hors scope). */
 async function softDelete(id) {
   const { rows } = await db.query(
@@ -304,6 +328,8 @@ module.exports = {
   // admin
   listAdmin,
   setStatus,
+  setRole,
+  createInvited,
   softDelete,
   stats,
   countActive,

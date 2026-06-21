@@ -217,6 +217,20 @@ async function create(data, executor = db) {
  * @param {string[]} ids
  * @returns {Promise<Map<string,{correct_index:number|null, explanation:string|null}>>}
  */
+/**
+ * Récupère un lot de questions en version « brève » (texte + options + bonne
+ * réponse) pour le récapitulatif d'une partie côté admin.
+ * @returns {Promise<Map<string,{text_fr, options, correct_index}>>}
+ */
+async function findManyBrief(ids) {
+  if (!ids || ids.length === 0) return new Map();
+  const { rows } = await db.query(
+    `SELECT id, text_fr, options, correct_index FROM questions WHERE id = ANY($1::uuid[])`,
+    [ids]
+  );
+  return new Map(rows.map((r) => [r.id, { text_fr: r.text_fr, options: r.options, correct_index: r.correct_index }]));
+}
+
 async function findSolutions(ids) {
   if (!ids || ids.length === 0) return new Map();
   const { rows } = await db.query(
@@ -390,6 +404,7 @@ module.exports = {
   listAllApproved,
   existsByNormalizedText,
   create,
+  findManyBrief,
   findSolutions,
   findByIdAny,
   listAdmin,

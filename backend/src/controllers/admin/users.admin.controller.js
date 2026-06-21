@@ -1,10 +1,24 @@
 'use strict';
 
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const asyncHandler = require('../../utils/asyncHandler');
 const ApiError = require('../../utils/ApiError');
-const { ok, noContent } = require('../../utils/response');
+const { ok, created, noContent } = require('../../utils/response');
 const userModel = require('../../models/user.model');
 const otpService = require('../../services/otpService');
+
+const BCRYPT_COST = 12;
+
+/** Mot de passe temporaire respectant la politique (≥8, 1 majuscule, 1 chiffre). */
+function generateTempPassword() {
+  return `Crv${crypto.randomBytes(5).toString('hex')}1A`;
+}
+
+/** Téléphone synthétique unique (colonne NOT NULL UNIQUE) pour un compte invité. */
+function syntheticPhone() {
+  return `+237${crypto.randomInt(600000000, 699999999)}`;
+}
 
 /**
  * Administration des utilisateurs (spec §12) : liste, fiche, modération
@@ -59,10 +73,54 @@ const remove = asyncHandler(async (req, res) => {
   return noContent(res);
 });
 
+/** PATCH /admin/users/:id/role — change le rôle (super_admin uniquement). */
+const changeRole = asyncHandler(async (req, res) => {
+  const updated = await userModel.setRole(req.params.id, req.body.role);
+  if (!updated) throw new ApiError('USER_NOT_FOUND');
+  return ok(res, { id: updated.id, role: updated.role });
+});
+
+/**
+ * POST /admin/users/invite — crée un compte admin/modérateur avec mot de passe
+ * temporaire. (Pas d'envoi d'email ici : le mot de passe est renvoyé pour être
+ * communiqué par l'admin.) Réessaie en cas de collision de téléphone synthétique.
+ */
+const invite = asyncHandler(async (req, res) => {
+  const { email, name, role } = req.body;
+  if (await userModel.findByEmail(email)) throw new ApiError('EMAIL_ALREADY_USED');
+
+  const tempPassword = generateTempPassword();
+  const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_COST);
+  const referralCode = await userModel.generateUniqueReferralCode();
+
+  let user;
+  for (let attempt = 0; attempt < 3 && !user; attempt += 1) {
+    try {
+      user = await userModel.createInvited({ name, email, role, password_hash: passwordHash, phone: syntheticPhone(), referral_code: referralCode });
+    } catch (err) {
+      // Collision sur l'email → conflit ; sur le téléphone synthétique → on réessaie.
+      if (err && err.code === '23505') {
+        if (String(err.constraint || err.detail).includes('email')) throw new ApiError('EMAIL_ALREADY_USED');
+        if (attempt === 2) throw err;
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  return created(res, {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    temporary_password: tempPassword,
+  });
+});
+
 /** GET /admin/referrals/:code — nombre d'inscrits via ce code. */
 const referral = asyncHandler(async (req, res) => {
   const count = await userModel.referralCount(req.params.code);
   return ok(res, { code: req.params.code, signups: count });
 });
 
-module.exports = { list, get, suspend, ban, resetPassword, remove, referral };
+module.exports = { list, get, suspend, ban, resetPassword, remove, changeRole, invite, referral };

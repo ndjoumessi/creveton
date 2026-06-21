@@ -30,6 +30,11 @@ const PERMISSIONS = {
 
   'users:read': 'moderator',
   'users:manage': 'admin',
+  'users:invite': 'admin',
+  'users:role': 'super_admin',
+
+  'sessions:read': 'admin',
+  'leaderboard:read': 'moderator',
 
   'tournaments:read': 'moderator',
   'tournaments:manage': 'admin',

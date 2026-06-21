@@ -1,7 +1,7 @@
 'use strict';
 
 const Joi = require('joi');
-const { SEXES, LANGS, ROLES } = require('../utils/constants');
+const { SEXES, LANGS, ROLES, THEMES, LEVELS, LEADERBOARD_SCOPES } = require('../utils/constants');
 
 /** PATCH /users/me */
 const updateMe = Joi.object({
@@ -56,4 +56,43 @@ const adminAnalytics = Joi.object({
   metrics: Joi.string().optional(),
 });
 
-module.exports = { updateMe, pagination, adminList, adminSuspend, adminBan, adminAnalytics };
+/** PATCH /admin/users/:id/role (super_admin) — pas de super_admin via l'UI. */
+const adminRole = Joi.object({
+  role: Joi.string().valid('player', 'moderator', 'admin').required(),
+});
+
+/** POST /admin/users/invite */
+const adminInvite = Joi.object({
+  email: Joi.string().email().required(),
+  name: Joi.string().min(2).max(100).required(),
+  role: Joi.string().valid('moderator', 'admin').required(),
+});
+
+/** GET /admin/sessions?user_id=&theme=&level=&date_from=&limit=&cursor= */
+const adminSessions = Joi.object({
+  user_id: Joi.string().uuid().optional(),
+  theme: Joi.string().valid(...THEMES).optional(),
+  level: Joi.string().valid(...LEVELS).optional(),
+  date_from: Joi.date().iso().optional(),
+  limit: Joi.number().integer().min(1).max(100).default(20),
+  cursor: Joi.string().optional(),
+});
+
+/** GET /admin/leaderboard?scope=&theme= */
+const adminLeaderboard = Joi.object({
+  scope: Joi.string().valid(...LEADERBOARD_SCOPES).default('global'),
+  theme: Joi.string().valid(...THEMES).optional(),
+});
+
+module.exports = {
+  updateMe,
+  pagination,
+  adminList,
+  adminSuspend,
+  adminBan,
+  adminAnalytics,
+  adminRole,
+  adminInvite,
+  adminSessions,
+  adminLeaderboard,
+};
