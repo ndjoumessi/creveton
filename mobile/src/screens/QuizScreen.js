@@ -1,13 +1,11 @@
 // QuizScreen — immersif (#0b2e1a).
-// BUG 2 : timer prominent (barre animée + compte à rebours 28px or, rouge ≤10s,
-//          pulsation ≤5s, durée selon niveau, reset par question).
-// BUG 3 : feedback immédiat via POST /sessions/answer (mode normal). La réponse
-//          serveur fournit correct/correct_index/explanation/points_earned/
-//          streak. Bonne réponse révélée, options bloquées, explication + Suivant.
-//          Timeout → answer(selected_index:null) + révélation 2 s puis auto-next.
-// Anti-triche : en tournoi/challenge on n'appelle PAS l'endpoint ; simple
-// surbrillance de sélection, sans rien révéler. /sessions/submit reste appelé
-// à la fin pour le score officiel (avec le session_id mémorisé).
+// Timer CIRCULAIRE (SVG, or → orange → rouge) centré au-dessus de la question.
+// Feedback immédiat via POST /sessions/answer (mode normal) : option verte/rouge,
+// bonne réponse révélée, explication slide-up. AUTO-NEXT : après la réponse, une
+// barre or se remplit en 1500ms puis passe à la question suivante (pas de bouton ;
+// tap n'importe où = passer tout de suite). Timeout → révélation 2s puis auto-next.
+// Anti-triche : tournoi/challenge n'appellent pas l'endpoint (repli surbrillance).
+// /sessions/submit reste appelé à la fin (avec session_id).
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
@@ -21,16 +19,17 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LoadingScreen, ProgressDots, AppButton, useToast } from '../components';
+import { LoadingScreen, ProgressDots, CircularTimer, useToast } from '../components';
 import { useGameStore } from '../store/gameStore';
 import { sessions as sessionsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
+import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
-const BLOCK_MS = 1500;
-const TIMEOUT_REVEAL_MS = 2000;
+const ANSWER_DELAY_MS = 1500;
+const TIMEOUT_DELAY_MS = 2000;
 
 export default function QuizScreen({ navigation }) {
   const toast = useToast();
@@ -48,6 +47,7 @@ export default function QuizScreen({ navigation }) {
   const question = questions[currentIndex];
   const total = questions.length;
   const timeLimit = TIME_BY_LEVEL[level] || 30;
+  const feedbackEnabled = mode === 'normal';
 
   const [secondsLeft, setSecondsLeft] = useState(timeLimit);
   const [answered, setAnswered] = useState(null); // { selectedIndex, correctIndex, explanation, isCorrect, timedOut }
@@ -57,22 +57,19 @@ export default function QuizScreen({ navigation }) {
   const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const timerAnim = useRef(new Animated.Value(1)).current;
-  const pulse = useRef(new Animated.Value(1)).current;
-  const streakBounce = useRef(new Animated.Value(0)).current;
+  const timerAnim = useRef(new Animated.Value(1)).current; // 1 → 0
   const explainY = useRef(new Animated.Value(40)).current;
   const explainOpacity = useRef(new Animated.Value(0)).current;
+  const autoNextAnim = useRef(new Animated.Value(0)).current; // 0 → 1 (barre de délai)
+  const streakBounce = useRef(new Animated.Value(0)).current;
   const scoreAnim = useRef(new Animated.Value(0)).current;
   const scoreTarget = useRef(0);
   const intervalRef = useRef(null);
   const advanceRef = useRef(null);
+  const advancedRef = useRef(false);
   const questionStart = useRef(Date.now());
-  const pulseLoop = useRef(null);
 
-  // Mode normal uniquement : le feedback immédiat passe par /sessions/answer.
-  const feedbackEnabled = mode === 'normal';
-
-  // Count-up du score à partir des points renvoyés par le serveur.
+  // Count-up du score.
   useEffect(() => {
     const id = scoreAnim.addListener(({ value }) => setDisplayScore(Math.round(value)));
     return () => scoreAnim.removeListener(id);
@@ -96,10 +93,8 @@ export default function QuizScreen({ navigation }) {
     clearInterval(intervalRef.current);
     clearTimeout(advanceRef.current);
     timerAnim.stopAnimation();
-    pulseLoop.current?.stop();
   }, [timerAnim]);
 
-  // Confirmation de sortie (✕ et bouton retour Android).
   const confirmQuit = useCallback(() => {
     Alert.alert('Quitter la partie ?', 'Ta progression sera perdue.', [
       { text: 'Continuer', style: 'cancel' },
@@ -122,8 +117,10 @@ export default function QuizScreen({ navigation }) {
     return () => sub.remove();
   }, [confirmQuit]);
 
-  // Avance à la question suivante ou soumet la partie.
+  // Avance — idempotent (tap + timeout ne déclenchent qu'une fois).
   const goNext = useCallback(async () => {
+    if (advancedRef.current) return;
+    advancedRef.current = true;
     clearTimers();
     if (isLastQuestion()) {
       setSubmitting(true);
@@ -133,6 +130,21 @@ export default function QuizScreen({ navigation }) {
     }
     next();
   }, [clearTimers, isLastQuestion, submit, next, navigation]);
+
+  // Programme l'auto-next + barre de progression du délai.
+  const scheduleAutoNext = useCallback(
+    (delay) => {
+      autoNextAnim.setValue(0);
+      Animated.timing(autoNextAnim, {
+        toValue: 1,
+        duration: delay,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      }).start();
+      advanceRef.current = setTimeout(goNext, delay);
+    },
+    [autoNextAnim, goNext]
+  );
 
   const revealExplain = useCallback(() => {
     Animated.parallel([
@@ -150,37 +162,33 @@ export default function QuizScreen({ navigation }) {
     ]).start();
   }, [explainY, explainOpacity]);
 
-  // Enregistre la réponse (tap, timeout ou passer) et déclenche le feedback.
   const handleAnswer = useCallback(
     async ({ selectedIndex, skipped = false, timedOut = false }) => {
       if (answered || checking) return;
       clearTimers();
       const elapsed = Date.now() - questionStart.current;
-
-      // Mémorisation locale pour le submit final (le serveur recalcule tout).
       answerCurrent({ selectedIndex, elapsedMs: elapsed, skipped });
 
-      // Passer : on avance tout de suite, sans rien révéler ni appeler l'API.
+      // Passer : avance immédiate, sans rien révéler ni appeler l'API.
       if (skipped) {
         setDotStates((d) => {
-          const copy = [...d];
-          copy[currentIndex] = 'skipped';
-          return copy;
+          const c = [...d];
+          c[currentIndex] = 'skipped';
+          return c;
         });
         goNext();
         return;
       }
 
-      // Tournoi / challenge : pas d'endpoint de feedback (anti-triche) →
-      // simple surbrillance puis avance.
+      // Tournoi/challenge : pas de feedback serveur (anti-triche).
       if (!feedbackEnabled) {
         setAnswered({ selectedIndex, correctIndex: null, isCorrect: false, timedOut });
         setDotStates((d) => {
-          const copy = [...d];
-          copy[currentIndex] = selectedIndex === null ? 'wrong' : 'correct';
-          return copy;
+          const c = [...d];
+          c[currentIndex] = selectedIndex === null ? 'wrong' : 'correct';
+          return c;
         });
-        advanceRef.current = setTimeout(goNext, timedOut ? TIMEOUT_REVEAL_MS : BLOCK_MS);
+        scheduleAutoNext(timedOut ? TIMEOUT_DELAY_MS : ANSWER_DELAY_MS);
         return;
       }
 
@@ -195,16 +203,16 @@ export default function QuizScreen({ navigation }) {
           session_id: sessionId || undefined,
         });
         setSessionId(fb.session_id);
-
         bumpScore(fb.points_earned || 0);
         if (typeof fb.streak === 'number') setCorrectStreak(fb.streak);
+        if (fb.correct) hapticSuccess();
+        else hapticError();
 
         setDotStates((d) => {
-          const copy = [...d];
-          copy[currentIndex] = fb.correct ? 'correct' : 'wrong';
-          return copy;
+          const c = [...d];
+          c[currentIndex] = fb.correct ? 'correct' : 'wrong';
+          return c;
         });
-
         setAnswered({
           selectedIndex,
           correctIndex: Number.isInteger(fb.correct_index) ? fb.correct_index : null,
@@ -213,19 +221,16 @@ export default function QuizScreen({ navigation }) {
           timedOut,
         });
         revealExplain();
-
-        // Timeout : révélation 2 s puis auto-next. Tap : « Suivant » manuel.
-        if (timedOut) advanceRef.current = setTimeout(goNext, TIMEOUT_REVEAL_MS);
+        scheduleAutoNext(timedOut ? TIMEOUT_DELAY_MS : ANSWER_DELAY_MS);
       } catch (e) {
-        // Échec réseau : on ne bloque pas la partie — surbrillance + avance.
         toast.show({ type: 'error', message: parseApiError(e).message });
         setAnswered({ selectedIndex, correctIndex: null, isCorrect: false, timedOut });
         setDotStates((d) => {
-          const copy = [...d];
-          copy[currentIndex] = 'wrong';
-          return copy;
+          const c = [...d];
+          c[currentIndex] = 'wrong';
+          return c;
         });
-        advanceRef.current = setTimeout(goNext, BLOCK_MS);
+        scheduleAutoNext(ANSWER_DELAY_MS);
       } finally {
         setChecking(false);
       }
@@ -243,17 +248,20 @@ export default function QuizScreen({ navigation }) {
       currentIndex,
       goNext,
       revealExplain,
+      scheduleAutoNext,
       toast,
     ]
   );
 
   // Démarre le timer à chaque nouvelle question.
   useEffect(() => {
+    advancedRef.current = false;
     setAnswered(null);
     setSecondsLeft(timeLimit);
     questionStart.current = Date.now();
     explainY.setValue(40);
     explainOpacity.setValue(0);
+    autoNextAnim.setValue(0);
 
     timerAnim.setValue(1);
     Animated.timing(timerAnim, {
@@ -281,20 +289,6 @@ export default function QuizScreen({ navigation }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
 
-  // Pulsation du timer sous les 5 s.
-  useEffect(() => {
-    if (secondsLeft <= 5 && secondsLeft > 0 && !answered) {
-      pulseLoop.current = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulse, { toValue: 1.05, duration: 400, useNativeDriver: true }),
-          Animated.timing(pulse, { toValue: 1, duration: 400, useNativeDriver: true }),
-        ])
-      );
-      pulseLoop.current.start();
-      return () => pulseLoop.current?.stop();
-    }
-  }, [secondsLeft, answered, pulse]);
-
   // Bounce du badge de série.
   useEffect(() => {
     if (correctStreak >= 3) {
@@ -306,39 +300,23 @@ export default function QuizScreen({ navigation }) {
   if (submitting) return <LoadingScreen message="Calcul du score…" />;
   if (!question) return <LoadingScreen message="Chargement…" />;
 
-  const danger = secondsLeft <= 10;
-  const barWidth = timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
   const streakScale = streakBounce.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] });
+  const autoNextWidth = autoNextAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-      {/* Top bar */}
+      {/* Header */}
       <View style={styles.topBar}>
         <Pressable onPress={confirmQuit} hitSlop={10} style={styles.quit}>
           <Text style={styles.quitText}>✕</Text>
         </Pressable>
         <Text style={styles.counter}>Q {currentIndex + 1}/{total}</Text>
-        <Text style={styles.score}>{displayScore} pts ⚡</Text>
+        <Text style={styles.score}>⚡ {displayScore} pts</Text>
       </View>
 
-      {/* TIMER prominent */}
-      <View style={styles.timerRow}>
-        <View style={styles.timerTrack}>
-          <Animated.View
-            style={[
-              styles.timerFill,
-              { width: barWidth, backgroundColor: danger ? colors.red400 : colors.gold500 },
-            ]}
-          />
-        </View>
-        <Animated.Text
-          style={[
-            styles.timerValue,
-            { color: danger ? colors.red400 : colors.gold500, transform: [{ scale: pulse }] },
-          ]}
-        >
-          {secondsLeft}s
-        </Animated.Text>
+      {/* Timer circulaire centré */}
+      <View style={styles.timerWrap}>
+        <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
       </View>
 
       {/* Progress dots */}
@@ -359,7 +337,7 @@ export default function QuizScreen({ navigation }) {
         <View style={styles.underline} />
       </View>
 
-      {/* Options */}
+      {/* Options A–D */}
       <View style={styles.options}>
         {(question.options || []).map((opt, i) => (
           <OptionRow
@@ -384,37 +362,33 @@ export default function QuizScreen({ navigation }) {
         </Pressable>
       ) : null}
 
-      {/* Explication + Suivant (slide-up) */}
+      {/* Tap-to-skip : couvre la zone pour avancer immédiatement */}
+      {answered ? (
+        <Pressable style={styles.tapToSkip} onPress={goNext} />
+      ) : null}
+
+      {/* Explication + barre auto-next */}
       {answered && answered.correctIndex !== null ? (
         <Animated.View
-          style={[
-            styles.explain,
-            { opacity: explainOpacity, transform: [{ translateY: explainY }] },
-          ]}
+          pointerEvents="none"
+          style={[styles.explain, { opacity: explainOpacity, transform: [{ translateY: explainY }] }]}
         >
-          {answered.explanation ? (
-            <Text style={styles.explainText}>💡 {answered.explanation}</Text>
-          ) : (
-            <Text style={styles.explainText}>
-              {answered.isCorrect ? '✓ Bonne réponse !' : '✗ Mauvaise réponse.'}
-            </Text>
-          )}
-          {!answered.timedOut ? (
-            <AppButton
-              title="Suivant →"
-              variant="primary"
-              size="md"
-              onPress={goNext}
-              style={styles.nextBtn}
-            />
-          ) : null}
+          <Text style={styles.explainText}>
+            {answered.explanation
+              ? `💡 ${answered.explanation}`
+              : answered.isCorrect
+                ? '✓ Bonne réponse !'
+                : '✗ Mauvaise réponse.'}
+          </Text>
+          <View style={styles.autoTrack}>
+            <Animated.View style={[styles.autoFill, { width: autoNextWidth }]} />
+          </View>
         </Animated.View>
       ) : null}
     </SafeAreaView>
   );
 }
 
-// Option A–D avec états de feedback bien visibles.
 function OptionRow({ letter, text, optionIndex, answered, onPress }) {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -436,7 +410,7 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
       badgeText = styles.badgeTextOnColor;
       label = styles.optTextCorrect;
       glyph = '✓';
-      showGoodLabel = !isSelected; // bonne réponse non choisie
+      showGoodLabel = !isSelected;
     } else if (isSelected) {
       container = styles.optWrong;
       badge = styles.badgeWrong;
@@ -445,7 +419,6 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
       glyph = '✗';
     }
   } else if (isSelected) {
-    // Sans réponse connue (anti-triche) : simple surbrillance de sélection.
     container = styles.optSelected;
   }
 
@@ -457,7 +430,10 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
-        onPress={onPress}
+        onPress={() => {
+          hapticLight();
+          onPress();
+        }}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         disabled={!!answered}
@@ -488,22 +464,12 @@ const styles = StyleSheet.create({
   counter: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkMuted },
   score: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.gold500 },
 
-  timerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.xs },
-  timerTrack: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    overflow: 'hidden',
-  },
-  timerFill: { height: '100%', borderRadius: 4 },
-  timerValue: { fontFamily: fonts.titleBold, fontSize: 28, minWidth: 56, textAlign: 'right' },
-
-  dots: { marginTop: spacing.lg },
+  timerWrap: { alignItems: 'center', marginTop: spacing.xs },
+  dots: { marginTop: spacing.md },
 
   streak: {
     position: 'absolute',
-    top: 64,
+    top: 60,
     right: spacing.lg,
     backgroundColor: colors.gold500,
     borderRadius: radius.pill,
@@ -514,27 +480,17 @@ const styles = StyleSheet.create({
   },
   streakText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.green900 },
 
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.xl,
-    padding: 20,
-    marginTop: spacing.xl,
-  },
-  question: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: 17,
-    lineHeight: 26,
-    color: colors.green900,
-  },
-  underline: { width: 44, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.md },
+  card: { backgroundColor: colors.white, borderRadius: radius.xl, padding: 20, marginTop: spacing.lg },
+  question: { fontFamily: fonts.titleSemiBold, fontSize: 17, lineHeight: 26, color: colors.green900 },
+  underline: { width: 32, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.md },
 
-  options: { marginTop: spacing.xl, gap: spacing.md },
+  options: { marginTop: spacing.lg, gap: spacing.sm },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    minHeight: 56,
-    borderRadius: radius.base,
+    minHeight: 58,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1.5,
@@ -543,13 +499,7 @@ const styles = StyleSheet.create({
   optSelected: { backgroundColor: colors.successBgSoft, borderColor: colors.green500 },
   optCorrect: { backgroundColor: colors.successBg, borderWidth: 3, borderColor: colors.green500 },
   optWrong: { backgroundColor: colors.errorBg, borderWidth: 3, borderColor: colors.red400 },
-  badge: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  badge: { width: 32, height: 32, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   badgeDefault: { backgroundColor: '#f3f4f6' },
   badgeCorrect: { backgroundColor: colors.green500 },
   badgeWrong: { backgroundColor: colors.red400 },
@@ -566,15 +516,23 @@ const styles = StyleSheet.create({
   skip: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: 'auto' },
   skipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: 'rgba(253,246,233,0.4)' },
 
+  tapToSkip: { ...StyleSheet.absoluteFillObject },
+
   explain: {
     marginTop: 'auto',
     marginBottom: spacing.md,
     backgroundColor: colors.cream,
     borderRadius: radius.lg,
-    borderTopWidth: 3,
-    borderTopColor: colors.gold500,
     padding: spacing.lg,
+    zIndex: 6,
   },
   explainText: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.md, color: colors.textDark, lineHeight: 21 },
-  nextBtn: { marginTop: spacing.md },
+  autoTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(11,46,26,0.1)',
+    marginTop: spacing.md,
+    overflow: 'hidden',
+  },
+  autoFill: { height: '100%', borderRadius: 2, backgroundColor: colors.gold500 },
 });

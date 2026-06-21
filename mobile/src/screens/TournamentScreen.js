@@ -3,7 +3,7 @@
 // En-tête sombre, corps clair (crème) avec cartes blanches.
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, Animated, FlatList, StyleSheet, Pressable } from 'react-native';
+import { View, Text, Animated, FlatList, StyleSheet, Pressable, Modal } from 'react-native';
 import {
   Screen,
   Title,
@@ -20,6 +20,7 @@ import { tournaments as tournamentsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { colors, fonts, fontSizes, radius, spacing, themeAccent, shadow } from '../constants/theme';
 import { formatDateTime } from '../utils/format';
+import { hapticLight } from '../utils/haptics';
 
 const TABS = [
   { key: 'active', label: 'Actifs', statuses: ['open', 'running'] },
@@ -35,6 +36,17 @@ const TYPE_LABEL = {
   premium: 'Premium',
 };
 
+// Renvoie « Xh Ymin » si starts_at est dans les 24 prochaines heures, sinon null.
+function formatCountdown(startsAt) {
+  if (!startsAt) return null;
+  const ms = new Date(startsAt).getTime() - Date.now();
+  if (Number.isNaN(ms) || ms <= 0 || ms > 24 * 60 * 60 * 1000) return null;
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const min = totalMin % 60;
+  return h > 0 ? `${h}h ${min}min` : `${min}min`;
+}
+
 export default function TournamentScreen() {
   const toast = useToast();
   const [tab, setTab] = useState('active');
@@ -42,6 +54,8 @@ export default function TournamentScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  // Tournoi en attente de confirmation d'inscription (null = modale fermée).
+  const [confirm, setConfirm] = useState(null);
 
   const load = useCallback(
     async (tabKey, { isRefresh = false } = {}) => {
@@ -74,7 +88,14 @@ export default function TournamentScreen() {
     load(tab, { isRefresh: true });
   };
 
-  const onJoin = () => {
+  const onJoin = (t) => {
+    hapticLight();
+    setConfirm(t);
+  };
+
+  const confirmJoin = () => {
+    setConfirm(null);
+    // Pas encore d'endpoint d'inscription : on reste honnête.
     toast.show({ type: 'info', message: 'Inscription bientôt disponible.' });
   };
 
@@ -140,6 +161,42 @@ export default function TournamentScreen() {
           />
         )}
       </View>
+
+      {/* Confirmation d'inscription */}
+      <Modal
+        visible={!!confirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirm(null)}
+      >
+        <Pressable style={styles.confirmBackdrop} onPress={() => setConfirm(null)} />
+        <View style={styles.confirmWrap} pointerEvents="box-none">
+          <View style={styles.confirmCard}>
+            <Text style={styles.confirmEmoji}>🏆</Text>
+            <Heading style={styles.confirmTitle}>
+              Tu vas rejoindre {confirm?.name}
+            </Heading>
+            <Body muted style={styles.confirmText}>
+              Récompenses : XP & badges
+            </Body>
+            <View style={styles.confirmActions}>
+              <AppButton
+                variant="primary"
+                title="Confirmer"
+                fullWidth
+                onPress={confirmJoin}
+              />
+              <AppButton
+                variant="ghost"
+                title="Annuler"
+                fullWidth
+                style={styles.confirmCancel}
+                onPress={() => setConfirm(null)}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -153,6 +210,7 @@ function TournamentCard({ t, onJoin }) {
   const ratio = t.max_players
     ? Math.min(1, (t.registered_players ?? 0) / t.max_players)
     : 0;
+  const countdown = formatCountdown(t.starts_at);
 
   let ctaTitle = "S'inscrire";
   let ctaVariant = 'primary';
@@ -196,12 +254,14 @@ function TournamentCard({ t, onJoin }) {
           <Body style={styles.metaLine}>
             👥 {t.registered_players ?? 0} / {t.max_players ?? 0} joueurs
           </Body>
-          <View style={styles.fillTrack}>
-            <View style={[styles.fillBar, { width: `${Math.round(ratio * 100)}%` }]} />
-          </View>
-          <Body muted style={styles.metaLineMuted}>
-            📅 {formatDateTime(t.starts_at) || 'Date à venir'}
-          </Body>
+          <FillBar ratio={ratio} />
+          {countdown ? (
+            <Body style={styles.countdownLine}>⏳ Commence dans {countdown}</Body>
+          ) : (
+            <Body muted style={styles.metaLineMuted}>
+              📅 {formatDateTime(t.starts_at) || 'Date à venir'}
+            </Body>
+          )}
           <Body muted style={styles.metaLineMuted}>
             ⏱ {t.format?.questions ?? '—'} questions · {t.format?.time_per_q_s ?? '—'}s par
             question
@@ -218,6 +278,23 @@ function TournamentCard({ t, onJoin }) {
         />
       </View>
     </AppCard>
+  );
+}
+
+function FillBar({ ratio }) {
+  const grow = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(grow, {
+      toValue: ratio,
+      duration: 600,
+      useNativeDriver: false,
+    }).start();
+  }, [grow, ratio]);
+  const width = grow.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  return (
+    <View style={styles.fillTrack}>
+      <Animated.View style={[styles.fillBar, { width }]} />
+    </View>
   );
 }
 
@@ -331,8 +408,37 @@ const styles = StyleSheet.create({
     marginVertical: spacing.xxs,
   },
   fillBar: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.green500 },
+  countdownLine: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: fontSizes.md,
+    color: colors.gold500,
+  },
 
   cta: { marginTop: spacing.xs },
+
+  // Modale de confirmation
+  confirmBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.overlay },
+  confirmWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  confirmCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.sm,
+    ...shadow.card,
+  },
+  confirmEmoji: { fontSize: 44 },
+  confirmTitle: { color: colors.green900, textAlign: 'center' },
+  confirmText: { textAlign: 'center' },
+  confirmActions: { width: '100%', marginTop: spacing.lg, gap: spacing.sm },
+  confirmCancel: { marginTop: 0 },
 
   runningPill: {
     flexDirection: 'row',

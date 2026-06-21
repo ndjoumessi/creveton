@@ -2,7 +2,7 @@
 // thème, historique) + classement global avec podium et rang du joueur (API §7/§10).
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { View, StyleSheet, Pressable, Text, Animated } from 'react-native';
+import { View, StyleSheet, Pressable, Text, Animated, FlatList } from 'react-native';
 import { Screen, Avatar, AppCard, Body, Skeleton } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { useLeaderboardStore } from '../store/leaderboardStore';
@@ -51,6 +51,26 @@ function themeRate(byTheme, key) {
   const v = typeof entry === 'object' ? entry.success_rate ?? entry.rate ?? entry.accuracy : entry;
   if (v === null || v === undefined) return null;
   return Math.round(v <= 1 ? v * 100 : v);
+}
+
+// Tendance du rang du joueur — uniquement si l'API expose réellement le delta.
+function rankTrend(me) {
+  if (!me) return null;
+  let dir = null;
+  if (typeof me.rank_delta === 'number' && me.rank_delta !== 0) {
+    dir = me.rank_delta > 0 ? 'up' : 'down';
+  } else if (typeof me.trend === 'string') {
+    const t = me.trend.toLowerCase();
+    if (t === 'up' || t === 'down' || t === 'flat' || t === 'same') {
+      dir = t === 'same' ? 'flat' : t;
+    }
+  } else if (typeof me.rank_delta === 'number' && me.rank_delta === 0) {
+    dir = 'flat';
+  }
+  if (!dir) return null;
+  if (dir === 'up') return { arrow: '↑', color: colors.green500 };
+  if (dir === 'down') return { arrow: '↓', color: colors.red400 };
+  return { arrow: '→', color: colors.grey };
 }
 
 function XpBar({ pct }) {
@@ -102,7 +122,7 @@ export default function StatsScreen() {
 
   const loadHistory = useCallback(async () => {
     try {
-      const res = await users.history({ limit: 5 });
+      const res = await users.history({ limit: 10 });
       setHistory(res.data || []);
     } catch {
       setHistory([]);
@@ -216,7 +236,11 @@ function StatsTab({ kpi, byTheme, history }) {
                   </Text>
                   <Text style={styles.themeRowPct}>{rate === null ? '—' : `${rate}%`}</Text>
                 </View>
-                <ThemeRateBar accent={accent} pct={rate ?? 0} />
+                {rate === null ? (
+                  <Text style={styles.themeRowEmpty}>Pas encore de données</Text>
+                ) : (
+                  <ThemeRateBar accent={accent} pct={rate} />
+                )}
               </View>
             );
           })}
@@ -229,8 +253,8 @@ function StatsTab({ kpi, byTheme, history }) {
         </View>
       )}
 
-      {/* Historique */}
-      <Text style={styles.sectionTitle}>Historique des 5 dernières parties</Text>
+      {/* Historique — timeline verticale */}
+      <Text style={styles.sectionTitle}>Historique des 10 dernières parties</Text>
       {history === null ? (
         <AppCard tone="light" padding="md" elevation="soft">
           {[0, 1, 2].map((i) => (
@@ -252,21 +276,43 @@ function StatsTab({ kpi, byTheme, history }) {
         </View>
       ) : (
         <AppCard tone="light" padding="md" elevation="soft">
-          {history.map((h, i) => (
-            <View key={h.session_id || i} style={[styles.histRow, i === 0 && styles.histRowFirst]}>
-              <Text style={styles.histEmoji}>{themeEmoji(h.theme)}</Text>
-              <View style={styles.histMid}>
-                <Text style={styles.histTitle} numberOfLines={1}>
-                  {levelLabel(h.level)} · {h.score} pts
-                </Text>
-                <Text style={styles.histSub}>{timeAgo(h.played_at)}</Text>
-              </View>
-              <Text style={styles.histXp}>+{h.xp_earned} XP</Text>
-            </View>
-          ))}
+          <FlatList
+            data={history}
+            scrollEnabled={false}
+            keyExtractor={(h, i) => String(h.session_id || i)}
+            renderItem={({ item: h, index }) => (
+              <TimelineRow
+                h={h}
+                isFirst={index === 0}
+                isLast={index === history.length - 1}
+              />
+            )}
+          />
         </AppCard>
       )}
     </>
+  );
+}
+
+function TimelineRow({ h, isFirst, isLast }) {
+  return (
+    <View style={styles.tlRow}>
+      <View style={styles.tlGutter}>
+        <View style={[styles.tlLine, isFirst && styles.tlLineHidden]} />
+        <View style={styles.tlDot} />
+        <View style={[styles.tlLine, isLast && styles.tlLineHidden]} />
+      </View>
+      <View style={styles.tlContent}>
+        <View style={styles.tlHead}>
+          <Text style={styles.tlEmoji}>{themeEmoji(h.theme)}</Text>
+          <Text style={styles.tlTitle} numberOfLines={1}>
+            {levelLabel(h.level)} · {h.score} pts
+          </Text>
+          <Text style={styles.tlXp}>+{h.xp_earned} XP</Text>
+        </View>
+        <Text style={styles.tlSub}>{timeAgo(h.played_at)}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -322,6 +368,7 @@ function RankTab({ data, me, loading, currentUserId }) {
         <AppCard tone="light" padding="md" elevation="soft">
           {rest.map((r, i) => {
             const isMe = (me && r.rank === me.rank) || (currentUserId && r.user_id === currentUserId);
+            const trend = isMe ? rankTrend(me) : null;
             return (
               <View
                 key={r.user_id || r.rank}
@@ -330,9 +377,14 @@ function RankTab({ data, me, loading, currentUserId }) {
                 <Text style={styles.rankNum}>{r.rank}</Text>
                 <Avatar name={r.name || ''} size={32} style={styles.rankAvatar} />
                 <View style={styles.rankMid}>
-                  <Text style={styles.rankName} numberOfLines={1}>
-                    {r.name}
-                  </Text>
+                  <View style={styles.rankNameRow}>
+                    <Text style={styles.rankName} numberOfLines={1}>
+                      {r.name}
+                    </Text>
+                    {trend ? (
+                      <Text style={[styles.rankTrend, { color: trend.color }]}>{trend.arrow}</Text>
+                    ) : null}
+                  </View>
                   {r.ville ? <Text style={styles.rankVille}>{r.ville}</Text> : null}
                 </View>
                 <Text style={styles.rankScore}>{Number(r.score).toLocaleString('fr-FR')}</Text>
@@ -442,6 +494,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   rateFill: { height: '100%', borderRadius: radius.pill },
+  themeRowEmpty: {
+    fontFamily: fonts.bodyRegular,
+    fontSize: fontSizes.xs,
+    color: colors.textFaint,
+  },
 
   // Historique
   histRow: {
@@ -454,24 +511,39 @@ const styles = StyleSheet.create({
     borderTopColor: colors.divider,
   },
   histRowFirst: { borderTopWidth: 0, marginTop: 0, paddingTop: 0 },
-  histEmoji: { fontSize: 22 },
   histSkelMid: { flex: 1, gap: 6 },
-  histMid: { flex: 1 },
-  histTitle: {
+
+  // Timeline historique
+  tlRow: { flexDirection: 'row', gap: spacing.md },
+  tlGutter: { width: 14, alignItems: 'center' },
+  tlLine: { width: 2, flex: 1, backgroundColor: colors.divider },
+  tlLineHidden: { backgroundColor: 'transparent' },
+  tlDot: {
+    width: 10,
+    height: 10,
+    borderRadius: radius.pill,
+    backgroundColor: colors.gold500,
+    marginVertical: 2,
+  },
+  tlContent: { flex: 1, paddingBottom: spacing.md },
+  tlHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  tlEmoji: { fontSize: 18 },
+  tlTitle: {
+    flex: 1,
     fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.md,
     color: colors.textDark,
   },
-  histSub: {
+  tlXp: {
+    fontFamily: fonts.titleSemiBold,
+    fontSize: fontSizes.sm,
+    color: colors.successText,
+  },
+  tlSub: {
     fontFamily: fonts.bodyRegular,
     fontSize: fontSizes.xs,
     color: colors.textMuted,
     marginTop: 1,
-  },
-  histXp: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.sm,
-    color: colors.successText,
   },
 
   // Podium
@@ -516,10 +588,16 @@ const styles = StyleSheet.create({
   rankAvatar: {},
   rankAvatarSkel: {},
   rankMid: { flex: 1 },
+  rankNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   rankName: {
     fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.md,
     color: colors.textDark,
+    flexShrink: 1,
+  },
+  rankTrend: {
+    fontFamily: fonts.titleBold,
+    fontSize: fontSizes.md,
   },
   rankVille: {
     fontFamily: fonts.bodyRegular,

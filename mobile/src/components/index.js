@@ -28,3 +28,8 @@ export { ToastProvider, useToast } from './Toast';
 
 // Jeu
 export { default as ProgressDots } from './ProgressDots';
+export { default as CircularTimer } from './CircularTimer';
+
+// Visualisations / effets
+export { default as Confetti } from './Confetti';
+export { default as MiniLineChart } from './MiniLineChart';

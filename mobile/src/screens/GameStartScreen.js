@@ -2,8 +2,8 @@
 // puis tirage depuis le cache local (mode normal : questions avec correct_index)
 // et lancement du quiz.
 
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Screen, Title, Body, AppButton, useToast } from '../components';
 import { THEMES, LEVELS, GAME } from '../constants/config';
@@ -12,6 +12,7 @@ import { useGameStore } from '../store/gameStore';
 import { questions as questionsApi } from '../services/endpoints';
 import { themeGradients, colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
 import { themeLabel, levelLabel } from '../utils/format';
+import { hapticMedium } from '../utils/haptics';
 
 const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
 
@@ -25,14 +26,67 @@ export default function GameStartScreen({ navigation, route }) {
   const drawQuestions = useQuestionsStore((s) => s.drawQuestions);
   const startGame = useGameStore((s) => s.startGame);
 
+  // Animation d'entrée : chaque carte de thème glisse vers le haut + apparaît,
+  // avec un décalage de 100ms par index.
+  const cardAnims = useRef(THEMES.map(() => new Animated.Value(0))).current;
+  useEffect(() => {
+    Animated.stagger(
+      100,
+      cardAnims.map((a) =>
+        Animated.timing(a, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        })
+      )
+    ).start();
+  }, [cardAnims]);
+
   const recap = useMemo(() => {
     if (!theme) return null;
     const t = TIME_BY_LEVEL[level] || 30;
     return `${themeLabel(theme)} · ${levelLabel(level)} · ${GAME.questionsPerSession} questions · ${t}s/Q`;
   }, [theme, level]);
 
+  // Le récap apparaît en glissant vers le bas quand thème + niveau sont choisis.
+  const recapAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(recapAnim, {
+      toValue: recap ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [recap, recapAnim]);
+
+  // Pulse doré subtil du bouton « Lancer » quand il est actif.
+  const ready = !!theme && !!level;
+  const pulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!ready) {
+      pulse.setValue(1);
+      return undefined;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1.03,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [ready, pulse]);
+
   const onStart = async () => {
     if (!theme || !level) return;
+    hapticMedium();
     setLoading(true);
     try {
       let qs = await drawQuestions({ theme, level, count: GAME.questionsPerSession });
@@ -69,30 +123,47 @@ export default function GameStartScreen({ navigation, route }) {
 
       <Text style={styles.section}>Choisis ton thème</Text>
       <View style={styles.grid}>
-        {THEMES.map((t) => {
+        {THEMES.map((t, i) => {
           const active = t.key === theme;
+          const anim = cardAnims[i];
           return (
-            <Pressable
+            <Animated.View
               key={t.key}
-              onPress={() => setTheme(t.key)}
-              style={styles.gridItem}
+              style={[
+                styles.gridItem,
+                {
+                  opacity: anim,
+                  transform: [
+                    {
+                      translateY: anim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [24, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}
             >
-              <LinearGradient
-                colors={themeGradients[t.key] || themeGradients.industrie}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.themeCard, active && styles.themeCardActive]}
-              >
-                {active ? (
-                  <View style={styles.check}>
-                    <Text style={styles.checkText}>✓</Text>
-                  </View>
-                ) : null}
-                <Text style={styles.themeEmoji}>{t.emoji}</Text>
-                <Text style={styles.themeName}>{t.label}</Text>
-                <Text style={styles.themeMeta}>{GAME.questionsPerSession} questions</Text>
-              </LinearGradient>
-            </Pressable>
+              <Pressable onPress={() => setTheme(t.key)}>
+                <LinearGradient
+                  colors={themeGradients[t.key] || themeGradients.industrie}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.themeCard, active && styles.themeCardActive]}
+                >
+                  {active ? (
+                    <View style={styles.check}>
+                      <Text style={styles.checkText}>✓</Text>
+                    </View>
+                  ) : null}
+                  <Text style={styles.themeEmoji}>{t.emoji}</Text>
+                  <Text style={styles.themeName}>{t.label}</Text>
+                  <Text style={styles.themeMeta}>
+                    {GAME.questionsPerSession} questions / partie
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
           );
         })}
       </View>
@@ -114,24 +185,41 @@ export default function GameStartScreen({ navigation, route }) {
       </View>
 
       {recap ? (
-        <View style={styles.recap}>
+        <Animated.View
+          style={[
+            styles.recap,
+            {
+              opacity: recapAnim,
+              transform: [
+                {
+                  translateY: recapAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-8, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <Body style={styles.recapText}>{recap}</Body>
-        </View>
+        </Animated.View>
       ) : (
         <Body muted style={styles.hint}>
           Sélectionne un thème pour lancer une partie.
         </Body>
       )}
 
-      <AppButton
-        title="Lancer ▶"
-        variant="primary"
-        size="lg"
-        loading={loading}
-        disabled={!theme || !level}
-        onPress={onStart}
-        style={styles.cta}
-      />
+      <Animated.View style={{ transform: [{ scale: pulse }] }}>
+        <AppButton
+          title="Lancer ▶"
+          variant="primary"
+          size="lg"
+          loading={loading}
+          disabled={!ready}
+          onPress={onStart}
+          style={styles.cta}
+        />
+      </Animated.View>
       <AppButton
         title="⚔️ Défier un ami"
         variant="ghost"
@@ -206,7 +294,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginTop: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.gold500,
   },
   recapText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.grey, textAlign: 'center' },
   hint: { marginTop: spacing.lg, textAlign: 'center' },

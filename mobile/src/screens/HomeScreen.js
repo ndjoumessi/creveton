@@ -8,6 +8,7 @@ import {
   ScrollView,
   RefreshControl,
   StatusBar,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -70,6 +71,39 @@ function deriveStats(stats) {
         : `${Math.round(rate <= 1 ? rate * 100 : rate)}%`,
     streak: dash(streak),
   };
+}
+
+// Anime un nombre de 0 → value sur ~800ms. Si la valeur n'est pas numérique
+// (ex. « — » ou « 87% »), on affiche tel quel sans count-up.
+function StatValue({ value }) {
+  const numericMatch =
+    typeof value === 'number'
+      ? { num: value, suffix: '' }
+      : typeof value === 'string' && /^\d+%?$/.test(value)
+        ? { num: parseInt(value, 10), suffix: value.endsWith('%') ? '%' : '' }
+        : null;
+
+  const [display, setDisplay] = useState(numericMatch ? '0' : value);
+
+  useEffect(() => {
+    if (!numericMatch) {
+      setDisplay(value);
+      return undefined;
+    }
+    const anim = new Animated.Value(0);
+    const id = anim.addListener(({ value: v }) => {
+      setDisplay(`${Math.round(v)}${numericMatch.suffix}`);
+    });
+    Animated.timing(anim, {
+      toValue: numericMatch.num,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+    return () => anim.removeListener(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return <Body style={styles.statValue}>{display}</Body>;
 }
 
 function StatusPill({ tournament }) {
@@ -140,8 +174,8 @@ export default function HomeScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.gold400}
-            colors={[colors.green500]}
+            tintColor={colors.gold500}
+            colors={[colors.gold500]}
           />
         }
       >
@@ -170,6 +204,9 @@ export default function HomeScreen({ navigation }) {
               accessibilityLabel="Notifications"
             >
               <Body style={styles.bellEmoji}>🔔</Body>
+              {/* Placeholder « non lu » : pastille rouge statique en attendant
+                  un endpoint de notifications dédié. */}
+              <View style={styles.bellDot} />
             </Pressable>
           </View>
         </View>
@@ -200,6 +237,35 @@ export default function HomeScreen({ navigation }) {
               />
             </View>
             <Body style={styles.playEmoji}>⚡</Body>
+          </LinearGradient>
+
+          {/* Défi du jour */}
+          <LinearGradient
+            colors={[colors.gold500, colors.gold400]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.challengeCard}
+          >
+            {/* Pas d'API de complétion par jour : badge « NOUVEAU » statique. */}
+            <View style={styles.newPill}>
+              <Label color={colors.cream} style={styles.newPillText}>
+                NOUVEAU
+              </Label>
+            </View>
+            <Heading color={colors.green900} style={styles.challengeTitle}>
+              ❓ Défi du jour
+            </Heading>
+            <Body color={colors.green900} style={styles.challengeDesc}>
+              Réponds à 1 question bonus par jour
+            </Body>
+            <AppButton
+              title="Relever le défi"
+              variant="secondary"
+              size="md"
+              fullWidth={false}
+              onPress={() => navigation.navigate('Play')}
+              style={styles.challengeBtn}
+            />
           </LinearGradient>
 
           {/* Tournois */}
@@ -351,7 +417,7 @@ export default function HomeScreen({ navigation }) {
                 style={styles.statCard}
               >
                 <Body style={styles.statEmoji}>{def.emoji}</Body>
-                <Body style={styles.statValue}>{stats[def.key]}</Body>
+                <StatValue value={stats[def.key]} />
                 <Label muted style={styles.statLabel}>
                   {def.label}
                 </Label>
@@ -397,6 +463,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   bellEmoji: { fontSize: 18, color: colors.white },
+  bellDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 9,
+    height: 9,
+    borderRadius: radius.pill,
+    backgroundColor: colors.red400,
+    borderWidth: 1.5,
+    borderColor: colors.green900,
+  },
 
   // Corps
   body: {
@@ -422,6 +499,27 @@ const styles = StyleSheet.create({
   playDesc: { marginTop: spacing.xs, fontSize: fontSizes.sm, lineHeight: 19 },
   playBtn: { marginTop: spacing.lg, alignSelf: 'flex-start' },
   playEmoji: { fontSize: 56, marginLeft: spacing.sm },
+
+  // Défi du jour
+  challengeCard: {
+    marginTop: spacing.lg,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    ...shadow.gold,
+  },
+  newPill: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    backgroundColor: colors.green900,
+    borderRadius: radius.pill,
+    paddingVertical: 3,
+    paddingHorizontal: spacing.sm,
+  },
+  newPillText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs },
+  challengeTitle: { fontFamily: fonts.titleBold, fontSize: fontSizes.base },
+  challengeDesc: { fontSize: fontSizes.sm, marginTop: spacing.xs },
+  challengeBtn: { marginTop: spacing.md, alignSelf: 'flex-start' },
 
   // Sections
   sectionHeader: {

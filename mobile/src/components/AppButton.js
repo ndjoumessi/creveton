@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { hapticLight } from '../utils/haptics';
 
 const SIZES = {
   sm: { height: 42, font: fontSizes.md, px: spacing.lg },
@@ -29,6 +30,7 @@ export default function AppButton({
   iconLeft = null,
   iconRight = null,
   fullWidth = true,
+  haptic = true,
   style,
   textStyle,
 }) {
@@ -36,6 +38,11 @@ export default function AppButton({
   const isDisabled = disabled || loading;
   const v = VARIANTS[variant] || VARIANTS.primary;
   const s = SIZES[size] || SIZES.md;
+
+  const handlePress = (e) => {
+    if (haptic) hapticLight();
+    onPress?.(e);
+  };
 
   const pressIn = () =>
     Animated.spring(scale, {
@@ -62,7 +69,7 @@ export default function AppButton({
       ]}
     >
       <Pressable
-        onPress={onPress}
+        onPress={handlePress}
         onPressIn={pressIn}
         onPressOut={pressOut}
         disabled={isDisabled}

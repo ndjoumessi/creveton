@@ -2,11 +2,12 @@
 // badges, déconnexion (API §10/§11).
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { View, StyleSheet, Pressable, Text, Animated } from 'react-native';
-import { Screen, Avatar, AppCard, AppButton, Body, useToast } from '../components';
+import { View, StyleSheet, Pressable, Text, Animated, Modal, Share } from 'react-native';
+import { Screen, Avatar, AppCard, AppButton, AppInput, Body, useToast } from '../components';
 import { useAuthStore } from '../store/authStore';
-import { wallet } from '../services/endpoints';
-import { LANGS } from '../constants/config';
+import { wallet, users } from '../services/endpoints';
+import { parseApiError } from '../services/api';
+import { LANGS, SEXES } from '../constants/config';
 import {
   colors,
   fonts,
@@ -16,6 +17,7 @@ import {
   motion,
 } from '../constants/theme';
 import { formatFcfa, levelProgress } from '../utils/format';
+import { hapticLight } from '../utils/haptics';
 
 const LANG_LABEL = (key) =>
   LANGS.find((l) => l.key === key)?.label || (key === 'en' ? 'English' : 'Français');
@@ -27,7 +29,11 @@ function deriveBadges(level) {
     { key: 'regular', emoji: '🔥', label: 'Habitué', min: 3 },
     { key: 'expert', emoji: '🧠', label: 'Cerveau', min: 5 },
     { key: 'champion', emoji: '👑', label: 'Champion', min: 10 },
-  ].map((b) => ({ ...b, unlocked: level >= b.min }));
+  ].map((b) => ({
+    ...b,
+    unlocked: level >= b.min,
+    req: `Atteins le niveau ${b.min} pour débloquer`,
+  }));
 }
 
 function XpBar({ pct }) {
@@ -66,10 +72,47 @@ export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  const setUser = useAuthStore((s) => s.setUser);
 
   // walletState: 'loading' | 'disabled' | { balance, currency }
   const [walletState, setWalletState] = useState('loading');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Édition du profil (bottom sheet)
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [ville, setVille] = useState('');
+  const [age, setAge] = useState('');
+  const [sexe, setSexe] = useState('N');
+  const [lang, setLang] = useState('fr');
+
+  const openEdit = useCallback(() => {
+    setVille(user?.ville || '');
+    setAge(user?.age != null ? String(user.age) : '');
+    setSexe(user?.sexe || 'N');
+    setLang(user?.lang || 'fr');
+    setEditOpen(true);
+  }, [user]);
+
+  const saveEdit = useCallback(async () => {
+    setSaving(true);
+    try {
+      const updated = await users.update({
+        ville: ville.trim() || undefined,
+        age: Number(age) || undefined,
+        sexe,
+        lang,
+      });
+      if (updated) setUser(updated);
+      else await refreshProfile?.();
+      setEditOpen(false);
+      toast.show({ type: 'success', message: 'Profil mis à jour' });
+    } catch (e) {
+      toast.show({ type: 'error', message: parseApiError(e).message });
+    } finally {
+      setSaving(false);
+    }
+  }, [ville, age, sexe, lang, setUser, refreshProfile, toast]);
 
   const loadWallet = useCallback(async () => {
     try {
@@ -105,7 +148,10 @@ export default function ProfileScreen() {
         <Pressable
           style={styles.editBtn}
           hitSlop={10}
-          onPress={() => toast.show({ type: 'info', message: 'Édition bientôt disponible' })}
+          onPress={() => {
+            hapticLight();
+            openEdit();
+          }}
         >
           <Text style={styles.editIcon}>✏️</Text>
         </Pressable>
@@ -178,8 +224,10 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>Mes badges</Text>
         <View style={styles.badgeGrid}>
           {badges.map((b) => (
-            <View
+            <Pressable
               key={b.key}
+              disabled={b.unlocked}
+              onPress={() => toast.show({ type: 'info', message: b.req })}
               style={[styles.badge, b.unlocked ? styles.badgeUnlocked : styles.badgeLocked]}
             >
               <Text style={[styles.badgeEmoji, !b.unlocked && styles.badgeEmojiLocked]}>
@@ -193,9 +241,22 @@ export default function ProfileScreen() {
               >
                 {b.label}
               </Text>
-            </View>
+            </Pressable>
           ))}
         </View>
+
+        {/* Inviter un ami */}
+        <AppButton
+          variant="ghost"
+          title="Inviter un ami 🎁"
+          fullWidth
+          style={styles.invite}
+          onPress={() =>
+            Share.share({
+              message: `Rejoins-moi sur Creveton ! Code : ${user?.referral_code || 'CREV'}`,
+            })
+          }
+        />
 
         {/* Déconnexion */}
         <AppButton
@@ -206,6 +267,87 @@ export default function ProfileScreen() {
           onPress={logout}
         />
       </View>
+
+      {/* Bottom sheet — édition du profil */}
+      <Modal
+        visible={editOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditOpen(false)}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={() => setEditOpen(false)} />
+        <View style={styles.sheet}>
+          <View style={styles.sheetHandle} />
+          <Text style={styles.sheetTitle}>Modifier mon profil</Text>
+
+          <AppInput
+            label="Ville"
+            value={ville}
+            onChangeText={setVille}
+            placeholder="Ta ville"
+          />
+          <AppInput
+            label="Âge"
+            value={age}
+            onChangeText={setAge}
+            keyboardType="number-pad"
+            placeholder="Ton âge"
+          />
+
+          <Text style={styles.fieldLabel}>Sexe</Text>
+          <View style={styles.pillRow}>
+            {SEXES.map((s) => {
+              const sel = s.key === sexe;
+              return (
+                <Pressable
+                  key={s.key}
+                  onPress={() => setSexe(s.key)}
+                  style={[styles.pill, sel && styles.pillActive]}
+                >
+                  <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                    {s.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.fieldLabel}>Langue</Text>
+          <View style={styles.pillRow}>
+            {LANGS.map((l) => {
+              const sel = l.key === lang;
+              return (
+                <Pressable
+                  key={l.key}
+                  onPress={() => setLang(l.key)}
+                  style={[styles.pill, sel && styles.pillActive]}
+                >
+                  <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                    {l.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={styles.sheetActions}>
+            <AppButton
+              variant="primary"
+              title="Enregistrer"
+              fullWidth
+              loading={saving}
+              onPress={saveEdit}
+            />
+            <AppButton
+              variant="ghost"
+              title="Annuler"
+              fullWidth
+              style={styles.sheetCancel}
+              onPress={() => setEditOpen(false)}
+            />
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -335,5 +477,55 @@ const styles = StyleSheet.create({
   badgeLabelUnlocked: { color: colors.gold500 },
   badgeLabelLocked: { color: colors.textFaint },
 
-  logout: { marginTop: spacing.xl },
+  invite: { marginTop: spacing.xl },
+  logout: { marginTop: spacing.md },
+
+  // Bottom sheet
+  sheetBackdrop: { flex: 1, backgroundColor: colors.overlay },
+  sheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.sm,
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: radius.pill,
+    backgroundColor: colors.border,
+    marginBottom: spacing.sm,
+  },
+  sheetTitle: {
+    fontFamily: fonts.titleSemiBold,
+    fontSize: fontSizes.lg,
+    color: colors.green900,
+    marginBottom: spacing.sm,
+  },
+  fieldLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.sm,
+    color: colors.textBody,
+    marginTop: spacing.xs,
+  },
+  pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  pill: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  pillActive: { backgroundColor: colors.green500, borderColor: colors.green500 },
+  pillText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.sm,
+    color: colors.textBody,
+  },
+  pillTextActive: { color: colors.white },
+  sheetActions: { marginTop: spacing.lg, gap: spacing.sm },
+  sheetCancel: { marginTop: 0 },
 });

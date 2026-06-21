@@ -3,7 +3,7 @@
 // Données issues de /sessions/submit (API §6), lues depuis le gameStore.
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Animated, Easing, StyleSheet } from 'react-native';
+import { View, Text, Animated, Easing, StyleSheet, Share } from 'react-native';
 import {
   Screen,
   Heading,
@@ -12,9 +12,14 @@ import {
   AppCard,
   AppButton,
   ErrorScreen,
+  Skeleton,
+  Confetti,
+  MiniLineChart,
 } from '../components';
 import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
+import { users } from '../services/endpoints';
+import { hapticSuccess } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
 
 export default function ResultsScreen({ route, navigation }) {
@@ -62,10 +67,22 @@ function ResultsContent({ result, onReplay, onHome }) {
   const review = Array.isArray(result.review) ? result.review : [];
 
   const heroEmoji = pct > 70 ? '🏆' : pct >= 50 ? '🥈' : '🎯';
+  const celebrate = pct > 70;
+
+  // — Nouveau record : uniquement si l'API expose réellement l'info.
+  const isRecord =
+    result.is_record === true ||
+    (typeof result.best_score === 'number' && (result.score || 0) >= result.best_score);
+
+  // — Progression : 5 derniers scores (ancien → récent) via l'historique.
+  const [history, setHistory] = useState(null); // null = chargement
 
   // — Trophée : scale ressort + légère rotation à l'entrée.
   const heroScale = useRef(new Animated.Value(0)).current;
   const heroRotate = useRef(new Animated.Value(0)).current;
+
+  // — Bannière record : glisse depuis le haut + fondu.
+  const recordSlide = useRef(new Animated.Value(0)).current;
 
   // — Score : count-up de 0 → score (~900ms, value tween acceptable).
   const scoreAnim = useRef(new Animated.Value(0)).current;
@@ -96,10 +113,21 @@ function ResultsContent({ result, onReplay, onHome }) {
     });
     Animated.timing(scoreAnim, {
       toValue: result.score || 0,
-      duration: 900,
+      duration: 1200,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
+
+    if (isRecord) {
+      hapticSuccess();
+      Animated.timing(recordSlide, {
+        toValue: 1,
+        duration: motion.enter,
+        delay: 200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    }
 
     Animated.timing(xpFill, {
       toValue: 1,
@@ -120,7 +148,28 @@ function ResultsContent({ result, onReplay, onHome }) {
     }
 
     return () => scoreAnim.removeAllListeners();
-  }, [heroScale, heroRotate, scoreAnim, xpFill, levelGlow, result]);
+  }, [heroScale, heroRotate, scoreAnim, xpFill, levelGlow, recordSlide, isRecord, result]);
+
+  // — Historique récent pour la mini-courbe de progression.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await users.history({ limit: 5 });
+        if (alive) setHistory(res?.data || []);
+      } catch {
+        if (alive) setHistory([]);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const progressScores = (history || [])
+    .slice()
+    .reverse()
+    .map((h) => Number(h.score) || 0);
 
   const rotate = heroRotate.interpolate({
     inputRange: [0, 1],
@@ -134,6 +183,16 @@ function ResultsContent({ result, onReplay, onHome }) {
     inputRange: [0, 1],
     outputRange: [0.9, 1],
   });
+  const recordTranslateY = recordSlide.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-40, 0],
+  });
+
+  const onShare = () => {
+    Share.share({
+      message: `J'ai scoré ${result.score || 0} pts sur Creveton ! 🇨🇲`,
+    });
+  };
 
   const avgSeconds =
     typeof result.avg_time_ms === 'number'
@@ -142,6 +201,24 @@ function ResultsContent({ result, onReplay, onHome }) {
 
   return (
     <Screen dark scroll contentStyle={styles.content}>
+      {celebrate ? (
+        <View style={styles.confettiLayer} pointerEvents="none">
+          <Confetti count={28} duration={2000} />
+        </View>
+      ) : null}
+
+      {/* BANNIÈRE NOUVEAU RECORD — uniquement si réel */}
+      {isRecord ? (
+        <Animated.View
+          style={[
+            styles.recordBanner,
+            { opacity: recordSlide, transform: [{ translateY: recordTranslateY }] },
+          ]}
+        >
+          <Text style={styles.recordText}>🏆 Nouveau record !</Text>
+        </Animated.View>
+      ) : null}
+
       {/* HERO — trophée + score en or */}
       <View style={styles.hero}>
         <Animated.Text
@@ -219,6 +296,27 @@ function ResultsContent({ result, onReplay, onHome }) {
         </View>
       </View>
 
+      {/* MA PROGRESSION — mini-courbe des derniers scores */}
+      {history === null ? (
+        <View style={styles.progressBlock}>
+          <Heading color={colors.cream} style={styles.sectionTitle}>
+            Ma progression
+          </Heading>
+          <AppCard tone="light" padding="md" radius={radius.xl}>
+            <Skeleton width="100%" height={80} radius={radius.md} />
+          </AppCard>
+        </View>
+      ) : progressScores.length >= 2 ? (
+        <View style={styles.progressBlock}>
+          <Heading color={colors.cream} style={styles.sectionTitle}>
+            Ma progression
+          </Heading>
+          <AppCard tone="light" padding="md" radius={radius.xl} style={styles.progressCard}>
+            <MiniLineChart data={progressScores} width={300} height={80} color={colors.gold500} />
+          </AppCard>
+        </View>
+      ) : null}
+
       {/* PALIER DÉBLOQUÉ */}
       {result.level_unlocked ? (
         <Animated.View style={[styles.levelUp, { transform: [{ scale: glowScale }] }]}>
@@ -234,6 +332,7 @@ function ResultsContent({ result, onReplay, onHome }) {
 
       {/* ACTIONS */}
       <View style={styles.actions}>
+        <AppButton title="Partager 📤" variant="ghost" onPress={onShare} fullWidth />
         <AppButton title="Rejouer" variant="secondary" onPress={onReplay} fullWidth />
         <AppButton
           title="Retour à l'accueil"
@@ -259,7 +358,30 @@ function Stat({ value, label }) {
 const styles = StyleSheet.create({
   content: { paddingBottom: spacing.xxl },
 
-  hero: { alignItems: 'center', paddingVertical: spacing.lg },
+  confettiLayer: { ...StyleSheet.absoluteFillObject, zIndex: 1 },
+
+  recordBanner: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: radius.pill,
+    backgroundColor: colors.goldVeil,
+    borderWidth: 1,
+    borderColor: colors.goldVeilBorder,
+  },
+  recordText: {
+    fontFamily: fonts.titleBold,
+    fontSize: fontSizes.md,
+    color: colors.gold400,
+  },
+
+  progressBlock: { marginTop: spacing.xl, zIndex: 2 },
+  progressCard: { alignItems: 'center' },
+
+  hero: { alignItems: 'center', paddingVertical: spacing.lg, zIndex: 2 },
   trophy: { fontSize: 72, marginBottom: spacing.sm },
   scoreLabel: { marginBottom: spacing.xs },
   score: {
@@ -357,6 +479,6 @@ const styles = StyleSheet.create({
   levelUpEmoji: { fontSize: 36 },
   levelUpText: { textAlign: 'center' },
 
-  actions: { marginTop: spacing.xxl, gap: spacing.md },
+  actions: { marginTop: spacing.xxl, gap: spacing.md, zIndex: 2 },
   homeBtn: {},
 });
