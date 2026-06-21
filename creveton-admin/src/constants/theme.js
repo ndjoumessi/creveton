@@ -6,17 +6,19 @@ export const colors = {
   green500: '#2a8a4f',
   green300: '#5eca84',
   gold: '#d4a017',
+  gold500: '#d4a017',
+  gold400: '#e8b830',
   goldLight: '#e8b830',
+  cream: '#fdf6e9',
   bg: '#f8f9fa',
+  contentBg: '#f0f4f0',
   surface: '#ffffff',
   border: '#e5e7eb',
   text: '#374151',
   ink: '#0b2e1a',
   muted: '#6b7280',
-  red: '#dc2626',
-  // alias rétro-compat
-  gold500: '#d4a017',
-  red400: '#dc2626',
+  red: '#e74c3c',
+  red400: '#e74c3c',
   white: '#ffffff',
 };
 
@@ -26,16 +28,16 @@ export const fonts = {
 };
 
 // Palette graphiques (recharts).
-export const chartColors = ['#2a8a4f', '#d4a017', '#5eca84', '#2563eb', '#7c3aed'];
+export const chartColors = ['#2a8a4f', '#d4a017', '#5eca84', '#3b82f6', '#8b5cf6'];
 
-// Badges de THÈME — une couleur distinctive par thème (spec redesign).
+// Badges de THÈME — couleur distinctive + emoji par thème (spec redesign senior).
 export const themeBadgeColors = {
-  culture: { bg: '#ede9fe', fg: '#7c3aed', label: 'Culture' }, // violet
-  geographie: { bg: '#dbeafe', fg: '#2563eb', label: 'Géographie' }, // bleu
-  histoire: { bg: '#ffedd5', fg: '#ea580c', label: 'Histoire' }, // orange
-  industrie: { bg: '#dcfce7', fg: '#16a34a', label: 'Industrie' }, // vert
-  sport: { bg: '#fee2e2', fg: '#dc2626', label: 'Sport' }, // rouge
-  science: { bg: '#cffafe', fg: '#0891b2', label: 'Science' }, // cyan
+  culture: { bg: '#f3edff', fg: '#8b5cf6', label: 'Culture', icon: '📚' }, // violet
+  geographie: { bg: '#e6f0ff', fg: '#3b82f6', label: 'Géographie', icon: '🌍' }, // bleu
+  histoire: { bg: '#fff4e0', fg: '#f59e0b', label: 'Histoire', icon: '🏛️' }, // orange
+  industrie: { bg: '#e3fbef', fg: '#10b981', label: 'Industrie', icon: '🏭' }, // vert
+  sport: { bg: '#fdeceb', fg: '#e74c3c', label: 'Sport', icon: '⚽' }, // rouge
+  science: { bg: '#e6fafc', fg: '#0891b2', label: 'Science', icon: '🔬' }, // cyan
 };
 
 // Badges de STATUT — questions (workflow CDC §3.3).

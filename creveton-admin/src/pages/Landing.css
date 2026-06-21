@@ -1,0 +1,568 @@
+/* ============================================================
+   CREVETON — Landing publique (autonome)
+   Registre "brand" · Charte « Le Cockpit Émeraude »
+   Tout est préfixé .land-… et isolé de la console.
+   ============================================================ */
+
+.land-root {
+  /* Charte locale */
+  --land-green900: #0b2e1a;
+  --land-green700: #1a5230;
+  --land-green500: #2a8a4f;
+  --land-green300: #5eca84;
+  --land-gold: #d4a017;
+  --land-gold400: #e8b830;
+  --land-cream: #fdf6e9;
+  --land-red: #e74c3c;
+
+  --land-max: 1140px;
+
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--land-green900);
+  background: #fff;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.land-root *,
+.land-root *::before,
+.land-root *::after {
+  box-sizing: border-box;
+}
+
+.land-container {
+  width: 100%;
+  max-width: var(--land-max);
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+/* Focus visible accessible global landing */
+.land-root a:focus-visible,
+.land-root button:focus-visible {
+  outline: 3px solid var(--land-gold400);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* ─────────────── Boutons ─────────────── */
+.land-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  padding: 16px 34px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease,
+    background-color 150ms ease;
+  will-change: transform;
+}
+
+.land-btn-gold {
+  background: var(--land-gold);
+  color: var(--land-green900);
+  box-shadow: 0 12px 30px -8px rgba(212, 160, 23, 0.6);
+}
+.land-btn-gold:hover {
+  background: var(--land-gold400);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px -8px rgba(212, 160, 23, 0.7);
+}
+
+.land-btn-green {
+  background: var(--land-green900);
+  color: var(--land-gold400);
+  box-shadow: 0 14px 32px -10px rgba(11, 46, 26, 0.55);
+}
+.land-btn-green:hover {
+  background: var(--land-green700);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.land-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--land-green900);
+  background-image: radial-gradient(
+      1000px 540px at 78% 8%,
+      rgba(212, 160, 23, 0.16),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 600px at 8% 92%,
+      rgba(42, 138, 79, 0.28),
+      transparent 60%
+    );
+}
+
+.land-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.land-hero-pattern {
+  position: absolute;
+  inset: 0;
+}
+
+.land-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: 56px;
+  min-height: 100vh;
+  padding-block: 96px;
+}
+
+.land-hero-copy {
+  max-width: 560px;
+}
+
+.land-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  background: linear-gradient(150deg, var(--land-gold400), var(--land-gold));
+  color: var(--land-green900);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 76px;
+  line-height: 1;
+  margin-bottom: 32px;
+  box-shadow: 0 18px 44px -14px rgba(212, 160, 23, 0.65);
+}
+
+.land-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: clamp(48px, 8vw, 72px);
+  line-height: 1.02;
+  letter-spacing: -1.5px;
+  color: #fff;
+  margin: 0 0 14px;
+}
+
+.land-subtitle {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 26px;
+}
+
+.land-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 8px 16px;
+  border-radius: 50px;
+  margin-bottom: 36px;
+}
+
+.land-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 28px;
+}
+
+.land-cta-secondary {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+.land-cta-secondary:hover {
+  color: #fff;
+}
+
+/* ─────────────── Mockup téléphone ─────────────── */
+.land-phone-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.land-phone {
+  position: relative;
+  width: 300px;
+  height: 600px;
+  background: #0a2516;
+  border: 10px solid #07190f;
+  border-radius: 46px;
+  padding: 18px 16px;
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 2px rgba(94, 202, 132, 0.12);
+}
+
+.land-phone-notch {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 22px;
+  background: #07190f;
+  border-radius: 0 0 16px 16px;
+  z-index: 2;
+}
+
+.land-phone-screen {
+  height: 100%;
+  background: linear-gradient(180deg, #103823, #0b2e1a);
+  border-radius: 30px;
+  padding: 44px 20px 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.land-quiz-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.land-quiz-theme {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+}
+.land-quiz-timer {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--land-gold400);
+  background: rgba(212, 160, 23, 0.14);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.land-quiz-progress {
+  height: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.land-quiz-progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--land-green300), var(--land-gold400));
+}
+
+.land-quiz-question {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.3;
+  color: #fff;
+  margin: 0 0 22px;
+}
+
+.land-quiz-options {
+  list-style: none;
+  margin: 0 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.land-quiz-option {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 13px 16px;
+}
+.land-quiz-option-right {
+  color: #fff;
+  background: rgba(42, 138, 79, 0.32);
+  border-color: var(--land-green300);
+  box-shadow: 0 0 0 1px var(--land-green300);
+}
+
+.land-quiz-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.land-quiz-score span {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.land-quiz-score strong {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--land-gold400);
+}
+
+/* ============================================================
+   CHIFFRES
+   ============================================================ */
+.land-stats {
+  background: #fff;
+  padding-block: 80px;
+}
+.land-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  text-align: center;
+}
+.land-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.land-stat-num {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--land-green900);
+  letter-spacing: -1px;
+}
+.land-stat-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--land-green500);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* ============================================================
+   Titres de section partagés
+   ============================================================ */
+.land-section-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: clamp(28px, 4vw, 38px);
+  letter-spacing: -0.6px;
+  text-align: center;
+  color: var(--land-green900);
+  margin: 0 0 48px;
+}
+
+/* ============================================================
+   FONCTIONNALITÉS
+   ============================================================ */
+.land-features {
+  background: #fff;
+  padding-block: 88px;
+}
+.land-features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+.land-feature {
+  padding: 36px 30px;
+  border: 1px solid #e7efe9;
+  border-radius: 20px;
+  background: #fff;
+  transition: transform 150ms ease, box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+.land-feature:hover {
+  transform: translateY(-4px);
+  border-color: #d6e6db;
+  box-shadow: 0 24px 48px -24px rgba(11, 46, 26, 0.28);
+}
+.land-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--land-green900);
+  color: var(--land-gold400);
+  margin-bottom: 22px;
+}
+.land-feature-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 21px;
+  color: var(--land-green900);
+  margin: 0 0 10px;
+}
+.land-feature-desc {
+  font-size: 16px;
+  color: #5b6b61;
+  margin: 0;
+}
+
+/* ============================================================
+   THÈMES
+   ============================================================ */
+.land-themes {
+  background: #f0f7f0;
+  padding-block: 88px;
+}
+.land-themes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+.land-theme-card {
+  text-align: center;
+  background: #fff;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 36px 22px;
+  transition: transform 150ms ease, box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+.land-theme-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--land-gold);
+  box-shadow: 0 26px 50px -26px rgba(11, 46, 26, 0.35);
+}
+.land-theme-emoji {
+  display: block;
+  font-size: 46px;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.land-theme-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--land-green900);
+  margin: 0 0 6px;
+}
+.land-theme-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--land-green500);
+  margin: 0;
+}
+
+/* ============================================================
+   CTA FINAL
+   ============================================================ */
+.land-cta-final {
+  background: var(--land-gold);
+  padding-block: 84px;
+}
+.land-cta-final-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  text-align: center;
+}
+.land-cta-final-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: clamp(34px, 5vw, 48px);
+  letter-spacing: -0.8px;
+  color: var(--land-green900);
+  margin: 0;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.land-footer {
+  background: var(--land-green900);
+  padding-block: 36px;
+}
+.land-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 28px;
+}
+.land-footer-copy {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+.land-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+.land-footer-links a {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+.land-footer-links a:hover {
+  color: var(--land-gold400);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 980px) {
+  .land-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 56px;
+    text-align: center;
+    padding-block: 80px;
+    min-height: auto;
+  }
+  .land-hero-copy {
+    max-width: 100%;
+    margin-inline: auto;
+  }
+  .land-cta-row {
+    justify-content: center;
+  }
+  .land-themes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .land-features-grid,
+  .land-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .land-stats-grid {
+    gap: 44px;
+  }
+  .land-themes-grid {
+    grid-template-columns: 1fr;
+  }
+  .land-footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .land-root * {
+    transition: none !important;
+  }
+}

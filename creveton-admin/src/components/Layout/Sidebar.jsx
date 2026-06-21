@@ -1,5 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings } from 'lucide-react';
+import dashboardService from '../../services/dashboard.service';
+import { useApiData } from '../../hooks/useApiData';
 
 const NAV = [
   {
@@ -12,7 +14,7 @@ const NAV = [
   {
     title: 'Contenu',
     items: [
-      { to: '/questions', label: 'Questions', icon: FileQuestion },
+      { to: '/questions', label: 'Questions', icon: FileQuestion, badgeKey: 'pending' },
       { to: '/sessions', label: 'Parties', icon: Gamepad2 },
       { to: '/tournaments', label: 'Tournois', icon: Swords },
     ],
@@ -28,6 +30,10 @@ const NAV = [
 ];
 
 export default function Sidebar() {
+  // Compteur de questions en attente pour le badge de notification.
+  const { data } = useApiData(() => dashboardService.overview().catch(() => null), [], { pollMs: 60000 });
+  const pending = data?.pending_questions?.length || 0;
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -38,10 +44,11 @@ export default function Sidebar() {
         {NAV.map((section) => (
           <div className="nav-section" key={section.title}>
             <div className="nav-section-title">{section.title}</div>
-            {section.items.map(({ to, label, icon: Icon, end }) => (
+            {section.items.map(({ to, label, icon: Icon, end, badgeKey }) => (
               <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={label}>
                 <Icon className="nav-icon" size={18} />
                 <span className="nav-label">{label}</span>
+                {badgeKey === 'pending' && pending > 0 && <span className="nav-badge">{pending}</span>}
               </NavLink>
             ))}
           </div>

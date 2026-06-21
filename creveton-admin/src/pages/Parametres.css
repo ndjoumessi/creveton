@@ -1,0 +1,88 @@
+/* ── Paramètres — présentation « Cockpit Émeraude » ──
+   Classes locales .set-… (complète index.css, ne le remplace pas). */
+
+/* En-tête de section dans le panneau de droite */
+.set-section-head { margin-bottom: 4px; }
+.set-section-head h2 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  color: var(--ink);
+  margin: 0;
+}
+.set-section-head p { color: var(--muted); font-size: 13.5px; margin: 4px 0 0; }
+
+/* Bandeau identité du compte */
+.set-identity { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.set-identity-meta { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.set-identity-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1.1; }
+
+/* Champs lecture seule élégants (réutilise .kv-field) */
+.set-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 4px; }
+.set-field {
+  background: var(--surface-2);
+  border: 1px solid var(--border-green);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.set-field-full { grid-column: 1 / -1; }
+@media (max-width: 620px) { .set-fields { grid-template-columns: 1fr; } }
+
+/* Icône d'accroche d'une ligne de réglage */
+.set-row-lead { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.set-row-ic {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; flex: none;
+  border-radius: 10px;
+  background: rgba(42, 138, 79, 0.1);
+  color: var(--green700);
+}
+.set-row-ic.is-locked { background: rgba(212, 160, 23, 0.12); color: #8a6a12; }
+.set-row-title { font-weight: 600; color: var(--ink); font-size: 14px; display: flex; align-items: center; gap: 7px; }
+.set-row-desc { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+
+/* Mention licence (cadenas) */
+.set-lock-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; color: #8a6a12;
+  background: rgba(212, 160, 23, 0.1);
+  border: 1px solid rgba(212, 160, 23, 0.4);
+  padding: 2px 7px; border-radius: 6px;
+}
+
+/* Grille des cards Système (sombres) */
+.set-sys-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 760px) { .set-sys-grid { grid-template-columns: 1fr; } }
+.set-sys-card { display: flex; flex-direction: column; gap: 14px; }
+.set-sys-top { display: flex; align-items: center; gap: 11px; }
+.set-sys-ic {
+  display: grid; place-items: center; width: 38px; height: 38px; flex: none;
+  border-radius: 11px; background: var(--green700); color: var(--gold);
+}
+.set-sys-name { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 15px; color: #fff; }
+.set-sys-foot { display: flex; align-items: center; justify-content: space-between; }
+.set-sys-state { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: rgba(255,255,255,0.75); }
+.set-sys-ms { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 22px; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
+.set-sys-ms small { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.55); margin-left: 3px; }
+.set-dot-pulse { animation: pulse-dot 1.6s infinite; }
+
+.set-sys-sync { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+
+/* À propos */
+.set-about-head { display: flex; align-items: center; gap: 12px; }
+.set-about-version { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); line-height: 1; }
+.set-badge-gold { background: var(--gold); color: var(--green900); }
+.set-links { display: flex; flex-direction: column; gap: 2px; margin-top: 16px; }
+.set-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 4px; color: var(--ink); font-weight: 500; font-size: 14px;
+  border-bottom: 1px solid var(--border); transition: color var(--t-fast);
+}
+.set-links .set-link:last-child { border-bottom: none; }
+.set-link:hover { color: var(--green700); }
+.set-link svg { color: var(--green700); flex: none; }
+.set-link .set-link-go { margin-left: auto; color: var(--muted); }
+
+/* Modal mot de passe */
+.set-form { display: flex; flex-direction: column; gap: 14px; }
+.set-form label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px; color: var(--ink); }

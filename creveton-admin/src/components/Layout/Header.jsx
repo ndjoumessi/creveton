@@ -47,18 +47,20 @@ export default function Header() {
 
       <span className="live-badge"><span className="live-dot" /> Live</span>
 
+      <div className="header-sep" />
+
       <div className="lang-toggle">
         <button className={lang === 'fr' ? 'active' : ''} onClick={() => setLang('fr')}>FR</button>
         <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
       </div>
 
-      <button className="btn btn-sm" onClick={onRefresh}><RefreshCw size={15} /> Actualiser</button>
+      <button className="header-btn" onClick={onRefresh}><RefreshCw size={15} /> Actualiser</button>
 
-      <div className="profile">
-        <div className="avatar">{initials}</div>
-      </div>
+      <div className="header-sep" />
 
-      <button className="icon-btn" onClick={onLogout} title="Déconnexion" aria-label="Déconnexion">
+      <div className="profile-avatar" title={user?.name || 'Admin'}>{initials}</div>
+
+      <button className="header-btn" onClick={onLogout} title="Déconnexion" aria-label="Déconnexion">
         <LogOut size={17} />
       </button>
     </header>

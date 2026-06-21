@@ -7,7 +7,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import LoadingSpinner from './LoadingSpinner';
+import { SkeletonTable } from './Skeleton';
 import EmptyState from './EmptyState';
 
 /** Fenêtre de numéros de page autour de la page courante. */
@@ -41,7 +41,7 @@ export default function DataTable({ columns, data = [], loading, pageSize = 20, 
     initialState: { pagination: { pageSize } },
   });
 
-  if (loading) return <div className="card"><LoadingSpinner label="Chargement…" /></div>;
+  if (loading) return <SkeletonTable rows={8} cols={columns.length || 5} />;
   if (!data.length) return <div className="card"><EmptyState message={emptyMessage} /></div>;
 
   const { pageIndex } = table.getState().pagination;

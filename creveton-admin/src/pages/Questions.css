@@ -1,0 +1,185 @@
+/* Questions — présentation spécifique (Cockpit Émeraude).
+   Classes préfixées .q- ; tout le reste vient du design system (index.css). */
+
+/* En-tête sticky : titre + compteurs inline + actions */
+.q-head {
+  position: sticky;
+  top: 0;
+  z-index: 18;
+  background: var(--bg);
+  padding: 18px 0 14px;
+  margin: -6px 0 0;
+}
+.q-head-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.q-title-line { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.q-count-inline { color: var(--muted); font-size: 13.5px; font-weight: 500; }
+.q-count-inline strong { font-family: 'Outfit'; font-weight: 700; color: var(--green700); }
+
+/* Bandeau filtres sticky, juste sous l'en-tête */
+.q-filters {
+  position: sticky;
+  z-index: 16;
+  background: var(--bg);
+  padding: 10px 0 16px;
+}
+
+/* Table maison (sélection + tri préservés via en-têtes cliquables) */
+.q-th-sel { width: 44px; }
+.q-th-actions { width: 120px; text-align: right; }
+.q-td-actions .row { justify-content: flex-end; }
+.q-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+.q-sort:hover { color: var(--ink); }
+.q-sort-icon { display: inline-flex; opacity: 0.45; }
+.q-sort-icon.on { opacity: 1; color: var(--green500); }
+
+/* Pagination cliente sous la table */
+.q-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.q-pager .page-info { color: var(--muted); font-size: 12.5px; }
+
+/* Énoncé tronqué proprement dans la cellule */
+.q-statement {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 460px;
+}
+
+/* Drawer : libellés de section + radio visuel des options */
+.q-section-label {
+  font-family: 'Space Grotesk';
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 9px;
+}
+.q-drawer-q { font-family: 'Outfit'; font-weight: 600; font-size: 18px; color: var(--ink); line-height: 1.35; }
+.q-opt-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.opt-review.correct .q-opt-radio { border-color: var(--green500); }
+.q-opt-check { color: var(--gold); }
+.q-opt-letter {
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--muted);
+  width: 16px;
+  flex: none;
+}
+.opt-review.correct .q-opt-letter { color: var(--green700); }
+.q-opt-text { flex: 1; }
+
+/* Modal création : grille 2 colonnes (form + preview live) */
+.q-create-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+}
+@media (max-width: 720px) { .q-create-grid { grid-template-columns: 1fr; } }
+.q-preview {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  align-self: start;
+  position: sticky;
+  top: 0;
+}
+.q-preview-cap {
+  font-family: 'Space Grotesk';
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.q-preview-q {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.35;
+  margin-bottom: 12px;
+  min-height: 20px;
+}
+.q-preview-q.empty { color: #9ca3af; font-weight: 500; }
+.q-preview-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  background: var(--surface);
+}
+.q-preview-opt.correct { background: #f0fdf4; border-color: var(--green500); color: #15803d; font-weight: 600; }
+.q-preview-opt .q-opt-letter { width: 14px; }
+
+/* Compteur de caractères du textarea */
+.q-counter { text-align: right; font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* Ligne d'options dans le formulaire (input + radio bonne réponse) */
+.q-opt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.q-opt-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.q-opt-pick.on { background: var(--green500); border-color: var(--green500); color: #fff; }
+
+/* Tags input dans le formulaire */
+.q-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.q-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: #e3f3ea;
+  color: var(--green700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.q-tag button { border: 0; background: none; color: inherit; cursor: pointer; display: inline-flex; padding: 0; }

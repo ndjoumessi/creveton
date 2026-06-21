@@ -1,110 +1,56 @@
 import { useState, useMemo, useRef } from 'react';
-import { useForm } from 'react-hook-form';
 import {
-  Plus, Upload, Search, Check, Eye, Pencil, Trash2, Send, ThumbsUp, ThumbsDown,
-  Archive, RotateCcw, Zap, Download,
+  Plus, Upload, Search, Check, Eye, Send, ThumbsUp, ThumbsDown,
+  Archive, RotateCcw, Zap, Download, ChevronUp, ChevronDown, ChevronsUpDown,
+  ChevronLeft, ChevronRight, X, FileText, ListChecks, Tags,
 } from 'lucide-react';
 import questionsService from '../services/questions.service';
 import { useApiData } from '../hooks/useApiData';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
 import { themeLabels, levelLabels, questionStatusColors } from '../constants/theme';
-import { pct, dateFr } from '../utils/format';
+import { pct, dateFr, dateTimeFr } from '../utils/format';
 import PageHeader from '../components/PageHeader';
-import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import ThemeBadge from '../components/ThemeBadge';
 import Modal from '../components/Modal';
 import Drawer from '../components/Drawer';
-import LoadingSpinner from '../components/LoadingSpinner';
+import EmptyState from '../components/EmptyState';
+import { SkeletonTable } from '../components/Skeleton';
 import { notify } from '../components/Toast';
+import './Questions.css';
 
 const STATUSES = ['draft', 'pending_review', 'approved', 'rejected', 'archived'];
 const EMPTY_FILTERS = { theme: '', level: '', status: '', q: '' };
-const truncate = (s, n = 60) => (s && s.length > n ? `${s.slice(0, n)}…` : s);
+const PAGE_SIZE = 20;
+const LETTERS = ['A', 'B', 'C', 'D'];
 
 const LevelBadge = ({ level }) => (
-  <span className="badge" style={{ background: '#f3f4f6', color: '#4b5563' }}>{levelLabels[level] || level}</span>
+  <span className="badge badge-level">{levelLabels[level] || level}</span>
 );
 
-/* ---------- Formulaire création / édition ---------- */
-function QuestionForm({ initial, onSubmit }) {
-  const init = initial || {};
-  const [correctIndex, setCorrectIndex] = useState(init.correct_index ?? 1);
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: {
-      text_fr: init.text_fr || '',
-      theme: init.theme || 'culture',
-      level: init.level || 'beginner',
-      explanation: init.explanation || '',
-      tags: (init.tags || []).join(', '),
-      opt0: init.options?.[0]?.text || '',
-      opt1: init.options?.[1]?.text || '',
-      opt2: init.options?.[2]?.text || '',
-      opt3: init.options?.[3]?.text || '',
-    },
-  });
-
-  const submit = (v) => {
-    const options = [0, 1, 2, 3].map((i) => ({ text: v[`opt${i}`], is_correct: i === correctIndex }));
-    onSubmit({
-      text_fr: v.text_fr,
-      type: 'mcq',
-      options,
-      explanation: v.explanation || null,
-      theme: v.theme,
-      level: v.level,
-      tags: v.tags ? v.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
-    });
-  };
-
+/* ---------- En-tête de statut avec point pulsé si approuvée ---------- */
+function QuestionStatus({ status }) {
+  if (status !== 'approved') return <StatusBadge status={status} kind="question" />;
+  const cfg = questionStatusColors.approved;
   return (
-    <form id="question-form" onSubmit={handleSubmit(submit)}>
-      <div className="field">
-        <label>Énoncé (FR)</label>
-        <textarea className="textarea" placeholder="Quelle est la capitale… ?" {...register('text_fr', { required: 'Énoncé requis', minLength: { value: 3, message: '3 caractères min' } })} />
-        {errors.text_fr && <span className="field-error">{errors.text_fr.message}</span>}
-      </div>
-      <div className="field">
-        <label>Options — cochez la bonne réponse</label>
-        <div className="options-list">
-          {[0, 1, 2, 3].map((i) => (
-            <div className="option-row" key={i}>
-              <input className="input" placeholder={`Option ${String.fromCharCode(65 + i)}`} {...register(`opt${i}`, { required: i < 2 })} />
-              <button type="button" className={`toggle-correct ${correctIndex === i ? 'on' : ''}`} onClick={() => setCorrectIndex(i)}>
-                <Check size={14} /> Bonne
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="row" style={{ gap: 12 }}>
-        <div className="field" style={{ flex: 1 }}>
-          <label>Thème</label>
-          <select className="select" {...register('theme')}>{THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabels[t]}</option>)}</select>
-        </div>
-        <div className="field" style={{ flex: 1 }}>
-          <label>Niveau</label>
-          <select className="select" {...register('level')}>{LEVEL_KEYS.map((l) => <option key={l} value={l}>{levelLabels[l]}</option>)}</select>
-        </div>
-      </div>
-      <div className="field"><label>Explication</label><textarea className="textarea" placeholder="Affichée après réponse" {...register('explanation')} /></div>
-      <div className="field" style={{ marginBottom: 0 }}><label>Tags (séparés par des virgules)</label><input className="input" placeholder="capitale, géographie" {...register('tags')} /></div>
-    </form>
+    <span className="badge" style={{ background: cfg.bg, color: cfg.fg }}>
+      <span className="badge-dot pulse" style={{ background: cfg.fg }} />
+      {cfg.label}
+    </span>
   );
 }
 
-/* ---------- Import CSV ---------- */
+/* ---------- Import CSV (plomberie préservée) ---------- */
 const CSV_TEMPLATE = [
   'question,option_a,option_b,option_c,option_d,correct,difficulty,category,explanation,language',
   'Quelle est la capitale du Cameroun ?,Douala,Yaoundé,Bafoussam,Garoua,B,beginner,geographie,Yaoundé est la capitale.,fr',
 ].join('\n');
 
-function downloadTemplate() {
-  const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+function downloadCsv(content, filename) {
+  const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'modele-questions-creveton.csv';
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -138,10 +84,14 @@ function ImportModal({ open, onClose, onDone }) {
       open={open}
       onClose={onClose}
       title="Import CSV de questions"
-      footer={<>
-        <button className="btn" onClick={downloadTemplate}><Download size={15} /> Télécharger le modèle</button>
-        <button className="btn" onClick={onClose}>Fermer</button>
-      </>}
+      footer={(
+        <>
+          <button className="btn" onClick={() => downloadCsv(CSV_TEMPLATE, 'modele-questions-creveton.csv')}>
+            <Download size={15} /> Télécharger le modèle
+          </button>
+          <button className="btn" onClick={onClose}>Fermer</button>
+        </>
+      )}
     >
       <div
         className={`dropzone ${drag ? 'drag' : ''}`}
@@ -163,7 +113,11 @@ function ImportModal({ open, onClose, onDone }) {
             <div className="import-stat" style={{ background: '#f3fbf5' }}><div className="n" style={{ color: '#15803d' }}>{report.accepted}</div><div className="muted">Acceptées</div></div>
             <div className="import-stat" style={{ background: '#fef2f2' }}><div className="n" style={{ color: '#dc2626' }}>{report.rejected}</div><div className="muted">Rejetées</div></div>
           </div>
-          {report.errors?.length > 0 && <div className="errors-list">{report.errors.map((e, i) => <div className="err" key={i}>Ligne {e.row} — {e.issue}</div>)}</div>}
+          {report.errors?.length > 0 && (
+            <div className="errors-list">
+              {report.errors.map((e) => <div className="err" key={`${e.row}-${e.issue}`}>Ligne {e.row} — {e.issue}</div>)}
+            </div>
+          )}
           {report.accepted > 0 && (
             <button className="btn btn-primary btn-block" style={{ marginTop: 16 }} onClick={runForceSync}>
               <Zap size={15} /> Force sync (push silencieux)
@@ -175,27 +129,254 @@ function ImportModal({ open, onClose, onDone }) {
   );
 }
 
+/* ---------- Modal de création par étapes + preview live ---------- */
+const STEP_META = [
+  { icon: FileText, label: 'Contenu' },
+  { icon: ListChecks, label: 'Options' },
+  { icon: Tags, label: 'Métadonnées' },
+];
+
+function CreateModal({ open, onClose, onCreate, submitting }) {
+  const [step, setStep] = useState(0);
+  const [textFr, setTextFr] = useState('');
+  const [opts, setOpts] = useState(['', '', '', '']);
+  const [correct, setCorrect] = useState(0);
+  const [explanation, setExplanation] = useState('');
+  const [theme, setTheme] = useState('culture');
+  const [level, setLevel] = useState('beginner');
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState([]);
+
+  const reset = () => {
+    setStep(0); setTextFr(''); setOpts(['', '', '', '']); setCorrect(0);
+    setExplanation(''); setTheme('culture'); setLevel('beginner'); setTagInput(''); setTags([]);
+  };
+  const close = () => { reset(); onClose(); };
+
+  const setOpt = (i, v) => setOpts((o) => o.map((x, idx) => (idx === i ? v : x)));
+  const addTag = () => {
+    const t = tagInput.trim();
+    if (t && !tags.includes(t)) setTags((p) => [...p, t]);
+    setTagInput('');
+  };
+
+  const step1Ok = textFr.trim().length >= 3;
+  const step2Ok = opts[0].trim() && opts[1].trim();
+  const canCreate = step1Ok && step2Ok;
+
+  const submit = () => {
+    if (!canCreate) return;
+    onCreate({
+      text_fr: textFr.trim(),
+      type: 'mcq',
+      options: opts.map((text, i) => ({ text, is_correct: i === correct })),
+      explanation: explanation || null,
+      theme,
+      level,
+      tags,
+    }, reset);
+  };
+
+  const next = () => setStep((s) => Math.min(2, s + 1));
+  const prev = () => setStep((s) => Math.max(0, s - 1));
+
+  const footer = (
+    <>
+      <button className="btn btn-ghost-soft" onClick={close}>Annuler</button>
+      <div style={{ flex: 1 }} />
+      {step > 0 && <button className="btn" onClick={prev}><ChevronLeft size={15} /> Précédent</button>}
+      {step < 2 && (
+        <button className="btn btn-primary" onClick={next} disabled={step === 0 && !step1Ok}>
+          Suivant <ChevronRight size={15} />
+        </button>
+      )}
+      {step === 2 && (
+        <button className="btn btn-success" onClick={submit} disabled={!canCreate || submitting}>
+          <Plus size={15} /> Créer (brouillon)
+        </button>
+      )}
+    </>
+  );
+
+  return (
+    <Modal open={open} onClose={close} title="Nouvelle question" footer={footer} width={760}>
+      <div className="steps">
+        {STEP_META.map((s, i) => (
+          <div key={s.label} style={{ display: 'contents' }}>
+            <span className={`step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
+              <span className="num">{i < step ? <Check size={13} /> : i + 1}</span>
+              {s.label}
+            </span>
+            {i < STEP_META.length - 1 && <span className="step-sep" />}
+          </div>
+        ))}
+      </div>
+
+      <div className="q-create-grid">
+        <div>
+          {step === 0 && (
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Énoncé (FR)</label>
+              <textarea
+                className="textarea"
+                placeholder="Quelle est la capitale… ?"
+                value={textFr}
+                maxLength={280}
+                onChange={(e) => setTextFr(e.target.value)}
+              />
+              <div className="q-counter">{textFr.length} / 280 caractères</div>
+            </div>
+          )}
+
+          {step === 1 && (
+            <>
+              <div className="field">
+                <label>Options — sélectionnez la bonne réponse</label>
+                {opts.map((v, i) => (
+                  <div className="q-opt-row" key={LETTERS[i]}>
+                    <input
+                      className="input"
+                      placeholder={`Option ${LETTERS[i]}`}
+                      value={v}
+                      onChange={(e) => setOpt(i, e.target.value)}
+                    />
+                    <button type="button" className={`q-opt-pick ${correct === i ? 'on' : ''}`} onClick={() => setCorrect(i)}>
+                      <Check size={13} /> Bonne
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="field" style={{ marginBottom: 0 }}>
+                <label>Explication (affichée après réponse)</label>
+                <textarea
+                  className="textarea"
+                  placeholder="Pourquoi cette réponse est correcte…"
+                  value={explanation}
+                  onChange={(e) => setExplanation(e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <div className="row" style={{ gap: 12, alignItems: 'flex-start' }}>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Thème</label>
+                  <select className="select" value={theme} onChange={(e) => setTheme(e.target.value)}>
+                    {THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabels[t]}</option>)}
+                  </select>
+                </div>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Niveau</label>
+                  <select className="select" value={level} onChange={(e) => setLevel(e.target.value)}>
+                    {LEVEL_KEYS.map((l) => <option key={l} value={l}>{levelLabels[l]}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="field" style={{ marginBottom: 0 }}>
+                <label>Tags</label>
+                <input
+                  className="input"
+                  placeholder="Saisissez puis Entrée (ex. capitale)"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                  onBlur={addTag}
+                />
+                {tags.length > 0 && (
+                  <div className="q-tags">
+                    {tags.map((t) => (
+                      <span className="q-tag" key={t}>
+                        {t}
+                        <button type="button" onClick={() => setTags((p) => p.filter((x) => x !== t))} aria-label={`Retirer ${t}`}>
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Preview live */}
+        <aside className="q-preview">
+          <div className="q-preview-cap">Aperçu</div>
+          <div className="row wrap" style={{ gap: 6, marginBottom: 12 }}>
+            <ThemeBadge theme={theme} />
+            <LevelBadge level={level} />
+          </div>
+          <div className={`q-preview-q ${textFr.trim() ? '' : 'empty'}`}>
+            {textFr.trim() || 'Votre énoncé apparaîtra ici…'}
+          </div>
+          {opts.map((o, i) => (
+            <div className={`q-preview-opt ${i === correct && o.trim() ? 'correct' : ''}`} key={LETTERS[i]}>
+              <span className="q-opt-letter">{LETTERS[i]}</span>
+              <span className="q-opt-text">{o.trim() || <span className="muted">Option {LETTERS[i]}</span>}</span>
+              {i === correct && o.trim() && <Check size={14} className="q-opt-check" />}
+            </div>
+          ))}
+          {explanation.trim() && <div className="explain" style={{ marginTop: 12 }}>{explanation}</div>}
+        </aside>
+      </div>
+    </Modal>
+  );
+}
+
 /* ---------- Page ---------- */
 export default function Questions() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [showImport, setShowImport] = useState(false);
-  const [editing, setEditing] = useState(undefined); // undefined=fermé, null=création, objet=édition
+  const [creating, setCreating] = useState(false);
   const [detail, setDetail] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [selected, setSelected] = useState(() => new Set());
+  const [sort, setSort] = useState({ key: 'created_at', dir: 'desc' });
+  const [page, setPage] = useState(0);
 
   const { data, loading, refetch } = useApiData(
     () => questionsService.list(filters),
     [filters.theme, filters.level, filters.status, filters.q],
   );
   const rows = useMemo(() => data?.data || [], [data]);
-  const avgSuccess = useMemo(() => {
-    const rated = rows.filter((r) => r.success_rate != null);
-    return rated.length ? rated.reduce((s, r) => s + r.success_rate, 0) / rated.length : null;
-  }, [rows]);
-  const hasFilters = filters.theme || filters.level || filters.status || filters.q;
-  const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
 
+  const total = rows.length;
+  const approvedCount = useMemo(() => rows.filter((r) => r.status === 'approved').length, [rows]);
+  const pendingCount = useMemo(() => rows.filter((r) => r.status === 'pending_review').length, [rows]);
+
+  const hasFilters = filters.theme || filters.level || filters.status || filters.q;
+  const setF = (k, v) => { setFilters((f) => ({ ...f, [k]: v })); setPage(0); };
+  const resetFilters = () => { setFilters(EMPTY_FILTERS); setPage(0); };
+
+  // --- Tri (préservé : cycle asc/desc par colonne) ---
+  const toggleSort = (key) => {
+    setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }));
+    setPage(0);
+  };
+  const sortedRows = useMemo(() => {
+    const arr = [...rows];
+    const { key, dir } = sort;
+    arr.sort((a, b) => {
+      const va = a[key]; const vb = b[key];
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      if (va < vb) return dir === 'asc' ? -1 : 1;
+      if (va > vb) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return arr;
+  }, [rows, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE));
+  const pageRows = useMemo(
+    () => sortedRows.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE),
+    [sortedRows, page],
+  );
+
+  // --- Transitions / actions unitaires (plomberie préservée) ---
   const doTransition = async (q, to) => {
     let reason;
     if (to === 'rejected') { reason = window.prompt('Motif du rejet :'); if (reason == null) return; }
@@ -209,24 +390,24 @@ export default function Questions() {
     try { const r = await questionsService.forceSync([q.id]); notify.success(`Force sync · ${r.devices_targeted?.toLocaleString('fr-FR') || '—'} appareils`); }
     catch { notify.error('Échec du force sync.'); }
   };
-  const doArchive = async (q) => {
-    if (!window.confirm('Archiver cette question ? (soft delete)')) return;
-    try { await questionsService.remove(q.id); notify.success('Question archivée.'); refetch(); }
-    catch { notify.error('Archivage impossible.'); }
-  };
-  const saveQuestion = async (payload) => {
+  const createQuestion = async (payload, resetForm) => {
     setSubmitting(true);
     try {
-      if (editing) { await questionsService.update(editing.id, payload); notify.success('Question mise à jour.'); }
-      else { await questionsService.create(payload); notify.success('Question créée (brouillon).'); }
-      setEditing(undefined); refetch();
+      await questionsService.create(payload);
+      notify.success('Question créée (brouillon).');
+      resetForm(); setCreating(false); refetch();
     } catch { notify.error('Enregistrement impossible.'); } finally { setSubmitting(false); }
   };
 
-  // --- Sélection multiple + actions groupées ---
-  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+  // --- Sélection multiple + actions groupées (préservé) ---
+  const allSelected = pageRows.length > 0 && pageRows.every((r) => selected.has(r.id));
   const toggleOne = (id) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-  const toggleAll = () => setSelected(() => (allSelected ? new Set() : new Set(rows.map((r) => r.id))));
+  const toggleAll = () => setSelected((s) => {
+    const n = new Set(s);
+    if (allSelected) pageRows.forEach((r) => n.delete(r.id));
+    else pageRows.forEach((r) => n.add(r.id));
+    return n;
+  });
   const clearSel = () => setSelected(new Set());
 
   const bulkTransition = async (to) => {
@@ -238,198 +419,265 @@ export default function Questions() {
       clearSel(); refetch();
     } catch { notify.error('Action groupée impossible.'); }
   };
-  const bulkForceSync = async () => {
-    const ids = [...selected];
-    if (!ids.length) return;
-    try { const r = await questionsService.forceSync(ids); notify.success(`Force sync · ${r.devices_targeted?.toLocaleString('fr-FR') || '—'} appareils`); }
-    catch { notify.error('Force sync impossible.'); }
-  };
   const exportCsv = () => {
     const cols = ['id', 'text_fr', 'theme', 'level', 'status', 'success_rate', 'created_at'];
     const esc = (v) => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-    const csv = [cols.join(',')].concat(rows.map((q) => cols.map((k) => esc(q[k])).join(','))).join('\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const a = document.createElement('a');
-    a.href = url; a.download = 'questions-creveton.csv'; a.click(); URL.revokeObjectURL(url);
-    notify.success(`${rows.length} question(s) exportée(s)`);
+    const picked = selected.size ? rows.filter((r) => selected.has(r.id)) : rows;
+    const csv = [cols.join(',')].concat(picked.map((q) => cols.map((k) => esc(q[k])).join(','))).join('\n');
+    downloadCsv(csv, 'questions-creveton.csv');
+    notify.success(`${picked.length} question(s) exportée(s)`);
   };
 
-  const columns = [
-    {
-      id: 'sel', enableSorting: false,
-      header: () => <span className={`checkbox ${allSelected ? 'on' : ''}`} onClick={toggleAll}>{allSelected && <Check size={12} />}</span>,
-      cell: ({ row }) => {
-        const on = selected.has(row.original.id);
-        return <span className={`checkbox ${on ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); toggleOne(row.original.id); }}>{on && <Check size={12} />}</span>;
-      },
-    },
-    { id: 'idx', header: '#', enableSorting: false, cell: ({ row }) => <span className="muted">{row.index + 1}</span> },
-    { accessorKey: 'text_fr', header: 'Énoncé', cell: (c) => <span style={{ fontWeight: 500, color: 'var(--ink)' }}>{truncate(c.getValue())}</span> },
-    { accessorKey: 'theme', header: 'Thème', cell: (c) => <ThemeBadge theme={c.getValue()} /> },
-    { accessorKey: 'level', header: 'Niveau', cell: (c) => <LevelBadge level={c.getValue()} /> },
-    { accessorKey: 'status', header: 'Statut', cell: (c) => <StatusBadge status={c.getValue()} kind="question" /> },
-    { accessorKey: 'success_rate', header: 'Taux réussite', cell: (c) => pct(c.getValue()) },
-    { accessorKey: 'created_at', header: 'Créée le', cell: (c) => dateFr(c.getValue()) },
-    {
-      id: 'actions', header: 'Actions', enableSorting: false,
-      cell: ({ row }) => {
-        const q = row.original;
-        return (
-          <div className="row nowrap" style={{ gap: 2 }}>
-            <button className="icon-action" title="Voir" onClick={() => setDetail(q)}><Eye size={17} /></button>
-            <button className="icon-action" title="Éditer" onClick={() => setEditing(q)}><Pencil size={16} /></button>
-            <button className="icon-action danger" title="Archiver" onClick={() => doArchive(q)}><Trash2 size={16} /></button>
-          </div>
-        );
-      },
-    },
-  ];
+  const sortHead = (label, k) => {
+    const active = sort.key === k;
+    return (
+      <span className="q-sort" onClick={() => toggleSort(k)}>
+        {label}
+        <span className={`q-sort-icon ${active ? 'on' : ''}`}>
+          {active ? (sort.dir === 'asc' ? <ChevronUp size={13} /> : <ChevronDown size={13} />) : <ChevronsUpDown size={13} />}
+        </span>
+      </span>
+    );
+  };
 
   const renderWorkflow = (q) => (
-    <div className="row wrap" style={{ gap: 8 }}>
-      {q.status === 'draft' && <button className="btn btn-sm btn-primary" onClick={() => doTransition(q, 'pending_review')}><Send size={14} /> Soumettre</button>}
-      {q.status === 'pending_review' && <>
-        <button className="btn btn-sm btn-success" onClick={() => doTransition(q, 'approved')}><ThumbsUp size={14} /> Approuver</button>
-        <button className="btn btn-sm btn-danger" onClick={() => doTransition(q, 'rejected')}><ThumbsDown size={14} /> Rejeter</button>
-      </>}
-      {q.status === 'approved' && <>
-        <button className="btn btn-sm" onClick={() => doForceSync(q)}><Zap size={14} /> Force sync</button>
-        <button className="btn btn-sm" onClick={() => doTransition(q, 'archived')}><Archive size={14} /> Archiver</button>
-      </>}
-      {q.status === 'rejected' && <button className="btn btn-sm btn-primary" onClick={() => doTransition(q, 'pending_review')}><RotateCcw size={14} /> Resoumettre</button>}
-      {q.status === 'archived' && <button className="btn btn-sm" onClick={() => doForceSync(q)}><Zap size={14} /> Force sync</button>}
+    <div className="stack" style={{ gap: 8 }}>
+      {q.status === 'draft' && (
+        <button className="btn btn-primary btn-block" onClick={() => doTransition(q, 'pending_review')}><Send size={15} /> Soumettre à révision</button>
+      )}
+      {q.status === 'pending_review' && (
+        <>
+          <button className="btn btn-success btn-block" onClick={() => doTransition(q, 'approved')}><ThumbsUp size={15} /> Approuver</button>
+          <button className="btn btn-danger-ghost btn-block" onClick={() => doTransition(q, 'rejected')}><ThumbsDown size={15} /> Rejeter</button>
+        </>
+      )}
+      {q.status === 'approved' && (
+        <>
+          <button className="btn btn-block" onClick={() => doForceSync(q)}><Zap size={15} /> Force sync</button>
+          <button className="btn btn-block" onClick={() => doTransition(q, 'archived')}><Archive size={15} /> Archiver</button>
+        </>
+      )}
+      {q.status === 'rejected' && (
+        <button className="btn btn-primary btn-block" onClick={() => doTransition(q, 'pending_review')}><RotateCcw size={15} /> Resoumettre</button>
+      )}
+      {q.status === 'archived' && (
+        <button className="btn btn-block" onClick={() => doForceSync(q)}><Zap size={15} /> Force sync</button>
+      )}
     </div>
   );
 
   return (
     <>
-      <PageHeader
-        title="Questions"
-        description="Gérez le contenu et le workflow de modération des questions du quiz."
-        actions={<>
-          <button className="btn" onClick={exportCsv}><Download size={16} /> Exporter CSV</button>
-          <button className="btn" disabled={selected.size === 0} onClick={bulkForceSync}><Zap size={16} /> Force sync{selected.size > 0 ? ` (${selected.size})` : ''}</button>
-          <button className="btn" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
-          <button className="btn btn-creveton" onClick={() => setEditing(null)}><Plus size={16} /> Nouvelle question</button>
-        </>}
-      />
+      {/* En-tête sticky : titre + compteurs inline + actions */}
+      <div className="q-head">
+        <PageHeader
+          title={(
+            <span className="q-title-line">
+              Questions
+              {!loading && <span className="q-count-inline"><strong>{total}</strong> chargées · <strong>{pendingCount}</strong> en attente</span>}
+            </span>
+          )}
+          description="Gérez le contenu et le workflow de modération des questions du quiz."
+          actions={(
+            <>
+              <button className="btn" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
+              <button className="btn btn-primary" onClick={() => setCreating(true)}><Plus size={16} /> Nouvelle question</button>
+            </>
+          )}
+        />
 
-      <div className="grid grid-3" style={{ marginBottom: 20 }}>
-        <div className="card kpi"><div className="kpi-label">Total chargées</div><div className="kpi-value">{rows.length}</div></div>
-        <div className="card kpi"><div className="kpi-label">Taux de réussite moyen</div><div className="kpi-value">{pct(avgSuccess)}</div></div>
-        <div className="card kpi"><div className="kpi-label">En attente de révision</div><div className="kpi-value">{rows.filter((r) => r.status === 'pending_review').length}</div></div>
+        {/* KPI strip (3 blocs, chiffres Outfit 700, traits verticaux) */}
+        {loading ? (
+          <div className="kpi-strip"><span className="muted">Chargement…</span></div>
+        ) : (
+          <div className="kpi-strip">
+            <div className="item"><span className="n">{total}</span><span className="l">questions</span></div>
+            <div className="item"><span className="n">{approvedCount}</span><span className="l">approuvées</span></div>
+            <div className="item"><span className="n">{pendingCount}</span><span className="l">en attente</span></div>
+          </div>
+        )}
       </div>
 
-      <div className="card card-pad" style={{ marginBottom: 18 }}>
+      {/* Barre filtres sticky */}
+      <div className="q-filters">
         <div className="filters">
-          <div className="search"><Search size={16} /><input className="input" placeholder="Rechercher un énoncé…" value={filters.q} onChange={(e) => setF('q', e.target.value)} /></div>
-          <select className="select" value={filters.theme} onChange={(e) => setF('theme', e.target.value)}><option value="">Tous thèmes</option>{THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabels[t]}</option>)}</select>
-          <select className="select" value={filters.level} onChange={(e) => setF('level', e.target.value)}><option value="">Tous niveaux</option>{LEVEL_KEYS.map((l) => <option key={l} value={l}>{levelLabels[l]}</option>)}</select>
-          <select className="select" value={filters.status} onChange={(e) => setF('status', e.target.value)}><option value="">Tous statuts</option>{STATUSES.map((s) => <option key={s} value={s}>{questionStatusColors[s].label}</option>)}</select>
+          <div className="search">
+            <Search size={16} />
+            <input className="input" placeholder="Rechercher un énoncé…" value={filters.q} onChange={(e) => setF('q', e.target.value)} />
+          </div>
+          <select className="select" value={filters.theme} onChange={(e) => setF('theme', e.target.value)}>
+            <option value="">Tous thèmes</option>
+            {THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabels[t]}</option>)}
+          </select>
+          <select className="select" value={filters.level} onChange={(e) => setF('level', e.target.value)}>
+            <option value="">Tous niveaux</option>
+            {LEVEL_KEYS.map((l) => <option key={l} value={l}>{levelLabels[l]}</option>)}
+          </select>
+          <select className="select" value={filters.status} onChange={(e) => setF('status', e.target.value)}>
+            <option value="">Tous statuts</option>
+            {STATUSES.map((s) => <option key={s} value={s}>{questionStatusColors[s].label}</option>)}
+          </select>
+          {hasFilters && (
+            <button className="btn btn-ghost-soft" onClick={resetFilters}>Réinitialiser filtres</button>
+          )}
         </div>
       </div>
 
+      {/* Table */}
+      {loading ? (
+        <SkeletonTable rows={8} cols={7} />
+      ) : sortedRows.length === 0 ? (
+        <div className="card">
+          {hasFilters ? (
+            <EmptyState
+              title="Aucun résultat"
+              message="Aucune question ne correspond à ces filtres."
+              action={<button className="btn" onClick={resetFilters}>Réinitialiser les filtres</button>}
+            />
+          ) : (
+            <EmptyState
+              title="Importez vos premières questions"
+              message="Aucune question pour l’instant. Créez-en une ou importez un lot CSV."
+              action={(
+                <div className="row" style={{ gap: 10 }}>
+                  <button className="btn" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
+                  <button className="btn btn-primary" onClick={() => setCreating(true)}><Plus size={16} /> Nouvelle question</button>
+                </div>
+              )}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="card">
+          <div className="table-wrap">
+            <table className="data">
+              <thead>
+                <tr>
+                  <th className="q-th-sel">
+                    <span className={`checkbox ${allSelected ? 'on' : ''}`} onClick={toggleAll}>{allSelected && <Check size={12} />}</span>
+                  </th>
+                  <th>{sortHead('Énoncé', 'text_fr')}</th>
+                  <th>{sortHead('Thème', 'theme')}</th>
+                  <th>{sortHead('Niveau', 'level')}</th>
+                  <th>{sortHead('Statut', 'status')}</th>
+                  <th>{sortHead('Taux réussite', 'success_rate')}</th>
+                  <th>{sortHead('Créée le', 'created_at')}</th>
+                  <th className="q-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageRows.map((q) => {
+                  const on = selected.has(q.id);
+                  return (
+                    <tr key={q.id} className="clickable" onClick={() => setDetail(q)}>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <span className={`checkbox ${on ? 'on' : ''}`} onClick={() => toggleOne(q.id)}>{on && <Check size={12} />}</span>
+                      </td>
+                      <td><span className="cell-strong q-statement">{q.text_fr}</span></td>
+                      <td><ThemeBadge theme={q.theme} /></td>
+                      <td><LevelBadge level={q.level} /></td>
+                      <td><QuestionStatus status={q.status} /></td>
+                      <td>{pct(q.success_rate)}</td>
+                      <td className="muted">{dateFr(q.created_at)}</td>
+                      <td className="q-td-actions" onClick={(e) => e.stopPropagation()}>
+                        <div className="row nowrap" style={{ gap: 2 }}>
+                          <button className="icon-action" title="Voir" onClick={() => setDetail(q)}><Eye size={17} /></button>
+                          {q.status === 'pending_review' && (
+                            <button className="icon-action" title="Approuver" onClick={() => doTransition(q, 'approved')}><ThumbsUp size={16} /></button>
+                          )}
+                          {q.status === 'approved' && (
+                            <button className="icon-action" title="Force sync" onClick={() => doForceSync(q)}><Zap size={16} /></button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {pageCount > 1 && (
+            <div className="q-pager">
+              <span className="page-info">{sortedRows.length} éléments · {PAGE_SIZE} par page</span>
+              <div className="row" style={{ gap: 6 }}>
+                <button className="icon-btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)} aria-label="Précédent"><ChevronLeft size={16} /></button>
+                <span className="muted" style={{ fontSize: 13 }}>Page {page + 1} / {pageCount}</span>
+                <button className="icon-btn" disabled={page >= pageCount - 1} onClick={() => setPage((p) => p + 1)} aria-label="Suivant"><ChevronRight size={16} /></button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Barre d'actions groupées (sticky bottom) */}
       {selected.size > 0 && (
         <div className="bulk-bar">
           <span>{selected.size} question(s) sélectionnée(s)</span>
           <div className="row wrap" style={{ gap: 8, marginLeft: 'auto' }}>
             <button className="btn btn-sm btn-success" onClick={() => bulkTransition('approved')}><ThumbsUp size={14} /> Approuver tout</button>
             <button className="btn btn-sm" onClick={() => bulkTransition('archived')}><Archive size={14} /> Archiver tout</button>
-            <button className="btn btn-sm" onClick={bulkForceSync}><Zap size={14} /> Force sync</button>
+            <button className="btn btn-sm" onClick={exportCsv}><Download size={14} /> Export CSV</button>
             <button className="btn btn-sm btn-ghost" onClick={clearSel}>Désélectionner</button>
           </div>
         </div>
       )}
 
-      {loading ? (
-        <div className="card"><LoadingSpinner label="Chargement…" /></div>
-      ) : rows.length === 0 ? (
-        <div className="card">
-          <div className="empty">
-            <div className="empty-illus">
-              <svg width="76" height="76" viewBox="0 0 76 76" fill="none">
-                <rect x="14" y="10" width="40" height="50" rx="6" fill="#ecfdf3" stroke="#5eca84" strokeWidth="2" />
-                <rect x="22" y="22" width="40" height="50" rx="6" fill="#fff" stroke="#2a8a4f" strokeWidth="2" />
-                <line x1="29" y1="34" x2="55" y2="34" stroke="#5eca84" strokeWidth="2" strokeLinecap="round" />
-                <line x1="29" y1="44" x2="55" y2="44" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" />
-                <line x1="29" y1="54" x2="46" y2="54" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            {hasFilters ? (
-              <>
-                <h3>Aucun résultat</h3>
-                <span style={{ fontSize: 14 }}>Aucune question ne correspond à ces filtres.</span>
-                <button className="btn" onClick={() => setFilters(EMPTY_FILTERS)}>Réinitialiser les filtres</button>
-              </>
-            ) : (
-              <>
-                <h3>Importez vos premières questions</h3>
-                <span style={{ fontSize: 14 }}>Aucune question pour l’instant. Créez-en une ou importez un lot CSV.</span>
-                <div className="row" style={{ gap: 10 }}>
-                  <button className="btn" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
-                  <button className="btn btn-creveton" onClick={() => setEditing(null)}><Plus size={16} /> Nouvelle question</button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      ) : (
-        <DataTable columns={columns} data={rows} />
-      )}
+      {/* Modal de création par étapes */}
+      <CreateModal open={creating} onClose={() => setCreating(false)} onCreate={createQuestion} submitting={submitting} />
 
-      {/* Modal création / édition */}
-      <Modal
-        open={editing !== undefined}
-        onClose={() => setEditing(undefined)}
-        title={editing ? 'Modifier la question' : 'Nouvelle question'}
-        footer={<>
-          <button className="btn" onClick={() => setEditing(undefined)}>Annuler</button>
-          <button className="btn btn-creveton" type="submit" form="question-form" disabled={submitting}>{editing ? 'Enregistrer' : 'Créer (brouillon)'}</button>
-        </>}
-      >
-        <QuestionForm initial={editing || undefined} onSubmit={saveQuestion} />
-      </Modal>
-
-      {/* Drawer détail */}
-      <Drawer open={Boolean(detail)} onClose={() => setDetail(null)} title="Détail de la question">
+      {/* Drawer vue question */}
+      <Drawer open={Boolean(detail)} onClose={() => setDetail(null)} title="Détail de la question" width={480}>
         {detail && (
-          <div className="stack" style={{ gap: 18 }}>
+          <div className="stack" style={{ gap: 22 }}>
             <div className="row wrap" style={{ gap: 8 }}>
-              <ThemeBadge theme={detail.theme} /><LevelBadge level={detail.level} /><StatusBadge status={detail.status} kind="question" />
+              <ThemeBadge theme={detail.theme} />
+              <LevelBadge level={detail.level} />
+              <QuestionStatus status={detail.status} />
             </div>
+
             <div>
-              <div className="muted" style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>ÉNONCÉ</div>
-              <div style={{ fontFamily: 'Outfit', fontWeight: 600, fontSize: 16, color: 'var(--ink)' }}>{detail.text_fr}</div>
+              <div className="q-section-label">Énoncé</div>
+              <div className="q-drawer-q">{detail.text_fr}</div>
             </div>
+
             <div>
-              <div className="muted" style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>OPTIONS</div>
-              {(detail.options || []).map((o, i) => (
-                <div className={`opt-review ${o.is_correct || i === detail.correct_index ? 'correct' : ''}`} key={i}>
-                  {(o.is_correct || i === detail.correct_index) ? <Check size={16} /> : <span style={{ width: 16 }} />}
-                  {o.text}
-                </div>
-              ))}
+              <div className="q-section-label">Réponses</div>
+              {(detail.options || []).map((o, i) => {
+                const ok = o.is_correct || i === detail.correct_index;
+                return (
+                  <div className={`opt-review ${ok ? 'correct' : ''}`} key={`${detail.id}-${i}`}>
+                    <span className="q-opt-letter">{LETTERS[i]}</span>
+                    <span className="q-opt-text">{o.text}</span>
+                    {ok ? <Check size={16} className="q-opt-check" /> : <span className="q-opt-radio" />}
+                  </div>
+                );
+              })}
             </div>
+
             {detail.explanation && (
               <div>
-                <div className="muted" style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>EXPLICATION</div>
-                <div style={{ fontSize: 14 }}>{detail.explanation}</div>
+                <div className="q-section-label">Explication</div>
+                <div className="explain">{detail.explanation}</div>
               </div>
             )}
+
             <div>
-              <div className="muted" style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>STATISTIQUES</div>
-              <div className="stat-banner" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 0 }}>
-                <div className="stat"><div className="v">{detail.times_asked ?? '—'}</div><div className="l">Posée</div></div>
-                <div className="stat"><div className="v">{detail.times_correct ?? '—'}</div><div className="l">Réussie</div></div>
-                <div className="stat"><div className="v" style={{ color: 'var(--green700)' }}>{pct(detail.success_rate)}</div><div className="l">Taux</div></div>
+              <div className="q-section-label">Statistiques</div>
+              <div className="kpi-strip">
+                <div className="item"><span className="n">{detail.times_asked ?? '—'}</span><span className="l">Posée</span></div>
+                <div className="item"><span className="n">{detail.times_correct ?? '—'}</span><span className="l">Réussie</span></div>
+                <div className="item"><span className="n" style={{ color: 'var(--green700)' }}>{pct(detail.success_rate)}</span><span className="l">Taux</span></div>
               </div>
             </div>
+
             <dl className="kv">
               <dt>Version</dt><dd>{detail.version ?? '—'}</dd>
-              <dt>Mise à jour</dt><dd>{dateFr(detail.updated_at)}</dd>
+              <dt>Mise à jour</dt><dd>{dateTimeFr(detail.updated_at)}</dd>
             </dl>
+
             <div>
-              <div className="muted" style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>WORKFLOW</div>
+              <div className="q-section-label">Workflow</div>
               {renderWorkflow(detail)}
             </div>
           </div>

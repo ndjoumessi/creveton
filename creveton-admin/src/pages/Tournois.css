@@ -1,0 +1,136 @@
+/* Tournois — présentation spécifique « Cockpit Émeraude ».
+   Classes préfixées .tour-… pour ne pas entrer en collision avec le design
+   system (.t-card, .badge, .progress… déjà stylés dans index.css). */
+
+/* Bannière info tournois payants : icône + texte, sobre, non envahissante. */
+.tour-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+/* En-tête coloré de la card : teinté selon le thème (var --tour-fg injectée
+   en inline). On garde la hauteur 70px de .t-card-banner du design system. */
+.tour-banner {
+  background: linear-gradient(135deg, var(--tour-fg, var(--green700)), color-mix(in srgb, var(--tour-fg, var(--green500)) 55%, #ffffff));
+}
+
+/* Pastille emoji du thème, posée sur la bannière colorée. */
+.tour-banner-emoji {
+  position: absolute;
+  left: 16px;
+  bottom: -18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+/* Badge "LIVE" glissé en haut à droite de la bannière des tournois en cours. */
+.tour-live {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+/* La card laisse de la place sous la bannière pour la pastille débordante. */
+.tour-card-body { padding-top: 30px; }
+
+/* Ligne participants : libellé + ratio. */
+.tour-players {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+.tour-players .tour-players-count {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  color: var(--ink);
+}
+.tour-players .tour-players-full {
+  color: var(--green500);
+  font-weight: 700;
+  font-size: 11.5px;
+}
+
+/* Hover de la card cliquable. */
+.tour-card.t-card { cursor: pointer; transition: transform var(--t-fast), box-shadow var(--t-fast); }
+.tour-card.t-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg, 0 12px 28px rgba(11, 46, 26, 0.12)); }
+
+/* Icône de la card "Créer". */
+.tour-create-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 160, 23, 0.14);
+  color: var(--gold);
+}
+.tour-create-sub { font-size: 12.5px; font-weight: 500; color: var(--muted); font-family: 'Space Grotesk', sans-serif; }
+
+/* Modal création : 2 colonnes (formulaire | preview). */
+.tour-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+.tour-preview {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tour-preview-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tour-preview-hint {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--cream);
+  border: 1px solid #f1dca6;
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  line-height: 1.4;
+}
+.tour-preview-hint b { color: var(--green700); font-family: 'Outfit', sans-serif; }
+
+@media (max-width: 720px) {
+  .tour-modal-grid { grid-template-columns: 1fr; }
+  .tour-preview { position: static; }
+}
+
+/* Icône meta (date) alignée avec la valeur. */
+.tour-meta-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tour-meta-row svg { color: var(--green500); }

@@ -1,0 +1,51 @@
+/* Styles spécifiques au Dashboard — préfixés .dash- pour ne pas polluer le DS. */
+
+/* Feed "Activité récente" — item compact avatar | texte | temps relatif. */
+.dash-feed { display: flex; flex-direction: column; }
+.dash-feed-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 8px; margin: 0 -8px;
+  border-radius: 10px; border-bottom: 1px solid var(--border);
+  color: inherit; text-decoration: none;
+  transition: background var(--t-fast);
+}
+.dash-feed-item:last-child { border-bottom: none; }
+.dash-feed-item:hover { background: #fff; }
+.dash-feed-text { font-size: 13.5px; color: var(--ink); line-height: 1.4; }
+.dash-feed-text strong { font-weight: 600; }
+.dash-feed-text svg { vertical-align: -2px; margin-right: 2px; }
+.dash-feed-time { margin-left: auto; flex: none; font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+/* Liste des questions à réviser. */
+.dash-q-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.dash-q-item:last-child { border-bottom: none; }
+.dash-q-text { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.4; }
+.dash-q-meta { margin-top: 7px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dash-q-actions { margin-left: auto; display: inline-flex; gap: 6px; }
+
+/* Pastille "compteur" orange en haut à droite des cartes de modération. */
+.dash-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: #fef3c7; color: #a16207;
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* En-tête de carte avec action à droite. */
+.dash-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+
+/* Titre de graphique (Outfit 600 16px, spec). */
+.dash-chart-title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 16px; color: var(--ink); margin: 0; }
+.dash-chart-legend { display: inline-flex; align-items: center; gap: 16px; }
+.dash-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.dash-legend-swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+/* État vide centré dans une carte. */
+.dash-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 28px 12px; text-align: center; color: var(--muted); }
+.dash-empty-title { font-weight: 600; color: var(--ink); }
+
+/* Statut système sombre. */
+.dash-sys-sync { display: flex; align-items: center; gap: 10px; padding-top: 12px; margin-top: 4px; }
+.dash-sys-sync .sys-name { color: rgba(255, 255, 255, 0.65) !important; font-weight: 400; }

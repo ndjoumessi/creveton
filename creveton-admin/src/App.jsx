@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
+import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Classement from './pages/Classement';
 import Questions from './pages/Questions';
@@ -13,8 +14,11 @@ import Parametres from './pages/Parametres';
 export default function App() {
   return (
     <Routes>
+      {/* Routes publiques */}
+      <Route path="/landing" element={<Landing />} />
       <Route path="/login" element={<Login />} />
 
+      {/* Console (protégée) */}
       <Route
         element={
           <PrivateRoute>

@@ -1,21 +1,24 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  Plus, AlertTriangle, Play, X, Trophy,
+  Plus, Lock, Play, X, Trophy, Calendar, Users,
 } from 'lucide-react';
 import tournamentsService from '../services/tournaments.service';
 import { useApiData } from '../hooks/useApiData';
 import { THEME_KEYS, tournamentTypeLabels } from '../constants/enums';
-import { themeLabels } from '../constants/theme';
+import { themeLabels, themeBadgeColors } from '../constants/theme';
 import {
   num, dateFr, dateTimeFr, initials, avatarColor,
 } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
+import ThemeBadge from '../components/ThemeBadge';
 import Modal from '../components/Modal';
 import Drawer from '../components/Drawer';
-import LoadingSpinner from '../components/LoadingSpinner';
+import EmptyState from '../components/EmptyState';
+import { SkeletonCard } from '../components/Skeleton';
 import { notify } from '../components/Toast';
+import './Tournois.css';
 
 // Statuts terminaux : on ne peut plus annuler le tournoi.
 const TERMINAL = ['paid', 'cancelled'];
@@ -41,31 +44,132 @@ function demoParticipants(t) {
   }));
 }
 
-/** Avatar carré coloré (initiales) — réutilisé dans les listes. */
+/** Ratio de remplissage (0-100) inscrits / capacité. */
+function fillPct(t) {
+  return t.max_players ? Math.min(100, Math.round((t.registered_players / t.max_players) * 100)) : 0;
+}
+
+/** Avatar carré coloré (initiales) — réutilisé dans le drawer. */
 function Avatar({ name }) {
   return (
     <span className="avatar-c" style={{ background: avatarColor(name) }}>{initials(name)}</span>
   );
 }
 
-/** Formulaire de création de tournoi (mode gratuit forcé — tournois payants désactivés). */
-function TournamentForm({ onSubmit }) {
+/**
+ * Card de présentation d'un tournoi (utilisée dans la grille ET en preview live).
+ * `interactive` = card cliquable (ouvre le drawer) avec boutons d'action.
+ */
+function TournamentCard({
+  t, interactive = false, onOpen, onStart, onCancel,
+}) {
+  const cfg = themeBadgeColors[t.theme] || { fg: '#1a5230' };
+  const canStart = t.status === 'scheduled' || t.status === 'open';
+  const canCancel = !TERMINAL.includes(t.status);
+  const pct = fillPct(t);
+  const full = t.registered_players >= t.max_players && t.max_players > 0;
+
+  return (
+    <div
+      className={`card t-card${interactive ? ' tour-card' : ''}`}
+      style={{ '--tour-fg': cfg.fg }}
+      onClick={interactive ? () => onOpen(t) : undefined}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+    >
+      <div className="t-card-banner tour-banner">
+        {t.status === 'running' && (
+          <span className="tour-live"><span className="live-dot" />LIVE</span>
+        )}
+        <span className="tour-banner-emoji" aria-hidden="true">{cfg.icon || '🏆'}</span>
+      </div>
+
+      <div className="t-card-body tour-card-body">
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+          <span className="t-card-name">{t.name || 'Nom du tournoi'}</span>
+          <span className="row" style={{ gap: 6, alignItems: 'center' }}>
+            {t.status === 'running' && <span className="badge-dot pulse" style={{ background: 'var(--gold)' }} />}
+            <StatusBadge status={t.status} kind="tournament" />
+          </span>
+        </div>
+
+        <div className="row" style={{ gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span className="badge" style={{ background: '#ede9fe', color: '#7c3aed' }}>
+            {tournamentTypeLabels[t.type] || t.type}
+          </span>
+          <ThemeBadge theme={t.theme} />
+        </div>
+
+        <div>
+          <div className="tour-players">
+            <span>
+              <span className="tour-players-count">{num(t.registered_players || 0)}</span>
+              {` / ${num(t.max_players || 0)} joueurs`}
+            </span>
+            {full && <span className="tour-players-full">Complet</span>}
+          </div>
+          <div className="progress"><span style={{ width: `${pct}%` }} /></div>
+        </div>
+
+        <div className="t-meta">
+          <div>
+            <div className="m-label">Récompense</div>
+            <div className="m-value">{t.prize_pool > 0 ? `${num(t.prize_pool)} FCFA` : 'XP & badges'}</div>
+          </div>
+          <div>
+            <div className="m-label">Début</div>
+            <div className="m-value">
+              <span className="tour-meta-row"><Calendar size={13} />{dateFr(t.starts_at)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {interactive && (canStart || canCancel) && (
+        <div className="t-card-foot" onClick={(e) => e.stopPropagation()}>
+          {canStart && (
+            <button type="button" className="btn btn-sm btn-success" onClick={() => onStart(t)}>
+              <Play size={14} /> Démarrer
+            </button>
+          )}
+          {canCancel && (
+            <button type="button" className="btn btn-sm btn-danger" onClick={() => onCancel(t)}>
+              <X size={14} /> Annuler
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Formulaire de création de tournoi (mode gratuit forcé — payants désactivés).
+ * Émet aussi les valeurs courantes via `onChange` pour alimenter la preview live.
+ */
+function TournamentForm({ onSubmit, onChange }) {
   const {
     register, handleSubmit, watch, formState: { errors },
   } = useForm({
-    defaultValues: { theme: 'culture', max_players: '64' },
+    defaultValues: { name: '', theme: 'culture', max_players: '64' },
   });
   const theme = watch('theme');
 
-  const submit = (values) => {
+  // Remonte les valeurs au parent à chaque changement (preview temps réel).
+  useEffect(() => {
+    const sub = watch((values) => onChange(values));
+    return () => sub.unsubscribe();
+  }, [watch, onChange]);
+
+  const submit = (v) => {
     onSubmit({
-      name: values.name,
+      name: v.name,
       type: 'free',
-      theme: values.theme,
-      max_players: Number(values.max_players),
+      theme: v.theme,
+      max_players: Number(v.max_players),
       entry_fee: 0, // tournois payants désactivés (feature flag)
       format: { questions: 10, time_per_q_s: 20 },
-      starts_at: new Date(values.starts_at).toISOString(),
+      starts_at: new Date(v.starts_at).toISOString(),
     });
   };
 
@@ -82,11 +186,8 @@ function TournamentForm({ onSubmit }) {
         <select className="select" {...register('theme')}>
           {THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabels[t]}</option>)}
         </select>
-        <span className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-          Ce tournoi aura ~
-          {themeQuestionCount(theme)}
-          {' '}
-          questions disponibles sur ce thème.
+        <span className="field-help">
+          {`Ce tournoi aura ~${themeQuestionCount(theme)} questions disponibles sur ce thème.`}
         </span>
       </div>
 
@@ -115,60 +216,11 @@ function TournamentForm({ onSubmit }) {
         <label>Type</label>
         <select className="select" defaultValue="free" disabled>
           <option value="free">Gratuit</option>
-          <option value="premium" disabled style={{ color: '#9ca3af' }}>Premium — Bientôt</option>
+          <option value="premium" disabled>Premium — Bientôt</option>
         </select>
-        <span className="muted" style={{ fontSize: 12, marginTop: 4 }}>Les tournois payants arrivent bientôt.</span>
+        <span className="field-help">Les tournois payants arrivent bientôt.</span>
       </div>
     </form>
-  );
-}
-
-/** Carte d'un tournoi (rendue via .map — pas de composant majuscule imbriqué). */
-function renderTournamentCard(t, { onOpen, onStart, onCancel }) {
-  const canStart = t.status === 'scheduled' || t.status === 'open';
-  const canCancel = !TERMINAL.includes(t.status);
-  const pct = t.max_players ? Math.min(100, Math.round((t.registered_players / t.max_players) * 100)) : 0;
-
-  return (
-    <div className="card t-card" key={t.id} onClick={() => onOpen(t)} style={{ cursor: 'pointer' }}>
-      <div className="t-card-head">
-        <span className="t-card-name">{t.name}</span>
-        <span className="row" style={{ gap: 6, alignItems: 'center' }}>
-          {t.status === 'running' && <span className="live-dot" />}
-          <StatusBadge status={t.status} kind="tournament" />
-        </span>
-      </div>
-
-      <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span className="badge" style={{ background: '#ede9fe', color: '#7c3aed' }}>{tournamentTypeLabels[t.type] || t.type}</span>
-        <span className="muted" style={{ fontSize: 13 }}>{themeLabels[t.theme] || t.theme}</span>
-      </div>
-
-      <div>
-        <div className="muted" style={{ fontSize: 12.5, marginBottom: 6 }}>
-          {`${t.registered_players}/${t.max_players} joueurs`}
-        </div>
-        <div className="progress"><span style={{ width: `${pct}%` }} /></div>
-      </div>
-
-      <div className="t-meta">
-        <div><div className="m-label">Cagnotte</div><div className="m-value">{t.prize_pool > 0 ? `${num(t.prize_pool)} FCFA` : 'XP & badges'}</div></div>
-        <div><div className="m-label">Début</div><div className="m-value">{dateFr(t.starts_at)}</div></div>
-      </div>
-
-      <div className="row" style={{ gap: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
-        {canStart && (
-          <button className="btn btn-sm btn-success" onClick={() => onStart(t)}>
-            <Play size={14} /> Démarrer
-          </button>
-        )}
-        {canCancel && (
-          <button className="btn btn-sm btn-danger" onClick={() => onCancel(t)}>
-            <X size={14} /> Annuler
-          </button>
-        )}
-      </div>
-    </div>
   );
 }
 
@@ -176,6 +228,7 @@ export default function Tournois() {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [draft, setDraft] = useState({ name: '', theme: 'culture', max_players: '64' });
 
   const { data, loading, refetch } = useApiData(() => tournamentsService.list(), []);
   const rows = useMemo(() => data?.data || [], [data]);
@@ -219,8 +272,6 @@ export default function Tournois() {
     } catch { notify.error('Création impossible.'); } finally { setSubmitting(false); }
   };
 
-  const cardHandlers = { onOpen: setSelected, onStart: doStart, onCancel: doCancel };
-
   const sel = selected;
   const selCanStart = sel && (sel.status === 'scheduled' || sel.status === 'open');
   const selCanCancel = sel && !TERMINAL.includes(sel.status);
@@ -228,82 +279,148 @@ export default function Tournois() {
   const participants = sel ? demoParticipants(sel) : [];
   const ranking = sel ? [...participants].sort((a, b) => b.score - a.score) : [];
 
+  // Tournoi factice pour la preview live (statut "programmé").
+  const previewTournament = {
+    name: draft.name,
+    type: 'free',
+    theme: draft.theme,
+    max_players: Number(draft.max_players) || 0,
+    registered_players: 0,
+    prize_pool: 0,
+    status: 'scheduled',
+    starts_at: draft.starts_at || null,
+  };
+
   return (
     <>
-      {/* Bandeau d'avertissement : tournois payants désactivés (feature flag). */}
-      <div className="banner">
-        <AlertTriangle size={16} />
-        Les tournois payants seront disponibles dans une prochaine version. Vous pouvez créer des tournois gratuits (XP & badges uniquement).
-      </div>
-
       <PageHeader
         title="Tournois"
-        description="Gestion des tournois : création, démarrage et annulation."
-        actions={<button className="btn btn-primary" onClick={() => setShowForm(true)}><Plus size={16} /> Créer un tournoi</button>}
+        description="Création, démarrage et suivi des tournois Creveton."
+        actions={(
+          <button type="button" className="btn btn-primary" onClick={() => setShowForm(true)}>
+            <Plus size={16} /> Créer un tournoi
+          </button>
+        )}
       />
 
-      {/* Stats */}
-      <div className="grid grid-3" style={{ marginBottom: 18 }}>
-        <div className="card kpi"><div className="kpi-label">Total tournois</div><div className="kpi-value">{rows.length}</div></div>
-        <div className="card kpi"><div className="kpi-label">En cours</div><div className="kpi-value">{rows.filter((r) => r.status === 'running').length}</div></div>
-        <div className="card kpi"><div className="kpi-label">Programmés</div><div className="kpi-value">{rows.filter((r) => r.status === 'scheduled').length}</div></div>
+      {/* Bannière info : tournois payants désactivés (MVP gratuit). */}
+      <div className="banner banner-locked">
+        <span className="tour-banner-icon"><Lock size={16} /></span>
+        Les tournois payants arrivent dans une prochaine version. Vous pouvez dès à présent
+        créer des tournois gratuits (récompenses en XP &amp; badges).
       </div>
 
       {loading ? (
-        <div className="card"><LoadingSpinner label="Chargement…" /></div>
+        <div className="grid-auto">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} h={300} />)}
+        </div>
       ) : rows.length === 0 ? (
-        <div className="card"><div className="empty"><h3>Aucun tournoi</h3><span style={{ fontSize: 14 }}>Aucun tournoi pour le moment.</span></div></div>
+        <EmptyState
+          icon={Trophy}
+          title="Aucun tournoi"
+          message="Lancez votre premier tournoi gratuit pour animer la communauté."
+          action={(
+            <button type="button" className="btn btn-primary" onClick={() => setShowForm(true)}>
+              <Plus size={16} /> Créer un tournoi
+            </button>
+          )}
+        />
       ) : (
-        <div className="cards-grid">{rows.map((t) => renderTournamentCard(t, cardHandlers))}</div>
+        <div className="grid-auto">
+          {rows.map((t) => (
+            <TournamentCard
+              key={t.id}
+              t={t}
+              interactive
+              onOpen={setSelected}
+              onStart={doStart}
+              onCancel={doCancel}
+            />
+          ))}
+
+          {/* Card "Créer un tournoi" — pointillés or, fond cream. */}
+          <button type="button" className="card t-create" onClick={() => setShowForm(true)}>
+            <span className="tour-create-icon"><Plus size={26} /></span>
+            Créer un tournoi
+            <span className="tour-create-sub">Gratuit · XP &amp; badges</span>
+          </button>
+        </div>
       )}
 
-      {/* Modal création */}
+      {/* Modal création — 2 colonnes : formulaire + preview live. */}
       <Modal
         open={showForm}
         onClose={() => setShowForm(false)}
         title="Créer un tournoi"
-        footer={<><button className="btn" onClick={() => setShowForm(false)}>Annuler</button><button className="btn btn-primary" type="submit" form="tournament-form" disabled={submitting}>Créer</button></>}
+        width={820}
+        footer={(
+          <>
+            <button type="button" className="btn" onClick={() => setShowForm(false)}>Annuler</button>
+            <button type="submit" className="btn btn-primary" form="tournament-form" disabled={submitting}>
+              {submitting ? 'Création…' : 'Créer le tournoi'}
+            </button>
+          </>
+        )}
       >
-        <TournamentForm onSubmit={createTournament} />
+        <div className="tour-modal-grid">
+          <TournamentForm onSubmit={createTournament} onChange={setDraft} />
+
+          <div className="tour-preview">
+            <span className="tour-preview-label">Aperçu</span>
+            <TournamentCard t={previewTournament} />
+            <div className="tour-preview-hint">
+              Ce tournoi aura <b>{themeQuestionCount(draft.theme)}</b> questions disponibles
+              et <b>10</b> questions par partie (20 s chacune).
+            </div>
+          </div>
+        </div>
       </Modal>
 
-      {/* Drawer détail */}
+      {/* Drawer détail — préservé (participants + classement live démo). */}
       <Drawer
         open={Boolean(sel)}
         onClose={() => setSelected(null)}
         title={sel ? sel.name : ''}
         footer={sel && (
           <>
-            {selCanStart && <button className="btn btn-sm btn-success" onClick={() => doStart(sel)}><Play size={14} /> Démarrer</button>}
-            {selCanCancel && <button className="btn btn-sm btn-danger" onClick={() => doCancel(sel)}><X size={14} /> Annuler</button>}
-            {selCanPayout && <button className="btn btn-sm btn-primary" onClick={() => doPayout(sel)}><Trophy size={14} /> Voir résultats</button>}
+            {selCanStart && <button type="button" className="btn btn-sm btn-success" onClick={() => doStart(sel)}><Play size={14} /> Démarrer</button>}
+            {selCanCancel && <button type="button" className="btn btn-sm btn-danger" onClick={() => doCancel(sel)}><X size={14} /> Annuler</button>}
+            {selCanPayout && <button type="button" className="btn btn-sm btn-primary" onClick={() => doPayout(sel)}><Trophy size={14} /> Voir résultats</button>}
           </>
         )}
       >
         {sel && (
           <div className="stack" style={{ gap: 18 }}>
             <div className="row wrap" style={{ gap: 8, alignItems: 'center' }}>
-              {sel.status === 'running' && <span className="live-dot" />}
+              {sel.status === 'running' && <span className="badge-dot pulse" style={{ background: 'var(--gold)' }} />}
               <StatusBadge status={sel.status} kind="tournament" />
+              <ThemeBadge theme={sel.theme} />
+            </div>
+
+            <div>
+              <div className="tour-players">
+                <span className="row" style={{ gap: 6, alignItems: 'center' }}>
+                  <Users size={14} />
+                  <span className="tour-players-count">{num(sel.registered_players)}</span>
+                  {` / ${num(sel.max_players)} joueurs`}
+                </span>
+              </div>
+              <div className="progress"><span style={{ width: `${fillPct(sel)}%` }} /></div>
             </div>
 
             <dl className="kv">
               <dt>Type</dt><dd>{tournamentTypeLabels[sel.type] || sel.type}</dd>
               <dt>Thème</dt><dd>{themeLabels[sel.theme] || sel.theme}</dd>
-              <dt>Joueurs</dt><dd>{`${sel.registered_players}/${sel.max_players}`}</dd>
-              <dt>Cagnotte</dt><dd>{sel.prize_pool > 0 ? `${num(sel.prize_pool)} FCFA` : 'XP & badges'}</dd>
+              <dt>Récompense</dt><dd>{sel.prize_pool > 0 ? `${num(sel.prize_pool)} FCFA` : 'XP & badges'}</dd>
               <dt>Début</dt><dd>{dateTimeFr(sel.starts_at)}</dd>
-              <dt>Statut</dt><dd>{tournamentStatusLabel(sel.status)}</dd>
             </dl>
 
             <div>
               <div className="muted" style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
-                PARTICIPANTS INSCRITS
-                {' '}
-                <span style={{ fontWeight: 400 }}>(démo)</span>
+                PARTICIPANTS INSCRITS <span style={{ fontWeight: 400 }}>(démo)</span>
               </div>
-              {participants.map((p, i) => (
-                <div className="list-row" key={i}>
+              {participants.map((p) => (
+                <div className="list-row" key={`${p.name}-${p.ville}`}>
                   <Avatar name={p.name} />
                   <div className="grow">
                     <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{p.name}</div>
@@ -317,13 +434,11 @@ export default function Tournois() {
             {sel.status === 'running' && (
               <div>
                 <div className="muted" style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
-                  CLASSEMENT LIVE
-                  {' '}
-                  <span style={{ fontWeight: 400 }}>(démo)</span>
+                  CLASSEMENT LIVE <span style={{ fontWeight: 400 }}>(démo)</span>
                 </div>
                 {ranking.map((p, i) => (
-                  <div className="list-row" key={i}>
-                    <span className="avatar-c" style={{ background: i === 0 ? '#d4a017' : avatarColor(p.name) }}>{i + 1}</span>
+                  <div className="list-row" key={`rank-${p.name}-${p.ville}`}>
+                    <span className="avatar-c" style={{ background: i === 0 ? 'var(--gold)' : avatarColor(p.name) }}>{i + 1}</span>
                     <div className="grow">
                       <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{p.name}</div>
                       <div className="muted" style={{ fontSize: 12.5 }}>{p.ville}</div>
@@ -338,17 +453,4 @@ export default function Tournois() {
       </Drawer>
     </>
   );
-}
-
-// Libellé de statut tournoi (réutilise la même table que les badges).
-function tournamentStatusLabel(status) {
-  const LABELS = {
-    scheduled: 'Programmé',
-    open: 'Inscriptions',
-    running: 'En cours',
-    closed: 'Clôturé',
-    paid: 'Payé',
-    cancelled: 'Annulé',
-  };
-  return LABELS[status] || status;
 }

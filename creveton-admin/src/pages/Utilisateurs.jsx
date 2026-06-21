@@ -1,22 +1,26 @@
 import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  Search, Eye, UserX, KeyRound, Trash2, UserPlus, ShieldCheck,
+  Search, Eye, UserX, KeyRound, Trash2, UserPlus, ShieldCheck, Trophy,
 } from 'lucide-react';
 import usersService from '../services/users.service';
 import { useApiData } from '../hooks/useApiData';
 import { useAuthStore } from '../store/authStore';
 import { USER_STATUS_KEYS, roleLabels, THEME_KEYS } from '../constants/enums';
-import { userStatusColors, themeLabels } from '../constants/theme';
+import { userStatusColors, themeBadgeColors } from '../constants/theme';
 import {
-  num, dateFr, initials, avatarColor, isToday,
+  num, dateFr, dateTimeFr, isToday,
 } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import Drawer from '../components/Drawer';
 import Modal from '../components/Modal';
+import Avatar from '../components/Avatar';
+import Sparkline from '../components/Sparkline';
+import { Skeleton } from '../components/Skeleton';
 import { notify } from '../components/Toast';
+import './Utilisateurs.css';
 
 const EMPTY_FILTERS = { ville: '', level: '', status: '', q: '', period: '' };
 const LEVELS = [1, 2, 3, 4, 5];
@@ -60,11 +64,13 @@ function mockAvgScore(id) {
 /** Statistiques fictives mais déterministes par utilisateur (fiche détail). */
 function mockUserStats(user) {
   const seed = seedFrom(user.id);
+  const themeKey = THEME_KEYS[seed % THEME_KEYS.length];
   return {
     games: mockGamesPlayed(user.id),
     avgScore: mockAvgScore(user.id),
     successRate: 45 + (seed % 51), // 45..95 %
-    favTheme: themeLabels[THEME_KEYS[seed % THEME_KEYS.length]],
+    favTheme: themeBadgeColors[themeKey].label,
+    favThemeIcon: themeBadgeColors[themeKey].icon,
     streak: 2 + (seed % 18), // 2..19
   };
 }
@@ -76,8 +82,11 @@ function mockGames(user) {
     const s = seed + i * 97;
     const total = 8 + (s % 5); // 8..12 questions
     const correct = s % (total + 1);
+    const themeKey = THEME_KEYS[(s >> 2) % THEME_KEYS.length];
     return {
-      theme: themeLabels[THEME_KEYS[(s >> 2) % THEME_KEYS.length]],
+      themeKey,
+      theme: themeBadgeColors[themeKey].label,
+      icon: themeBadgeColors[themeKey].icon,
       level: 1 + (s % 5),
       score: 100 + (s % 301),
       correct,
@@ -103,86 +112,64 @@ function inPeriod(user, period) {
 
 /** Largeur (%) de la barre d'XP dans la bande du niveau courant. */
 function levelProgress(level, xp) {
-  if (level >= 5) return { pct: 100, remaining: 0, max: true };
+  if (level >= 5) return { pct: 100, remaining: 0, start: LEVEL_XP[4], end: LEVEL_XP[4], max: true };
   const start = LEVEL_XP[level - 1] ?? 0;
   const end = LEVEL_XP[level] ?? start + 1;
   const ratio = ((xp - start) / (end - start)) * 100;
   const clamped = Math.max(0, Math.min(100, ratio));
-  return { pct: Math.round(clamped), remaining: Math.max(0, end - xp), max: false };
+  return {
+    pct: Math.round(clamped), remaining: Math.max(0, end - xp), start, end, max: false,
+  };
 }
 
-/** Avatar coloré déterministe (initiales + couleur dérivée du nom). */
-function Avatar({ name, large }) {
-  return (
-    <div className={`avatar-c${large ? ' avatar-lg' : ''}`} style={{ background: avatarColor(name) }}>
-      {initials(name)}
-    </div>
-  );
-}
-
-/** Sparkline SVG des scores (polyline mise à l'échelle, sans librairie). */
-function Sparkline({ values, height = 60 }) {
-  if (!values || values.length < 2) return null;
-  const w = 100; // viewBox en %, le SVG s'étire à 100% de largeur
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  const step = w / (values.length - 1);
-  const pts = values
-    .map((v, i) => {
-      const x = i * step;
-      const y = height - 6 - ((v - min) / span) * (height - 12);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(' ');
-  return (
-    <svg
-      width="100%"
-      height={height}
-      viewBox={`0 0 ${w} ${height}`}
-      preserveAspectRatio="none"
-      style={{ display: 'block' }}
-    >
-      <polyline
-        points={pts}
-        fill="none"
-        stroke="#2a8a4f"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
-  );
+/** Temps relatif FR ("il y a 3 jours"). Renvoie '—' si date absente. */
+function relativeFr(iso) {
+  if (!iso) return '—';
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return '—';
+  const diff = Date.now() - t;
+  if (diff < 0) return dateFr(iso);
+  const min = Math.round(diff / 60000);
+  if (min < 1) return "à l'instant";
+  if (min < 60) return `il y a ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `il y a ${h} h`;
+  const d = Math.round(h / 24);
+  if (d < 30) return `il y a ${d} j`;
+  const mo = Math.round(d / 30);
+  if (mo < 12) return `il y a ${mo} mois`;
+  return `il y a ${Math.round(mo / 12)} an(s)`;
 }
 
 /* ---------- Onglet Profil ---------- */
 function ProfilTab({ user }) {
+  const suspended = user.status === 'suspended' || user.status === 'banned';
   return (
-    <div className="stack" style={{ gap: 20 }}>
-      <div className="row" style={{ gap: 14, alignItems: 'center' }}>
-        <Avatar name={user.name} large />
-        <div className="stack" style={{ gap: 6 }}>
-          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 18, color: 'var(--ink)' }}>{user.name}</div>
-          <span className="badge" style={{ background: '#f3f4f6', color: '#4b5563' }}>{roleLabels[user.role] || user.role}</span>
+    <div className="stack" style={{ gap: 22 }}>
+      <dl className="kv-2">
+        <div className="kv-field"><div className="k">Email</div><div className="v">{user.email}</div></div>
+        <div className="kv-field">
+          <div className="k">Téléphone</div>
+          <div className="v">
+            {user.phone ? <span className="u-phone"><span className="u-flag">🇨🇲</span>{user.phone}</span> : '—'}
+          </div>
         </div>
-      </div>
-
-      <dl className="kv">
-        <dt>Email</dt><dd>{user.email}</dd>
-        <dt>Téléphone</dt><dd>{user.phone || '—'}</dd>
-        <dt>Ville</dt><dd>{user.ville || '—'}</dd>
-        <dt>Âge</dt><dd>{user.age ?? '—'}</dd>
-        <dt>Sexe</dt><dd>{user.sexe ?? '—'}</dd>
-        <dt>Langue</dt><dd>{user.lang ?? 'fr'}</dd>
-        <dt>Inscrit le</dt><dd>{dateFr(user.created_at)}</dd>
-        <dt>Dernière activité</dt><dd>{user.last_active_at ? dateFr(user.last_active_at) : '—'}</dd>
-        <dt>Statut</dt><dd><StatusBadge status={user.status} kind="user" /></dd>
+        <div className="kv-field"><div className="k">Ville</div><div className="v">{user.ville || '—'}</div></div>
+        <div className="kv-field"><div className="k">Âge</div><div className="v">{user.age ?? '—'}</div></div>
+        <div className="kv-field"><div className="k">Sexe</div><div className="v">{user.sexe ?? '—'}</div></div>
+        <div className="kv-field"><div className="k">Langue</div><div className="v">{user.lang ?? 'fr'}</div></div>
+        <div className="kv-field"><div className="k">Inscrit le</div><div className="v">{dateFr(user.created_at)}</div></div>
+        <div className="kv-field">
+          <div className="k">Dernière activité</div>
+          <div className="v" title={user.last_active_at ? dateTimeFr(user.last_active_at) : undefined}>
+            {relativeFr(user.last_active_at)}
+          </div>
+        </div>
       </dl>
 
       <div>
-        <h4 className="card-title" style={{ fontSize: 14, marginBottom: 8 }}>Historique des suspensions</h4>
-        {user.status === 'suspended' || user.status === 'banned' ? (
+        <div className="u-section-title">Historique des suspensions</div>
+        {suspended ? (
           <div className="list-row">
             <div className="grow">
               <div className="list-name">{user.status === 'banned' ? 'Bannissement' : 'Suspension'}</div>
@@ -202,34 +189,48 @@ function ProfilTab({ user }) {
 function ProgressionTab({ user }) {
   const prog = levelProgress(user.level, user.total_xp);
   const stats = mockUserStats(user);
+  const games = mockGames(user);
+  const scores = games.map((g) => g.score);
   return (
-    <div className="stack" style={{ gap: 22 }}>
+    <div className="stack" style={{ gap: 24 }}>
       <div>
-        <div className="between row" style={{ marginBottom: 8 }}>
-          <strong style={{ fontFamily: 'Outfit' }}>
-            Niveau {user.level} — {LEVEL_NAMES[user.level - 1] || '—'}
-          </strong>
-          <span className="muted">{num(user.total_xp)} XP</span>
+        <div className="u-prog-title" style={{ marginBottom: 12 }}>
+          Niveau {user.level} — {LEVEL_NAMES[user.level - 1] || '—'}
         </div>
-        <div className="progress"><span style={{ width: `${prog.pct}%` }} /></div>
-        <div className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>
+        <div className="u-prog-xp">
+          <span className="muted" style={{ fontSize: 12.5 }}>Progression XP</span>
+          <span className="u-prog-xp-val">
+            {num(user.total_xp)} / {prog.max ? num(prog.end) : num(prog.end)} XP
+          </span>
+        </div>
+        <div className="progress xp"><span style={{ width: `${prog.pct}%` }} /></div>
+        <div className="u-reward">
+          <Trophy size={15} />
           {prog.max
-            ? 'Niveau max atteint'
-            : `${num(prog.remaining)} XP avant le niveau suivant`}
+            ? 'Niveau max atteint — toutes les récompenses débloquées.'
+            : `Prochaine récompense : Tournois Premium à ${num(prog.end)} XP`}
         </div>
       </div>
 
       <div>
-        <h4 className="card-title" style={{ fontSize: 14, marginBottom: 10 }}>
-          Statistiques <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>(démo)</span>
-        </h4>
-        <dl className="kv">
-          <dt>Parties jouées</dt><dd>{num(stats.games)}</dd>
-          <dt>Taux de réussite</dt><dd>{stats.successRate} %</dd>
-          <dt>Score moyen</dt><dd>{num(stats.avgScore)} pts</dd>
-          <dt>Thème favori</dt><dd>{stats.favTheme}</dd>
-          <dt>Streak maximum</dt><dd>{stats.streak} parties</dd>
-        </dl>
+        <div className="u-section-title">
+          Statistiques <span className="u-demo">(démo)</span>
+        </div>
+        <div className="u-stat-grid">
+          <div className="u-stat"><div className="u-stat-k">Parties</div><div className="u-stat-v">{num(stats.games)}</div></div>
+          <div className="u-stat"><div className="u-stat-k">Taux de réussite</div><div className="u-stat-v">{stats.successRate} %</div></div>
+          <div className="u-stat"><div className="u-stat-k">Thème favori</div><div className="u-stat-v" style={{ fontSize: 15 }}>{stats.favThemeIcon} {stats.favTheme}</div></div>
+          <div className="u-stat"><div className="u-stat-k">Streak max</div><div className="u-stat-v">{stats.streak}</div></div>
+        </div>
+      </div>
+
+      <div>
+        <div className="u-section-title">
+          Évolution des scores <span className="u-demo">(démo)</span>
+        </div>
+        <div className="u-spark">
+          <Sparkline values={scores} width={200} height={60} fill />
+        </div>
       </div>
     </div>
   );
@@ -238,29 +239,27 @@ function ProgressionTab({ user }) {
 /* ---------- Onglet Historique ---------- */
 function HistoriqueTab({ user }) {
   const games = mockGames(user);
-  const scores = games.map((g) => g.score);
   return (
-    <div className="stack" style={{ gap: 16 }}>
-      <div>
-        <h4 className="card-title" style={{ fontSize: 14, marginBottom: 8 }}>
-          Évolution des scores <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>(démo)</span>
-        </h4>
-        <Sparkline values={scores} />
-      </div>
-      <div>
-        <h4 className="card-title" style={{ fontSize: 14, marginBottom: 6 }}>10 dernières parties</h4>
-        {games.map((g, i) => (
-          <div className="list-row" key={i}>
-            <div className="grow">
-              <div className="list-name">{g.theme}</div>
-              <div className="list-sub">
-                Niveau {g.level} · {g.correct}/{g.total} bonnes · +{g.xp} XP · {dateFr(g.date)}
-              </div>
-            </div>
-            <strong>{num(g.score)} pts</strong>
+    <div className="stack" style={{ gap: 4 }}>
+      <div className="u-section-title" style={{ marginBottom: 6 }}>10 dernières parties</div>
+      {games.map((g, i) => (
+        <div className="u-game-row" key={i}>
+          <div
+            className="u-game-icon"
+            style={{ background: themeBadgeColors[g.themeKey].bg }}
+          >
+            {g.icon}
           </div>
-        ))}
-      </div>
+          <div className="u-game-main">
+            <div className="list-name">{g.theme} · Niveau {g.level}</div>
+            <div className="list-sub">{relativeFr(g.date)}</div>
+          </div>
+          <div className="u-game-end">
+            <div className="u-game-score">{num(g.score)} pts</div>
+            <div className="u-game-xp">+{g.xp} XP</div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -326,7 +325,10 @@ export default function Utilisateurs() {
 
   // KPI globaux du parc — calculés côté backend sur TOUTE la base (pas la page
   // courante, qui est paginée). Rechargés après les mutations qui les affectent.
-  const { data: statsData, refetch: refetchStats } = useApiData(() => usersService.stats(), []);
+  const { data: statsData, loading: statsLoading, refetch: refetchStats } = useApiData(
+    () => usersService.stats(),
+    [],
+  );
   const stats = statsData || {};
 
   // Filtre période d'inscription appliqué côté client sur created_at.
@@ -410,32 +412,66 @@ export default function Utilisateurs() {
       id: 'avatar',
       header: '',
       enableSorting: false,
-      cell: ({ row }) => <Avatar name={row.original.name} />,
+      cell: ({ row }) => <Avatar name={row.original.name} size="sm" />,
     },
-    { accessorKey: 'name', header: 'Nom', cell: (c) => <span style={{ fontWeight: 500, color: 'var(--ink)' }}>{c.getValue()}</span> },
-    { accessorKey: 'email', header: 'Email' },
-    { accessorKey: 'phone', header: 'Téléphone', cell: (c) => c.getValue() || '—' },
+    {
+      accessorKey: 'name',
+      header: 'Joueur',
+      cell: ({ row }) => {
+        const u = row.original;
+        return (
+          <div className="u-id">
+            <span className="cell-strong u-id-name">{u.name}</span>
+            <span className="list-sub u-id-mail">{u.email}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Téléphone',
+      enableSorting: false,
+      cell: (c) => (c.getValue()
+        ? <span className="u-phone"><span className="u-flag">🇨🇲</span>{c.getValue()}</span>
+        : '—'),
+    },
     { accessorKey: 'ville', header: 'Ville', cell: (c) => c.getValue() || '—' },
-    { id: 'age', header: 'Âge', enableSorting: false, cell: ({ row }) => row.original.age ?? '—' },
     {
       accessorKey: 'level',
       header: 'Niveau',
       cell: ({ row }) => {
         const u = row.original;
+        const prog = levelProgress(u.level, u.total_xp);
         return (
-          <span className="badge" style={{ background: '#ecfdf3', color: '#15803d' }}>
-            Niv. {u.level} · {num(u.total_xp)} XP
-          </span>
+          <div className="u-level">
+            <span className="badge badge-level">Niv. {u.level} · {num(u.total_xp)} XP</span>
+            <span className="progress progress-mini" title={`${prog.pct}%`}>
+              <span style={{ width: `${prog.pct}%` }} />
+            </span>
+          </div>
         );
       },
     },
-    { id: 'games', header: 'Parties jouées', enableSorting: false, cell: ({ row }) => num(mockGamesPlayed(row.original.id)) },
-    { id: 'avg', header: 'Score moyen', enableSorting: false, cell: ({ row }) => `${num(mockAvgScore(row.original.id))} pts` },
-    { accessorKey: 'status', header: 'Statut', cell: (c) => <StatusBadge status={c.getValue()} kind="user" /> },
+    {
+      id: 'games',
+      header: 'Parties',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="u-games">
+          <span className="u-games-main">{num(mockGamesPlayed(row.original.id))} parties</span>
+          <span className="u-games-sub">{num(mockAvgScore(row.original.id))} pts en moyenne</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Statut',
+      cell: (c) => <StatusBadge status={c.getValue()} kind="user" />,
+    },
     { accessorKey: 'created_at', header: 'Inscrit le', cell: (c) => dateFr(c.getValue()) },
     {
       id: 'actions',
-      header: 'Actions',
+      header: '',
       enableSorting: false,
       cell: ({ row }) => (
         <button
@@ -461,12 +497,24 @@ export default function Utilisateurs() {
         )}
       />
 
-      {/* Bandeau de statistiques */}
-      <div className="stat-banner">
-        <div className="stat"><div className="v">{num(stats.total)}</div><div className="l">Total joueurs</div></div>
-        <div className="stat"><div className="v">{num(stats.active_7d)}</div><div className="l">Actifs 7j</div></div>
-        <div className="stat"><div className="v">{num(stats.new_today)}</div><div className="l">Nouveaux aujourd&apos;hui</div></div>
-        <div className="stat"><div className="v">{num(stats.blocked)}</div><div className="l">Suspendus</div></div>
+      {/* Bandeau de statistiques (sombre) — KPI globaux du parc */}
+      <div className="dark-banner">
+        <div className="item">
+          <div className="v">{statsLoading ? <Skeleton w={64} h={32} r={8} style={{ background: 'rgba(255,255,255,0.18)' }} /> : num(stats.total)}</div>
+          <div className="l">Total joueurs</div>
+        </div>
+        <div className="item">
+          <div className="v">{statsLoading ? <Skeleton w={56} h={32} r={8} style={{ background: 'rgba(255,255,255,0.18)' }} /> : num(stats.active_7d)}</div>
+          <div className="l">Actifs 7j</div>
+        </div>
+        <div className="item">
+          <div className="v">{statsLoading ? <Skeleton w={48} h={32} r={8} style={{ background: 'rgba(255,255,255,0.18)' }} /> : num(stats.new_today)}</div>
+          <div className="l">Nouveaux aujourd&apos;hui</div>
+        </div>
+        <div className="item">
+          <div className="v">{statsLoading ? <Skeleton w={48} h={32} r={8} style={{ background: 'rgba(255,255,255,0.18)' }} /> : num(stats.blocked)}</div>
+          <div className="l">Suspendus</div>
+        </div>
       </div>
 
       {/* Filtres */}
@@ -509,30 +557,59 @@ export default function Utilisateurs() {
       <Drawer
         open={!!selected}
         onClose={() => setSelected(null)}
-        title="Fiche utilisateur"
+        title="Fiche joueur"
+        width={560}
         footer={selected && (
-          <div className="row wrap" style={{ gap: 8 }}>
-            <button className="btn" onClick={() => setSuspendFor(selected)}><UserX size={14} /> Suspendre</button>
-            <button className="btn" onClick={() => doResetPassword(selected)}><KeyRound size={14} /> Réinitialiser le mot de passe</button>
+          <div className="u-foot">
+            <div className="danger-zone">
+              <div className="dz-title">Zone sensible</div>
+              <div className="u-dz-actions">
+                <button className="btn btn-danger-ghost" onClick={() => setSuspendFor(selected)}>
+                  <UserX size={14} /> Suspendre
+                </button>
+                <button className="btn btn-danger" onClick={() => doRemove(selected)}>
+                  <Trash2 size={14} /> Supprimer (RGPD)
+                </button>
+              </div>
+            </div>
             {isSuperAdmin && (
-              <label className="row" style={{ gap: 6, fontSize: 13 }}>
-                <ShieldCheck size={14} />
+              <label className="u-foot-role">
+                <ShieldCheck size={15} /> Rôle
                 <select
                   className="select"
                   value={selected.role}
                   onChange={(e) => doChangeRole(selected, e.target.value)}
-                  style={{ minWidth: 130 }}
                 >
                   {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{roleLabels[r]}</option>)}
                 </select>
               </label>
             )}
-            <button className="btn btn-danger" onClick={() => doRemove(selected)}><Trash2 size={14} /> Supprimer (RGPD)</button>
           </div>
         )}
       >
         {selected && (
           <>
+            <div className="u-fiche-head">
+              <Avatar name={selected.name} size="lg" />
+              <div className="u-fiche-id">
+                <div className="u-fiche-name">{selected.name}</div>
+                <div className="u-fiche-meta">
+                  <span className="badge" style={{ background: '#f3f4f6', color: '#4b5563' }}>
+                    {roleLabels[selected.role] || selected.role}
+                  </span>
+                  <StatusBadge status={selected.status} kind="user" />
+                </div>
+                <div className="u-fiche-quick">
+                  <button className="btn btn-ghost-soft" onClick={() => setSuspendFor(selected)}>
+                    <UserX size={14} /> Suspendre
+                  </button>
+                  <button className="btn btn-ghost-soft" onClick={() => doResetPassword(selected)}>
+                    <KeyRound size={14} /> Reset MDP
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div className="tabs">
               <button className={`tab${tab === 'profil' ? ' active' : ''}`} onClick={() => setTab('profil')}>Profil</button>
               <button className={`tab${tab === 'progression' ? ' active' : ''}`} onClick={() => setTab('progression')}>Progression</button>
