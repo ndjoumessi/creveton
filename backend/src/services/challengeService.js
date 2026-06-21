@@ -4,7 +4,6 @@ const env = require('../config/env');
 const ApiError = require('../utils/ApiError');
 const scoreService = require('./scoreService');
 const questionService = require('./questionService');
-const { levelFromXp } = require('./gameService');
 const questionModel = require('../models/question.model');
 const challengeModel = require('../models/challenge.model');
 const userModel = require('../models/user.model');
@@ -117,7 +116,7 @@ async function submit({ userId, challengeId, answers }) {
   const result = scoreService.computeSession({ level: ch.level, answers, solutions });
 
   // L'XP de session du joueur est créditée immédiatement.
-  await userModel.creditSessionXp(userId, result.xp_earned, levelFromXp);
+  await userModel.creditSessionXp(userId, result.xp_earned);
   const updated = await challengeModel.recordScore(challengeId, side, result.score, result.xp_earned);
 
   const bothPlayed = updated.score_challenger != null && updated.score_opponent != null;
@@ -142,7 +141,7 @@ async function submit({ userId, challengeId, answers }) {
     winnerXp = updated.xp_opponent;
   }
   const xpBonus = winnerId ? Math.round(WINNER_XP_BONUS_RATE * winnerXp) : 0;
-  if (xpBonus > 0) await userModel.creditSessionXp(winnerId, xpBonus, levelFromXp);
+  if (xpBonus > 0) await userModel.creditSessionXp(winnerId, xpBonus);
 
   const final = await challengeModel.finalize(challengeId, winnerId);
   return {

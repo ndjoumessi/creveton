@@ -283,18 +283,32 @@ async function findManyByIds(ids) {
   return ids.map((id) => byId.get(id)).filter(Boolean);
 }
 
+// Bandes d'XP cumulées → niveau joueur (1–5). Source de vérité du recalcul de
+// niveau après tout gain d'XP (Novice/Apprenti/Joueur/Expert/Champion).
+const XP_LEVELS = [0, 200, 500, 1200, 3000];
+
+/** Niveau (1–5) correspondant à une XP cumulée. */
+function levelForXp(totalXp) {
+  for (let i = XP_LEVELS.length - 1; i >= 0; i -= 1) {
+    if (totalXp >= XP_LEVELS[i]) return i + 1;
+  }
+  return 1;
+}
+
 /**
- * Crédite l'XP d'une partie et recalcule le niveau (1–5) en une transaction.
- * Verrou FOR UPDATE pour éviter les pertes de mise à jour concurrentes.
+ * Crédite l'XP d'une partie ET recalcule le niveau (1–5) dans la MÊME requête
+ * (CASE SQL serveur-authoritative). Verrou FOR UPDATE pour éviter les pertes de
+ * mise à jour concurrentes. Unique point d'écriture de total_xp : tout gain
+ * (/sessions/submit, /challenges/:id/submit, bonus vainqueur) passe par ici, donc
+ * le niveau est toujours recalculé après chaque partie.
  * @param {string} id
  * @param {number} xpDelta
- * @param {(totalXp:number)=>number} levelFromXp
  * @param {object} [executor=db]  client de transaction si fourni.
  * @returns {Promise<{ level_before:number, level_after:number, total_xp:number }>}
  */
-async function creditSessionXp(id, xpDelta, levelFromXp, executor = db) {
+async function creditSessionXp(id, xpDelta, executor = db) {
   const current = await executor.query(
-    'SELECT total_xp, level FROM users WHERE id = $1 FOR UPDATE',
+    'SELECT total_xp FROM users WHERE id = $1 FOR UPDATE',
     [id]
   );
   if (!current.rows[0]) {
@@ -302,14 +316,23 @@ async function creditSessionXp(id, xpDelta, levelFromXp, executor = db) {
     err.code = 'USER_NOT_FOUND';
     throw err;
   }
-  const levelBefore = current.rows[0].level;
-  const newTotal = current.rows[0].total_xp + xpDelta;
-  const levelAfter = levelFromXp(newTotal);
-  await executor.query(
-    'UPDATE users SET total_xp = $2, level = $3, last_active_at = now() WHERE id = $1',
-    [id, newTotal, levelAfter]
+  const levelBefore = levelForXp(current.rows[0].total_xp);
+  const { rows } = await executor.query(
+    `UPDATE users SET
+        total_xp = total_xp + $1,
+        level = CASE
+          WHEN total_xp + $1 >= 3000 THEN 5
+          WHEN total_xp + $1 >= 1200 THEN 4
+          WHEN total_xp + $1 >= 500  THEN 3
+          WHEN total_xp + $1 >= 200  THEN 2
+          ELSE 1
+        END,
+        last_active_at = now()
+      WHERE id = $2
+      RETURNING total_xp, level`,
+    [xpDelta, id]
   );
-  return { level_before: levelBefore, level_after: levelAfter, total_xp: newTotal };
+  return { level_before: levelBefore, level_after: rows[0].level, total_xp: rows[0].total_xp };
 }
 
 /**
@@ -344,6 +367,8 @@ module.exports = {
   incrementWallet,
   findManyByIds,
   creditSessionXp,
+  levelForXp,
+  XP_LEVELS,
   generateUniqueReferralCode,
   // admin
   listAdmin,

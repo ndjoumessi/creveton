@@ -95,7 +95,7 @@ async function submitSession({ userId, mode = 'normal', theme, level, startedAt,
         client
       );
       sessionId = session.id;
-      levels = await userModel.creditSessionXp(userId, result.xp_earned, levelFromXp, client);
+      levels = await userModel.creditSessionXp(userId, result.xp_earned, client);
       await client.query('COMMIT');
     } catch (err) {
       await client.query('ROLLBACK');

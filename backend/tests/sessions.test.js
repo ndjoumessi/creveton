@@ -140,5 +140,5 @@ t('crédit XP + montée de niveau persistés en base', async () => {
   });
   const { rows } = await H.db.query('SELECT total_xp, level FROM users WHERE id = $1', [user.id]);
   expect(rows[0].total_xp).toBe(750); // 0 + 750
-  expect(rows[0].level).toBe(2); // 750 ≥ seuil niveau 2 (500)
+  expect(rows[0].level).toBe(3); // 750 ≥ 500 → niveau 3 (bandes 0/200/500/1200/3000)
 });

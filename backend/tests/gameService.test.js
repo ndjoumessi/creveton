@@ -27,12 +27,16 @@ const leaderboardService = require('../src/services/leaderboardService');
 const gameService = require('../src/services/gameService');
 
 describe('gameService.levelFromXp', () => {
-  test('mappe l’XP au niveau 1–5 (seuils 0/500/2000/5000/12000)', () => {
+  test('mappe l’XP au niveau 1–5 (seuils 0/200/500/1200/3000)', () => {
     expect(gameService.levelFromXp(0)).toBe(1);
-    expect(gameService.levelFromXp(499)).toBe(1);
-    expect(gameService.levelFromXp(500)).toBe(2);
-    expect(gameService.levelFromXp(2500)).toBe(3);
-    expect(gameService.levelFromXp(5000)).toBe(4);
+    expect(gameService.levelFromXp(199)).toBe(1);
+    expect(gameService.levelFromXp(200)).toBe(2);
+    expect(gameService.levelFromXp(499)).toBe(2);
+    expect(gameService.levelFromXp(500)).toBe(3);
+    expect(gameService.levelFromXp(1199)).toBe(3);
+    expect(gameService.levelFromXp(1200)).toBe(4);
+    expect(gameService.levelFromXp(2999)).toBe(4);
+    expect(gameService.levelFromXp(3000)).toBe(5);
     expect(gameService.levelFromXp(999999)).toBe(5);
   });
 });

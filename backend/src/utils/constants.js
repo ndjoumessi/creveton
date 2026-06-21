@@ -24,8 +24,9 @@ const LEADERBOARD_SCOPES = ['global', 'theme', 'weekly', 'monthly'];
 
 // Niveau joueur (1–5) calculé dynamiquement depuis total_xp (CDC §4.1).
 // Distinct de la difficulté des questions (LEVELS). Seuil i ⇒ niveau i+1 atteint
-// quand total_xp >= LEVEL_XP_THRESHOLDS[i].
-const LEVEL_XP_THRESHOLDS = [0, 500, 2000, 5000, 12000];
+// quand total_xp >= LEVEL_XP_THRESHOLDS[i]. Aligné sur les bandes XP de la
+// console admin (Novice/Apprenti/Joueur/Expert/Champion).
+const LEVEL_XP_THRESHOLDS = [0, 200, 500, 1200, 3000];
 
 const CURRENCY = 'XAF';
 
