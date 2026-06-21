@@ -43,7 +43,7 @@ export default class ErrorBoundary extends Component {
           )}
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <button
-              onClick={() => { this.setState({ error: null }); window.location.assign('/'); }}
+              onClick={() => { this.setState({ error: null }); window.location.assign('/dashboard'); }}
               style={{ background: '#0b2e1a', color: '#d4a017', border: 'none', borderRadius: 8, padding: '10px 16px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
             >
               Retour au tableau de bord

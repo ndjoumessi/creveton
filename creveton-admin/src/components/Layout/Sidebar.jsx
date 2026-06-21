@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings } from 'lucide-react';
 import dashboardService from '../../services/dashboard.service';
 import { useApiData } from '../../hooks/useApiData';
@@ -7,8 +7,8 @@ const NAV = [
   {
     title: 'Vue générale',
     items: [
-      { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-      { to: '/leaderboard', label: 'Classement', icon: Trophy },
+      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      { to: '/classement', label: 'Classement', icon: Trophy },
     ],
   },
   {
@@ -36,10 +36,10 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
+      <Link to="/dashboard" className="sidebar-brand" aria-label="Tableau de bord Creveton">
         <div className="sidebar-logo">C</div>
         <span className="sidebar-brand-name">Creveton</span>
-      </div>
+      </Link>
       <nav className="sidebar-nav">
         {NAV.map((section) => (
           <div className="nav-section" key={section.title}>

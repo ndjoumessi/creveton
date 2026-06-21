@@ -14,11 +14,12 @@ import Parametres from './pages/Parametres';
 export default function App() {
   return (
     <Routes>
-      {/* Routes publiques */}
+      {/* Routes publiques : la racine affiche la landing (vitrine grand public) */}
+      <Route path="/" element={<Landing />} />
       <Route path="/landing" element={<Landing />} />
       <Route path="/login" element={<Login />} />
 
-      {/* Console (protégée) */}
+      {/* Console d'administration (protégée par PrivateRoute) */}
       <Route
         element={
           <PrivateRoute>
@@ -26,15 +27,16 @@ export default function App() {
           </PrivateRoute>
         }
       >
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/leaderboard" element={<Classement />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/questions" element={<Questions />} />
+        <Route path="/classement" element={<Classement />} />
         <Route path="/sessions" element={<Parties />} />
         <Route path="/tournaments" element={<Tournois />} />
         <Route path="/users" element={<Utilisateurs />} />
         <Route path="/settings" element={<Parametres />} />
       </Route>
 
+      {/* Inconnu → landing publique */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

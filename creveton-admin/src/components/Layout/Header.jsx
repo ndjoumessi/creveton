@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { RefreshCw, LogOut } from 'lucide-react';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
@@ -6,8 +6,8 @@ import { triggerRefresh } from '../../hooks/useApiData';
 import { notify } from '../Toast';
 
 const TITLES = {
-  '/': 'Dashboard',
-  '/leaderboard': 'Classement',
+  '/dashboard': 'Dashboard',
+  '/classement': 'Classement',
   '/questions': 'Questions',
   '/sessions': 'Parties',
   '/tournaments': 'Tournois',
@@ -38,7 +38,7 @@ export default function Header() {
   return (
     <header className="header">
       <div className="breadcrumb">
-        <span className="crumb-muted">Console</span>
+        <Link to="/dashboard" className="crumb-muted" title="Console d’administration">Console</Link>
         <span className="crumb-sep">/</span>
         <span className="crumb-current">{title}</span>
       </div>

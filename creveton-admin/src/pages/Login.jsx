@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { LogIn, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -10,10 +10,17 @@ export default function Login() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const isAdmin = useAuthStore((s) => s.isAdmin);
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [submitting, setSubmitting] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: { email: USE_MOCKS ? 'admin@creveton.cm' : '', password: '' },
   });
+
+  // Déjà connecté en admin → on file vers la console (après tous les hooks).
+  if (user && isAuthenticated() && isAdmin()) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const onSubmit = async ({ email, password }) => {
     setSubmitting(true);
@@ -25,7 +32,7 @@ export default function Login() {
         return;
       }
       notify.success('Connexion réussie');
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       const code = err?.response?.data?.error?.code;
       notify.error(code === 'AUTH_INVALID_CREDENTIALS' ? 'Email ou mot de passe incorrect.' : 'Échec de la connexion.');

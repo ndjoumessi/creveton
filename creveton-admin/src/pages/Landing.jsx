@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Target, Trophy, BarChart3 } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
 import './Landing.css';
 
 const features = [
@@ -31,6 +32,12 @@ const themes = [
 ];
 
 export default function Landing() {
+  // Cible du CTA console : tableau de bord si déjà connecté admin, sinon login.
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAdmin = useAuthStore((s) => s.isAdmin);
+  const consoleTarget = user && isAuthenticated() && isAdmin() ? '/dashboard' : '/login';
+
   return (
     <div className="land-root">
       {/* ─────────────── HERO ─────────────── */}
@@ -71,7 +78,7 @@ export default function Landing() {
               <a className="land-btn land-btn-gold" href="#">
                 Télécharger l&apos;app
               </a>
-              <Link className="land-cta-secondary" to="/login">
+              <Link className="land-cta-secondary" to={consoleTarget}>
                 Accéder à la console admin →
               </Link>
             </div>
