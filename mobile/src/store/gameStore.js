@@ -20,6 +20,7 @@ const initial = {
   streak: 0,
   streakMax: 0,
   startedAt: null,
+  sessionId: null, // renvoyé par /sessions/answer, réutilisé jusqu'au submit
   result: null, // réponse de /sessions/submit
   submitting: false,
   error: null,
@@ -66,6 +67,11 @@ export const useGameStore = create((set, get) => ({
     });
   },
 
+  // Mémorise l'id de session renvoyé par /sessions/answer (1re réponse).
+  setSessionId: (sessionId) => {
+    if (sessionId && !get().sessionId) set({ sessionId });
+  },
+
   next: () => set((s) => ({ currentIndex: s.currentIndex + 1 })),
 
   isLastQuestion: () => {
@@ -75,7 +81,7 @@ export const useGameStore = create((set, get) => ({
 
   // Soumet la partie au serveur ; stocke le résultat officiel.
   submit: async () => {
-    const { mode, theme, level, startedAt, answers } = get();
+    const { mode, theme, level, startedAt, answers, sessionId } = get();
     set({ submitting: true, error: null });
     try {
       const result = await sessionsApi.submit({
@@ -83,6 +89,7 @@ export const useGameStore = create((set, get) => ({
         theme,
         level,
         started_at: startedAt,
+        session_id: sessionId || undefined,
         answers,
       });
       set({ result, submitting: false });

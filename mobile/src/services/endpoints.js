@@ -29,6 +29,11 @@ export const questions = {
 
 // --- Sessions (API §6) ---------------------------------------------------
 export const sessions = {
+  // Feedback immédiat par question (mode normal).
+  // payload: { question_id, selected_index, elapsed_ms, mode, session_id }
+  // → { correct, correct_index, explanation, points_earned, speed_bonus, streak, session_id }
+  answer: (payload) =>
+    api.post('/sessions/answer', payload).then((r) => r.data),
   submit: (payload) =>
     api.post('/sessions/submit', payload).then((r) => r.data),
 };

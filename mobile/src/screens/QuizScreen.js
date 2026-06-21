@@ -1,11 +1,13 @@
 // QuizScreen — immersif (#0b2e1a).
 // BUG 2 : timer prominent (barre animée + compte à rebours 28px or, rouge ≤10s,
 //          pulsation ≤5s, durée selon niveau, reset par question).
-// BUG 3 : feedback réponses très visible à partir de question.correct_index
-//          (mode normal). Bonne réponse révélée, options bloquées, puis
-//          explication + « Suivant ». Timeout → révélation 2 s puis auto-next.
-// Anti-triche : si correct_index est absent (tournoi/challenge), on retombe
-// sur une simple surbrillance de sélection, sans rien révéler.
+// BUG 3 : feedback immédiat via POST /sessions/answer (mode normal). La réponse
+//          serveur fournit correct/correct_index/explanation/points_earned/
+//          streak. Bonne réponse révélée, options bloquées, explication + Suivant.
+//          Timeout → answer(selected_index:null) + révélation 2 s puis auto-next.
+// Anti-triche : en tournoi/challenge on n'appelle PAS l'endpoint ; simple
+// surbrillance de sélection, sans rien révéler. /sessions/submit reste appelé
+// à la fin pour le score officiel (avec le session_id mémorisé).
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
@@ -19,9 +21,10 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LoadingScreen, ProgressDots, AppButton } from '../components';
+import { LoadingScreen, ProgressDots, AppButton, useToast } from '../components';
 import { useGameStore } from '../store/gameStore';
-import { LEVELS } from '../constants/config';
+import { sessions as sessionsApi } from '../services/endpoints';
+import { parseApiError } from '../services/api';
 import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
@@ -29,11 +32,8 @@ const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
 const BLOCK_MS = 1500;
 const TIMEOUT_REVEAL_MS = 2000;
 
-function basePoints(level) {
-  return LEVELS.find((l) => l.key === level)?.points || 50;
-}
-
 export default function QuizScreen({ navigation }) {
+  const toast = useToast();
   const questions = useGameStore((s) => s.questions);
   const currentIndex = useGameStore((s) => s.currentIndex);
   const answerCurrent = useGameStore((s) => s.answerCurrent);
@@ -41,16 +41,20 @@ export default function QuizScreen({ navigation }) {
   const isLastQuestion = useGameStore((s) => s.isLastQuestion);
   const submit = useGameStore((s) => s.submit);
   const level = useGameStore((s) => s.level);
+  const mode = useGameStore((s) => s.mode);
+  const sessionId = useGameStore((s) => s.sessionId);
+  const setSessionId = useGameStore((s) => s.setSessionId);
 
   const question = questions[currentIndex];
   const total = questions.length;
   const timeLimit = TIME_BY_LEVEL[level] || 30;
 
   const [secondsLeft, setSecondsLeft] = useState(timeLimit);
-  const [answered, setAnswered] = useState(null); // { selectedIndex, correctIndex, isCorrect, timedOut }
+  const [answered, setAnswered] = useState(null); // { selectedIndex, correctIndex, explanation, isCorrect, timedOut }
   const [dotStates, setDotStates] = useState([]);
-  const [score, setScore] = useState(0);
+  const [displayScore, setDisplayScore] = useState(0);
   const [correctStreak, setCorrectStreak] = useState(0);
+  const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const timerAnim = useRef(new Animated.Value(1)).current;
@@ -58,14 +62,35 @@ export default function QuizScreen({ navigation }) {
   const streakBounce = useRef(new Animated.Value(0)).current;
   const explainY = useRef(new Animated.Value(40)).current;
   const explainOpacity = useRef(new Animated.Value(0)).current;
+  const scoreAnim = useRef(new Animated.Value(0)).current;
+  const scoreTarget = useRef(0);
   const intervalRef = useRef(null);
   const advanceRef = useRef(null);
   const questionStart = useRef(Date.now());
   const pulseLoop = useRef(null);
 
-  const correctIndex = Number.isInteger(question?.correct_index)
-    ? question.correct_index
-    : null;
+  // Mode normal uniquement : le feedback immédiat passe par /sessions/answer.
+  const feedbackEnabled = mode === 'normal';
+
+  // Count-up du score à partir des points renvoyés par le serveur.
+  useEffect(() => {
+    const id = scoreAnim.addListener(({ value }) => setDisplayScore(Math.round(value)));
+    return () => scoreAnim.removeListener(id);
+  }, [scoreAnim]);
+
+  const bumpScore = useCallback(
+    (points) => {
+      if (!points) return;
+      scoreTarget.current += points;
+      Animated.timing(scoreAnim, {
+        toValue: scoreTarget.current,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }).start();
+    },
+    [scoreAnim]
+  );
 
   const clearTimers = useCallback(() => {
     clearInterval(intervalRef.current);
@@ -109,81 +134,116 @@ export default function QuizScreen({ navigation }) {
     next();
   }, [clearTimers, isLastQuestion, submit, next, navigation]);
 
+  const revealExplain = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(explainY, {
+        toValue: 0,
+        duration: motion.enter,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(explainOpacity, {
+        toValue: 1,
+        duration: motion.enter,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [explainY, explainOpacity]);
+
   // Enregistre la réponse (tap, timeout ou passer) et déclenche le feedback.
   const handleAnswer = useCallback(
-    ({ selectedIndex, skipped = false, timedOut = false }) => {
-      if (answered) return;
+    async ({ selectedIndex, skipped = false, timedOut = false }) => {
+      if (answered || checking) return;
       clearTimers();
       const elapsed = Date.now() - questionStart.current;
+
+      // Mémorisation locale pour le submit final (le serveur recalcule tout).
       answerCurrent({ selectedIndex, elapsedMs: elapsed, skipped });
 
-      const isCorrect =
-        correctIndex !== null && selectedIndex === correctIndex && !skipped;
-
-      // Score provisoire (le serveur fait foi) — uniquement si on connaît la réponse.
-      if (isCorrect) {
-        const pts = Math.round(
-          basePoints(level) * (elapsed <= 5000 ? 1.5 : 1)
-        );
-        setScore((s) => s + pts);
-        setCorrectStreak((s) => s + 1);
-      } else {
-        setCorrectStreak(0);
-      }
-
-      setDotStates((d) => {
-        const copy = [...d];
-        copy[currentIndex] = skipped
-          ? 'skipped'
-          : isCorrect
-            ? 'correct'
-            : 'wrong';
-        return copy;
-      });
-
-      // Passer : on avance tout de suite, sans rien révéler.
+      // Passer : on avance tout de suite, sans rien révéler ni appeler l'API.
       if (skipped) {
+        setDotStates((d) => {
+          const copy = [...d];
+          copy[currentIndex] = 'skipped';
+          return copy;
+        });
         goNext();
         return;
       }
 
-      setAnswered({ selectedIndex, correctIndex, isCorrect, timedOut });
-
-      // Carte d'explication (slide-up) si on a la réponse.
-      if (correctIndex !== null) {
-        Animated.parallel([
-          Animated.timing(explainY, {
-            toValue: 0,
-            duration: motion.enter,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }),
-          Animated.timing(explainOpacity, {
-            toValue: 1,
-            duration: motion.enter,
-            useNativeDriver: true,
-          }),
-        ]).start();
+      // Tournoi / challenge : pas d'endpoint de feedback (anti-triche) →
+      // simple surbrillance puis avance.
+      if (!feedbackEnabled) {
+        setAnswered({ selectedIndex, correctIndex: null, isCorrect: false, timedOut });
+        setDotStates((d) => {
+          const copy = [...d];
+          copy[currentIndex] = selectedIndex === null ? 'wrong' : 'correct';
+          return copy;
+        });
+        advanceRef.current = setTimeout(goNext, timedOut ? TIMEOUT_REVEAL_MS : BLOCK_MS);
+        return;
       }
 
-      // Timeout : révélation 2 s puis auto-next. Réponse tapée sans réponse
-      // connue : court blocage puis auto-next. Sinon : « Suivant » manuel.
-      if (timedOut) {
-        advanceRef.current = setTimeout(goNext, TIMEOUT_REVEAL_MS);
-      } else if (correctIndex === null) {
+      // Mode normal : feedback immédiat serveur.
+      setChecking(true);
+      try {
+        const fb = await sessionsApi.answer({
+          question_id: question.id,
+          selected_index: selectedIndex,
+          elapsed_ms: Math.round(elapsed),
+          mode: 'normal',
+          session_id: sessionId || undefined,
+        });
+        setSessionId(fb.session_id);
+
+        bumpScore(fb.points_earned || 0);
+        if (typeof fb.streak === 'number') setCorrectStreak(fb.streak);
+
+        setDotStates((d) => {
+          const copy = [...d];
+          copy[currentIndex] = fb.correct ? 'correct' : 'wrong';
+          return copy;
+        });
+
+        setAnswered({
+          selectedIndex,
+          correctIndex: Number.isInteger(fb.correct_index) ? fb.correct_index : null,
+          explanation: fb.explanation || null,
+          isCorrect: !!fb.correct,
+          timedOut,
+        });
+        revealExplain();
+
+        // Timeout : révélation 2 s puis auto-next. Tap : « Suivant » manuel.
+        if (timedOut) advanceRef.current = setTimeout(goNext, TIMEOUT_REVEAL_MS);
+      } catch (e) {
+        // Échec réseau : on ne bloque pas la partie — surbrillance + avance.
+        toast.show({ type: 'error', message: parseApiError(e).message });
+        setAnswered({ selectedIndex, correctIndex: null, isCorrect: false, timedOut });
+        setDotStates((d) => {
+          const copy = [...d];
+          copy[currentIndex] = 'wrong';
+          return copy;
+        });
         advanceRef.current = setTimeout(goNext, BLOCK_MS);
+      } finally {
+        setChecking(false);
       }
     },
     [
       answered,
+      checking,
       clearTimers,
       answerCurrent,
-      correctIndex,
-      level,
+      feedbackEnabled,
+      question,
+      sessionId,
+      setSessionId,
+      bumpScore,
       currentIndex,
       goNext,
-      explainY,
-      explainOpacity,
+      revealExplain,
+      toast,
     ]
   );
 
@@ -258,7 +318,7 @@ export default function QuizScreen({ navigation }) {
           <Text style={styles.quitText}>✕</Text>
         </Pressable>
         <Text style={styles.counter}>Q {currentIndex + 1}/{total}</Text>
-        <Text style={styles.score}>{score} pts ⚡</Text>
+        <Text style={styles.score}>{displayScore} pts ⚡</Text>
       </View>
 
       {/* TIMER prominent */}
@@ -325,15 +385,15 @@ export default function QuizScreen({ navigation }) {
       ) : null}
 
       {/* Explication + Suivant (slide-up) */}
-      {answered && correctIndex !== null ? (
+      {answered && answered.correctIndex !== null ? (
         <Animated.View
           style={[
             styles.explain,
             { opacity: explainOpacity, transform: [{ translateY: explainY }] },
           ]}
         >
-          {question.explanation ? (
-            <Text style={styles.explainText}>💡 {question.explanation}</Text>
+          {answered.explanation ? (
+            <Text style={styles.explainText}>💡 {answered.explanation}</Text>
           ) : (
             <Text style={styles.explainText}>
               {answered.isCorrect ? '✓ Bonne réponse !' : '✗ Mauvaise réponse.'}
