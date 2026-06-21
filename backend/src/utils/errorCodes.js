@@ -24,6 +24,7 @@ const ERROR_CODES = {
   ACCOUNT_SUSPENDED: { http: 403, message: 'Compte suspendu ou banni.' },
   FORBIDDEN: { http: 403, message: 'Rôle insuffisant.' },
   FEATURE_DISABLED: { http: 403, message: 'Fonctionnalité indisponible.' },
+  MODE_NOT_ALLOWED: { http: 403, message: 'Action réservée au mode normal.' },
 
   USER_NOT_FOUND: { http: 404, message: 'Utilisateur introuvable.' },
   QUESTION_NOT_FOUND: { http: 404, message: 'Question introuvable.' },

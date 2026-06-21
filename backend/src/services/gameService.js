@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const db = require('../config/database');
 const { redis } = require('../config/redis');
 const ApiError = require('../utils/ApiError');
@@ -27,6 +28,9 @@ const sessionModel = require('../models/session.model');
 // ≥ 2 réponses sous 1 s ⇒ triche (« répétées », spec §6).
 const CHEAT_FAST_REPEAT = 2;
 const IDEMPOTENCY_TTL_SEC = 24 * 3600;
+// Mode normal — feedback immédiat (POST /sessions/answer).
+const ANSWER_CHEAT_MIN_MS = 500; // répondre sous 500 ms ⇒ triche
+const LIVE_SESSION_TTL_SEC = 2 * 3600; // durée de vie de l'état live (streak)
 
 /** Niveau joueur (1–5) à partir de l'XP cumulée (seuils CDC §4.1). */
 function levelFromXp(totalXp) {
@@ -130,4 +134,74 @@ async function submitSession({ userId, mode = 'normal', theme, level, startedAt,
   }
 }
 
-module.exports = { submitSession, levelFromXp, CHEAT_FAST_REPEAT };
+/**
+ * POST /sessions/answer — soumet UNE réponse (mode normal solo) et renvoie le
+ * feedback immédiat. La bonne réponse n'est révélée qu'APRÈS soumission ici. La
+ * session reste finalisée par /sessions/submit ; cet endpoint ne fait que tenir
+ * l'état live (streak) en Redis et calculer les points de la réponse.
+ *
+ * @param {object} p
+ * @param {string} p.userId
+ * @param {string|null} [p.sessionId] créé au premier appel si absent.
+ * @param {string} p.questionId
+ * @param {number|null} p.selectedIndex 0–3, ou null (timeout/skip).
+ * @param {number} p.elapsedMs temps de réponse.
+ * @param {string} [p.mode='normal'] seul « normal » est autorisé.
+ * @returns {Promise<object>} feedback (correct, correct_index, explanation,
+ *          points_earned, speed_bonus, streak, session_id).
+ */
+async function answerSingle({ userId, sessionId = null, questionId, selectedIndex, elapsedMs, mode = 'normal' }) {
+  // 1. Mode : feedback immédiat réservé au solo « normal ».
+  if (mode !== 'normal') {
+    throw new ApiError('MODE_NOT_ALLOWED', {
+      message: 'Le feedback immédiat est réservé au mode normal (tournoi/challenge interdits).',
+    });
+  }
+
+  // 2. Anti-triche : une réponse réelle sous 500 ms est impossible humainement.
+  //    (Un skip/timeout `selected_index = null` n'est pas une « réponse ».)
+  if (selectedIndex !== null && elapsedMs < ANSWER_CHEAT_MIN_MS) {
+    throw new ApiError('CHEAT_DETECTED');
+  }
+
+  // 3. Solution chargée serveur (jamais fournie par le client).
+  const info = await questionModel.findAnswerInfo(questionId);
+  if (!info) throw new ApiError('QUESTION_NOT_FOUND');
+
+  // 4. État live (streak) : créé au premier appel, conservé en Redis.
+  const sid = sessionId || crypto.randomUUID();
+  const key = `session:live:${userId}:${sid}`;
+  let state = { streak: 0, answered: 0, correct_count: 0 };
+  const raw = await redis.get(key);
+  if (raw) {
+    try { state = { ...state, ...JSON.parse(raw) }; } catch { /* état illisible → repart de zéro */ }
+  }
+
+  // 5. Calcul de la réponse.
+  const isCorrect = selectedIndex !== null && selectedIndex === info.correct_index;
+  const base = scoreService.basePoints(info.level);
+  const speed = isCorrect ? scoreService.speedBonus(base, elapsedMs) : 0;
+  const pointsEarned = isCorrect ? base : 0;
+  const streak = isCorrect ? state.streak + 1 : 0;
+
+  // 6. Persistance de l'état live (best-effort, TTL borné).
+  const next = {
+    streak,
+    answered: state.answered + 1,
+    correct_count: state.correct_count + (isCorrect ? 1 : 0),
+  };
+  await redis.set(key, JSON.stringify(next), 'EX', LIVE_SESSION_TTL_SEC);
+
+  // 7. Feedback (révélation de la solution autorisée à ce moment).
+  return {
+    correct: isCorrect,
+    correct_index: info.correct_index,
+    explanation: info.explanation ?? null,
+    points_earned: pointsEarned,
+    speed_bonus: speed,
+    streak,
+    session_id: sid,
+  };
+}
+
+module.exports = { submitSession, answerSingle, levelFromXp, CHEAT_FAST_REPEAT, ANSWER_CHEAT_MIN_MS };

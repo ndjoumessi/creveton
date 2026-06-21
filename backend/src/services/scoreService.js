@@ -28,6 +28,16 @@ function streakMultiplier(streak) {
   return 1;
 }
 
+/** Points de base d'une question selon son niveau de difficulté. */
+function basePoints(level) {
+  return BASE_POINTS[level] ?? BASE_POINTS.beginner;
+}
+
+/** Bonus de vitesse pour une réponse (0 au-delà du seuil de rapidité). */
+function speedBonus(base, elapsedMs) {
+  return elapsedMs <= SPEED_BONUS_THRESHOLD_MS ? Math.round(base * SPEED_BONUS_RATE) : 0;
+}
+
 /**
  * @param {object} params
  * @param {string} params.level beginner|intermediate|expert
@@ -108,9 +118,12 @@ function computeSession({ level, answers, solutions }) {
 module.exports = {
   computeSession,
   streakMultiplier,
+  basePoints,
+  speedBonus,
   BASE_POINTS,
   LEVEL_MULTIPLIER,
   SPEED_BONUS_THRESHOLD_MS,
+  SPEED_BONUS_RATE,
   UNLOCK_THRESHOLD,
   CHEAT_MIN_MS,
 };

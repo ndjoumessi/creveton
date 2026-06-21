@@ -8,6 +8,7 @@ const schemas = require('../validators/session.validator');
 
 const router = express.Router();
 
+router.post('/answer', authenticate, validate(schemas.answerOne), ctrl.answer);
 router.post('/submit', authenticate, validate(schemas.submit), ctrl.submit);
 
 module.exports = router;

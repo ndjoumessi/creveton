@@ -25,4 +25,18 @@ const submit = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
-module.exports = { submit };
+/** POST /sessions/answer → 200 (feedback immédiat d'une réponse, mode normal) */
+const answer = asyncHandler(async (req, res) => {
+  const { session_id, question_id, selected_index, elapsed_ms, mode } = req.body;
+  const result = await gameService.answerSingle({
+    userId: req.user.id,
+    sessionId: session_id ?? null,
+    questionId: question_id,
+    selectedIndex: selected_index,
+    elapsedMs: elapsed_ms,
+    mode,
+  });
+  return ok(res, result);
+});
+
+module.exports = { submit, answer };

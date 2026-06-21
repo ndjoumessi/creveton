@@ -243,6 +243,21 @@ async function findSolutions(ids) {
 }
 
 /**
+ * Solution + difficulté d'UNE question approuvée (feedback immédiat mode normal,
+ * POST /sessions/answer). Le niveau sert au calcul des points de base.
+ * @returns {Promise<{correct_index:number|null, explanation:string|null, level:string}|null>}
+ */
+async function findAnswerInfo(id) {
+  const { rows } = await db.query(
+    `SELECT correct_index, explanation, level
+       FROM questions
+      WHERE id = $1 AND deleted_at IS NULL AND status = 'approved'`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
+/**
  * Vue admin COMPLÈTE d'une question (§15 vue admin) — inclut la solution.
  * Réservée aux endpoints /admin/* (rôle modérateur+).
  */
@@ -406,6 +421,7 @@ module.exports = {
   create,
   findManyBrief,
   findSolutions,
+  findAnswerInfo,
   findByIdAny,
   listAdmin,
   update,
