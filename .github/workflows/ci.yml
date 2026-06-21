@@ -1,0 +1,111 @@
+name: CI
+
+# Lance la pipeline sur les push vers main et sur chaque pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Le backend Node vit dans backend/ (monorepo).
+defaults:
+  run:
+    working-directory: backend
+
+# Un seul run par branche/PR à la fois.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1) LINT ------------------------------------------------------------------
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+
+  # 2) TEST ------------------------------------------------------------------
+  test:
+    name: Test (Jest + PostgreSQL + Redis)
+    needs: lint
+    runs-on: ubuntu-latest
+
+    # Services réels pour les tests d'intégration.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: creveton_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/creveton_test
+      REDIS_URL: redis://localhost:6379
+      # Échec explicite si l'infra n'est pas joignable (pas de skip silencieux en CI).
+      REQUIRE_INTEGRATION: '1'
+      JWT_ACCESS_SECRET: ci-access-secret
+      JWT_REFRESH_SECRET: ci-refresh-secret
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Run migrations
+        run: npm run migrate
+      - name: Tests + coverage
+        run: npm run test:coverage
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: backend/coverage
+          if-no-files-found: ignore
+
+  # 3) BUILD -----------------------------------------------------------------
+  build:
+    name: Build (packaging smoke)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      # Installe uniquement les dépendances de production et vérifie que l'app
+      # se charge sans les devDependencies (artefact déployable sain).
+      - run: npm ci --omit=dev
+      - name: App loads with production deps only
+        run: node -e "require('./src/app'); console.log('✓ app loads')"
