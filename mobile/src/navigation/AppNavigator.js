@@ -1,17 +1,23 @@
 // Navigateur racine : choisit AuthStack ou MainStack selon l'état d'auth.
 
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import AuthStack from './AuthStack';
 import MainStack from './MainStack';
-import { Loader } from '../components';
+import { LoadingScreen } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { colors } from '../constants/theme';
 
 // Thème de navigation aligné sur la charte (fond crème).
+// IMPORTANT : on part de DefaultTheme pour hériter de sa clé `fonts`
+// (regular/medium/bold/heavy). React Navigation v7 et les en-têtes
+// native-stack lisent `theme.fonts.regular` ; un thème sans `fonts`
+// provoque « Cannot read property 'regular' of undefined ».
 const navTheme = {
+  ...DefaultTheme,
   dark: false,
   colors: {
+    ...DefaultTheme.colors,
     primary: colors.gold500,
     background: colors.cream,
     card: colors.green900,
@@ -31,7 +37,7 @@ export default function AppNavigator() {
   }, [bootstrap]);
 
   if (isBootstrapping) {
-    return <Loader dark message="Chargement…" />;
+    return <LoadingScreen message="Chargement…" />;
   }
 
   return (

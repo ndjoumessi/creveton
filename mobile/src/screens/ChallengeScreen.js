@@ -1,102 +1,118 @@
-// ChallengeScreen — défier un ami (opponent_id) ou un adversaire aléatoire
-// (opponent_id: null) sur un thème/niveau (API §9).
+// ChallengeScreen — modale « Challenges » présentée depuis Jouer.
+// Défier un ami (opponent_id) ou un adversaire aléatoire (opponent_id: null)
+// sur un thème/niveau. Le challenger joue en premier (set figé, même seed — API §9).
 
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
-import {
-  Screen,
-  Title,
-  Heading,
-  Body,
-  Label,
-  Card,
-  Button,
-  Input,
-} from '../components';
+import { Screen, Title, Body, AppCard, AppButton, AppInput, useToast } from '../components';
 import { THEMES, LEVELS } from '../constants/config';
-import { challenges as challengesApi } from '../services/endpoints';
+import { challenges } from '../services/endpoints';
 import { useGameStore } from '../store/gameStore';
 import { parseApiError } from '../services/api';
 import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
 
 export default function ChallengeScreen({ navigation }) {
-  const [mode, setMode] = useState('random'); // random | friend
-  const [opponentId, setOpponentId] = useState('');
-  const [theme, setTheme] = useState('culture');
-  const [level, setLevel] = useState('intermediate');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
+  const toast = useToast();
   const startGame = useGameStore((s) => s.startGame);
 
-  const onCreate = async () => {
-    setError(null);
-    if (mode === 'friend' && !opponentId.trim()) {
-      setError("Indique l'identifiant de ton ami.");
+  const [mode, setMode] = useState(null); // 'friend' | 'random' | null
+  const [opponentId, setOpponentId] = useState('');
+  const [theme, setTheme] = useState(THEMES[0].key);
+  const [level, setLevel] = useState(LEVELS[1].key);
+  const [inputError, setInputError] = useState(null);
+  const [launching, setLaunching] = useState(false);
+
+  const launch = async (selectedMode) => {
+    setInputError(null);
+    const friend = selectedMode === 'friend';
+    const oppId = friend ? opponentId.trim() : null;
+
+    if (friend && !oppId) {
+      setInputError("Indique l'identifiant de ton ami.");
+      toast.show({ type: 'error', message: "Identifiant de l'ami requis." });
       return;
     }
-    setLoading(true);
+
+    setLaunching(true);
     try {
-      const resp = await challengesApi.create({
-        opponent_id: mode === 'friend' ? opponentId.trim() : null,
+      const res = await challenges.create({
+        opponent_id: oppId,
         theme,
         level,
-        stake: 0, // stake > 0 réservé v2 (flag payant)
+        stake: 0,
       });
-      // Le challenger joue en premier avec le set figé (même seed).
-      const questions = resp.questions || [];
-      startGame({ mode: 'challenge', theme, level, questions });
-      setLoading(false);
+      startGame({ mode: 'challenge', theme, level, questions: res.questions || [] });
+      setLaunching(false);
       navigation.replace('Quiz');
     } catch (e) {
-      setLoading(false);
-      setError(parseApiError(e).message);
+      setLaunching(false);
+      toast.show({ type: 'error', message: parseApiError(e).message });
     }
   };
 
   return (
     <Screen dark scroll>
       <View style={styles.handle} />
+
       <Title color={colors.cream} style={styles.title}>
-        ⚔️ Lancer un défi
+        Challenges
       </Title>
       <Body color={colors.textOnDarkMuted} style={styles.subtitle}>
-        Affronte un ami ou un adversaire de ton niveau. Le gagnant empoche +25 % d'XP.
+        Affronte un ami ou un joueur de ton niveau sur les mêmes questions.
       </Body>
 
-      {/* Type d'adversaire */}
-      <View style={styles.modeRow}>
-        <ModeCard
-          active={mode === 'random'}
-          emoji="🎲"
-          label="Aléatoire"
-          desc="Même niveau"
-          onPress={() => setMode('random')}
+      {/* Option : défier un ami */}
+      <AppCard tone="dark" style={styles.optionCard}>
+        <Text style={styles.optionEmoji}>🤝</Text>
+        <Text style={styles.optionTitleDark}>Envoie un défi à un ami</Text>
+        <Body color={colors.textOnDarkMuted} style={styles.optionDesc}>
+          Partagez les mêmes questions.
+        </Body>
+        {mode === 'friend' ? (
+          <View style={styles.friendInput}>
+            <AppInput
+              label="Identifiant de l'ami"
+              value={opponentId}
+              onChangeText={setOpponentId}
+              error={inputError}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+        ) : null}
+        <AppButton
+          variant="primary"
+          title={mode === 'friend' ? 'Envoyer le défi' : 'Choisir un ami'}
+          loading={launching && mode === 'friend'}
+          onPress={() => {
+            if (mode !== 'friend') {
+              setMode('friend');
+              setInputError(null);
+              return;
+            }
+            launch('friend');
+          }}
         />
-        <ModeCard
-          active={mode === 'friend'}
-          emoji="🤝"
-          label="Un ami"
-          desc="Par identifiant"
-          onPress={() => setMode('friend')}
-        />
-      </View>
+      </AppCard>
 
-      {mode === 'friend' ? (
-        <Input
-          label="Identifiant de l'ami"
-          placeholder="ex. a77b-..."
-          value={opponentId}
-          onChangeText={setOpponentId}
-          autoCapitalize="none"
-          style={styles.input}
+      {/* Option : adversaire aléatoire */}
+      <AppCard tone="cream" style={styles.optionCard}>
+        <Text style={styles.optionEmoji}>🎲</Text>
+        <Text style={styles.optionTitleCream}>Affronte un joueur de ton niveau</Text>
+        <AppButton
+          variant="secondary"
+          title="Lancer"
+          loading={launching && mode === 'random'}
+          onPress={() => {
+            setMode('random');
+            setOpponentId('');
+            launch('random');
+          }}
         />
-      ) : null}
+      </AppCard>
 
       {/* Thème */}
-      <Heading color={colors.cream} style={styles.sectionTitle}>
-        Thème
-      </Heading>
+      <Text style={styles.sectionTitle}>Thème</Text>
       <View style={styles.chips}>
         {THEMES.map((t) => {
           const active = t.key === theme;
@@ -115,9 +131,7 @@ export default function ChallengeScreen({ navigation }) {
       </View>
 
       {/* Niveau */}
-      <Heading color={colors.cream} style={styles.sectionTitle}>
-        Niveau
-      </Heading>
+      <Text style={styles.sectionTitle}>Niveau</Text>
       <View style={styles.chips}>
         {LEVELS.map((l) => {
           const active = l.key === level;
@@ -135,39 +149,30 @@ export default function ChallengeScreen({ navigation }) {
         })}
       </View>
 
-      {error ? (
-        <Body color={colors.red400} style={styles.error}>
-          {error}
+      {/* Mes challenges en cours */}
+      <Text style={styles.sectionTitle}>Mes challenges en cours</Text>
+      <View style={styles.emptyBox}>
+        <Text style={styles.emptyEmoji}>⚔️</Text>
+        <Body color={colors.textOnDarkMuted} style={styles.emptyText}>
+          Aucun défi en cours pour l’instant.
         </Body>
-      ) : null}
+      </View>
 
-      <Button
-        title="Créer le défi ⚔️"
-        onPress={onCreate}
-        loading={loading}
-        style={styles.cta}
-      />
-      <Pressable onPress={() => navigation.goBack()}>
+      {/* Défis récents */}
+      <Text style={styles.sectionTitle}>Défis récents</Text>
+      <View style={styles.emptyBox}>
+        <Text style={styles.emptyEmoji}>🏁</Text>
+        <Body color={colors.textOnDarkMuted} style={styles.emptyText}>
+          Tes derniers défis apparaîtront ici.
+        </Body>
+      </View>
+
+      <Pressable onPress={() => navigation.goBack()} hitSlop={10}>
         <Body color={colors.textOnDarkMuted} style={styles.cancel}>
           Annuler
         </Body>
       </Pressable>
     </Screen>
-  );
-}
-
-function ModeCard({ active, emoji, label, desc, onPress }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.modeCard, active && styles.modeCardActive]}
-    >
-      <Text style={styles.modeEmoji}>{emoji}</Text>
-      <Text style={[styles.modeLabel, active && styles.modeLabelActive]}>
-        {label}
-      </Text>
-      <Text style={styles.modeDesc}>{desc}</Text>
-    </Pressable>
   );
 }
 
@@ -178,36 +183,34 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: colors.borderOnDark,
     alignSelf: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   title: { marginBottom: spacing.sm },
-  subtitle: { marginBottom: spacing.lg },
-  modeRow: { flexDirection: 'row', gap: spacing.sm },
-  modeCard: {
-    flex: 1,
-    borderRadius: radius.lg,
-    backgroundColor: colors.cardOnDark,
-    borderWidth: 1.5,
-    borderColor: colors.borderOnDark,
-    padding: spacing.md,
-    alignItems: 'center',
-    gap: 4,
-  },
-  modeCardActive: { borderColor: colors.gold400, backgroundColor: colors.green700 },
-  modeEmoji: { fontSize: 32 },
-  modeLabel: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.md,
+  subtitle: { marginBottom: spacing.xl },
+
+  optionCard: { gap: spacing.sm, marginBottom: spacing.lg, alignItems: 'flex-start' },
+  optionEmoji: { fontSize: 48 },
+  optionTitleDark: {
+    fontFamily: fonts.titleBold,
+    fontSize: fontSizes.lg,
     color: colors.cream,
   },
-  modeLabelActive: { color: colors.gold400 },
-  modeDesc: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.xs,
-    color: colors.textOnDarkMuted,
+  optionTitleCream: {
+    fontFamily: fonts.titleBold,
+    fontSize: fontSizes.lg,
+    color: colors.green900,
+    marginBottom: spacing.xs,
   },
-  input: { marginTop: spacing.md },
-  sectionTitle: { marginTop: spacing.lg, marginBottom: spacing.sm },
+  optionDesc: { marginBottom: spacing.xs },
+  friendInput: { alignSelf: 'stretch', marginTop: spacing.xs },
+
+  sectionTitle: {
+    fontFamily: fonts.titleSemiBold,
+    fontSize: fontSizes.base,
+    color: colors.cream,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
     paddingHorizontal: spacing.md,
@@ -224,7 +227,18 @@ const styles = StyleSheet.create({
     color: colors.textOnDarkMuted,
   },
   chipTextActive: { color: colors.gold400 },
-  error: { marginTop: spacing.md },
-  cta: { marginTop: spacing.lg },
-  cancel: { textAlign: 'center', marginTop: spacing.md },
+
+  emptyBox: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.borderOnDark,
+    backgroundColor: colors.cardOnDark,
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  emptyEmoji: { fontSize: 28, opacity: 0.85 },
+  emptyText: { textAlign: 'center' },
+
+  cancel: { textAlign: 'center', marginTop: spacing.xl, marginBottom: spacing.sm },
 });

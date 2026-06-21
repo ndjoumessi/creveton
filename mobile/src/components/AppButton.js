@@ -1,0 +1,129 @@
+// AppButton — variant (primary/secondary/ghost/danger) × size (sm/md/lg).
+// Feedback tactile < 120ms (scale spring au press), état loading (spinner inline).
+// L'or est réservé au variant primary (CTA).
+
+import React, { useRef } from 'react';
+import {
+  Animated,
+  Pressable,
+  Text,
+  View,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
+import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+
+const SIZES = {
+  sm: { height: 42, font: fontSizes.md, px: spacing.lg },
+  md: { height: 52, font: fontSizes.base, px: spacing.xl },
+  lg: { height: 60, font: fontSizes.lg, px: spacing.xl },
+};
+
+export default function AppButton({
+  title,
+  onPress,
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  loading = false,
+  iconLeft = null,
+  iconRight = null,
+  fullWidth = true,
+  style,
+  textStyle,
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const isDisabled = disabled || loading;
+  const v = VARIANTS[variant] || VARIANTS.primary;
+  const s = SIZES[size] || SIZES.md;
+
+  const pressIn = () =>
+    Animated.spring(scale, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 0,
+    }).start();
+  const pressOut = () =>
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start();
+
+  return (
+    <Animated.View
+      style={[
+        fullWidth && styles.fullWidth,
+        { transform: [{ scale }] },
+        variant === 'primary' && !isDisabled && shadow.gold,
+        style,
+      ]}
+    >
+      <Pressable
+        onPress={onPress}
+        onPressIn={pressIn}
+        onPressOut={pressOut}
+        disabled={isDisabled}
+        style={[
+          styles.base,
+          { height: s.height, paddingHorizontal: s.px },
+          v.container,
+          isDisabled && styles.disabled,
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator color={v.text.color} />
+        ) : (
+          <View style={styles.content}>
+            {iconLeft}
+            <Text style={[styles.text, { fontSize: s.font }, v.text, textStyle]}>
+              {title}
+            </Text>
+            {iconRight}
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+const styles = StyleSheet.create({
+  fullWidth: { alignSelf: 'stretch' },
+  base: {
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  text: { fontFamily: fonts.titleBold, letterSpacing: 0.2 },
+  disabled: { opacity: 0.45 },
+});
+
+const VARIANTS = {
+  primary: {
+    container: { backgroundColor: colors.gold500 },
+    text: { color: colors.green900 },
+  },
+  secondary: {
+    container: { backgroundColor: colors.green500 },
+    text: { color: colors.cream },
+  },
+  ghost: {
+    container: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: colors.green700,
+    },
+    text: { color: colors.green700 },
+  },
+  danger: {
+    container: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: colors.red400,
+    },
+    text: { color: colors.red400 },
+  },
+};

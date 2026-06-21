@@ -1,4 +1,5 @@
-// Conteneur d'écran avec safe area + fond (crème clair ou vert foncé).
+// Screen — conteneur safe-area. Fond cream (clair) ou green900 (dark).
+// scroll optionnel, pull-to-refresh, padding configurable.
 
 import React from 'react';
 import {
@@ -26,26 +27,22 @@ export default function Screen({
   const Content = scroll ? ScrollView : View;
   const contentProps = scroll
     ? {
-        contentContainerStyle: [
-          padded && styles.padded,
-          contentStyle,
-        ],
+        contentContainerStyle: [padded && styles.padded, contentStyle],
         showsVerticalScrollIndicator: false,
+        keyboardShouldPersistTaps: 'handled',
         refreshControl: onRefresh ? (
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={colors.gold400}
+            colors={[colors.green500]}
           />
         ) : undefined,
       }
     : { style: [styles.flex, padded && styles.padded, contentStyle] };
 
   return (
-    <SafeAreaView
-      edges={edges}
-      style={[styles.flex, { backgroundColor: bg }, style]}
-    >
+    <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: bg }, style]}>
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
       <Content {...contentProps}>{children}</Content>
     </SafeAreaView>

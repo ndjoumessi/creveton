@@ -1,4 +1,6 @@
-// Composants texte typés à la charte (Outfit pour titres, Space Grotesk corps).
+// Composants texte typés à la charte.
+// Outfit → Title/Heading (titres, scores). Space Grotesk → Body/Label (corps).
+// Couleurs par défaut contrastées (≥ 4.5:1 sur fond clair).
 
 import React from 'react';
 import { Text as RNText, StyleSheet } from 'react-native';
@@ -6,10 +8,7 @@ import { colors, fonts, fontSizes } from '../constants/theme';
 
 export function Title({ style, children, color, ...props }) {
   return (
-    <RNText
-      style={[styles.title, color && { color }, style]}
-      {...props}
-    >
+    <RNText style={[styles.title, color && { color }, style]} {...props}>
       {children}
     </RNText>
   );
@@ -55,8 +54,8 @@ const styles = StyleSheet.create({
   },
   body: {
     fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.md,
-    color: colors.textDark,
+    fontSize: fontSizes.base,
+    color: colors.textBody,
   },
   label: {
     fontFamily: fonts.bodyMedium,

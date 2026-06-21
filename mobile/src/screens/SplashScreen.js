@@ -1,63 +1,168 @@
-// SplashScreen — logo CREVETON, slogan, boutons Jouer / S'inscrire.
+// SplashScreen — ouverture « Cockpit Émeraude ».
+// Logo or animé, wordmark CREVETON, slogan, barre de progression dorée.
+// Bascule vers Login après ~2 s (les utilisateurs connectés ne montent jamais cet écran).
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Screen, Title, Body, Button } from '../components';
-import { colors, fonts, fontSizes, spacing } from '../constants/theme';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, Animated, Easing, StatusBar, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
 
 export default function SplashScreen({ navigation }) {
+  const logoScale = useRef(new Animated.Value(0.5)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const wordmarkY = useRef(new Animated.Value(20)).current;
+  const wordmarkOpacity = useRef(new Animated.Value(0)).current;
+  const sloganOpacity = useRef(new Animated.Value(0)).current;
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.parallel([
+      Animated.timing(logoScale, {
+        toValue: 1,
+        duration: 400,
+        easing: Easing.out(Easing.back(1.4)),
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 400,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(wordmarkY, {
+        toValue: 0,
+        duration: 300,
+        delay: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(wordmarkOpacity, {
+        toValue: 1,
+        duration: 300,
+        delay: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(sloganOpacity, {
+        toValue: 1,
+        duration: 400,
+        delay: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: 1800,
+        easing: Easing.inOut(Easing.cubic),
+        useNativeDriver: false,
+      }),
+    ]);
+    animation.start();
+
+    const timer = setTimeout(() => navigation.replace('Login'), 2000);
+
+    return () => {
+      clearTimeout(timer);
+      animation.stop();
+    };
+  }, [
+    logoScale,
+    logoOpacity,
+    wordmarkY,
+    wordmarkOpacity,
+    sloganOpacity,
+    progress,
+    navigation,
+  ]);
+
+  const fillWidth = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
   return (
-    <Screen dark>
-      <View style={styles.container}>
-        <View style={styles.brand}>
-          <Text style={styles.shrimp}>🦐</Text>
-          <Text style={styles.logo}>CREVETON</Text>
-          <View style={styles.underline} />
-          <Body style={styles.slogan} color={colors.gold400}>
-            Le quiz qui réveille ton génie camerounais
-          </Body>
-        </View>
+    <SafeAreaView style={styles.root}>
+      <StatusBar barStyle="light-content" />
 
-        <View style={styles.actions}>
-          <Button
-            title="S'inscrire"
-            variant="primary"
-            onPress={() => navigation.navigate('Register')}
-          />
-          <Button
-            title="J'ai déjà un compte"
-            variant="ghost"
-            onPress={() => navigation.navigate('Login')}
-            style={{ marginTop: spacing.md }}
-          />
-        </View>
+      <View style={styles.center}>
+        <Animated.View
+          style={[
+            styles.logo,
+            { opacity: logoOpacity, transform: [{ scale: logoScale }] },
+          ]}
+        >
+          <Text style={styles.logoLetter}>C</Text>
+        </Animated.View>
 
-        <Body style={styles.footer} color={colors.textOnDarkMuted}>
-          🇨🇲 Fait au Cameroun · 12–30 ans
-        </Body>
+        <Animated.Text
+          style={[
+            styles.wordmark,
+            { opacity: wordmarkOpacity, transform: [{ translateY: wordmarkY }] },
+          ]}
+        >
+          CREVETON
+        </Animated.Text>
+
+        <Animated.Text style={[styles.slogan, { opacity: sloganOpacity }]}>
+          Quiz. Compétition. Cameroun.
+        </Animated.Text>
       </View>
-    </Screen>
+
+      <View style={styles.progressTrack}>
+        <Animated.View style={[styles.progressFill, { width: fillWidth }]} />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'space-between', paddingVertical: spacing.xxl },
-  brand: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  shrimp: { fontSize: 88, marginBottom: spacing.md },
+  root: {
+    flex: 1,
+    backgroundColor: colors.green900,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   logo: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.display,
+    width: 96,
+    height: 96,
+    borderRadius: radius.xxl,
+    backgroundColor: colors.gold500,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+  },
+  logoLetter: {
+    fontFamily: fonts.titleBlack,
+    fontSize: 56,
+    lineHeight: 64,
+    color: colors.green900,
+  },
+  wordmark: {
+    fontFamily: fonts.titleBlack,
+    fontSize: 32,
+    letterSpacing: 2,
     color: colors.cream,
-    letterSpacing: 4,
+    marginBottom: spacing.md,
   },
-  underline: {
-    width: 64,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.gold400,
-    marginVertical: spacing.md,
+  slogan: {
+    fontFamily: fonts.bodyRegular,
+    fontSize: fontSizes.md,
+    color: colors.textOnDarkMuted,
   },
-  slogan: { textAlign: 'center', fontSize: fontSizes.md, maxWidth: 280 },
-  actions: { width: '100%' },
-  footer: { textAlign: 'center', marginTop: spacing.lg },
+  progressTrack: {
+    height: 3,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    marginHorizontal: spacing.xxl,
+    marginBottom: spacing.xxl,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: radius.pill,
+    backgroundColor: colors.gold500,
+  },
 });

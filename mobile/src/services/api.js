@@ -16,6 +16,7 @@ import {
   clearTokens,
 } from './storage';
 
+// eslint-disable-next-line import/no-named-as-default-member -- axios.create est l'usage attendu de l'import par défaut
 const api = axios.create({
   baseURL: API_URL,
   timeout: 15000,
@@ -90,7 +91,7 @@ api.interceptors.response.use(
         config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${newToken}`;
         return api(config);
-      } catch (e) {
+      } catch {
         await clearTokens();
         if (onAuthExpired) onAuthExpired();
         return Promise.reject(error);

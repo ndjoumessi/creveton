@@ -1,12 +1,28 @@
-// Barrel export des composants réutilisables.
+// Barrel export de la bibliothèque de composants.
 
+// Typographie
 export { Title, Heading, Body, Label } from './Text';
-export { default as Button } from './Button';
+
+// Layout
 export { default as Screen } from './Screen';
-export { default as Card } from './Card';
-export { default as Input } from './Input';
-export { default as Badge } from './Badge';
-export { default as Loader } from './Loader';
+export { default as AppCard } from './AppCard';
+
+// Contrôles
+export { default as AppButton } from './AppButton';
+export { default as AppInput } from './AppInput';
+
+// Identité / badges
+export { default as Avatar } from './Avatar';
+export { default as ThemeBadge } from './ThemeBadge';
+export { default as LevelBadge } from './LevelBadge';
+
+// États
+export { default as LoadingScreen } from './LoadingScreen';
+export { default as ErrorScreen } from './ErrorScreen';
+export { default as Skeleton } from './Skeleton';
+
+// Feedback
+export { ToastProvider, useToast } from './Toast';
+
+// Jeu
 export { default as ProgressDots } from './ProgressDots';
-export { default as EmptyState } from './EmptyState';
-export { default as SyncBadge } from './SyncBadge';

@@ -22,6 +22,7 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 
 import AppNavigator from './src/navigation/AppNavigator';
+import { ToastProvider } from './src/components';
 import { initDatabase } from './src/services/database';
 import {
   runSync,
@@ -85,12 +86,14 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <View
-        style={{ flex: 1, backgroundColor: colors.cream }}
-        onLayout={onLayoutRootView}
-      >
-        <AppNavigator />
-      </View>
+      <ToastProvider>
+        <View
+          style={{ flex: 1, backgroundColor: colors.cream }}
+          onLayout={onLayoutRootView}
+        >
+          <AppNavigator />
+        </View>
+      </ToastProvider>
     </SafeAreaProvider>
   );
 }
