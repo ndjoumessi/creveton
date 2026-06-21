@@ -227,6 +227,26 @@ async function stats(id) {
   return rows[0];
 }
 
+/**
+ * Statistiques globales du parc d'utilisateurs (bandeau KPI §3.2). Calculées sur
+ * l'ensemble de la base (hors soft-deleted), pas sur une page de la liste.
+ *  - active_7d : dernière activité dans les 7 derniers jours
+ *  - new_today : inscrits aujourd'hui (DATE(created_at) = aujourd'hui, fuseau serveur)
+ *  - blocked   : comptes suspendus ou bannis
+ */
+async function adminStats() {
+  const { rows } = await db.query(
+    `SELECT
+        count(*)::int AS total,
+        count(*) FILTER (WHERE last_active_at > now() - interval '7 days')::int AS active_7d,
+        count(*) FILTER (WHERE created_at >= date_trunc('day', now()))::int AS new_today,
+        count(*) FILTER (WHERE status IN ('suspended', 'banned'))::int AS blocked
+       FROM users
+      WHERE deleted_at IS NULL`
+  );
+  return rows[0];
+}
+
 /** Nombre de comptes actifs (proxy du parc d'appareils pour le push force-sync). */
 async function countActive() {
   const { rows } = await db.query(
@@ -332,6 +352,7 @@ module.exports = {
   createInvited,
   softDelete,
   stats,
+  adminStats,
   countActive,
   referralCount,
 };

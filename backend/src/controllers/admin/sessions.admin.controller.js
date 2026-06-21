@@ -44,9 +44,16 @@ const get = asyncHandler(async (req, res) => {
       correct_index: q ? q.correct_index : null,
       your_index: a.selected_index ?? null,
       is_correct: a.is_correct ?? null,
-      elapsed_ms: a.elapsed_ms ?? null,
+      elapsed_ms: a.elapsed_ms ?? a.time_ms ?? null,
     };
   });
+
+  // Durée totale agrégée depuis le temps passé par réponse (game_sessions n'a pas
+  // de colonne durée). null si aucune donnée de timing n'est disponible.
+  const durationMs = answers.reduce((sum, a) => {
+    const ms = a.elapsed_ms ?? a.time_ms;
+    return ms == null ? sum : (sum ?? 0) + Number(ms);
+  }, null);
 
   return ok(res, {
     id: session.id,
@@ -58,6 +65,7 @@ const get = asyncHandler(async (req, res) => {
     correct_count: session.correct_count,
     question_count: session.question_count,
     xp_earned: session.xp_earned,
+    duration_s: durationMs != null ? Math.round(durationMs / 1000) : null,
     played_at: session.played_at,
     answers: recap,
   });

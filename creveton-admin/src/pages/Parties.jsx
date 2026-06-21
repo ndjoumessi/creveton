@@ -35,8 +35,12 @@ function inPeriod(playedAt, period) {
   return d.getTime() >= since;
 }
 
-/** Durée lisible : secondes (< 60 s) ou minutes arrondies. */
-const formatDuration = (s) => (s < 60 ? `${s}s` : `${Math.round(s / 60)} min`);
+/** Durée lisible : secondes (< 60 s) ou minutes arrondies ; "—" si indisponible. */
+const formatDuration = (s) => {
+  const n = Number(s);
+  if (s == null || Number.isNaN(n)) return '—';
+  return n < 60 ? `${n}s` : `${Math.round(n / 60)} min`;
+};
 
 export default function Parties() {
   const navigate = useNavigate();

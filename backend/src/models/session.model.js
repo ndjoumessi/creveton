@@ -78,18 +78,24 @@ function toAdminView(row) {
     correct_count: row.correct_count,
     question_count: row.question_count,
     xp_earned: row.xp_earned,
+    // game_sessions n'a pas de colonne durée : on l'agrège depuis le temps passé
+    // par réponse (answers JSONB). null si la donnée de timing est absente.
+    duration_s: row.duration_ms != null ? Math.round(Number(row.duration_ms) / 1000) : null,
     played_at: row.played_at,
   };
 }
 
 /**
  * Liste admin des parties (JOIN users), filtres + pagination offset.
- * NB : game_sessions n'a pas de colonne deleted_at (pas de soft delete).
+ * NB : game_sessions n'a pas de colonne deleted_at (pas de soft delete) ni de
+ * colonne durée — celle-ci est calculée par somme des temps de réponse (JSONB).
  */
 async function listAdmin({ userId = null, theme = null, level = null, dateFrom = null, limit = 20, offset = 0 }) {
   const { rows } = await db.query(
     `SELECT gs.id, gs.user_id, gs.mode, gs.theme, gs.level, gs.score, gs.correct_count,
             gs.question_count, gs.xp_earned, gs.played_at,
+            (SELECT SUM(COALESCE((a->>'time_ms')::numeric, (a->>'elapsed_ms')::numeric))
+               FROM jsonb_array_elements(gs.answers) AS a) AS duration_ms,
             u.name AS user_name, u.ville AS user_ville, u.level AS user_level
        FROM game_sessions gs
        JOIN users u ON gs.user_id = u.id

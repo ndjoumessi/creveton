@@ -36,6 +36,12 @@ const list = asyncHandler(async (req, res) => {
   });
 });
 
+/** GET /admin/users/stats — KPI globaux du parc (total, actifs 7j, nouveaux, bloqués). */
+const usersStats = asyncHandler(async (req, res) => {
+  const data = await userModel.adminStats();
+  return ok(res, data);
+});
+
 /** GET /admin/users/:id — fiche (profil + stats). */
 const get = asyncHandler(async (req, res) => {
   const user = await userModel.findById(req.params.id);
@@ -123,4 +129,4 @@ const referral = asyncHandler(async (req, res) => {
   return ok(res, { code: req.params.code, signups: count });
 });
 
-module.exports = { list, get, suspend, ban, resetPassword, remove, changeRole, invite, referral };
+module.exports = { list, usersStats, get, suspend, ban, resetPassword, remove, changeRole, invite, referral };

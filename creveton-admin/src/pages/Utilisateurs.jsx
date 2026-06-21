@@ -324,6 +324,11 @@ export default function Utilisateurs() {
   );
   const rows = useMemo(() => data?.data || [], [data]);
 
+  // KPI globaux du parc — calculés côté backend sur TOUTE la base (pas la page
+  // courante, qui est paginée). Rechargés après les mutations qui les affectent.
+  const { data: statsData, refetch: refetchStats } = useApiData(() => usersService.stats(), []);
+  const stats = statsData || {};
+
   // Filtre période d'inscription appliqué côté client sur created_at.
   const filtered = useMemo(
     () => (filters.period ? rows.filter((u) => inPeriod(u, filters.period)) : rows),
@@ -337,12 +342,6 @@ export default function Utilisateurs() {
     const found = [...new Set(rows.map((u) => u.ville).filter(Boolean))].sort();
     return found.length ? found : FALLBACK_VILLES;
   }, [rows]);
-
-  // Statistiques du bandeau.
-  const totalJoueurs = rows.length;
-  const actifs7j = rows.filter((u) => u.status === 'active').length;
-  const nouveaux = rows.filter((u) => isToday(u.created_at)).length;
-  const bloques = rows.filter((u) => u.status === 'suspended' || u.status === 'banned').length;
 
   const openSelected = (u) => { setSelected(u); setTab('profil'); };
 
@@ -358,6 +357,7 @@ export default function Utilisateurs() {
       setSuspendReason('');
       setSelected(null);
       refetch();
+      refetchStats();
     } catch { notify.error('Suspension impossible.'); }
   };
 
@@ -388,6 +388,7 @@ export default function Utilisateurs() {
       notify.success('Compte supprimé (RGPD).');
       setSelected(null);
       refetch();
+      refetchStats();
     } catch { notify.error('Suppression impossible.'); }
   };
 
@@ -398,6 +399,7 @@ export default function Utilisateurs() {
       setTempPassword(res.temporary_password || '');
       notify.success(`Compte créé · mot de passe temporaire : ${res.temporary_password}`);
       refetch();
+      refetchStats();
     } catch { notify.error('Invitation impossible.'); } finally { setInviting(false); }
   };
 
@@ -461,10 +463,10 @@ export default function Utilisateurs() {
 
       {/* Bandeau de statistiques */}
       <div className="stat-banner">
-        <div className="stat"><div className="v">{num(totalJoueurs)}</div><div className="l">Total joueurs</div></div>
-        <div className="stat"><div className="v">{num(actifs7j)}</div><div className="l">Actifs 7j</div></div>
-        <div className="stat"><div className="v">{num(nouveaux)}</div><div className="l">Nouveaux aujourd&apos;hui</div></div>
-        <div className="stat"><div className="v">{num(bloques)}</div><div className="l">Suspendus</div></div>
+        <div className="stat"><div className="v">{num(stats.total)}</div><div className="l">Total joueurs</div></div>
+        <div className="stat"><div className="v">{num(stats.active_7d)}</div><div className="l">Actifs 7j</div></div>
+        <div className="stat"><div className="v">{num(stats.new_today)}</div><div className="l">Nouveaux aujourd&apos;hui</div></div>
+        <div className="stat"><div className="v">{num(stats.blocked)}</div><div className="l">Suspendus</div></div>
       </div>
 
       {/* Filtres */}

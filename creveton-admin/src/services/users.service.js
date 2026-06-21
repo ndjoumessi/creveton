@@ -22,6 +22,26 @@ export function list(params = {}) {
   );
 }
 
+/** GET /admin/users/stats — KPI globaux du parc (total, actifs 7j, nouveaux, bloqués). */
+export function stats() {
+  return withMock(
+    () => api.get('/admin/users/stats').then((r) => r.data),
+    () => {
+      const DAY = 86400000;
+      const now = Date.now();
+      const isToday = (iso) => new Date(iso).toDateString() === new Date().toDateString();
+      const active7d = (u) => u.last_active_at && now - new Date(u.last_active_at).getTime() <= 7 * DAY;
+      return {
+        total: mockUsers.length,
+        // mockUsers n'a pas de last_active_at : on retombe sur les comptes actifs.
+        active_7d: mockUsers.filter((u) => active7d(u) || (!u.last_active_at && u.status === 'active')).length,
+        new_today: mockUsers.filter((u) => isToday(u.created_at)).length,
+        blocked: mockUsers.filter((u) => u.status === 'suspended' || u.status === 'banned').length,
+      };
+    },
+  );
+}
+
 /** GET /admin/users/:id (fiche + stats). */
 export function get(id) {
   return withMock(
@@ -56,4 +76,4 @@ export function changeRole(id, role) {
   return withMock(() => api.patch(`/admin/users/${id}/role`, { role }).then((r) => r.data), () => ({ id, role }));
 }
 
-export default { list, get, suspend, ban, resetPassword, remove, invite, changeRole };
+export default { list, stats, get, suspend, ban, resetPassword, remove, invite, changeRole };

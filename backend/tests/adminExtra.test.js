@@ -42,7 +42,43 @@ t('GET /admin/sessions → 200, parties + infos joueur (admin)', async () => {
   expect(r.status).toBe(200);
   expect(r.body.data).toHaveLength(1);
   expect(r.body.data[0]).toMatchObject({ score: 150, theme: 'sport', user: { name: player.name, ville: 'Douala' } });
+  // Durée agrégée depuis le temps de réponse (elapsed_ms 2200 → 2 s), pas de NaN.
+  expect(r.body.data[0].duration_s).toBe(2);
   expect(r.body.page).toHaveProperty('has_more');
+});
+
+t('GET /admin/sessions : duration_s = null si aucun timing dans answers', async () => {
+  const admin = await H.createUser({ role: 'admin', phone: '+237690000040' });
+  const player = await H.createUser({ role: 'player', phone: '+237690000041' });
+  await H.db.query(
+    `INSERT INTO game_sessions (user_id, theme, level, score, correct_count, question_count, xp_earned, answers)
+     VALUES ($1,'sport','beginner',10,1,1,20,'[]'::jsonb)`,
+    [player.id]
+  );
+  const r = await request(app).get(`${P}/sessions`).set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+  expect(r.status).toBe(200);
+  expect(r.body.data[0].duration_s).toBeNull();
+});
+
+t('GET /admin/users/stats → KPI globaux (total, actifs 7j, nouveaux, bloqués)', async () => {
+  const admin = await H.createUser({ role: 'admin', phone: '+237690000042' });
+  const p1 = await H.createUser({ role: 'player', phone: '+237690000043' }); // actif récemment
+  const p2 = await H.createUser({ role: 'player', phone: '+237690000044' }); // suspendu
+  const p3 = await H.createUser({ role: 'player', phone: '+237690000045' }); // inactif (10 j)
+  await H.db.query(`UPDATE users SET last_active_at = now() WHERE id = $1`, [p1.id]);
+  await H.db.query(`UPDATE users SET status = 'suspended' WHERE id = $1`, [p2.id]);
+  await H.db.query(`UPDATE users SET last_active_at = now() - interval '10 days' WHERE id = $1`, [p3.id]);
+
+  const r = await request(app).get(`${P}/users/stats`).set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+  expect(r.status).toBe(200);
+  expect(r.body).toMatchObject({ total: 4, active_7d: 1, new_today: 4, blocked: 1 });
+});
+
+t('GET /admin/users/stats : moderator autorisé (users:read = moderator)', async () => {
+  const mod = await H.createUser({ role: 'moderator', phone: '+237690000046' });
+  const r = await request(app).get(`${P}/users/stats`).set('Authorization', `Bearer ${H.tokenFor(mod)}`);
+  expect(r.status).toBe(200);
+  expect(r.body).toHaveProperty('total');
 });
 
 t('GET /admin/sessions : moderator → 403 (admin minimum)', async () => {
