@@ -94,20 +94,59 @@ function validateRow(raw) {
   };
 }
 
+// Seuils de similarité trigramme (CDC §3.3, détection multi-niveaux).
+//   > 0.85           → quasi-doublon : rejet automatique (non forçable).
+//   ]0.70 ; 0.85]    → ressemblance forte : avertissement (forçable à l'import).
+//   ≤ 0.70           → considéré comme nouveau.
+const SIMILARITY_WARN = 0.7;
+const SIMILARITY_REJECT = 0.85;
+
+/** Arrondi à 2 décimales pour un rapport lisible (0.8537 → 0.85). */
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
+
+/** Pourcentage entier pour les libellés (0.853 → 85). */
+function pctOf(n) {
+  return Math.round(n * 100);
+}
+
+/** Compare deux jeux d'options (texte + bonne réponse) indépendamment de l'ordre. */
+function optionsDiffer(a, b) {
+  const norm = (opts) =>
+    (Array.isArray(opts) ? opts : [])
+      .map((o) => `${String(o.text || '').trim().toLowerCase()}|${o.is_correct ? 1 : 0}`)
+      .sort()
+      .join('§');
+  return norm(a) !== norm(b);
+}
+
 /**
- * Importe un CSV.
+ * Importe un CSV avec détection de doublons multi-niveaux (CDC §3.3).
+ *
+ * Niveau 1 — hash exact : texte identique en base → REJET (« doublon exact »).
+ * Niveau 2 — similarité pg_trgm : >0.85 → REJET (quasi-doublon) ; 0.70–0.85 →
+ *            AVERTISSEMENT (non inséré sauf `force`).
+ * Niveau 3 — même texte mais options modifiées → AVERTISSEMENT.
+ *
+ * Les lignes en avertissement ne sont PAS insérées par défaut ; l'admin peut les
+ * forcer (`force: true`, bouton « Forcer l'import » côté console). Les rejets durs
+ * (validation, doublon exact, similarité >0.85) ne sont jamais insérés.
+ *
  * @param {Buffer} buffer
  * @param {object} [opts]
  * @param {string|null} [opts.createdBy]  admin à l'origine de l'import.
  * @param {boolean} [opts.persist=true]   insérer en base (false = dry-run).
- * @returns {Promise<{ total, accepted, rejected, inserted, rejected_rows }>}
+ * @param {boolean} [opts.force=false]    insérer aussi les lignes en avertissement.
+ * @returns {Promise<{ total, accepted, rejected, warnings, inserted, errors, warnings_list }>}
  */
-async function importCsv(buffer, { createdBy = null, persist = true } = {}) {
+async function importCsv(buffer, { createdBy = null, persist = true, force = false } = {}) {
   const raws = await parseBuffer(buffer);
 
-  const accepted = [];
-  const rejectedRows = [];
-  const seenHashes = new Set();
+  const toInsert = []; // questions effectivement insérables (propres + forcées)
+  const errors = []; // rejets durs
+  const warningsList = []; // avertissements (forçables)
+  const seenHashes = new Set(); // doublons intra-lot (exacts)
 
   // Ligne 1 = en-têtes ; la 1re ligne de données est la ligne 2 du fichier.
   let line = 1;
@@ -115,36 +154,98 @@ async function importCsv(buffer, { createdBy = null, persist = true } = {}) {
     line += 1;
     const result = validateRow(raw);
     if (!result.ok) {
-      rejectedRows.push({ line, errors: result.errors });
+      errors.push({ row: line, issue: result.errors.join(' ; ') });
       continue;
     }
+    const importedText = result.question.text_fr;
+
+    // Doublon intra-lot (texte identique plus haut dans le même fichier).
     if (seenHashes.has(result.hash)) {
-      rejectedRows.push({ line, errors: ['doublon dans le fichier (texte identique)'] });
-      continue;
-    }
-    if (await questionModel.existsByNormalizedText(result.normalized)) {
-      rejectedRows.push({ line, errors: ['doublon : question déjà présente en base'] });
+      errors.push({ row: line, issue: 'doublon dans le fichier (texte identique)' });
       continue;
     }
     seenHashes.add(result.hash);
-    accepted.push(result.question);
+
+    // Niveau 1 — doublon exact en base.
+    const exact = await questionModel.findExactDuplicate(result.hash, result.normalized);
+    if (exact) {
+      // Niveau 3 — même texte, options modifiées → avertissement (forçable).
+      if (optionsDiffer(result.question.options, exact.options)) {
+        warningsList.push({
+          row: line,
+          issue: 'question existante avec des options modifiées',
+          similar_to: exact.id,
+          similarity: 1,
+          existing_text: exact.text_fr,
+          imported_text: importedText,
+        });
+        if (force) toInsert.push(result.question);
+      } else {
+        errors.push({
+          row: line,
+          issue: 'doublon exact',
+          existing_id: exact.id,
+          existing_text: exact.text_fr,
+          imported_text: importedText,
+        });
+      }
+      continue;
+    }
+
+    // Niveau 2 — quasi-doublons par similarité trigramme.
+    const [top] = await questionModel.findSimilar(importedText, SIMILARITY_WARN, 3);
+    if (top && top.sim > SIMILARITY_REJECT) {
+      errors.push({
+        row: line,
+        issue: `question similaire à ${pctOf(top.sim)}%`,
+        similar_to: top.id,
+        similarity: round2(top.sim),
+        existing_text: top.text_fr,
+        imported_text: importedText,
+      });
+      continue;
+    }
+    if (top) {
+      // 0.70 < sim ≤ 0.85 → avertissement (non inséré sauf force).
+      warningsList.push({
+        row: line,
+        issue: `question similaire à ${pctOf(top.sim)}%`,
+        similar_to: top.id,
+        similarity: round2(top.sim),
+        existing_text: top.text_fr,
+        imported_text: importedText,
+      });
+      if (force) toInsert.push(result.question);
+      continue;
+    }
+
+    // Aucun conflit → question propre, acceptée.
+    toInsert.push(result.question);
   }
 
   let inserted = 0;
   if (persist) {
-    for (const question of accepted) {
+    for (const question of toInsert) {
       await questionModel.create({ ...question, created_by: createdBy });
       inserted += 1;
     }
   }
 
+  // Chaque ligne tombe dans EXACTEMENT une catégorie : rejet dur, avertissement,
+  // ou propre (accepted). accepted + warnings + rejected = total. `inserted` vaut
+  // accepted, plus les avertissements si `force` (les lignes forcées sont écrites
+  // mais restent comptées comme avertissements dans le rapport).
+  const accepted = toInsert.length - (force ? warningsList.length : 0);
+
   return {
     total: raws.length,
-    accepted: accepted.length,
-    rejected: rejectedRows.length,
+    accepted,
+    rejected: errors.length,
+    warnings: warningsList.length,
     inserted,
-    rejected_rows: rejectedRows,
+    errors,
+    warnings_list: warningsList,
   };
 }
 
-module.exports = { importCsv, validateRow, parseBuffer };
+module.exports = { importCsv, validateRow, parseBuffer, optionsDiffer, SIMILARITY_WARN, SIMILARITY_REJECT };

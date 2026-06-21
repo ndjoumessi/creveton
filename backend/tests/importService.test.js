@@ -2,9 +2,11 @@
 
 process.env.NODE_ENV = 'test';
 
-// Modèle mocké : pas de Postgres en test.
+// Modèle mocké : pas de Postgres en test (les niveaux de détection sont validés
+// contre un vrai pg_trgm dans tests/importDedup.test.js).
 jest.mock('../src/models/question.model', () => ({
-  existsByNormalizedText: jest.fn().mockResolvedValue(false),
+  findExactDuplicate: jest.fn().mockResolvedValue(null),
+  findSimilar: jest.fn().mockResolvedValue([]),
   create: jest.fn().mockResolvedValue({ id: 'new-id', status: 'pending_review' }),
 }));
 
@@ -67,7 +69,8 @@ describe('importService.validateRow', () => {
 
 describe('importService.importCsv', () => {
   beforeEach(() => {
-    questionModel.existsByNormalizedText.mockResolvedValue(false);
+    questionModel.findExactDuplicate.mockResolvedValue(null);
+    questionModel.findSimilar.mockResolvedValue([]);
     questionModel.create.mockClear();
   });
 
@@ -81,7 +84,8 @@ describe('importService.importCsv', () => {
     expect(report.accepted).toBe(1);
     expect(report.inserted).toBe(1);
     expect(report.rejected).toBe(1);
-    expect(report.rejected_rows[0].line).toBe(3);
+    expect(report.warnings).toBe(0);
+    expect(report.errors[0].row).toBe(3);
     expect(questionModel.create).toHaveBeenCalledTimes(1);
     expect(questionModel.create.mock.calls[0][0].created_by).toBe('admin-1');
   });
@@ -91,17 +95,88 @@ describe('importService.importCsv', () => {
     const report = await importService.importCsv(csv(row, row), { persist: false });
     expect(report.accepted).toBe(1);
     expect(report.rejected).toBe(1);
-    expect(report.rejected_rows[0].errors.join()).toMatch(/doublon dans le fichier/);
+    expect(report.errors[0].issue).toMatch(/doublon dans le fichier/);
   });
 
-  test('doublon déjà présent en base → rejet', async () => {
-    questionModel.existsByNormalizedText.mockResolvedValue(true);
+  test('niveau 1 — doublon exact en base (options identiques) → rejet', async () => {
+    questionModel.findExactDuplicate.mockResolvedValue({
+      id: 'existing-uuid',
+      text_fr: 'Déjà en base ?',
+      options: [
+        { text: 'Douala', is_correct: false },
+        { text: 'Yaoundé', is_correct: true },
+        { text: 'Bafoussam', is_correct: false },
+        { text: 'Garoua', is_correct: false },
+      ],
+      correct_index: 1,
+    });
     const report = await importService.importCsv(
       csv('Déjà en base ?,Douala,Yaoundé,Bafoussam,Garoua,B,beginner,geographie,exp,fr'),
       { persist: false }
     );
     expect(report.accepted).toBe(0);
     expect(report.rejected).toBe(1);
-    expect(report.rejected_rows[0].errors.join()).toMatch(/déjà présente/);
+    expect(report.errors[0].issue).toBe('doublon exact');
+    expect(report.errors[0].existing_id).toBe('existing-uuid');
+  });
+
+  test('niveau 3 — même texte, options modifiées → avertissement', async () => {
+    questionModel.findExactDuplicate.mockResolvedValue({
+      id: 'existing-uuid',
+      text_fr: 'Déjà en base ?',
+      options: [
+        { text: 'Douala', is_correct: true }, // bonne réponse différente
+        { text: 'Yaoundé', is_correct: false },
+      ],
+      correct_index: 0,
+    });
+    const report = await importService.importCsv(
+      csv('Déjà en base ?,Douala,Yaoundé,Bafoussam,Garoua,B,beginner,geographie,exp,fr'),
+      { persist: false }
+    );
+    expect(report.rejected).toBe(0);
+    expect(report.warnings).toBe(1);
+    expect(report.warnings_list[0].issue).toMatch(/options modifiées/);
+    expect(report.warnings_list[0].similar_to).toBe('existing-uuid');
+  });
+
+  test('niveau 2 — similarité > 85% → rejet quasi-doublon', async () => {
+    questionModel.findSimilar.mockResolvedValue([
+      { id: 'sim-uuid', text_fr: 'Capitale du Cameroun ?', sim: 0.91 },
+    ]);
+    const report = await importService.importCsv(
+      csv('La capitale du Cameroun ?,Douala,Yaoundé,Bafoussam,Garoua,B,beginner,geographie,exp,fr'),
+      { persist: false }
+    );
+    expect(report.rejected).toBe(1);
+    expect(report.errors[0].issue).toMatch(/similaire à 91%/);
+    expect(report.errors[0].similarity).toBe(0.91);
+  });
+
+  test('niveau 2 — similarité 70–85% → avertissement (non inséré)', async () => {
+    questionModel.findSimilar.mockResolvedValue([
+      { id: 'sim-uuid', text_fr: 'Capitale du Cameroun ?', sim: 0.72 },
+    ]);
+    const report = await importService.importCsv(
+      csv('Quelle ville est capitale du Cameroun ?,Douala,Yaoundé,Bafoussam,Garoua,B,beginner,geographie,exp,fr'),
+      { persist: true }
+    );
+    expect(report.accepted).toBe(0);
+    expect(report.warnings).toBe(1);
+    expect(report.inserted).toBe(0);
+    expect(report.warnings_list[0].similarity).toBe(0.72);
+  });
+
+  test('force=true → les avertissements (70–85%) sont insérés', async () => {
+    questionModel.findSimilar.mockResolvedValue([
+      { id: 'sim-uuid', text_fr: 'Capitale du Cameroun ?', sim: 0.72 },
+    ]);
+    const report = await importService.importCsv(
+      csv('Quelle ville est capitale du Cameroun ?,Douala,Yaoundé,Bafoussam,Garoua,B,beginner,geographie,exp,fr'),
+      { persist: true, force: true }
+    );
+    expect(report.warnings).toBe(1);
+    expect(report.inserted).toBe(1);
+    expect(questionModel.create).toHaveBeenCalledTimes(1);
   });
 });

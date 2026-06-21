@@ -46,13 +46,18 @@ export function remove(id) {
   return withMock(() => api.delete(`/admin/questions/${id}`).then((r) => r.data), () => ({ id, status: 'archived' }));
 }
 
-/** POST /admin/questions/import (CSV multipart). */
-export function importCsv(file) {
+/**
+ * POST /admin/questions/import (CSV multipart).
+ * @param {File} file
+ * @param {{ force?: boolean }} [opts]  force=true → insère aussi les avertissements (70–85 %).
+ */
+export function importCsv(file, { force = false } = {}) {
   const form = new FormData();
   form.append('file', file);
+  if (force) form.append('force', 'true');
   return withMock(
     () => api.post('/admin/questions/import', form, { headers: { 'Content-Type': 'multipart/form-data' } }).then((r) => r.data),
-    () => ({ total_rows: 0, accepted: 0, rejected: 0, errors: [] }),
+    () => ({ total_rows: 0, accepted: 0, rejected: 0, warnings: 0, errors: [], warnings_list: [] }),
   );
 }
 

@@ -3,6 +3,7 @@ import {
   Plus, Upload, Search, Check, Eye, Send, ThumbsUp, ThumbsDown,
   Archive, RotateCcw, Zap, Download, ChevronUp, ChevronDown, ChevronsUpDown,
   ChevronLeft, ChevronRight, X, FileText, ListChecks, Tags, Copy, AlertCircle,
+  AlertTriangle, CheckCircle2, XCircle,
 } from 'lucide-react';
 import questionsService from '../services/questions.service';
 import { useApiData } from '../hooks/useApiData';
@@ -55,74 +56,175 @@ function downloadCsv(content, filename) {
   URL.revokeObjectURL(url);
 }
 
+/* Échappe un champ pour le CSV de rapport (virgules / guillemets / retours). */
+function csvCell(v) {
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+/* Construit un CSV du rapport d'import (rejets + avertissements). */
+function buildReportCsv(report) {
+  const head = 'categorie,ligne,probleme,similarite,question_importee,question_existante';
+  const lines = [
+    ...(report.errors || []).map((e) =>
+      ['rejet', e.row, e.issue, e.similarity ?? '', e.imported_text ?? '', e.existing_text ?? ''].map(csvCell).join(',')),
+    ...(report.warnings_list || []).map((w) =>
+      ['avertissement', w.row, w.issue, w.similarity ?? '', w.imported_text ?? '', w.existing_text ?? ''].map(csvCell).join(',')),
+  ];
+  return [head, ...lines].join('\n');
+}
+
+/* Carte de comparaison côte à côte : question importée vs question existante. */
+function CompareRow({ item, tone }) {
+  return (
+    <div className={`import-compare import-compare-${tone}`}>
+      <div className="import-compare-head">
+        <span className="import-compare-line">Ligne {item.row}</span>
+        <span className="import-compare-issue">{item.issue}</span>
+        {item.similarity != null && (
+          <span className="import-compare-sim">{Math.round(item.similarity * 100)} %</span>
+        )}
+      </div>
+      <div className="import-compare-grid">
+        <div className="import-compare-col">
+          <span className="import-compare-label">Importée</span>
+          <p className="import-compare-text">{item.imported_text || '—'}</p>
+        </div>
+        <div className="import-compare-col import-compare-col-existing">
+          <span className="import-compare-label">Déjà en base</span>
+          <p className="import-compare-text">{item.existing_text || '—'}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ImportModal({ open, onClose, onDone }) {
   const [drag, setDrag] = useState(false);
   const [report, setReport] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState('rejected');
+  const lastFileRef = useRef(null);
   const inputRef = useRef();
 
-  const handleFile = async (file) => {
+  const runImport = async (file, { force = false } = {}) => {
     if (!file) return;
+    lastFileRef.current = file;
     setBusy(true);
     try {
-      const res = await questionsService.importCsv(file);
+      const res = await questionsService.importCsv(file, { force });
       setReport(res);
-      notify.success(`Import : ${res.accepted} acceptées, ${res.rejected} rejetées`);
+      // Onglet ouvert par défaut sur la catégorie la plus « actionnable ».
+      setTab(res.warnings > 0 ? 'warnings' : res.rejected > 0 ? 'rejected' : 'accepted');
+      notify.success(
+        `Import : ${res.accepted} acceptées, ${res.warnings || 0} avertissements, ${res.rejected} rejetées`,
+      );
       onDone?.();
     } catch { notify.error('Échec de l’import.'); } finally { setBusy(false); }
   };
 
-  const runForceSync = async () => {
-    try {
-      const r = await questionsService.forceSync([]);
-      notify.success(`Force sync envoyé · ${r.devices_targeted?.toLocaleString('fr-FR') || '—'} appareils`);
-    } catch { notify.error('Force sync indisponible.'); }
+  const forceWarnings = () => runImport(lastFileRef.current, { force: true });
+
+  const downloadReport = () => {
+    downloadCsv(buildReportCsv(report), 'rapport-import-creveton.csv');
   };
+
+  const reset = () => { setReport(null); lastFileRef.current = null; };
+
+  const errors = report?.errors || [];
+  const warnings = report?.warnings_list || [];
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={() => { reset(); onClose(); }}
       title="Import CSV de questions"
       footer={(
         <>
           <button className="btn" onClick={() => downloadCsv(CSV_TEMPLATE, 'modele-questions-creveton.csv')}>
-            <Download size={15} /> Télécharger le modèle
+            <Download size={15} /> Modèle
           </button>
-          <button className="btn" onClick={onClose}>Fermer</button>
+          {report && (errors.length > 0 || warnings.length > 0) && (
+            <button className="btn" onClick={downloadReport}>
+              <Download size={15} /> Rapport CSV
+            </button>
+          )}
+          <button className="btn" onClick={() => { reset(); onClose(); }}>Fermer</button>
         </>
       )}
     >
-      <div
-        className={`dropzone ${drag ? 'drag' : ''}`}
-        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-        onDragLeave={() => setDrag(false)}
-        onDrop={(e) => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]); }}
-        onClick={() => inputRef.current?.click()}
-      >
-        <Upload size={26} style={{ marginBottom: 8 }} />
-        <div><strong>Glissez-déposez</strong> un fichier CSV, ou cliquez pour parcourir.</div>
-        <div style={{ fontSize: 12, marginTop: 6 }}>Colonnes : question, option_a…d, correct, difficulty, category</div>
-        <input ref={inputRef} type="file" accept=".csv" hidden onChange={(e) => handleFile(e.target.files[0])} />
-      </div>
+      {!report && (
+        <div
+          className={`dropzone ${drag ? 'drag' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={(e) => { e.preventDefault(); setDrag(false); runImport(e.dataTransfer.files[0]); }}
+          onClick={() => inputRef.current?.click()}
+        >
+          <Upload size={26} style={{ marginBottom: 8 }} />
+          <div><strong>Glissez-déposez</strong> un fichier CSV, ou cliquez pour parcourir.</div>
+          <div style={{ fontSize: 12, marginTop: 6 }}>Colonnes : question, option_a…d, correct, difficulty, category</div>
+          <input ref={inputRef} type="file" accept=".csv" hidden onChange={(e) => runImport(e.target.files[0])} />
+        </div>
+      )}
       {busy && <p className="muted" style={{ textAlign: 'center', marginTop: 14 }}>Traitement…</p>}
-      {report && (
+
+      {report && !busy && (
         <>
           <div className="import-report">
             <div className="import-stat"><div className="n">{report.total_rows}</div><div className="muted">Lignes</div></div>
             <div className="import-stat" style={{ background: '#f3fbf5' }}><div className="n" style={{ color: '#15803d' }}>{report.accepted}</div><div className="muted">Acceptées</div></div>
+            <div className="import-stat" style={{ background: '#fffbeb' }}><div className="n" style={{ color: '#b45309' }}>{report.warnings || 0}</div><div className="muted">Avert.</div></div>
             <div className="import-stat" style={{ background: '#fef2f2' }}><div className="n" style={{ color: '#dc2626' }}>{report.rejected}</div><div className="muted">Rejetées</div></div>
           </div>
-          {report.errors?.length > 0 && (
-            <div className="errors-list">
-              {report.errors.map((e) => <div className="err" key={`${e.row}-${e.issue}`}>Ligne {e.row} — {e.issue}</div>)}
-            </div>
-          )}
-          {report.accepted > 0 && (
-            <button className="btn btn-primary btn-block" style={{ marginTop: 16 }} onClick={runForceSync}>
-              <Zap size={15} /> Force sync (push silencieux)
+
+          <div className="import-tabs" role="tablist">
+            <button role="tab" aria-selected={tab === 'accepted'} className={`import-tab ${tab === 'accepted' ? 'active' : ''}`} onClick={() => setTab('accepted')}>
+              <CheckCircle2 size={15} /> Acceptées ({report.accepted})
             </button>
+            <button role="tab" aria-selected={tab === 'warnings'} className={`import-tab ${tab === 'warnings' ? 'active' : ''}`} onClick={() => setTab('warnings')}>
+              <AlertTriangle size={15} /> Avertissements ({warnings.length})
+            </button>
+            <button role="tab" aria-selected={tab === 'rejected'} className={`import-tab ${tab === 'rejected' ? 'active' : ''}`} onClick={() => setTab('rejected')}>
+              <XCircle size={15} /> Rejetées ({errors.length})
+            </button>
+          </div>
+
+          {tab === 'accepted' && (
+            report.accepted > 0
+              ? <p className="muted import-tabnote"><Check size={15} /> {report.accepted} question(s) intégrée(s) en file de modération (statut « à relire »).</p>
+              : <EmptyState title="Aucune ligne acceptée" subtitle="Toutes les lignes ont été rejetées ou signalées." />
           )}
+
+          {tab === 'warnings' && (
+            warnings.length > 0 ? (
+              <>
+                <p className="muted import-tabnote">
+                  <AlertTriangle size={15} /> Ressemblance forte (70–85 %) ou options modifiées. Non importées par défaut.
+                </p>
+                {warnings.map((w) => <CompareRow key={`w-${w.row}`} item={w} tone="warn" />)}
+                <button className="btn btn-gold btn-block" style={{ marginTop: 14 }} onClick={forceWarnings}>
+                  <Zap size={15} /> Forcer l’import des {warnings.length} avertissement(s)
+                </button>
+              </>
+            ) : <EmptyState title="Aucun avertissement" subtitle="Aucune question proche détectée." />
+          )}
+
+          {tab === 'rejected' && (
+            errors.length > 0 ? (
+              <div className="import-rejects">
+                {errors.map((e) => (
+                  e.imported_text || e.existing_text
+                    ? <CompareRow key={`e-${e.row}`} item={e} tone="reject" />
+                    : <div className="err" key={`e-${e.row}`}>Ligne {e.row} — {e.issue}</div>
+                ))}
+              </div>
+            ) : <EmptyState title="Aucun rejet" subtitle="Toutes les lignes sont valides." />
+          )}
+
+          <button className="btn btn-block" style={{ marginTop: 14 }} onClick={reset}>
+            <RotateCcw size={15} /> Importer un autre fichier
+          </button>
         </>
       )}
     </Modal>

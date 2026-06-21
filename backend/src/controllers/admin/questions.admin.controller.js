@@ -52,18 +52,25 @@ const remove = asyncHandler(async (req, res) => {
   return ok(res, question);
 });
 
-/** POST /admin/questions/import — rapport { total_rows, accepted, rejected, errors[] } */
+/**
+ * POST /admin/questions/import — rapport multi-niveaux (CDC §3.3).
+ * { total_rows, accepted, rejected, warnings, errors[], warnings_list[] }.
+ * Champ `force=true` (multipart) : insère aussi les lignes en avertissement.
+ */
 const importCsv = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new ApiError('VALIDATION_ERROR', { message: 'Fichier CSV requis (champ « file »).' });
   }
-  const report = await importService.importCsv(req.file.buffer, { createdBy: req.user.id });
-  // Mappe vers le contrat §12 (total_rows + errors[{row, issue}]).
+  const force = req.body?.force === 'true' || req.body?.force === true;
+  const report = await importService.importCsv(req.file.buffer, { createdBy: req.user.id, force });
   return ok(res, {
     total_rows: report.total,
     accepted: report.accepted,
     rejected: report.rejected,
-    errors: report.rejected_rows.map((r) => ({ row: r.line, issue: r.errors.join(' ; ') })),
+    warnings: report.warnings,
+    inserted: report.inserted,
+    errors: report.errors,
+    warnings_list: report.warnings_list,
   });
 });
 

@@ -180,6 +180,51 @@ async function existsByNormalizedText(normalizedText) {
 }
 
 /**
+ * NIVEAU 1 (+ base du niveau 3) — doublon EXACT.
+ * Retrouve une question dont le texte normalisé est identique, par hash indexé
+ * (`text_hash = $1`, chemin rapide) OU, en repli robuste, par comparaison du
+ * texte normalisé (`$2`) — au cas où un hash existant divergerait sur des espaces
+ * Unicode exotiques. Renvoie de quoi décider le niveau 3 (options identiques ?).
+ * @returns {Promise<{id, text_fr, options, correct_index}|null>}
+ */
+async function findExactDuplicate(textHash, normalizedText) {
+  const { rows } = await db.query(
+    `SELECT id, text_fr, options, correct_index
+       FROM questions
+      WHERE deleted_at IS NULL
+        AND (text_hash = $1
+             OR lower(btrim(regexp_replace(text_fr, '\\s+', ' ', 'g'))) = $2)
+      LIMIT 1`,
+    [textHash, normalizedText]
+  );
+  return rows[0] || null;
+}
+
+/**
+ * NIVEAU 2 — quasi-doublons par similarité trigramme (pg_trgm).
+ * L'opérateur `%` (pré-filtre indexé via idx_questions_text_trgm, seuil GUC ~0.3)
+ * réduit l'espace de recherche, puis `similarity() > $2` applique le seuil métier.
+ * @param {string} text       texte importé (non normalisé : pg_trgm gère la casse mal,
+ *                            mais on compare des énoncés bruts comparables).
+ * @param {number} threshold  seuil minimal (ex. 0.70).
+ * @param {number} [limit=3]
+ * @returns {Promise<Array<{id, text_fr, sim:number}>>} triés par similarité desc.
+ */
+async function findSimilar(text, threshold, limit = 3) {
+  const { rows } = await db.query(
+    `SELECT id, text_fr, similarity(text_fr, $1) AS sim
+       FROM questions
+      WHERE deleted_at IS NULL
+        AND text_fr % $1
+        AND similarity(text_fr, $1) > $2
+      ORDER BY sim DESC
+      LIMIT $3`,
+    [text, threshold, limit]
+  );
+  return rows.map((r) => ({ id: r.id, text_fr: r.text_fr, sim: Number(r.sim) }));
+}
+
+/**
  * Insère une question. `options` est sérialisé en JSONB.
  * @param {object} data
  * @param {object} [executor=db]  pool ou client (pour transactions/batch).
@@ -188,8 +233,9 @@ async function create(data, executor = db) {
   const { rows } = await executor.query(
     `INSERT INTO questions
        (text_fr, text_en, type, options, correct_index, theme, level,
-        explanation, media_url, source, status, created_by)
-     VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10, $11, $12)
+        explanation, media_url, source, status, created_by, text_hash)
+     VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10, $11, $12,
+        encode(digest(lower(btrim(regexp_replace($1, '\\s+', ' ', 'g'))), 'sha256'), 'hex'))
      RETURNING *`,
     [
       data.text_fr,
@@ -418,6 +464,8 @@ module.exports = {
   deletedSince,
   listAllApproved,
   existsByNormalizedText,
+  findExactDuplicate,
+  findSimilar,
   create,
   findManyBrief,
   findSolutions,
