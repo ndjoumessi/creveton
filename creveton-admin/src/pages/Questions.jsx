@@ -1475,13 +1475,13 @@ export default function Questions() {
 
                   <div className="q-preview-tools">
                     <button type="button" className="q-prev-tool" onClick={() => setPreviewNight((n) => !n)}>
-                      {previewNight ? <Sun size={14} /> : <Moon size={14} />} {previewNight ? 'Mode jour' : 'Mode nuit'}
+                      {previewNight ? <Sun size={14} /> : <Moon size={14} />} {previewNight ? t('questions.drawer.lightMode') : t('questions.drawer.darkMode')}
                     </button>
-                    <button type="button" className="q-prev-tool" onClick={() => copyJson(detail)}><Code2 size={14} /> Copier le JSON</button>
+                    <button type="button" className="q-prev-tool" onClick={() => copyJson(detail)}><Code2 size={14} /> {t('questions.drawer.copyJson')}</button>
                     {testPick != null ? (
-                      <button type="button" className="q-prev-tool" onClick={() => setTestPick(null)}><RotateCcw size={14} /> Réinitialiser</button>
+                      <button type="button" className="q-prev-tool" onClick={() => setTestPick(null)}><RotateCcw size={14} /> {t('questions.reset')}</button>
                     ) : (
-                      <button type="button" className="q-prev-tool q-prev-tool-go" onClick={() => setTestPick(-1)}><Play size={14} /> Tester la question</button>
+                      <button type="button" className="q-prev-tool q-prev-tool-go" onClick={() => setTestPick(-1)}><Play size={14} /> {t('questions.drawer.testQuestion')}</button>
                     )}
                   </div>
 

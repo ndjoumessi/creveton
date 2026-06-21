@@ -1,5 +1,6 @@
 import './Classement.css';
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trophy } from 'lucide-react';
 import leaderboardService from '../services/leaderboard.service';
 import { useApiData } from '../hooks/useApiData';
@@ -12,10 +13,10 @@ import EmptyState from '../components/EmptyState';
 import { Skeleton, SkeletonTable } from '../components/Skeleton';
 
 const SCOPES = [
-  { key: 'global', label: 'Global', icon: '🌍' },
-  { key: 'theme', label: 'Par thème', icon: '🎯' },
-  { key: 'weekly', label: 'Hebdomadaire', icon: '📅' },
-  { key: 'monthly', label: 'Mensuel', icon: '📆' },
+  { key: 'global', labelKey: 'leaderboard.scopes.global', icon: '🌍' },
+  { key: 'theme', labelKey: 'leaderboard.scopes.theme', icon: '🎯' },
+  { key: 'weekly', labelKey: 'leaderboard.scopes.weekly', icon: '📅' },
+  { key: 'monthly', labelKey: 'leaderboard.scopes.monthly', icon: '📆' },
 ];
 
 // Niveaux joueur 1..5 — couleur + libellé (sens doublé : jamais la teinte seule).
@@ -52,11 +53,12 @@ function CrownSvg() {
 
 /* Médaille argent / bronze (inline SVG, sens doublé par le rang affiché). */
 function MedalSvg({ tone }) {
+  const { t } = useTranslation();
   const palette = tone === 'silver'
-    ? { ring: '#9ca3af', face: '#e5e7eb', ink: '#374151', label: 'Argent' }
-    : { ring: '#b45309', face: '#fbcf9c', ink: '#7c2d12', label: 'Bronze' };
+    ? { ring: '#9ca3af', face: '#e5e7eb', ink: '#374151', label: t('leaderboard.misc.silver') }
+    : { ring: '#b45309', face: '#fbcf9c', ink: '#7c2d12', label: t('leaderboard.misc.bronze') };
   return (
-    <svg className="lb-medal-svg" viewBox="0 0 36 36" width="36" height="36" role="img" aria-label={`Médaille ${palette.label}`}>
+    <svg className="lb-medal-svg" viewBox="0 0 36 36" width="36" height="36" role="img" aria-label={t('leaderboard.a11y.medal', { tone: palette.label })}>
       <path d="M11 2 L18 14 L7 14 Z" fill={palette.ring} opacity="0.55" />
       <path d="M25 2 L29 14 L18 14 Z" fill={palette.ring} opacity="0.55" />
       <circle cx="18" cy="24" r="11" fill={palette.face} stroke={palette.ring} strokeWidth="2.5" />
@@ -69,6 +71,7 @@ function MedalSvg({ tone }) {
 
 /* Carte podium pour la 1ʳᵉ place (centre, signature dorée). */
 function PodiumFirst({ player }) {
+  const { t } = useTranslation();
   return (
     <div className="lb-podium-card lb-p1">
       <div className="lb-crown" aria-hidden="true"><CrownSvg /></div>
@@ -78,14 +81,15 @@ function PodiumFirst({ player }) {
       <div className="lb-podium-name lb-name-light">{player.name}</div>
       <div className="lb-podium-city lb-city-light">{player.ville || '—'}</div>
       <div className="lb-podium-score lb-score-light">{num(player.score)}</div>
-      <div className="lb-podium-pts lb-pts-light">pts</div>
-      <span className="lb-champ-badge">🏆 Champion</span>
+      <div className="lb-podium-pts lb-pts-light">{t('leaderboard.pts')}</div>
+      <span className="lb-champ-badge">🏆 {t('leaderboard.champion')}</span>
     </div>
   );
 }
 
 /* Carte podium pour 2e (argent) / 3e (bronze). */
 function PodiumSide({ player, place }) {
+  const { t } = useTranslation();
   const tone = place === 2 ? 'silver' : 'bronze';
   return (
     <div className={`lb-podium-card lb-p${place}`}>
@@ -96,12 +100,13 @@ function PodiumSide({ player, place }) {
       <div className="lb-podium-name">{player.name}</div>
       <div className="lb-podium-city">{player.ville || '—'}</div>
       <div className="lb-podium-score">{num(player.score)}</div>
-      <div className="lb-podium-pts">pts</div>
+      <div className="lb-podium-pts">{t('leaderboard.pts')}</div>
     </div>
   );
 }
 
 export default function Classement() {
+  const { t } = useTranslation();
   const [scope, setScope] = useState('global');
   const [theme, setTheme] = useState(THEME_KEYS[0]);
 
@@ -128,12 +133,12 @@ export default function Classement() {
   return (
     <>
       <PageHeader
-        title="Classement"
-        description="Les meilleurs joueurs Creveton selon la portée et le thème sélectionnés."
+        title={t('leaderboard.title')}
+        description={t('leaderboard.subtitle')}
       />
 
       <div className="lb-controls">
-        <div className="lb-pills" role="tablist" aria-label="Portée du classement">
+        <div className="lb-pills" role="tablist" aria-label={t('leaderboard.title')}>
           {SCOPES.map((s) => (
             <button
               key={s.key}
@@ -144,7 +149,7 @@ export default function Classement() {
               onClick={() => setScope(s.key)}
             >
               <span className="lb-pill-icon" aria-hidden="true">{s.icon}</span>
-              {s.label}
+              {t(s.labelKey)}
             </button>
           ))}
         </div>
@@ -153,7 +158,7 @@ export default function Classement() {
           <div className="lb-theme-slide">
             <select
               className="select lb-theme-select"
-              aria-label="Thème du classement"
+              aria-label={t('leaderboard.scopes.theme')}
               value={theme}
               onChange={(e) => setTheme(e.target.value)}
             >
@@ -167,9 +172,9 @@ export default function Classement() {
 
       {me && (
         <div className="lb-me-card">
-          <span className="lb-me-label">Votre position</span>
+          <span className="lb-me-label">{t('leaderboard.myPosition')}</span>
           <span className="lb-me-value">
-            #{me.rank} · {num(me.score)} pts
+            #{me.rank} · {num(me.score)} {t('leaderboard.pts')}
           </span>
         </div>
       )}
@@ -188,8 +193,8 @@ export default function Classement() {
       ) : isEmpty ? (
         <EmptyState
           icon={Trophy}
-          title="Aucun joueur classé"
-          message="Le classement est encore vide pour cette portée. Revenez après les prochaines parties."
+          title={t('leaderboard.empty.title')}
+          message={t('leaderboard.empty.message')}
         />
       ) : (
         <>
@@ -212,11 +217,11 @@ export default function Classement() {
               <table className="data lb-table">
                 <thead>
                   <tr>
-                    <th className="lb-th-rank">Rang</th>
-                    <th>Joueur</th>
-                    <th className="lb-th-city">Ville</th>
-                    <th className="lb-th-level">Niveau</th>
-                    <th className="lb-th-score">Score</th>
+                    <th className="lb-th-rank">{t('leaderboard.columns.rank')}</th>
+                    <th>{t('leaderboard.columns.player')}</th>
+                    <th className="lb-th-city">{t('leaderboard.columns.city')}</th>
+                    <th className="lb-th-level">{t('leaderboard.columns.level')}</th>
+                    <th className="lb-th-score">{t('leaderboard.columns.score')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -234,7 +239,7 @@ export default function Classement() {
                             <div className="lb-player-meta">
                               <div className="lb-player-name">
                                 {p.name}
-                                {isMe && <span className="lb-you-badge">Vous</span>}
+                                {isMe && <span className="lb-you-badge">{t('leaderboard.you')}</span>}
                               </div>
                               <div className="lb-player-sub">{p.ville || '—'}</div>
                             </div>
@@ -244,7 +249,7 @@ export default function Classement() {
                         <td className="lb-td-level">
                           {p.level != null ? (
                             <span className="lb-level-badge" style={{ background: lvl.bg, color: lvl.fg }}>
-                              Niv. {p.level}
+                              {t('common.level')} {p.level}
                             </span>
                           ) : '—'}
                         </td>

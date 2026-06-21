@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw, LogOut, Command } from 'lucide-react';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
@@ -7,17 +8,18 @@ import { triggerRefresh } from '../../hooks/useApiData';
 import { notify } from '../Toast';
 import Modal from '../Modal';
 
-const TITLES = {
-  '/dashboard': 'Dashboard',
-  '/classement': 'Classement',
-  '/questions': 'Questions',
-  '/sessions': 'Parties',
-  '/tournaments': 'Tournois',
-  '/users': 'Utilisateurs',
-  '/settings': 'Paramètres',
+const TITLE_KEYS = {
+  '/dashboard': 'nav.dashboard',
+  '/classement': 'nav.leaderboard',
+  '/questions': 'nav.questions',
+  '/sessions': 'nav.sessions',
+  '/tournaments': 'nav.tournaments',
+  '/users': 'nav.users',
+  '/settings': 'nav.settings',
 };
 
 export default function Header() {
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const lang = useUiStore((s) => s.lang);
@@ -26,12 +28,12 @@ export default function Header() {
   const logout = useAuthStore((s) => s.logout);
   const [confirmLogout, setConfirmLogout] = useState(false);
 
-  const title = TITLES[pathname] || 'Console';
+  const title = TITLE_KEYS[pathname] ? t(TITLE_KEYS[pathname]) : t('header.console');
   const initials = (user?.name || 'AD').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
   const onRefresh = () => {
     triggerRefresh();
-    notify.success('Données actualisées');
+    notify.success(t('header.notify.refreshed'));
   };
   const doLogout = () => {
     logout();
@@ -43,20 +45,20 @@ export default function Header() {
   return (
     <header className="header">
       <div className="breadcrumb">
-        <Link to="/dashboard" className="crumb-muted" title="Console d’administration">Console</Link>
+        <Link to="/dashboard" className="crumb-muted" title={t('header.a11y.console')}>{t('header.console')}</Link>
         <span className="crumb-sep">/</span>
         <span className="crumb-current">{title}</span>
       </div>
 
       <div className="header-spacer" />
 
-      <button className="cmdk-trigger" onClick={openPalette} title="Palette de commandes (⌘K)">
-        <Command size={14} /> <span>Rechercher</span> <kbd>⌘K</kbd>
+      <button className="cmdk-trigger" onClick={openPalette} title={t('header.a11y.palette')}>
+        <Command size={14} /> <span>{t('common.search')}</span> <kbd>⌘K</kbd>
       </button>
 
       <div className="header-sep" />
 
-      <span className="live-badge"><span className="live-dot" /> Live</span>
+      <span className="live-badge"><span className="live-dot" /> {t('header.live')}</span>
 
       <div className="header-sep" />
 
@@ -65,28 +67,28 @@ export default function Header() {
         <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
       </div>
 
-      <button className="header-btn" onClick={onRefresh} title="Actualiser les données"><RefreshCw size={15} /> Actualiser</button>
+      <button className="header-btn" onClick={onRefresh} title={t('header.refresh')}><RefreshCw size={15} /> {t('header.refresh')}</button>
 
       <div className="header-sep" />
 
       <div className="profile-avatar" title={user?.name || 'Admin'}>{initials}</div>
 
-      <button className="header-btn" onClick={() => setConfirmLogout(true)} title="Déconnexion" aria-label="Déconnexion">
+      <button className="header-btn" onClick={() => setConfirmLogout(true)} title={t('header.logout')} aria-label={t('header.logout')}>
         <LogOut size={17} />
       </button>
 
       <Modal
         open={confirmLogout}
         onClose={() => setConfirmLogout(false)}
-        title="Déconnexion"
+        title={t('header.logout')}
         footer={(
           <>
-            <button className="btn" onClick={() => setConfirmLogout(false)}>Annuler</button>
-            <button className="btn btn-danger" onClick={doLogout}><LogOut size={15} /> Se déconnecter</button>
+            <button className="btn" onClick={() => setConfirmLogout(false)}>{t('common.cancel')}</button>
+            <button className="btn btn-danger" onClick={doLogout}><LogOut size={15} /> {t('header.logout')}</button>
           </>
         )}
       >
-        <p style={{ margin: 0 }}>Voulez-vous vraiment vous déconnecter de la console ?</p>
+        <p style={{ margin: 0 }}>{t('header.logoutConfirm')}</p>
       </Modal>
     </header>
   );

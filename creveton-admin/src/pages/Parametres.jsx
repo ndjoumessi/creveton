@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   User, ToggleRight, Server, Info, Lock, Camera, KeyRound,
   Database, Zap, Bell, ShieldAlert, DoorOpen, GitBranch, FileText, ChevronRight,
@@ -27,17 +28,17 @@ const NOTIF_SIGNUP_KEY = 'creveton_admin_notif_signup';
 const NOTIF_CRASH_KEY = 'creveton_admin_notif_crash';
 
 const SECTIONS = [
-  { key: 'compte', label: 'Compte', icon: User },
-  { key: 'flags', label: 'Feature flags', icon: ToggleRight },
-  { key: 'notifications', label: 'Notifications', icon: Bell },
-  { key: 'systeme', label: 'Système', icon: Server },
-  { key: 'apropos', label: 'À propos', icon: Info },
+  { key: 'compte', labelKey: 'settings.sections.account', icon: User },
+  { key: 'flags', labelKey: 'settings.sections.flags', icon: ToggleRight },
+  { key: 'notifications', labelKey: 'settings.sections.notifications', icon: Bell },
+  { key: 'systeme', labelKey: 'settings.sections.system', icon: Server },
+  { key: 'apropos', labelKey: 'settings.sections.about', icon: Info },
 ];
 
 /* Statut d'un check health (db/redis) → libellé + état booléen. */
-function checkState(raw) {
+function checkState(raw, t) {
   const ok = raw == null || raw === 'up' || raw === 'ok' || raw === 'operational';
-  return { ok, label: ok ? 'Opérationnel' : 'Indisponible' };
+  return { ok, label: ok ? t('dashboard.system.operational') : t('dashboard.system.down') };
 }
 
 /* uptime en secondes → « Xj Yh Zm » ou « Xh Ym ». */
@@ -53,11 +54,12 @@ function formatUptime(seconds) {
 
 /* ── Section Compte ── */
 function SectionCompte({ user, onChangePassword }) {
+  const { t } = useTranslation();
   return (
     <div className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       <div className="set-section-head">
-        <h2>Compte</h2>
-        <p>Vos informations d’administrateur. L’identité provient du backend (lecture seule).</p>
+        <h2>{t('settings.sections.account')}</h2>
+        <p>{t('settings.desc.account')}</p>
       </div>
 
       <div className="set-identity">
@@ -65,8 +67,8 @@ function SectionCompte({ user, onChangePassword }) {
         <div className="set-identity-meta">
           <span className="set-identity-name">{user?.name || '—'}</span>
           <span>
-            <button className="btn btn-ghost" onClick={() => notify.info('Changement de photo bientôt disponible.')}>
-              <Camera size={15} /> Changer la photo
+            <button className="btn btn-ghost" onClick={() => notify.info(t('settings.notify.avatarSoon'))}>
+              <Camera size={15} /> {t('settings.account.avatar')}
             </button>
           </span>
         </div>
@@ -74,22 +76,22 @@ function SectionCompte({ user, onChangePassword }) {
 
       <div className="set-fields">
         <div className="set-field kv-field">
-          <div className="k">Nom</div>
+          <div className="k">{t('settings.account.displayName')}</div>
           <div className="v">{user?.name || '—'}</div>
         </div>
         <div className="set-field kv-field">
-          <div className="k">Rôle</div>
+          <div className="k">{t('users.columns.role')}</div>
           <div className="v">{roleLabels[user?.role] || user?.role || '—'}</div>
         </div>
         <div className="set-field kv-field set-field-full">
-          <div className="k">Adresse e-mail</div>
+          <div className="k">{t('login.email')}</div>
           <div className="v">{user?.email || '—'}</div>
         </div>
       </div>
 
       <div>
         <button className="btn btn-primary" onClick={onChangePassword}>
-          <KeyRound size={16} /> Changer le mot de passe
+          <KeyRound size={16} /> {t('settings.security.changePassword')}
         </button>
       </div>
     </div>
@@ -132,6 +134,7 @@ function ToggleRow({ icon: Icon, title, desc, locked, lockTag, lockHint, checked
 
 /* ── Section Feature flags ── */
 function SectionFlags() {
+  const { t } = useTranslation();
   const maintenance = useUiStore((s) => s.maintenance);
   const setMaintenance = useUiStore((s) => s.setMaintenance);
   const [flags, setFlags] = useState({ push: true, registrations: true });
@@ -139,57 +142,57 @@ function SectionFlags() {
   const toggle = (key, msg) => (e) => {
     const on = e.target.checked;
     setFlags((f) => ({ ...f, [key]: on }));
-    notify.success(`${msg} ${on ? 'activé' : 'désactivé'}`);
+    notify.success(`${msg} ${on ? t('settings.notify.on') : t('settings.notify.off')}`);
   };
 
   const toggleMaintenance = (e) => {
     const on = e.target.checked;
     setMaintenance(on);
-    if (on) notify.info('Mode maintenance activé — l’accès joueur est bloqué.');
-    else notify.success('Mode maintenance désactivé.');
+    if (on) notify.info(t('settings.notify.maintenanceOn'));
+    else notify.success(t('settings.notify.maintenanceOff'));
   };
 
   return (
     <div className="card card-pad">
       <div className="set-section-head" style={{ marginBottom: 6 }}>
-        <h2>Feature flags</h2>
-        <p>Activez ou coupez des fonctionnalités de la plateforme sans redéploiement.</p>
+        <h2>{t('settings.sections.flags')}</h2>
+        <p>{t('settings.desc.flags')}</p>
       </div>
 
       <ToggleRow
         icon={Bell}
-        title="Notifications push"
-        desc="Envoi des alertes temps réel aux joueurs (résultats, tournois)."
+        title={t('settings.notify.pushTitle')}
+        desc={t('settings.desc.push')}
         checked={flags.push}
-        onChange={toggle('push', 'Notifications push')}
+        onChange={toggle('push', t('settings.notify.pushTitle'))}
       />
       <ToggleRow
         icon={DoorOpen}
-        title="Inscriptions ouvertes"
-        desc="Autorise la création de nouveaux comptes joueur."
+        title={t('settings.flags.openRegistration')}
+        desc={t('settings.flags.openRegistrationDesc')}
         checked={flags.registrations}
-        onChange={toggle('registrations', 'Inscriptions')}
+        onChange={toggle('registrations', t('settings.flags.openRegistration'))}
       />
       <ToggleRow
         icon={ShieldAlert}
-        title="Mode maintenance"
-        desc="Bloque temporairement l’accès joueur et affiche la bannière globale."
+        title={t('settings.flags.maintenance')}
+        desc={t('settings.flags.maintenanceDesc')}
         checked={maintenance}
         onChange={toggleMaintenance}
       />
       <ToggleRow
         icon={Lock}
-        title="Tournois payants"
-        desc="Inscriptions, cagnottes et payouts en argent réel."
+        title={t('settings.flags.paidTournaments')}
+        desc={t('settings.desc.paidTournaments')}
         locked
-        lockTag="Licence requise"
-        lockHint="Activation après licence (CDC §6)"
+        lockTag={t('settings.flags.requiresLicense')}
+        lockHint={t('settings.misc.lockHint')}
         checked={false}
       />
 
       <div className="banner-locked card-pad" style={{ marginTop: 14, borderRadius: 12, fontSize: 13 }}>
         <Lock size={14} style={{ verticalAlign: '-2px', marginRight: 6 }} />
-        Les tournois payants seront débloqués après obtention de la licence de jeu (CDC §6).
+        {t('settings.misc.paidBanner')}
       </div>
     </div>
   );
@@ -197,6 +200,7 @@ function SectionFlags() {
 
 /* ── Section Notifications (persistance localStorage, pas d'API) ── */
 function SectionNotifications() {
+  const { t } = useTranslation();
   const [signup, setSignup] = useState(() => localStorage.getItem(NOTIF_SIGNUP_KEY) === 'true');
   const [crash, setCrash] = useState(() => localStorage.getItem(NOTIF_CRASH_KEY) === 'true');
 
@@ -204,34 +208,34 @@ function SectionNotifications() {
     const on = e.target.checked;
     setSignup(on);
     localStorage.setItem(NOTIF_SIGNUP_KEY, String(on));
-    notify.success(`Alertes inscription ${on ? 'activées' : 'désactivées'}`);
+    notify.success(`${t('settings.notify.signupAlerts')} ${on ? t('settings.notify.onF') : t('settings.notify.offF')}`);
   };
 
   const toggleCrash = (e) => {
     const on = e.target.checked;
     setCrash(on);
     localStorage.setItem(NOTIF_CRASH_KEY, String(on));
-    notify.success(`Alertes crash ${on ? 'activées' : 'désactivées'}`);
+    notify.success(`${t('settings.notify.crashAlerts')} ${on ? t('settings.notify.onF') : t('settings.notify.offF')}`);
   };
 
   return (
     <div className="card card-pad">
       <div className="set-section-head" style={{ marginBottom: 6 }}>
-        <h2>Notifications</h2>
-        <p>Préférences d’alertes par e-mail pour votre compte d’administrateur.</p>
+        <h2>{t('settings.sections.notifications')}</h2>
+        <p>{t('settings.desc.notifications')}</p>
       </div>
 
       <ToggleRow
         icon={Mail}
-        title="E-mail à chaque nouvelle inscription"
-        desc="Recevez un message dès qu’un joueur crée un compte."
+        title={t('settings.notify.signupTitle')}
+        desc={t('settings.desc.signup')}
         checked={signup}
         onChange={toggleSignup}
       />
       <ToggleRow
         icon={ActivitySquare}
-        title="Alerte si taux de crash > 1 %"
-        desc="Notification immédiate en cas de dégradation de la stabilité applicative."
+        title={t('settings.notifications.crashRate')}
+        desc={t('settings.desc.crash')}
         checked={crash}
         onChange={toggleCrash}
       />
@@ -274,6 +278,7 @@ function SysMetric({ icon: Icon, label, value, unit, hint }) {
 
 /* ── Section Système (healthService + mesure latence client) ── */
 function SectionSysteme() {
+  const { t } = useTranslation();
   const { data, loading } = useApiData(async () => {
     const t0 = performance.now();
     const res = await healthService.get();
@@ -287,8 +292,8 @@ function SectionSysteme() {
   return (
     <div className="card card-pad" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
       <div className="set-section-head" style={{ marginBottom: 16 }}>
-        <h2>Système</h2>
-        <p>État des services backend et métriques d’exécution en temps réel.</p>
+        <h2>{t('settings.sections.system')}</h2>
+        <p>{t('settings.desc.system')}</p>
       </div>
 
       {loading ? (
@@ -303,35 +308,35 @@ function SectionSysteme() {
       ) : (
         <>
           <div className="set-sys-grid">
-            <SysCard icon={Database} name="Base de données" state={checkState(checks.db)} />
-            <SysCard icon={Zap} name="Redis" state={checkState(checks.redis)} />
+            <SysCard icon={Database} name={t('dashboard.system.database')} state={checkState(checks.db, t)} />
+            <SysCard icon={Zap} name={t('dashboard.system.redis')} state={checkState(checks.redis, t)} />
           </div>
 
           <div className="set-metric-grid">
             <SysMetric
               icon={Server}
-              label="Temps de réponse API"
+              label={t('settings.system.apiResponse')}
               value={data?.latencyMs ?? '—'}
               unit="ms"
-              hint="Durée de l’appel /health mesurée côté client."
+              hint={t('settings.system.apiResponseHint')}
             />
             <SysMetric
               icon={ActivitySquare}
-              label="Uptime depuis démarrage"
+              label={t('settings.system.uptime')}
               value={formatUptime(system.uptime_s)}
-              hint="Temps écoulé depuis le dernier redémarrage du backend."
+              hint={t('settings.system.uptimeHint')}
             />
             <SysMetric
               icon={Cpu}
-              label="Version Node.js"
+              label={t('settings.system.nodeVersion')}
               value={system.node || '—'}
-              hint="Runtime du serveur backend."
+              hint={t('settings.system.nodeVersionHint')}
             />
             <SysMetric
               icon={Database}
-              label="Version PostgreSQL"
+              label={t('settings.system.pgVersion')}
               value={system.postgres || '—'}
-              hint="Moteur de base de données."
+              hint={t('settings.system.pgVersionHint')}
             />
           </div>
         </>
@@ -342,34 +347,35 @@ function SectionSysteme() {
 
 /* ── Section À propos ── */
 function SectionApropos() {
+  const { t } = useTranslation();
   const links = [
-    { icon: GitBranch, label: 'Dépôt GitHub', href: '#' },
-    { icon: FileText, label: 'Documentation', href: '#' },
-    { icon: Server, label: 'Spec API', href: '#' },
+    { icon: GitBranch, label: t('settings.about.github'), href: '#' },
+    { icon: FileText, label: t('settings.about.documentation'), href: '#' },
+    { icon: Server, label: t('settings.about.apiSpec'), href: '#' },
   ];
   return (
     <div className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div className="set-section-head">
-        <h2>À propos</h2>
-        <p>Version de la console et ressources techniques.</p>
+        <h2>{t('settings.sections.about')}</h2>
+        <p>{t('settings.desc.about')}</p>
       </div>
 
       <div className="set-about-head">
-        <span className="set-about-version">Creveton Admin</span>
+        <span className="set-about-version">{t('settings.about.brand')}</span>
         <span className="badge set-badge-gold">MVP</span>
       </div>
 
       <div className="set-fields" style={{ marginTop: 0 }}>
         <div className="set-field kv-field">
-          <div className="k">Version</div>
+          <div className="k">{t('settings.about.version')}</div>
           <div className="v">{APP_VERSION}</div>
         </div>
         <div className="set-field kv-field">
-          <div className="k">Environnement</div>
+          <div className="k">{t('settings.about.environment')}</div>
           <div className="v">{ENVIRONMENT}</div>
         </div>
         <div className="set-field kv-field set-field-full">
-          <div className="k">Backend</div>
+          <div className="k">{t('settings.about.backend')}</div>
           <div className="v" style={{ wordBreak: 'break-all' }}>{API_URL}</div>
         </div>
       </div>
@@ -389,6 +395,7 @@ function SectionApropos() {
 
 /* ── Modal mot de passe (react-hook-form + authService) ── */
 function PasswordModal({ open, onClose }) {
+  const { t } = useTranslation();
   const {
     register, handleSubmit, reset, watch, formState: { errors, isSubmitting },
   } = useForm({ mode: 'onTouched' });
@@ -402,15 +409,15 @@ function PasswordModal({ open, onClose }) {
   const onSubmit = async (values) => {
     try {
       await authService.changePassword(values.currentPassword, values.newPassword);
-      notify.success('Mot de passe mis à jour.');
+      notify.success(t('settings.notify.passwordUpdated'));
       reset();
       onClose();
     } catch (err) {
       const status = err?.response?.status;
       const apiMsg = err?.response?.data?.message;
-      let message = 'Échec de la mise à jour du mot de passe.';
+      let message = t('settings.notify.passwordUpdateFailed');
       if (status === 400 || status === 401 || status === 403) {
-        message = apiMsg || 'Mot de passe actuel incorrect.';
+        message = apiMsg || t('settings.notify.currentPasswordWrong');
       } else if (apiMsg) {
         message = apiMsg;
       }
@@ -422,50 +429,50 @@ function PasswordModal({ open, onClose }) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Changer le mot de passe"
+      title={t('settings.security.changePassword')}
       footer={(
         <>
-          <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn btn-ghost" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn btn-primary" type="submit" form="set-pwd-form" disabled={isSubmitting}>
-            {isSubmitting ? 'Mise à jour…' : 'Mettre à jour'}
+            {isSubmitting ? t('settings.misc.updating') : t('settings.misc.update')}
           </button>
         </>
       )}
     >
       <form id="set-pwd-form" className="set-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <label>
-          Mot de passe actuel
+          {t('settings.security.current')}
           <PasswordInput
             autoComplete="current-password"
             aria-invalid={errors.currentPassword ? 'true' : 'false'}
-            {...register('currentPassword', { required: 'Le mot de passe actuel est requis.' })}
+            {...register('currentPassword', { required: t('settings.validation.currentRequired') })}
           />
           {errors.currentPassword && <span className="set-form-err">{errors.currentPassword.message}</span>}
         </label>
 
         <label>
-          Nouveau mot de passe
+          {t('settings.security.new')}
           <PasswordInput
             autoComplete="new-password"
             aria-invalid={errors.newPassword ? 'true' : 'false'}
             {...register('newPassword', {
-              required: 'Le nouveau mot de passe est requis.',
-              minLength: { value: 8, message: 'Minimum 8 caractères.' },
+              required: t('settings.validation.newRequired'),
+              minLength: { value: 8, message: t('settings.validation.minLength') },
               validate: (v, all) =>
-                v !== all.currentPassword || 'Le nouveau mot de passe doit différer de l’actuel.',
+                v !== all.currentPassword || t('settings.validation.mustDiffer'),
             })}
           />
           {errors.newPassword && <span className="set-form-err">{errors.newPassword.message}</span>}
         </label>
 
         <label>
-          Confirmer le nouveau mot de passe
+          {t('settings.security.confirm')}
           <PasswordInput
             autoComplete="new-password"
             aria-invalid={errors.confirmPassword ? 'true' : 'false'}
             {...register('confirmPassword', {
-              required: 'Veuillez confirmer le nouveau mot de passe.',
-              validate: (v) => v === newPassword || 'Les mots de passe ne correspondent pas.',
+              required: t('settings.validation.confirmRequired'),
+              validate: (v) => v === newPassword || t('settings.validation.noMatch'),
             })}
           />
           {errors.confirmPassword && <span className="set-form-err">{errors.confirmPassword.message}</span>}
@@ -477,6 +484,7 @@ function PasswordModal({ open, onClose }) {
 
 /* ── Page ── */
 export default function Parametres() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const [section, setSection] = useState('compte');
   const [pwdOpen, setPwdOpen] = useState(false);
@@ -484,13 +492,13 @@ export default function Parametres() {
   return (
     <>
       <PageHeader
-        title="Paramètres"
-        description="Gérez votre compte, les fonctionnalités de la console et l’état du système."
+        title={t('settings.title')}
+        description={t('settings.subtitle')}
       />
 
       <div className="settings-layout">
-        <nav className="settings-nav" aria-label="Sections des paramètres">
-          {SECTIONS.map(({ key, label, icon: Icon }) => (
+        <nav className="settings-nav" aria-label={t('settings.title')}>
+          {SECTIONS.map(({ key, labelKey, icon: Icon }) => (
             <button
               key={key}
               className={section === key ? 'active' : ''}
@@ -498,7 +506,7 @@ export default function Parametres() {
               aria-current={section === key ? 'page' : undefined}
             >
               <Icon size={16} style={{ verticalAlign: '-3px', marginRight: 9 }} />
-              {label}
+              {t(labelKey)}
             </button>
           ))}
         </nav>

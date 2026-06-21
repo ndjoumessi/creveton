@@ -11,58 +11,31 @@ import {
   AtSign,
   Send,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useCountUp } from '../hooks/useCountUp';
 import Logo from '../components/Logo';
 import './Landing.css';
 
+// Données structurelles (icônes, emojis, valeurs non traduisibles).
+// Le texte visible est résolu via t() au rendu à partir des clés ci-dessous.
 const features = [
-  {
-    icon: Target,
-    titre: 'Quiz chronométré',
-    description:
-      'Réponds vite et juste. Chaque seconde compte pour grimper au classement et battre tes adversaires.',
-  },
-  {
-    icon: Trophy,
-    titre: 'Tournois compétitifs',
-    description:
-      'Affronte les meilleurs joueurs du Cameroun dans des tournois à élimination et remporte la couronne.',
-  },
-  {
-    icon: BarChart3,
-    titre: 'Classements en direct',
-    description:
-      'Suis ta progression en temps réel et compare tes scores avec la communauté Creveton.',
-  },
+  { icon: Target, titreKey: 'landing.features.quiz', descKey: 'landing.features.quizDesc' },
+  { icon: Trophy, titreKey: 'landing.features.tournaments', descKey: 'landing.features.tournamentsDesc' },
+  { icon: BarChart3, titreKey: 'landing.features.leaderboard', descKey: 'landing.features.leaderboardDesc' },
 ];
 
 const themes = [
-  { emoji: '🌍', nom: 'Géographie', questions: '18 questions' },
-  { emoji: '📚', nom: 'Culture', questions: '15 questions' },
-  { emoji: '🏛️', nom: 'Histoire', questions: '16 questions' },
-  { emoji: '🏭', nom: 'Industrie', questions: '12 questions' },
+  { emoji: '🌍', nom: 'Géographie', count: 18 },
+  { emoji: '📚', nom: 'Culture', count: 15 },
+  { emoji: '🏛️', nom: 'Histoire', count: 16 },
+  { emoji: '🏭', nom: 'Industrie', count: 12 },
 ];
 
 const etapes = [
-  {
-    icon: UserPlus,
-    titre: 'Inscris-toi',
-    description:
-      'Crée ton compte en quelques secondes et rejoins la communauté Creveton.',
-  },
-  {
-    icon: LayoutGrid,
-    titre: 'Choisis ton thème',
-    description:
-      'Géographie, culture, histoire ou industrie : sélectionne ton univers favori.',
-  },
-  {
-    icon: Gamepad2,
-    titre: 'Joue et gagne',
-    description:
-      'Réponds vite, marque des points et grimpe au sommet du classement national.',
-  },
+  { icon: UserPlus, titreKey: 'landing.howItWorks.step1', descKey: 'landing.howItWorks.step1Desc' },
+  { icon: LayoutGrid, titreKey: 'landing.howItWorks.step2', descKey: 'landing.howItWorks.step2Desc' },
+  { icon: Gamepad2, titreKey: 'landing.howItWorks.step3', descKey: 'landing.howItWorks.step3Desc' },
 ];
 
 const temoignages = [
@@ -107,6 +80,7 @@ function StatCountUp({ end, suffix, label }) {
 }
 
 export default function Landing() {
+  const { t } = useTranslation();
   // Cible du CTA console : tableau de bord si déjà connecté admin, sinon login.
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -145,16 +119,16 @@ export default function Landing() {
             </div>
 
             <h1 className="land-title">Creveton</h1>
-            <p className="land-subtitle">Le quiz compétitif du Cameroun</p>
+            <p className="land-subtitle">{t('landing.hero.subtitle')}</p>
 
-            <span className="land-badge">🇨🇲 Disponible sur Android</span>
+            <span className="land-badge">🇨🇲 {t('landing.hero.available')}</span>
 
             <div className="land-cta-row">
               <a className="land-btn land-btn-gold" href="#">
-                Télécharger l&apos;app
+                {t('landing.hero.download')}
               </a>
               <Link className="land-cta-secondary" to={consoleTarget}>
-                Accéder à la console admin →
+                {t('landing.hero.adminAccess')}
               </Link>
             </div>
           </div>
@@ -195,27 +169,27 @@ export default function Landing() {
       {/* ─────────────── CHIFFRES (count-up au scroll) ─────────────── */}
       <section className="land-stats">
         <div className="land-container land-stats-grid">
-          <StatCountUp end={60} suffix="+" label="Questions" />
-          <StatCountUp end={9} suffix="" label="Joueurs" />
-          <StatCountUp end={22} suffix="" label="Parties jouées" />
+          <StatCountUp end={60} suffix="+" label={t('landing.stats.questions')} />
+          <StatCountUp end={9} suffix="" label={t('landing.stats.players')} />
+          <StatCountUp end={22} suffix="" label={t('landing.stats.games')} />
         </div>
       </section>
 
       {/* ─────────────── COMMENT ÇA MARCHE ─────────────── */}
       <section className="land-steps">
         <div className="land-container">
-          <h2 className="land-section-title">Comment ça marche</h2>
+          <h2 className="land-section-title">{t('landing.howItWorks.title')}</h2>
           <ol className="land-steps-grid">
-            {etapes.map(({ icon: Icon, titre, description }, i) => (
-              <li className="land-step" key={titre}>
+            {etapes.map(({ icon: Icon, titreKey, descKey }, i) => (
+              <li className="land-step" key={titreKey}>
                 <span className="land-step-num" aria-hidden="true">
                   {i + 1}
                 </span>
                 <span className="land-step-icon" aria-hidden="true">
                   <Icon size={24} strokeWidth={2.2} />
                 </span>
-                <h3 className="land-step-title">{titre}</h3>
-                <p className="land-step-desc">{description}</p>
+                <h3 className="land-step-title">{t(titreKey)}</h3>
+                <p className="land-step-desc">{t(descKey)}</p>
               </li>
             ))}
           </ol>
@@ -225,15 +199,15 @@ export default function Landing() {
       {/* ─────────────── FONCTIONNALITÉS ─────────────── */}
       <section className="land-features">
         <div className="land-container">
-          <h2 className="land-section-title">Pensé pour la compétition</h2>
+          <h2 className="land-section-title">{t('landing.features.title')}</h2>
           <div className="land-features-grid">
-            {features.map(({ icon: Icon, titre, description }) => (
-              <article className="land-feature" key={titre}>
+            {features.map(({ icon: Icon, titreKey, descKey }) => (
+              <article className="land-feature" key={titreKey}>
                 <span className="land-feature-icon" aria-hidden="true">
                   <Icon size={26} strokeWidth={2.2} />
                 </span>
-                <h3 className="land-feature-title">{titre}</h3>
-                <p className="land-feature-desc">{description}</p>
+                <h3 className="land-feature-title">{t(titreKey)}</h3>
+                <p className="land-feature-desc">{t(descKey)}</p>
               </article>
             ))}
           </div>
@@ -243,15 +217,15 @@ export default function Landing() {
       {/* ─────────────── THÈMES ─────────────── */}
       <section className="land-themes">
         <div className="land-container">
-          <h2 className="land-section-title">Quatre univers à explorer</h2>
+          <h2 className="land-section-title">{t('landing.themes.title')}</h2>
           <div className="land-themes-grid">
-            {themes.map(({ emoji, nom, questions }) => (
+            {themes.map(({ emoji, nom, count }) => (
               <article className="land-theme-card" key={nom}>
                 <span className="land-theme-emoji" aria-hidden="true">
                   {emoji}
                 </span>
                 <h3 className="land-theme-name">{nom}</h3>
-                <p className="land-theme-count">{questions}</p>
+                <p className="land-theme-count">{count} {t('landing.themes.questions')}</p>
               </article>
             ))}
           </div>
@@ -261,13 +235,13 @@ export default function Landing() {
       {/* ─────────────── TÉMOIGNAGES ─────────────── */}
       <section className="land-testimonials">
         <div className="land-container">
-          <h2 className="land-section-title">Ils jouent déjà</h2>
+          <h2 className="land-section-title">{t('landing.testimonials.title')}</h2>
           <div className="land-testimonials-grid">
             {temoignages.map(({ initiales, nom, ville, citation }) => (
               <figure className="land-testimonial" key={nom}>
                 <div
                   className="land-testimonial-stars"
-                  aria-label="Note 5 sur 5"
+                  aria-label={t('landing.a11y.rating')}
                 >
                   {['s1', 's2', 's3', 's4', 's5'].map((s) => (
                     <Star
@@ -300,9 +274,9 @@ export default function Landing() {
       {/* ─────────────── CTA FINAL ─────────────── */}
       <section className="land-cta-final">
         <div className="land-container land-cta-final-inner">
-          <h2 className="land-cta-final-title">Prêt à jouer ?</h2>
+          <h2 className="land-cta-final-title">{t('landing.cta.title')}</h2>
           <a className="land-btn land-btn-green" href="#">
-            Télécharger gratuitement
+            {t('landing.cta.button')}
           </a>
         </div>
       </section>
@@ -313,11 +287,11 @@ export default function Landing() {
           <div className="land-footer-brand">
             <Logo size={32} />
             <p className="land-footer-copy">
-              © 2026 Creveton · Cameroun · Tous droits réservés
+              © 2026 Creveton · Cameroun · {t('landing.footer.rights')}
             </p>
           </div>
 
-          <nav className="land-footer-social" aria-label="Réseaux sociaux">
+          <nav className="land-footer-social" aria-label={t('landing.a11y.socialNetworks')}>
             {reseaux.map(({ icon: Icon, label }) => (
               <a
                 className="land-footer-social-link"
@@ -330,10 +304,10 @@ export default function Landing() {
             ))}
           </nav>
 
-          <nav className="land-footer-links" aria-label="Liens légaux">
-            <a href="#">Mentions légales</a>
-            <a href="#">Confidentialité</a>
-            <a href="#">Contact</a>
+          <nav className="land-footer-links" aria-label={t('landing.a11y.legalLinks')}>
+            <a href="#">{t('landing.footer.legal')}</a>
+            <a href="#">{t('landing.footer.privacy')}</a>
+            <a href="#">{t('landing.footer.contact')}</a>
           </nav>
         </div>
       </footer>

@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import App from './App.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { colors } from './constants/theme.js';
+import './i18n';
 import './index.css';
 
 createRoot(document.getElementById('root')).render(

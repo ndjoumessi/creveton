@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Search, LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings, CornerDownLeft,
 } from 'lucide-react';
@@ -9,16 +10,17 @@ import sessionsService from '../services/sessions.service';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 const PAGES = [
-  { label: 'Tableau de bord', to: '/dashboard', icon: LayoutDashboard },
-  { label: 'Classement', to: '/classement', icon: Trophy },
-  { label: 'Questions', to: '/questions', icon: FileQuestion },
-  { label: 'Parties', to: '/sessions', icon: Gamepad2 },
-  { label: 'Tournois', to: '/tournaments', icon: Swords },
-  { label: 'Utilisateurs', to: '/users', icon: Users },
-  { label: 'Paramètres', to: '/settings', icon: Settings },
+  { labelKey: 'nav.dashboard', to: '/dashboard', icon: LayoutDashboard },
+  { labelKey: 'nav.leaderboard', to: '/classement', icon: Trophy },
+  { labelKey: 'nav.questions', to: '/questions', icon: FileQuestion },
+  { labelKey: 'nav.sessions', to: '/sessions', icon: Gamepad2 },
+  { labelKey: 'nav.tournaments', to: '/tournaments', icon: Swords },
+  { labelKey: 'nav.users', to: '/users', icon: Users },
+  { labelKey: 'nav.settings', to: '/settings', icon: Settings },
 ];
 
 export default function CommandPalette() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
@@ -58,18 +60,19 @@ export default function CommandPalette() {
   }, [q, open]);
 
   const pageMatches = useMemo(
-    () => PAGES.filter((p) => p.label.toLowerCase().includes(q.trim().toLowerCase())),
-    [q],
+    () => PAGES.map((p) => ({ ...p, label: t(p.labelKey) }))
+      .filter((p) => p.label.toLowerCase().includes(q.trim().toLowerCase())),
+    [q, t],
   );
 
   // Liste plate des actions navigables (pour clavier ↑↓ + Enter).
   const flat = useMemo(() => {
     const items = pageMatches.map((p) => ({ key: `page:${p.to}`, label: p.label, icon: p.icon, to: p.to }));
     results.users.forEach((u) => items.push({ key: `u:${u.id}`, label: u.name, sub: u.email, to: '/users' }));
-    results.questions.forEach((qq) => items.push({ key: `q:${qq.id}`, label: (qq.text_fr || '').slice(0, 60), sub: 'Question', to: '/questions' }));
-    results.sessions.forEach((se) => items.push({ key: `s:${se.id}`, label: `Partie · ${se.user?.name || ''}`, sub: se.theme, to: '/sessions' }));
+    results.questions.forEach((qq) => items.push({ key: `q:${qq.id}`, label: (qq.text_fr || '').slice(0, 60), sub: t('nav.questions'), to: '/questions' }));
+    results.sessions.forEach((se) => items.push({ key: `s:${se.id}`, label: `${t('nav.sessions')} · ${se.user?.name || ''}`, sub: se.theme, to: '/sessions' }));
     return items;
-  }, [pageMatches, results]);
+  }, [pageMatches, results, t]);
 
   const go = (to) => { setOpen(false); navigate(to); };
 
@@ -82,7 +85,7 @@ export default function CommandPalette() {
   if (!open) return null;
   return (
     <div className="overlay cmdk-overlay" onMouseDown={() => setOpen(false)}>
-      <div className="cmdk" ref={trapRef} role="dialog" aria-modal="true" aria-label="Palette de commandes" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="cmdk" ref={trapRef} role="dialog" aria-modal="true" aria-label={t('header.palette.aria')} onMouseDown={(e) => e.stopPropagation()}>
         <div className="cmdk-input">
           <Search size={18} />
           <input
@@ -90,13 +93,13 @@ export default function CommandPalette() {
             value={q}
             onChange={(e) => { setQ(e.target.value); setActive(0); }}
             onKeyDown={onKeyDown}
-            placeholder="Rechercher une page, un joueur, une question…"
-            aria-label="Recherche"
+            placeholder={t('header.palette.placeholder')}
+            aria-label={t('common.search')}
           />
           <kbd className="cmdk-kbd">Esc</kbd>
         </div>
         <div className="cmdk-list">
-          {flat.length === 0 && <div className="cmdk-empty">Aucun résultat.</div>}
+          {flat.length === 0 && <div className="cmdk-empty">{t('header.palette.empty')}</div>}
           {flat.map((it, i) => {
             const Icon = it.icon;
             return (

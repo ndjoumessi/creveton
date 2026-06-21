@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Search, Eye, Check, X, ChevronRight, AlertTriangle, Zap,
 } from 'lucide-react';
@@ -10,6 +11,7 @@ import {
 import sessionsService from '../services/sessions.service';
 import dashboardService from '../services/dashboard.service';
 import { useApiData } from '../hooks/useApiData';
+import i18n from '../i18n';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
 import { themeLabels, levelLabels, themeBadgeColors } from '../constants/theme';
 import { num, pct, dateFr, dateTimeFr } from '../utils/format';
@@ -26,21 +28,20 @@ import './Parties.css';
 const EMPTY_FILTERS = { theme: '', level: '', q: '' };
 
 const PERIODS = [
-  { value: 'today', label: "Aujourd'hui" },
-  { value: '7', label: '7 jours' },
-  { value: '30', label: '30 jours' },
-  { value: '', label: 'Tout' },
+  { value: 'today', labelKey: 'sessions.periods.today' },
+  { value: '7', labelKey: 'sessions.periods.7d' },
+  { value: '30', labelKey: 'sessions.periods.30d' },
+  { value: '', labelKey: 'sessions.periods.all' },
 ];
 
 // Couleurs « douces » des barres par niveau (vert / or / rouge doux) + libellés.
 const LEVEL_BARS = [
-  { key: 'beginner', label: 'Débutant', color: '#2a8a4f' },
-  { key: 'intermediate', label: 'Intermédiaire', color: '#d4a017' },
-  { key: 'expert', label: 'Expert', color: '#e07a5f' },
+  { key: 'beginner', labelKey: 'questions.levels.beginner', color: '#2a8a4f' },
+  { key: 'intermediate', labelKey: 'questions.levels.intermediate', color: '#d4a017' },
+  { key: 'expert', labelKey: 'questions.levels.expert', color: '#e07a5f' },
 ];
 
 const MS_DAY = 24 * 60 * 60 * 1000;
-const MAX_SCORE = 1000;
 
 /** Bornes [début de journée locale, maintenant] — fonction module pure (pas dans le rendu). */
 function todayBounds() {
@@ -69,12 +70,12 @@ function relativeFr(iso) {
   const diff = todayBounds().now - t;
   if (diff < 0) return dateFr(iso);
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "à l'instant";
-  if (mins < 60) return `il y a ${mins} min`;
+  if (mins < 1) return i18n.t('common.justNow');
+  if (mins < 60) return i18n.t('common.agoMinutes', { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `il y a ${hours} h`;
+  if (hours < 24) return i18n.t('common.agoHours', { n: hours });
   const days = Math.floor(hours / 24);
-  if (days < 30) return `il y a ${days} j`;
+  if (days < 30) return i18n.t('common.agoDays', { n: days });
   return dateFr(iso);
 }
 
@@ -109,6 +110,7 @@ function isSuspicious(answers) {
 }
 
 export default function Parties() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [period, setPeriod] = useState('');
@@ -174,12 +176,12 @@ export default function Parties() {
     return LEVEL_BARS.map((b) => {
       const cur = acc.get(b.key);
       return {
-        label: b.label,
+        label: t(b.labelKey),
         color: b.color,
         avg: cur && cur.n ? Math.round(cur.sum / cur.n) : 0,
       };
     });
-  }, [filtered]);
+  }, [filtered, t]);
 
   const hasLevelData = useMemo(() => levelData.some((d) => d.avg > 0), [levelData]);
 
@@ -191,10 +193,10 @@ export default function Parties() {
     setDetailLoading(true);
     sessionsService.get(selected.id)
       .then((d) => { if (alive) setDetail(d); })
-      .catch(() => { if (alive) notify.error('Impossible de charger le détail de la partie.'); })
+      .catch(() => { if (alive) notify.error(t('common.error')); })
       .finally(() => { if (alive) setDetailLoading(false); });
     return () => { alive = false; };
-  }, [selected]);
+  }, [selected, t]);
 
   const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
 
@@ -206,7 +208,7 @@ export default function Parties() {
       cell: ({ row }) => <span className="ses-idx">{row.index + 1}</span>,
     },
     {
-      id: 'player', header: 'Joueur', enableSorting: false,
+      id: 'player', header: t('sessions.columns.player'), enableSorting: false,
       cell: ({ row }) => {
         const u = row.original.user || {};
         return (
@@ -221,21 +223,21 @@ export default function Parties() {
       },
     },
     {
-      accessorKey: 'theme', header: 'Thème', enableSorting: false,
+      accessorKey: 'theme', header: t('sessions.columns.theme'), enableSorting: false,
       cell: (c) => <ThemeBadge theme={c.getValue()} />,
     },
     {
-      accessorKey: 'level', header: 'Niveau', enableSorting: false,
+      accessorKey: 'level', header: t('sessions.columns.level'), enableSorting: false,
       cell: (c) => <span className="badge badge-level">{levelLabels[c.getValue()] || c.getValue() || '—'}</span>,
     },
     {
-      accessorKey: 'score', header: 'Score',
+      accessorKey: 'score', header: t('sessions.columns.score'),
       cell: (c) => (
         <span className="ses-score" style={{ color: scoreColor(c.getValue()) }}>{num(c.getValue())}</span>
       ),
     },
     {
-      id: 'ratio', header: 'Bonnes / Total', enableSorting: false,
+      id: 'ratio', header: t('sessions.columns.correct'), enableSorting: false,
       cell: ({ row }) => {
         const { correct_count: correct, question_count: tot } = row.original;
         const r = ratioOf(correct, tot);
@@ -250,24 +252,24 @@ export default function Parties() {
       },
     },
     {
-      accessorKey: 'xp_earned', header: 'XP',
+      accessorKey: 'xp_earned', header: t('sessions.columns.xp'),
       cell: (c) => (
         <span className="ses-xp"><Zap size={13} className="ses-xp-ico" />{num(c.getValue())}</span>
       ),
     },
     {
-      accessorKey: 'duration_s', header: 'Durée', enableSorting: false,
+      accessorKey: 'duration_s', header: t('sessions.columns.duration'), enableSorting: false,
       cell: (c) => <span className="ses-dur">{formatDuration(c.getValue())}</span>,
     },
     {
-      accessorKey: 'played_at', header: 'Date',
+      accessorKey: 'played_at', header: t('sessions.columns.date'),
       cell: (c) => <span className="ses-date" title={dateTimeFr(c.getValue())}>{relativeFr(c.getValue())}</span>,
     },
     {
       id: 'actions', header: '', enableSorting: false,
       cell: ({ row }) => (
         <button
-          className="icon-action" title="Voir le détail"
+          className="icon-action" title={t('common.view')}
           onClick={(e) => { e.stopPropagation(); setSelected(row.original); }}
         >
           <Eye size={17} />
@@ -282,8 +284,8 @@ export default function Parties() {
   return (
     <>
       <PageHeader
-        title="Parties"
-        description="Historique des sessions de jeu et détail de chaque partie."
+        title={t('sessions.title')}
+        description={t('sessions.subtitle')}
       />
 
       {/* Bande KPI sombre — chiffres réels (dashboard) + dérivés de la liste, libellés honnêtes. */}
@@ -291,26 +293,26 @@ export default function Parties() {
         {[
           {
             value: loading ? null : num(kpis.total),
-            label: `Parties chargées${period ? ' (période)' : ''}`,
-            sub: 'sur les dernières parties',
+            label: t('sessions.kpi.total'),
+            sub: t('sessions.misc.kpiLastGames'),
             ready: !loading,
           },
           {
             value: dashLoading ? null : (gamesToday != null ? num(gamesToday) : '—'),
-            label: "Aujourd'hui",
-            sub: 'parties jouées',
+            label: t('sessions.kpi.today'),
+            sub: t('sessions.misc.kpiGamesPlayed'),
             ready: !dashLoading,
           },
           {
             value: loading ? null : num(kpis.avgScore),
-            label: 'Score moyen',
-            sub: 'sur les parties chargées',
+            label: t('sessions.kpi.avgScore'),
+            sub: t('sessions.misc.kpiLoadedGames'),
             ready: !loading,
           },
           {
             value: dashLoading ? null : (successRate != null ? `${num(successRate)} %` : '—'),
-            label: 'Taux de réussite global',
-            sub: 'toutes parties',
+            label: t('sessions.kpi.globalSuccess'),
+            sub: t('sessions.misc.kpiAllGames'),
             ready: !dashLoading,
           },
         ].map((k, i) => (
@@ -329,11 +331,11 @@ export default function Parties() {
       {/* Graphiques : répartition par thème (donut) + score moyen par niveau (barres). */}
       <div className="ses-charts">
         <div className="card card-pad ses-chart-card">
-          <div className="ses-chart-title">Parties par thème</div>
+          <div className="ses-chart-title">{t('sessions.themeDistribution')}</div>
           {loading ? (
             <Skeleton w="100%" h={180} r={12} />
           ) : themeData.length === 0 ? (
-            <div className="ses-chart-empty">Aucune partie à répartir.</div>
+            <div className="ses-chart-empty">{t('common.noData')}</div>
           ) : (
             <div className="ses-donut">
               <ResponsiveContainer width="100%" height={180}>
@@ -352,7 +354,7 @@ export default function Parties() {
                     {themeData.map((d) => <Cell key={d.theme} fill={d.color} />)}
                   </Pie>
                   <RTooltip
-                    formatter={(value, name) => [`${num(value)} partie${value > 1 ? 's' : ''}`, name]}
+                    formatter={(value, name) => [t('sessions.misc.gamesCount', { count: value, value: num(value) }), name]}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -370,11 +372,11 @@ export default function Parties() {
         </div>
 
         <div className="card card-pad ses-chart-card">
-          <div className="ses-chart-title">Score moyen par niveau</div>
+          <div className="ses-chart-title">{t('sessions.scoreByLevel')}</div>
           {loading ? (
             <Skeleton w="100%" h={180} r={12} />
           ) : !hasLevelData ? (
-            <div className="ses-chart-empty">Aucune partie à mesurer.</div>
+            <div className="ses-chart-empty">{t('common.noData')}</div>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={levelData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -388,7 +390,7 @@ export default function Parties() {
                 />
                 <RTooltip
                   cursor={{ fill: 'rgba(0,0,0,0.04)' }}
-                  formatter={(value) => [`${num(value)} pts`, 'Score moyen']}
+                  formatter={(value) => [`${num(value)} ${t('common.pts')}`, t('sessions.kpi.avgScore')]}
                 />
                 <Bar dataKey="avg" radius={[6, 6, 0, 0]} maxBarSize={64}>
                   {levelData.map((d) => <Cell key={d.label} fill={d.color} />)}
@@ -405,16 +407,16 @@ export default function Parties() {
           <div className="search">
             <Search size={16} />
             <input
-              className="input" placeholder="Rechercher un joueur…"
+              className="input" placeholder={t('sessions.search')}
               value={filters.q} onChange={(e) => setF('q', e.target.value)}
             />
           </div>
           <select className="select" value={filters.theme} onChange={(e) => setF('theme', e.target.value)}>
-            <option value="">Tous thèmes</option>
+            <option value="">{t('sessions.allThemes')}</option>
             {THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabels[t]}</option>)}
           </select>
           <select className="select" value={filters.level} onChange={(e) => setF('level', e.target.value)}>
-            <option value="">Tous niveaux</option>
+            <option value="">{t('sessions.allLevels')}</option>
             {LEVEL_KEYS.map((l) => <option key={l} value={l}>{levelLabels[l]}</option>)}
           </select>
         </div>
@@ -425,7 +427,7 @@ export default function Parties() {
               className={`ses-pill ${period === p.value ? 'active' : ''}`}
               onClick={() => setPeriod(p.value)}
             >
-              {p.label}
+              {t(p.labelKey)}
             </button>
           ))}
         </div>
@@ -436,20 +438,20 @@ export default function Parties() {
         data={filtered}
         loading={loading}
         onRowClick={setSelected}
-        emptyMessage="Aucune partie ne correspond à ces filtres."
+        emptyMessage={t('common.noData')}
       />
 
       <Drawer
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
-        title="Détail de la partie"
+        title={t('sessions.drawer.title')}
         width={520}
         footer={selected && (
           <button
             className="ses-profile-link"
             onClick={() => goToProfile(detailUser.id)}
           >
-            Voir le profil du joueur <ChevronRight size={15} />
+            {t('sessions.drawer.viewProfile')} <ChevronRight size={15} />
           </button>
         )}
       >
@@ -465,7 +467,7 @@ export default function Parties() {
                     className="ses-dhead-link"
                     onClick={() => goToProfile(detailUser.id)}
                   >
-                    Voir le profil <ChevronRight size={13} />
+                    {t('users.drawer.profile')} <ChevronRight size={13} />
                   </button>
                   <div className="row wrap" style={{ gap: 7, marginTop: 2 }}>
                     <ThemeBadge theme={selected.theme} />
@@ -482,40 +484,40 @@ export default function Parties() {
             {!detailLoading && suspicious && (
               <div className="ses-cheat" role="alert">
                 <AlertTriangle size={17} />
-                <span>Activité suspecte détectée sur cette session</span>
+                <span>{t('sessions.drawer.cheatDetected')}</span>
               </div>
             )}
 
             {/* Carte score blanche. */}
             <div className="ses-score-card">
               <div className="ses-score-big" style={{ color: 'var(--gold)' }}>{num(selected.score)}</div>
-              <div className="ses-score-unit">/ {num(MAX_SCORE)} pts max</div>
+              <div className="ses-score-unit">{t('sessions.drawer.maxPts')}</div>
               <div className="ses-score-stats">
                 <div className="ses-sstat">
                   <div className="ses-sstat-v ok"><Check size={14} />{num(selected.correct_count)}</div>
-                  <div className="ses-sstat-l">Bonnes</div>
+                  <div className="ses-sstat-l">{t('sessions.drawer.correct')}</div>
                 </div>
                 <div className="ses-sstat">
                   <div className="ses-sstat-v ko">
                     <X size={14} />
                     {num(Math.max(0, (selected.question_count || 0) - (selected.correct_count || 0)))}
                   </div>
-                  <div className="ses-sstat-l">Fausses</div>
+                  <div className="ses-sstat-l">{t('sessions.drawer.wrong')}</div>
                 </div>
                 <div className="ses-sstat">
                   <div className="ses-sstat-v xp"><Zap size={14} />{num(selected.xp_earned)}</div>
-                  <div className="ses-sstat-l">XP</div>
+                  <div className="ses-sstat-l">{t('sessions.drawer.xp')}</div>
                 </div>
                 <div className="ses-sstat">
                   <div className="ses-sstat-v">{formatDuration(selected.duration_s)}</div>
-                  <div className="ses-sstat-l">Durée</div>
+                  <div className="ses-sstat-l">{t('sessions.drawer.duration')}</div>
                 </div>
               </div>
             </div>
 
             {/* Récapitulatif question par question. */}
             <div>
-              <div className="ses-recap-title">Détail des réponses</div>
+              <div className="ses-recap-title">{t('sessions.drawer.answerDetail')}</div>
               {detailLoading ? (
                 <div className="stack" style={{ gap: 8 }}>
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -545,7 +547,7 @@ export default function Parties() {
                         </div>
                         <div className="ses-ans-body">
                           {skipped ? (
-                            <div className="ses-ans-line ses-ans-line--skip">Question passée</div>
+                            <div className="ses-ans-line ses-ans-line--skip">{t('sessions.misc.questionSkipped')}</div>
                           ) : a.is_correct ? (
                             <div className="ses-ans-line ses-ans-line--ok">
                               <Check size={12} /> {yourText || '—'}
@@ -553,14 +555,14 @@ export default function Parties() {
                           ) : (
                             <>
                               <div className="ses-ans-line ses-ans-line--ko">
-                                <X size={12} /> Réponse : {yourText || '—'}
+                                <X size={12} /> {t('sessions.misc.yourAnswer')} {yourText || '—'}
                               </div>
                               <div className="ses-ans-line ses-ans-line--good">
-                                <Check size={12} /> Bonne : {goodText || '—'}
+                                <Check size={12} /> {t('sessions.misc.correctAnswer')} {goodText || '—'}
                               </div>
                             </>
                           )}
-                          {bonus && <span className="ses-ans-bonus"><Zap size={11} /> Bonus</span>}
+                          {bonus && <span className="ses-ans-bonus"><Zap size={11} /> {t('sessions.drawer.speedBonus')}</span>}
                         </div>
                       </div>
                     );
@@ -568,8 +570,8 @@ export default function Parties() {
                 </div>
               ) : (
                 <EmptyState
-                  title="Récapitulatif indisponible"
-                  message="Aucune réponse enregistrée pour cette partie."
+                  title={t('sessions.empty.recapTitle')}
+                  message={t('sessions.empty.recapMessage')}
                 />
               )}
             </div>

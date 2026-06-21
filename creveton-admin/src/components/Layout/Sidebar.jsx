@@ -1,4 +1,5 @@
 import { NavLink, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings } from 'lucide-react';
 import dashboardService from '../../services/dashboard.service';
 import { useApiData } from '../../hooks/useApiData';
@@ -6,31 +7,32 @@ import Logo from '../Logo';
 
 const NAV = [
   {
-    title: 'Vue générale',
+    titleKey: 'nav.general',
     items: [
-      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-      { to: '/classement', label: 'Classement', icon: Trophy },
+      { to: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, end: true },
+      { to: '/classement', labelKey: 'nav.leaderboard', icon: Trophy },
     ],
   },
   {
-    title: 'Contenu',
+    titleKey: 'nav.content',
     items: [
-      { to: '/questions', label: 'Questions', icon: FileQuestion, badgeKey: 'pending' },
-      { to: '/sessions', label: 'Parties', icon: Gamepad2 },
-      { to: '/tournaments', label: 'Tournois', icon: Swords },
+      { to: '/questions', labelKey: 'nav.questions', icon: FileQuestion, badgeKey: 'pending' },
+      { to: '/sessions', labelKey: 'nav.sessions', icon: Gamepad2 },
+      { to: '/tournaments', labelKey: 'nav.tournaments', icon: Swords },
     ],
   },
   {
-    title: 'Utilisateurs',
-    items: [{ to: '/users', label: 'Utilisateurs', icon: Users }],
+    titleKey: 'nav.userSection',
+    items: [{ to: '/users', labelKey: 'nav.users', icon: Users }],
   },
   {
-    title: 'Paramètres',
-    items: [{ to: '/settings', label: 'Paramètres', icon: Settings }],
+    titleKey: 'nav.params',
+    items: [{ to: '/settings', labelKey: 'nav.settings', icon: Settings }],
   },
 ];
 
 export default function Sidebar() {
+  const { t } = useTranslation();
   // Compteur de questions en attente pour le badge de notification.
   const { data } = useApiData(() => dashboardService.overview().catch(() => null), [], { pollMs: 60000 });
   const pending = data?.pending_questions?.length || 0;
@@ -43,15 +45,18 @@ export default function Sidebar() {
       </Link>
       <nav className="sidebar-nav">
         {NAV.map((section) => (
-          <div className="nav-section" key={section.title}>
-            <div className="nav-section-title">{section.title}</div>
-            {section.items.map(({ to, label, icon: Icon, end, badgeKey }) => (
-              <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={label}>
-                <Icon className="nav-icon" size={18} />
-                <span className="nav-label">{label}</span>
-                {badgeKey === 'pending' && pending > 0 && <span className="nav-badge">{pending}</span>}
-              </NavLink>
-            ))}
+          <div className="nav-section" key={section.titleKey}>
+            <div className="nav-section-title">{t(section.titleKey)}</div>
+            {section.items.map(({ to, labelKey, icon: Icon, end, badgeKey }) => {
+              const label = t(labelKey);
+              return (
+                <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={label}>
+                  <Icon className="nav-icon" size={18} />
+                  <span className="nav-label">{label}</span>
+                  {badgeKey === 'pending' && pending > 0 && <span className="nav-badge">{pending}</span>}
+                </NavLink>
+              );
+            })}
           </div>
         ))}
       </nav>
