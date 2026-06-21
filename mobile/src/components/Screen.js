@@ -1,0 +1,58 @@
+// Conteneur d'écran avec safe area + fond (crème clair ou vert foncé).
+
+import React from 'react';
+import {
+  View,
+  StyleSheet,
+  StatusBar,
+  ScrollView,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, spacing } from '../constants/theme';
+
+export default function Screen({
+  children,
+  dark = false,
+  scroll = false,
+  padded = true,
+  refreshing = false,
+  onRefresh = null,
+  edges = ['top', 'bottom'],
+  style,
+  contentStyle,
+}) {
+  const bg = dark ? colors.green900 : colors.cream;
+  const Content = scroll ? ScrollView : View;
+  const contentProps = scroll
+    ? {
+        contentContainerStyle: [
+          padded && styles.padded,
+          contentStyle,
+        ],
+        showsVerticalScrollIndicator: false,
+        refreshControl: onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.gold400}
+          />
+        ) : undefined,
+      }
+    : { style: [styles.flex, padded && styles.padded, contentStyle] };
+
+  return (
+    <SafeAreaView
+      edges={edges}
+      style={[styles.flex, { backgroundColor: bg }, style]}
+    >
+      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
+      <Content {...contentProps}>{children}</Content>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  padded: { padding: spacing.lg },
+});
