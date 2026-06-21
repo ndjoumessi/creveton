@@ -31,7 +31,13 @@ const list = asyncHandler(async (req, res) => {
   const offset = Math.max(0, parseInt(cursor, 10) || 0);
   const { rows, hasMore } = await userModel.listAdmin({ ville, level, role, status, q, limit, offset });
   return ok(res, {
-    data: rows.map((u) => ({ ...userModel.toPublic(u), status: u.status })),
+    data: rows.map((u) => ({
+      ...userModel.toPublic(u),
+      status: u.status,
+      sessions_played: u.sessions_played ?? 0,
+      avg_score: u.avg_score ?? 0,
+      last_played_at: u.last_played_at ?? null,
+    })),
     page: { limit, next_cursor: hasMore ? String(offset + limit) : null, has_more: hasMore },
   });
 });

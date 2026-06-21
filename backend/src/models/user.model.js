@@ -162,8 +162,15 @@ async function listAdmin({ ville = null, level = null, role = null, status = nul
   params.push(limit + 1);
   const limitIdx = params.length;
   params.push(offset);
+  // Agrégats d'activité par joueur (sous-requêtes corrélées) : nombre de parties,
+  // score moyen, date de dernière partie — pour la colonne « Activité » de la
+  // console, sans appel N+1 côté front.
   const { rows } = await db.query(
-    `SELECT ${PUBLIC_COLUMNS}, status FROM users
+    `SELECT ${PUBLIC_COLUMNS}, status,
+        (SELECT count(*)::int FROM game_sessions g WHERE g.user_id = users.id) AS sessions_played,
+        (SELECT COALESCE(round(avg(g.score)), 0)::int FROM game_sessions g WHERE g.user_id = users.id) AS avg_score,
+        (SELECT max(g.played_at) FROM game_sessions g WHERE g.user_id = users.id) AS last_played_at
+      FROM users
       WHERE ${clauses.join(' AND ')}
       ORDER BY created_at DESC
       LIMIT $${limitIdx} OFFSET $${params.length}`,

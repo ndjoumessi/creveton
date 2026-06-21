@@ -1,96 +1,272 @@
-/* Présentation page Utilisateurs — Cockpit Émeraude.
+/* Présentation page Utilisateurs — Cockpit Émeraude (premium).
    Le design system (src/index.css) reste la source de vérité ; ces classes .u-…
-   ne font que de la composition locale (stacks de cellules, header de fiche,
-   timeline d'historique). Aucun token ni couleur hors charte. */
+   ne font que de la composition locale. Aucun token ni couleur hors charte. */
 
-/* Cellule nom + email empilés dans la table */
+/* ─────────────── Bandeau KPI (sombre) ─────────────── */
+.u-banner {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #0b2e1a;
+  border-radius: 16px;
+  padding: 22px 8px;
+  margin-bottom: 18px;
+}
+.u-banner-item {
+  text-align: center;
+  padding: 0 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+.u-banner-item:last-child { border-right: none; }
+.u-banner-v {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 40px;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.u-banner-l {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 8px;
+}
+.u-banner-sub {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 3px;
+}
+
+/* ─────────────── Filtres ─────────────── */
+.u-filters-card { margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px; }
+.u-search-row { width: 100%; }
+.u-filters-selects { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.u-quickpills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.u-pill {
+  border: 1px solid var(--border);
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.u-pill:hover { border-color: var(--green500); }
+.u-pill.on { background: #0b2e1a; border-color: #0b2e1a; color: #fff; }
+
+/* ─────────────── Cellules de table ─────────────── */
+.u-cell-player { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .u-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .u-id .u-id-line { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.u-id .u-id-name { line-height: 1.25; }
-.u-id .u-id-mail { line-height: 1.3; }
+.u-id .u-id-name { line-height: 1.25; font-size: 15px; }
+.u-id .u-id-mail { line-height: 1.3; font-size: 13px; color: #6b7280; }
 .u-id .badge-admin { flex: none; padding: 2px 8px; font-size: 11px; }
 
-/* Cellule niveau : badge + mini barre XP alignés */
-.u-level { display: flex; align-items: center; gap: 9px; }
-
-/* Cellule parties / score moyen empilées */
-.u-games { display: flex; flex-direction: column; gap: 1px; }
-.u-games .u-games-main { font-family: 'Outfit'; font-weight: 600; color: var(--ink); font-size: 13.5px; }
-.u-games .u-games-sub { color: var(--muted); font-size: 12px; }
-
-/* Téléphone + drapeau */
+.u-contact { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.u-contact-city { color: #6b7280; }
 .u-phone { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .u-flag { font-size: 13px; line-height: 1; }
 
-/* En-tête de la fiche (dans le children du Drawer) */
-.u-fiche-head {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  padding-bottom: 18px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--border);
+.u-levelcell { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
+.u-level-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
 }
-.u-fiche-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
-.u-fiche-name { font-family: 'Outfit'; font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1.15; }
-.u-fiche-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.u-fiche-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.u-xp-mini { display: block; width: 60px; height: 4px; border-radius: 999px; background: #f3f4f6; overflow: hidden; }
+.u-xp-mini > span { display: block; height: 100%; border-radius: 999px; }
+.u-xp-mini-label { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: #9ca3af; font-variant-numeric: tabular-nums; }
 
-/* Onglet Progression */
-.u-prog-title { font-family: 'Outfit'; font-weight: 700; font-size: 24px; color: var(--ink); line-height: 1.1; }
-.u-prog-xp { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.u-prog-xp .u-prog-xp-val { font-family: 'Outfit'; font-weight: 700; font-size: 13.5px; color: var(--green700); font-variant-numeric: tabular-nums; }
-.u-reward {
-  margin-top: 12px;
+.u-activity { display: flex; flex-direction: column; gap: 1px; }
+.u-act-main { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 16px; color: #0b2e1a; }
+.u-act-sub { font-size: 13px; color: #6b7280; }
+.u-act-last { font-size: 12px; color: #9ca3af; }
+
+/* Statut avec point */
+.u-status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.u-status-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
+.u-st-active { color: #15803d; }
+.u-st-active .u-status-dot { background: #22c55e; animation: u-pulse 1.8s ease-in-out infinite; }
+.u-st-susp { color: #b45309; }
+.u-st-susp .u-status-dot { background: #f59e0b; }
+.u-st-ban { color: #dc2626; }
+.u-st-ban .u-status-dot { background: #dc2626; }
+.u-st-inactive { color: #6b7280; }
+.u-st-inactive .u-status-dot { background: #9ca3af; }
+@keyframes u-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); } 50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); } }
+
+/* Badge rôle */
+.u-role-badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.u-role-super { background: #fdf6e3; color: #b8860b; }
+.u-role-admin { background: #dcfce7; color: #15803d; }
+.u-role-mod { background: #e6f0ff; color: #2563eb; }
+.u-role-player { background: #f3f4f6; color: #6b7280; }
+
+/* Actions + menu contextuel */
+.u-actions { display: flex; align-items: center; gap: 2px; }
+.u-rowmenu { position: relative; display: inline-flex; }
+.u-menu-backdrop { position: fixed; inset: 0; z-index: 40; background: transparent; border: 0; cursor: default; }
+.u-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 41;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px -12px rgba(11, 46, 26, 0.3);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+}
+.u-menu button {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  padding: 9px 11px;
+  border: 0;
+  background: none;
+  border-radius: 8px;
   font-size: 13px;
-  color: var(--green700);
-  background: #f1faf3;
-  border: 1px solid #d6efe0;
-  border-radius: var(--radius);
-  padding: 9px 12px;
+  color: #374151;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
 }
+.u-menu button:hover { background: #f0f7f0; }
+.u-menu button.danger { color: #dc2626; }
+.u-menu button.danger:hover { background: #fef2f2; }
+
+/* ─────────────── Drawer : header sombre ─────────────── */
+.u-drawer-head {
+  background: #0b2e1a;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 18px;
+}
+.u-dh-top { display: flex; align-items: flex-start; gap: 16px; }
+.u-dh-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.u-dh-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 22px; color: #fff; line-height: 1.1; }
+.u-dh-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.u-dh-badges .u-status { color: rgba(255, 255, 255, 0.85); }
+.u-dh-contact { display: flex; flex-wrap: wrap; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+
+.u-dh-metrics { display: flex; gap: 0; margin: 20px 0 16px; }
+.u-dh-metrics > div { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 2px; border-right: 1px solid rgba(255, 255, 255, 0.18); }
+.u-dh-metrics > div:last-child { border-right: none; }
+.u-dh-mv { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; color: #fff; }
+.u-dh-ml { font-size: 11px; color: rgba(255, 255, 255, 0.5); }
+.u-dh-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.u-dh-quick .btn-ghost-soft { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.18); }
+.u-dh-quick .btn-ghost-soft:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* Onglets */
+.u-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; position: sticky; top: 0; background: #fff; z-index: 2; }
+.u-tab {
+  border: 0; background: none; cursor: pointer;
+  padding: 10px 14px;
+  font-size: 14px; font-weight: 600; color: #6b7280;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color var(--t-fast);
+}
+.u-tab:hover { color: var(--green700); }
+.u-tab.active { color: #0b2e1a; border-bottom-color: var(--gold); font-family: 'Outfit', sans-serif; }
+.u-tab-body { padding-bottom: 4px; }
+
+.u-section-title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13.5px; color: #0b2e1a; margin-bottom: 10px; }
+.u-empty-note { font-size: 13px; }
+
+/* Onglet Profil */
+.u-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin: 0; }
+.u-kv > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.u-kv dt { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #9ca3af; }
+.u-kv dd { margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 14px; color: #0b2e1a; word-break: break-word; }
+
+.u-account { display: flex; flex-direction: column; gap: 10px; }
+.u-account-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+.u-account-k { color: #6b7280; }
+.u-copy-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--border); background: #f8faf8;
+  border-radius: 999px; padding: 4px 11px;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; color: var(--green700);
+  cursor: pointer;
+}
+.u-copy-pill:hover { background: #f0f7f0; }
+.u-verified { color: #15803d; font-weight: 600; }
+.u-unverified { color: #b45309; font-weight: 600; }
+.u-suspension { font-size: 13px; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 9px 12px; }
+
+/* Onglet Progression */
+.u-level-hero { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.u-level-medal { width: 80px; height: 80px; border-radius: 22px; display: grid; place-items: center; font-size: 38px; }
+.u-level-hero-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 24px; color: #0b2e1a; }
+
+.u-xp-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
+.u-xp-current { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 17px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.u-xp-max { font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #9ca3af; }
+.u-xp-bar { height: 12px; border-radius: 999px; background: #f3f4f6; overflow: hidden; }
+.u-xp-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2a8a4f, #d4a017); transition: width 600ms ease; }
+.u-xp-hint { margin-top: 8px; font-size: 13px; color: #6b7280; }
+.u-next-reward { background: #fdf8ec; border-left: 3px solid var(--gold); border-radius: 10px; padding: 11px 14px; font-size: 13.5px; color: #7a5d10; }
+
 .u-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.u-stat {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-}
-.u-stat .u-stat-k { font-family: 'Space Grotesk'; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); }
-.u-stat .u-stat-v { font-family: 'Outfit'; font-weight: 700; font-size: 18px; color: var(--ink); margin-top: 3px; font-variant-numeric: tabular-nums; }
+.u-stat { background: var(--surface-2, #f8faf8); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.u-stat-k { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; color: #6b7280; }
+.u-stat-v { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; color: #0b2e1a; margin-top: 3px; font-variant-numeric: tabular-nums; }
 
-.u-section-title {
-  font-family: 'Outfit';
-  font-weight: 600;
-  font-size: 13.5px;
-  color: var(--ink);
-  margin-bottom: 10px;
-}
-.u-demo { font-family: 'Space Grotesk'; font-weight: 400; font-size: 11.5px; color: var(--muted); }
+.u-chart { background: #fbfdfb; border: 1px solid var(--border); border-radius: 12px; padding: 10px 6px; }
+.u-theme-perf { display: flex; flex-direction: column; gap: 10px; }
+.u-theme-row { display: grid; grid-template-columns: 130px 1fr 42px; align-items: center; gap: 10px; }
+.u-theme-name { font-size: 13px; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.u-theme-track { height: 8px; border-radius: 999px; background: #f3f4f6; overflow: hidden; }
+.u-theme-fill { display: block; height: 100%; border-radius: 999px; transition: width 800ms ease; }
+.u-theme-pct { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: #0b2e1a; text-align: right; }
 
-/* Onglet Historique — timeline des parties */
-.u-game-row { display: flex; align-items: center; gap: 12px; padding: 11px 8px; margin: 0 -8px; border-radius: 10px; border-bottom: 1px solid var(--border); transition: background var(--t-fast); cursor: default; }
-.u-game-row:last-child { border-bottom: none; }
-.u-game-row:hover { background: var(--surface-2); }
-.u-game-icon {
-  width: 36px; height: 36px; flex: none;
-  display: grid; place-items: center;
-  border-radius: 10px;
-  font-size: 17px;
-}
-.u-game-main { flex: 1; min-width: 0; }
-.u-game-end { text-align: right; flex: none; }
-.u-game-score { font-family: 'Outfit'; font-weight: 700; font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.u-game-xp { color: var(--green700); font-size: 12px; font-weight: 600; }
+/* Onglet Historique */
+.u-hist-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
+.u-hist-card { background: #fff; border: 1px solid var(--border); border-left: 3px solid #ccc; border-radius: 12px; padding: 12px 14px; }
+.u-hist-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
+.u-hist-theme { font-weight: 600; font-size: 13.5px; color: #0b2e1a; }
+.u-hist-mark { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.u-mark-good { background: #dcfce7; color: #15803d; }
+.u-mark-bad { background: #fee2e2; color: #dc2626; }
+.u-mark-mid { background: #fff4e0; color: #b45309; }
+.u-hist-mid { font-size: 13px; color: #4b5563; }
+.u-hist-bot { font-size: 12px; color: #9ca3af; margin-top: 3px; }
 
-/* Footer fiche : la danger-zone occupe toute la largeur, rôle à part */
+/* Onglet Activité — heatmap */
+.u-heatmap { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; max-width: 360px; }
+.u-heat-cell { width: 100%; aspect-ratio: 1; border-radius: 4px; display: inline-block; }
+.u-heat-0 { background: #f3f4f6; }
+.u-heat-1 { background: #a7e3c0; }
+.u-heat-2 { background: #2a8a4f; }
+.u-heat-3 { background: #0b2e1a; }
+.u-heat-legend { display: flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 11px; color: #9ca3af; }
+.u-heat-legend .u-heat-cell { width: 12px; aspect-ratio: 1; }
+
+.u-sessions-list { display: flex; flex-direction: column; }
+.u-session-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center; padding: 9px 4px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.u-session-row:last-child { border-bottom: none; }
+.u-session-when { color: #6b7280; }
+.u-session-theme { color: #374151; }
+.u-session-score { font-family: 'Outfit', sans-serif; font-weight: 700; color: #0b2e1a; }
+
+/* Footer fiche */
 .u-foot { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-.u-foot-role { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.u-foot-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.u-foot-danger { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: #fff5f5; border: 1px solid #fee2e2; border-radius: 12px; padding: 10px 12px; }
+.u-foot-role { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280; }
 .u-foot-role .select { min-width: 150px; }
-.u-dz-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* Spark wrap */
-.u-spark { padding: 4px 0 2px; }
+/* Modales : pills durée */
+.u-duration-pills { display: flex; flex-wrap: wrap; gap: 8px; }
