@@ -42,7 +42,11 @@ const PERMISSIONS = {
   'analytics:read': 'moderator',
   'dashboard:read': 'admin',
 
+  'system:read': 'admin',
   'system:manage': 'super_admin',
+
+  'settings:read': 'admin',
+  'settings:manage': 'super_admin',
 };
 
 /**

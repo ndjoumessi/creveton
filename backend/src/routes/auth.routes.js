@@ -25,5 +25,7 @@ router.post('/login', validate(schemas.login), ctrl.login);
 router.post('/refresh', validate(schemas.refresh), ctrl.refresh);
 router.post('/change-password', authenticate, validate(schemas.changePassword), ctrl.changePassword);
 router.post('/logout', authenticate, ctrl.logout);
+router.get('/sessions', authenticate, ctrl.sessions);
+router.post('/sessions/revoke-others', authenticate, ctrl.revokeOtherSessions);
 
 module.exports = router;

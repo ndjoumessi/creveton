@@ -12,6 +12,7 @@ const analyticsRoutes = require('./analytics.routes');
 const dashboardRoutes = require('./dashboard.admin.routes');
 const sessionRoutes = require('./sessions.admin.routes');
 const leaderboardRoutes = require('./leaderboard.admin.routes');
+const settingsRoutes = require('./settings.admin.routes');
 
 const router = express.Router();
 
@@ -26,6 +27,7 @@ router.use('/questions', questionRoutes);
 router.use('/users', userRoutes);
 router.use('/tournaments', tournamentRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/settings', settingsRoutes);
 // Parrainage : route à plat /admin/referrals/:code (spec §12).
 router.get('/referrals/:code', requirePermission('users:read'), usersCtrl.referral);
 

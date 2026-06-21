@@ -52,4 +52,16 @@ const logout = asyncHandler(async (req, res) => {
   return noContent(res);
 });
 
-module.exports = { register, verifyOtp, resendOtp, login, refresh, changePassword, logout };
+/** GET /auth/sessions — sessions actives de l'utilisateur courant. */
+const sessions = asyncHandler(async (req, res) => {
+  const list = await authService.listSessions(req.user.id, req.user.sid);
+  return ok(res, { sessions: list });
+});
+
+/** POST /auth/sessions/revoke-others — ferme toutes les autres sessions. */
+const revokeOtherSessions = asyncHandler(async (req, res) => {
+  const result = await authService.revokeOtherSessions(req.user.id, req.user.sid);
+  return ok(res, result);
+});
+
+module.exports = { register, verifyOtp, resendOtp, login, refresh, changePassword, logout, sessions, revokeOtherSessions };

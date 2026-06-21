@@ -48,6 +48,25 @@ async function findById(id) {
   return rows[0] || null;
 }
 
+/** Met à jour le profil de l'utilisateur courant (champs autorisés uniquement). */
+async function updateProfile(id, fields) {
+  const ALLOWED = ['name', 'ville', 'age', 'sexe', 'lang'];
+  const sets = [];
+  const params = [id];
+  for (const key of ALLOWED) {
+    if (fields[key] !== undefined) {
+      params.push(fields[key]);
+      sets.push(`${key} = $${params.length}`);
+    }
+  }
+  if (sets.length === 0) return findById(id);
+  const { rows } = await db.query(
+    `UPDATE users SET ${sets.join(', ')} WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
+    params
+  );
+  return rows[0] || null;
+}
+
 async function findByEmail(email) {
   const { rows } = await db.query(
     'SELECT * FROM users WHERE lower(email) = lower($1) AND deleted_at IS NULL',
@@ -374,6 +393,7 @@ module.exports = {
   PUBLIC_COLUMNS,
   toPublic,
   findById,
+  updateProfile,
   findByEmail,
   findByPhone,
   findByReferralCode,

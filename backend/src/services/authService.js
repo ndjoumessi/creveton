@@ -218,6 +218,56 @@ async function logout(userId, sid) {
 }
 
 /**
+ * Liste les sessions actives (refresh tokens en allowlist Redis) de l'utilisateur.
+ * Aucune donnée d'appareil n'est stockée → on expose le sid (masqué), l'expiration
+ * (déduite du TTL) et un drapeau « session courante ».
+ */
+async function listSessions(userId, currentSid) {
+  const pattern = refreshKey(userId, '*');
+  const found = [];
+  let cursor = '0';
+  do {
+    const [next, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+    cursor = next;
+    for (const key of keys) {
+      const sid = key.slice(key.lastIndexOf(':') + 1);
+      // TTL restant → date d'expiration approximative de la session.
+      // eslint-disable-next-line no-await-in-loop
+      const ttl = await redis.ttl(key);
+      found.push({
+        sid,
+        masked: `${sid.slice(0, 8)}…`,
+        current: sid === currentSid,
+        expires_in_s: ttl > 0 ? ttl : null,
+      });
+    }
+  } while (cursor !== '0');
+  // Session courante en tête.
+  found.sort((a, b) => (b.current ? 1 : 0) - (a.current ? 1 : 0));
+  return found;
+}
+
+/** Révoque toutes les sessions de l'utilisateur SAUF la session courante. */
+async function revokeOtherSessions(userId, currentSid) {
+  const pattern = refreshKey(userId, '*');
+  let cursor = '0';
+  let revoked = 0;
+  do {
+    const [next, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+    cursor = next;
+    for (const key of keys) {
+      const sid = key.slice(key.lastIndexOf(':') + 1);
+      if (sid !== currentSid) {
+        // eslint-disable-next-line no-await-in-loop
+        await redis.del(key);
+        revoked += 1;
+      }
+    }
+  } while (cursor !== '0');
+  return { revoked };
+}
+
+/**
  * Change le mot de passe d'un compte authentifié : vérifie le mot de passe
  * actuel, refuse un nouveau identique à l'ancien, puis stocke le hash bcrypt.
  */
@@ -244,6 +294,8 @@ module.exports = {
   login,
   refresh,
   logout,
+  listSessions,
+  revokeOtherSessions,
   changePassword,
   issueTokens,
 };
