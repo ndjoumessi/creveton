@@ -91,10 +91,11 @@ export default function ProfileScreen() {
     setRefreshing(false);
   }, [refreshProfile, loadWallet]);
 
-  const level = user?.level ?? 1;
   const totalXp = user?.total_xp ?? 0;
-  const progress = levelProgress(totalXp, level);
-  const remaining = Math.max(0, progress.needed - progress.current);
+  const progress = levelProgress(totalXp);
+  // Niveau effectif dérivé de l'XP (cohérent même si user.level est périmé).
+  const level = progress.level;
+  const remaining = progress.remaining;
   const badges = deriveBadges(level);
 
   return (
@@ -142,7 +143,9 @@ export default function ProfileScreen() {
           </View>
           <XpBar pct={progress.pct} />
           <Body muted style={styles.progressHint}>
-            Encore {remaining.toLocaleString('fr-FR')} XP pour le niveau suivant.
+            {progress.isMax
+              ? 'Niveau maximum atteint 🏆'
+              : `Encore ${remaining.toLocaleString('fr-FR')} XP pour le niveau suivant.`}
           </Body>
         </AppCard>
 

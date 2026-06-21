@@ -129,9 +129,10 @@ export default function StatsScreen() {
     setRefreshing(false);
   }, [tab, refreshProfile, loadHistory, loadLeaderboard]);
 
-  const level = user?.level ?? 1;
   const totalXp = user?.total_xp ?? 0;
-  const progress = levelProgress(totalXp, level);
+  const progress = levelProgress(totalXp);
+  // Niveau effectif dérivé de l'XP (cohérent même si user.level est périmé).
+  const level = progress.level;
   const kpi = deriveStats(user?.stats);
   const byTheme = user?.stats?.by_theme ?? user?.stats?.themes ?? null;
 
