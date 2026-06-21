@@ -10,8 +10,8 @@ import Analytics from './pages/Analytics';
 import Transactions from './pages/Transactions';
 import ComingSoon from './pages/ComingSoon';
 
-// Sections de la sidebar pas encore implémentées → placeholder (évite les liens morts).
-const SOON = ['/alerts', '/support', '/kyc', '/finances', '/wallet-ops', '/compliance', '/audit', '/team', '/challenges', '/settings'];
+// Seule section restante non implémentée → placeholder (évite un lien mort).
+const SOON = ['/settings'];
 
 export default function App() {
   return (

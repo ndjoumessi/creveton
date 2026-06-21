@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Menu, RefreshCw, LogOut } from 'lucide-react';
+import { RefreshCw, LogOut } from 'lucide-react';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { triggerRefresh } from '../../hooks/useApiData';
@@ -8,39 +8,28 @@ import { notify } from '../Toast';
 const TITLES = {
   '/': 'Dashboard',
   '/analytics': 'Analytique',
-  '/alerts': 'Alertes',
-  '/support': 'Support',
-  '/users': 'Utilisateurs',
-  '/kyc': 'Vérification KYC',
-  '/transactions': 'Transactions',
-  '/finances': 'Finances & Revenus',
-  '/wallet-ops': 'Recharges & Retraits',
-  '/compliance': 'Conformité ANIF',
-  '/audit': 'Journal Audit',
-  '/team': 'Équipe Admin',
   '/questions': 'Questions',
   '/tournaments': 'Tournois',
-  '/challenges': 'Challenges',
+  '/users': 'Utilisateurs',
+  '/transactions': 'Transactions',
   '/settings': 'Paramètres',
 };
 
 export default function Header() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const toggleSidebar = useUiStore((s) => s.toggleSidebar);
   const lang = useUiStore((s) => s.lang);
   const setLang = useUiStore((s) => s.setLang);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
-  const title = TITLES[pathname] || 'Creveton Admin';
+  const title = TITLES[pathname] || 'Console';
   const initials = (user?.name || 'AD').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
   const onRefresh = () => {
     triggerRefresh();
     notify.success('Données actualisées');
   };
-
   const onLogout = () => {
     logout();
     navigate('/login', { replace: true });
@@ -48,11 +37,10 @@ export default function Header() {
 
   return (
     <header className="header">
-      <button className="icon-btn" onClick={toggleSidebar} aria-label="Menu"><Menu size={18} /></button>
       <div className="breadcrumb">
         <span className="crumb-muted">Console</span>
-        <span>/</span>
-        <span>{title}</span>
+        <span className="crumb-sep">/</span>
+        <span className="crumb-current">{title}</span>
       </div>
 
       <div className="header-spacer" />
@@ -68,10 +56,6 @@ export default function Header() {
 
       <div className="profile">
         <div className="avatar">{initials}</div>
-        <div className="stack" style={{ gap: 0 }}>
-          <strong style={{ fontSize: 13 }}>{user?.name || 'Admin'}</strong>
-          <span className="muted" style={{ fontSize: 11.5 }}>{user?.role || 'admin'}</span>
-        </div>
       </div>
 
       <button className="icon-btn" onClick={onLogout} title="Déconnexion" aria-label="Déconnexion">
