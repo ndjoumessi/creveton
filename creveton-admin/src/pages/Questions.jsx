@@ -182,6 +182,7 @@ export default function Questions() {
   const [editing, setEditing] = useState(undefined); // undefined=fermé, null=création, objet=édition
   const [detail, setDetail] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [selected, setSelected] = useState(() => new Set());
 
   const { data, loading, refetch } = useApiData(
     () => questionsService.list(filters),
@@ -222,7 +223,46 @@ export default function Questions() {
     } catch { notify.error('Enregistrement impossible.'); } finally { setSubmitting(false); }
   };
 
+  // --- Sélection multiple + actions groupées ---
+  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+  const toggleOne = (id) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleAll = () => setSelected(() => (allSelected ? new Set() : new Set(rows.map((r) => r.id))));
+  const clearSel = () => setSelected(new Set());
+
+  const bulkTransition = async (to) => {
+    const items = rows.filter((r) => selected.has(r.id));
+    if (!items.length) return;
+    try {
+      await Promise.all(items.map((q) => questionsService.transition(q.id, to, to === 'rejected' ? 'Rejet groupé' : undefined)));
+      notify.success(`${items.length} question(s) → ${questionStatusColors[to]?.label || to}`);
+      clearSel(); refetch();
+    } catch { notify.error('Action groupée impossible.'); }
+  };
+  const bulkForceSync = async () => {
+    const ids = [...selected];
+    if (!ids.length) return;
+    try { const r = await questionsService.forceSync(ids); notify.success(`Force sync · ${r.devices_targeted?.toLocaleString('fr-FR') || '—'} appareils`); }
+    catch { notify.error('Force sync impossible.'); }
+  };
+  const exportCsv = () => {
+    const cols = ['id', 'text_fr', 'theme', 'level', 'status', 'success_rate', 'created_at'];
+    const esc = (v) => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+    const csv = [cols.join(',')].concat(rows.map((q) => cols.map((k) => esc(q[k])).join(','))).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = 'questions-creveton.csv'; a.click(); URL.revokeObjectURL(url);
+    notify.success(`${rows.length} question(s) exportée(s)`);
+  };
+
   const columns = [
+    {
+      id: 'sel', enableSorting: false,
+      header: () => <span className={`checkbox ${allSelected ? 'on' : ''}`} onClick={toggleAll}>{allSelected && <Check size={12} />}</span>,
+      cell: ({ row }) => {
+        const on = selected.has(row.original.id);
+        return <span className={`checkbox ${on ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); toggleOne(row.original.id); }}>{on && <Check size={12} />}</span>;
+      },
+    },
     { id: 'idx', header: '#', enableSorting: false, cell: ({ row }) => <span className="muted">{row.index + 1}</span> },
     { accessorKey: 'text_fr', header: 'Énoncé', cell: (c) => <span style={{ fontWeight: 500, color: 'var(--ink)' }}>{truncate(c.getValue())}</span> },
     { accessorKey: 'theme', header: 'Thème', cell: (c) => <ThemeBadge theme={c.getValue()} /> },
@@ -267,6 +307,8 @@ export default function Questions() {
         title="Questions"
         description="Gérez le contenu et le workflow de modération des questions du quiz."
         actions={<>
+          <button className="btn" onClick={exportCsv}><Download size={16} /> Exporter CSV</button>
+          <button className="btn" disabled={selected.size === 0} onClick={bulkForceSync}><Zap size={16} /> Force sync{selected.size > 0 ? ` (${selected.size})` : ''}</button>
           <button className="btn" onClick={() => setShowImport(true)}><Upload size={16} /> Import CSV</button>
           <button className="btn btn-creveton" onClick={() => setEditing(null)}><Plus size={16} /> Nouvelle question</button>
         </>}
@@ -286,6 +328,18 @@ export default function Questions() {
           <select className="select" value={filters.status} onChange={(e) => setF('status', e.target.value)}><option value="">Tous statuts</option>{STATUSES.map((s) => <option key={s} value={s}>{questionStatusColors[s].label}</option>)}</select>
         </div>
       </div>
+
+      {selected.size > 0 && (
+        <div className="bulk-bar">
+          <span>{selected.size} question(s) sélectionnée(s)</span>
+          <div className="row wrap" style={{ gap: 8, marginLeft: 'auto' }}>
+            <button className="btn btn-sm btn-success" onClick={() => bulkTransition('approved')}><ThumbsUp size={14} /> Approuver tout</button>
+            <button className="btn btn-sm" onClick={() => bulkTransition('archived')}><Archive size={14} /> Archiver tout</button>
+            <button className="btn btn-sm" onClick={bulkForceSync}><Zap size={14} /> Force sync</button>
+            <button className="btn btn-sm btn-ghost" onClick={clearSel}>Désélectionner</button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="card"><LoadingSpinner label="Chargement…" /></div>
@@ -362,8 +416,15 @@ export default function Questions() {
                 <div style={{ fontSize: 14 }}>{detail.explanation}</div>
               </div>
             )}
+            <div>
+              <div className="muted" style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>STATISTIQUES</div>
+              <div className="stat-banner" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 0 }}>
+                <div className="stat"><div className="v">{detail.times_asked ?? '—'}</div><div className="l">Posée</div></div>
+                <div className="stat"><div className="v">{detail.times_correct ?? '—'}</div><div className="l">Réussie</div></div>
+                <div className="stat"><div className="v" style={{ color: 'var(--green700)' }}>{pct(detail.success_rate)}</div><div className="l">Taux</div></div>
+              </div>
+            </div>
             <dl className="kv">
-              <dt>Taux réussite</dt><dd>{pct(detail.success_rate)}</dd>
               <dt>Version</dt><dd>{detail.version ?? '—'}</dd>
               <dt>Mise à jour</dt><dd>{dateFr(detail.updated_at)}</dd>
             </dl>

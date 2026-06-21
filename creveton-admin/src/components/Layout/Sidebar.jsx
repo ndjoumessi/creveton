@@ -1,16 +1,20 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileQuestion, Trophy, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings } from 'lucide-react';
 
 const NAV = [
   {
     title: 'Vue générale',
-    items: [{ to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true }],
+    items: [
+      { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      { to: '/leaderboard', label: 'Classement', icon: Trophy },
+    ],
   },
   {
     title: 'Contenu',
     items: [
       { to: '/questions', label: 'Questions', icon: FileQuestion },
-      { to: '/tournaments', label: 'Tournois', icon: Trophy },
+      { to: '/sessions', label: 'Parties', icon: Gamepad2 },
+      { to: '/tournaments', label: 'Tournois', icon: Swords },
     ],
   },
   {
@@ -35,7 +39,7 @@ export default function Sidebar() {
           <div className="nav-section" key={section.title}>
             <div className="nav-section-title">{section.title}</div>
             {section.items.map(({ to, label, icon: Icon, end }) => (
-              <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={label}>
                 <Icon className="nav-icon" size={18} />
                 <span className="nav-label">{label}</span>
               </NavLink>

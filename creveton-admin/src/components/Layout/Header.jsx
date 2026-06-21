@@ -7,7 +7,9 @@ import { notify } from '../Toast';
 
 const TITLES = {
   '/': 'Dashboard',
+  '/leaderboard': 'Classement',
   '/questions': 'Questions',
+  '/sessions': 'Parties',
   '/tournaments': 'Tournois',
   '/users': 'Utilisateurs',
   '/settings': 'Paramètres',

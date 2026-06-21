@@ -29,4 +29,27 @@ export function dateFr(iso, pattern = 'dd MMM yyyy') {
   }
 }
 
-export const dateTimeFr = (iso) => dateFr(iso, "dd MMM yyyy 'à' HH:mm");
+export const dateTimeFr = (iso) => dateFr(iso, "dd MMM yyyy 'à' HH'h'mm");
+
+/** Initiales (2 max) d'un nom. */
+export function initials(name) {
+  return (name || '?').split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+}
+
+// Palette d'avatars (couleur déterministe dérivée du nom).
+const AVATAR_COLORS = ['#2a8a4f', '#d4a017', '#2563eb', '#7c3aed', '#dc2626', '#0891b2', '#ea580c', '#16a34a'];
+
+/** Couleur d'avatar stable pour un nom donné. */
+export function avatarColor(name) {
+  let h = 0;
+  for (let i = 0; i < (name || '').length; i += 1) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
+/** Vrai si une date ISO tombe aujourd'hui (heure locale). */
+export function isToday(iso) {
+  if (!iso) return false;
+  const d = new Date(iso);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}

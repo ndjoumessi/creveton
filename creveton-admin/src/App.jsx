@@ -3,7 +3,9 @@ import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Classement from './pages/Classement';
 import Questions from './pages/Questions';
+import Parties from './pages/Parties';
 import Tournois from './pages/Tournois';
 import Utilisateurs from './pages/Utilisateurs';
 import Parametres from './pages/Parametres';
@@ -21,7 +23,9 @@ export default function App() {
         }
       >
         <Route path="/" element={<Dashboard />} />
+        <Route path="/leaderboard" element={<Classement />} />
         <Route path="/questions" element={<Questions />} />
+        <Route path="/sessions" element={<Parties />} />
         <Route path="/tournaments" element={<Tournois />} />
         <Route path="/users" element={<Utilisateurs />} />
         <Route path="/settings" element={<Parametres />} />

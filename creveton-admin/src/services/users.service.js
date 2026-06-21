@@ -43,4 +43,17 @@ export function remove(id) {
   return withMock(() => api.delete(`/admin/users/${id}`).then(() => ({ ok: true })), () => ({ ok: true }));
 }
 
-export default { list, get, suspend, ban, resetPassword, remove };
+/** POST /admin/users/invite — crée un admin/modérateur (mdp temporaire renvoyé). */
+export function invite(payload) {
+  return withMock(
+    () => api.post('/admin/users/invite', payload).then((r) => r.data),
+    () => ({ id: `mock-${Date.now()}`, ...payload, temporary_password: 'Crv-demo-1A' }),
+  );
+}
+
+/** PATCH /admin/users/:id/role — change le rôle (super_admin). */
+export function changeRole(id, role) {
+  return withMock(() => api.patch(`/admin/users/${id}/role`, { role }).then((r) => r.data), () => ({ id, role }));
+}
+
+export default { list, get, suspend, ban, resetPassword, remove, invite, changeRole };
