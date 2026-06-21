@@ -6,10 +6,12 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, Easing, StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Logo } from '../components';
 import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
 
 export default function SplashScreen({ navigation }) {
+  const { t } = useTranslation();
   const logoScale = useRef(new Animated.Value(0)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const wordY = useRef(new Animated.Value(20)).current;
@@ -58,7 +60,7 @@ export default function SplashScreen({ navigation }) {
           CREVETON
         </Animated.Text>
         <Animated.Text style={[styles.slogan, { opacity: sloganOpacity }]}>
-          Quiz. Compétition. Cameroun. 🇨🇲
+          {t('splash.tagline')}
         </Animated.Text>
       </View>
       <View style={styles.progressTrack}>

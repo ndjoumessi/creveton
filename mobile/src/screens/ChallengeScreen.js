@@ -3,6 +3,7 @@
 // sur un thème/niveau. Le challenger joue en premier (set figé, même seed — API §9).
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   StyleSheet,
@@ -19,6 +20,7 @@ import { parseApiError } from '../services/api';
 import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
 
 export default function ChallengeScreen({ navigation }) {
+  const { t: tr } = useTranslation();
   const toast = useToast();
   const startGame = useGameStore((s) => s.startGame);
 
@@ -66,7 +68,7 @@ export default function ChallengeScreen({ navigation }) {
         <View style={styles.handle} />
 
       <Title color={colors.cream} style={styles.title}>
-        Challenges
+        {tr('challenge.title')}
       </Title>
       <Body color={colors.textOnDarkMuted} style={styles.subtitle}>
         Affronte un ami ou un joueur de ton niveau sur les mêmes questions.
@@ -77,7 +79,7 @@ export default function ChallengeScreen({ navigation }) {
         <Text style={styles.optionEmoji}>🤝</Text>
         <Text style={styles.optionTitleDark}>Envoie un défi à un ami</Text>
         <Body color={colors.textOnDarkMuted} style={styles.optionDesc}>
-          Partagez les mêmes questions.
+          {tr('challenge.friend.subtitle')}
         </Body>
         {mode === 'friend' ? (
           <View style={styles.friendInput}>
@@ -93,7 +95,7 @@ export default function ChallengeScreen({ navigation }) {
         ) : null}
         <AppButton
           variant="primary"
-          title={mode === 'friend' ? 'Envoyer le défi' : 'Choisir un ami'}
+          title={mode === 'friend' ? 'Envoyer le défi' : tr('challenge.friend.button')}
           loading={launching && mode === 'friend'}
           onPress={() => {
             if (mode !== 'friend') {
@@ -109,10 +111,10 @@ export default function ChallengeScreen({ navigation }) {
       {/* Option : adversaire aléatoire */}
       <AppCard tone="cream" style={styles.optionCard}>
         <Text style={styles.optionEmoji}>🎲</Text>
-        <Text style={styles.optionTitleCream}>Affronte un joueur de ton niveau</Text>
+        <Text style={styles.optionTitleCream}>{tr('challenge.random.subtitle')}</Text>
         <AppButton
           variant="secondary"
-          title="Lancer"
+          title={tr('challenge.random.button')}
           loading={launching && mode === 'random'}
           onPress={() => {
             setMode('random');
@@ -161,7 +163,7 @@ export default function ChallengeScreen({ navigation }) {
       </View>
 
       {/* Mes challenges en cours */}
-      <Text style={styles.sectionTitle}>Mes challenges en cours</Text>
+      <Text style={styles.sectionTitle}>{tr('challenge.active')}</Text>
       <View style={styles.emptyBox}>
         <Text style={styles.emptyEmoji}>⚔️</Text>
         <Body color={colors.textOnDarkMuted} style={styles.emptyText}>
@@ -170,7 +172,7 @@ export default function ChallengeScreen({ navigation }) {
       </View>
 
       {/* Défis récents */}
-      <Text style={styles.sectionTitle}>Défis récents</Text>
+      <Text style={styles.sectionTitle}>{tr('challenge.recent')}</Text>
       <View style={styles.emptyBox}>
         <Text style={styles.emptyEmoji}>🏁</Text>
         <Body color={colors.textOnDarkMuted} style={styles.emptyText}>
@@ -180,7 +182,7 @@ export default function ChallengeScreen({ navigation }) {
 
       <Pressable onPress={() => navigation.goBack()} hitSlop={10}>
         <Body color={colors.textOnDarkMuted} style={styles.cancel}>
-          Annuler
+          {tr('common.cancel')}
         </Body>
       </Pressable>
       </Screen>

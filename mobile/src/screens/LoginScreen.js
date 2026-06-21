@@ -15,12 +15,14 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Logo, AppButton, AuthField } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { isValidEmail } from '../utils/validation';
 import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 
 export default function LoginScreen({ navigation }) {
+  const { t } = useTranslation();
   const login = useAuthStore((s) => s.login);
   const loading = useAuthStore((s) => s.loading);
 
@@ -61,11 +63,11 @@ export default function LoginScreen({ navigation }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.title}>Bon retour 👋</Text>
-          <Text style={styles.subtitle}>Joue et bats tes records.</Text>
+          <Text style={styles.title}>{t('auth.welcome')}</Text>
+          <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
 
           <AuthField
-            label="Email"
+            label={t('auth.email')}
             defaultValue=""
             onChangeText={(t) => (values.current.email = t)}
             autoCapitalize="none"
@@ -78,7 +80,7 @@ export default function LoginScreen({ navigation }) {
           />
           <AuthField
             ref={passwordRef}
-            label="Mot de passe"
+            label={t('auth.password')}
             defaultValue=""
             onChangeText={(t) => (values.current.password = t)}
             secureTextEntry={!showPassword}
@@ -92,7 +94,7 @@ export default function LoginScreen({ navigation }) {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <AppButton
-            title="Se connecter"
+            title={t('auth.login')}
             variant="primary"
             size="lg"
             loading={loading}
@@ -107,8 +109,8 @@ export default function LoginScreen({ navigation }) {
           hitSlop={8}
         >
           <Text style={styles.linkText}>
-            Pas encore de compte ?{' '}
-            <Text style={styles.linkAccent}>S&apos;inscrire</Text>
+            {t('auth.noAccount')}{' '}
+            <Text style={styles.linkAccent}>{t('auth.signup')}</Text>
           </Text>
         </Pressable>
       </KeyboardAvoidingView>

@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { auth as authApi, users as usersApi } from '../services/endpoints';
 import { parseApiError, setOnAuthExpired } from '../services/api';
+import { setLanguage } from '../i18n';
 import {
   setTokens,
   clearTokens,
@@ -108,6 +109,7 @@ export const useAuthStore = create((set, get) => ({
       const data = await usersApi.me();
       const user = data.user || data;
       await setStoredUser(user);
+      if (user?.lang) await setLanguage(user.lang);
       set({ user });
       return user;
     } catch {
@@ -128,6 +130,8 @@ export const useAuthStore = create((set, get) => ({
     });
     const user = data.user || null;
     if (user) await setStoredUser(user);
+    // Priorité langue : profil (user.lang) > AsyncStorage > système.
+    if (user?.lang) await setLanguage(user.lang);
     set({ user, isAuthenticated: true });
   },
 }));

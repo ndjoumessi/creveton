@@ -1,17 +1,19 @@
-// HomeScreen — tableau de bord : « Jouer », tournois ouverts, podium, stats.
+// HomeScreen — tableau de bord : « Jouer », tournois ouverts, podium, stats
+// réelles (dérivées de l'historique des parties) et dernières parties.
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   Pressable,
   ScrollView,
   RefreshControl,
   StatusBar,
-  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import {
   Logo,
   Heading,
@@ -26,7 +28,9 @@ import {
 } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { useLeaderboardStore } from '../store/leaderboardStore';
+import { useStatsStore } from '../store/statsStore';
 import { tournaments as tournamentsApi } from '../services/endpoints';
+import { profileStreak } from '../services/stats.service';
 import { runSync } from '../services/sync';
 import {
   colors,
@@ -37,73 +41,92 @@ import {
   shadow,
   emeraldGradient,
 } from '../constants/theme';
-import { formatDateTime } from '../utils/format';
+import {
+  formatDateTime,
+  themeLabel,
+  levelLabel,
+  timeAgo,
+  themeEmoji,
+} from '../utils/format';
 
-const STAT_DEFS = [
-  { key: 'games', emoji: '🎯', label: 'Parties jouées' },
-  { key: 'avg', emoji: '⭐', label: 'Score moyen' },
-  { key: 'rate', emoji: '📈', label: 'Taux de réussite' },
-  { key: 'streak', emoji: '🔥', label: 'Série actuelle' },
-];
+// Pastels des tuiles d'icônes de stats (décoratif, non sémantique).
+const ICON_BG = {
+  games: colors.successBg, // #dcfce7
+  avg: '#fef9c3',
+  rate: '#dbeafe',
+  streak: colors.errorBg, // #fee2e2
+};
 
 function medalFor(rank) {
   return rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉';
 }
 
-// Dérive les 4 valeurs de stats depuis user.stats (tolérant aux noms variés).
-function deriveStats(stats) {
-  if (!stats) {
-    return { games: '—', avg: '—', rate: '—', streak: '—' };
-  }
-  const games =
-    stats.games_played ?? stats.total_sessions ?? stats.sessions ?? null;
-  const avg = stats.avg_score ?? stats.average_score ?? null;
-  const rate =
-    stats.success_rate ?? stats.accuracy ?? stats.correct_rate ?? null;
-  const streak = stats.current_streak ?? stats.streak ?? null;
-  const dash = (v) => (v === null || v === undefined ? '—' : v);
-  return {
-    games: dash(games),
-    avg: avg === null || avg === undefined ? '—' : Math.round(avg),
-    rate:
-      rate === null || rate === undefined
-        ? '—'
-        : `${Math.round(rate <= 1 ? rate * 100 : rate)}%`,
-    streak: dash(streak),
-  };
+const fmtNum = (n) => Number(n || 0).toLocaleString('fr-FR');
+
+// Couleur du taux de réussite : vert > 70 %, or 50–70 %, rouge < 50 %.
+function rateColor(pct) {
+  if (pct === null || pct === undefined) return colors.green900;
+  if (pct > 70) return colors.green500;
+  if (pct >= 50) return colors.gold500;
+  return colors.red400;
 }
 
-// Anime un nombre de 0 → value sur ~800ms. Si la valeur n'est pas numérique
-// (ex. « — » ou « 87% »), on affiche tel quel sans count-up.
-function StatValue({ value }) {
-  const numericMatch =
-    typeof value === 'number'
-      ? { num: value, suffix: '' }
-      : typeof value === 'string' && /^\d+%?$/.test(value)
-        ? { num: parseInt(value, 10), suffix: value.endsWith('%') ? '%' : '' }
-        : null;
+function StatCard({ icon, iconBg, value, valueColor, label, sub }) {
+  return (
+    <View style={styles.statCard}>
+      <View style={[styles.statIcon, { backgroundColor: iconBg }]}>
+        <Text style={styles.statIconText}>{icon}</Text>
+      </View>
+      <Text style={[styles.statValue, valueColor ? { color: valueColor } : null]}>
+        {value}
+      </Text>
+      <Text style={styles.statLabel} numberOfLines={1}>
+        {label}
+      </Text>
+      {sub ? (
+        <Text style={styles.statSub} numberOfLines={1}>
+          {sub}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
 
-  const [display, setDisplay] = useState(numericMatch ? '0' : value);
+function StatCardSkeleton() {
+  return (
+    <View style={styles.statCard}>
+      <Skeleton width={44} height={44} radius={radius.md} />
+      <Skeleton width={64} height={26} style={styles.skelGap} />
+      <Skeleton width={80} height={11} style={styles.skelGapSm} />
+    </View>
+  );
+}
 
-  useEffect(() => {
-    if (!numericMatch) {
-      setDisplay(value);
-      return undefined;
-    }
-    const anim = new Animated.Value(0);
-    const id = anim.addListener(({ value: v }) => {
-      setDisplay(`${Math.round(v)}${numericMatch.suffix}`);
-    });
-    Animated.timing(anim, {
-      toValue: numericMatch.num,
-      duration: 800,
-      useNativeDriver: false,
-    }).start();
-    return () => anim.removeListener(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
-
-  return <Body style={styles.statValue}>{display}</Body>;
+function LastGameRow({ game }) {
+  const total = Number(game.total_questions) || 0;
+  const rate = total > 0 ? Math.round((Number(game.correct_count) || 0) / total * 100) : null;
+  const tone = rate === null ? null : rate >= 70 ? 'good' : rate < 50 ? 'bad' : null;
+  return (
+    <View
+      style={[
+        styles.lastRow,
+        tone === 'good' && styles.lastRowGood,
+        tone === 'bad' && styles.lastRowBad,
+      ]}
+    >
+      <Text style={styles.lastEmoji}>{themeEmoji(game.theme)}</Text>
+      <View style={styles.lastMid}>
+        <Text style={styles.lastTitle} numberOfLines={1}>
+          {themeLabel(game.theme)} · {levelLabel(game.level)}
+        </Text>
+        <Text style={styles.lastSub} numberOfLines={1}>
+          {timeAgo(game.played_at)}
+          {rate !== null ? ` · ✓ ${game.correct_count}/${total}` : ''}
+        </Text>
+      </View>
+      <Text style={styles.lastScore}>{fmtNum(game.score)}</Text>
+    </View>
+  );
 }
 
 function StatusPill({ tournament }) {
@@ -127,10 +150,16 @@ function StatusPill({ tournament }) {
 }
 
 export default function HomeScreen({ navigation }) {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const loadLeaderboard = useLeaderboardStore((s) => s.load);
   const top = useLeaderboardStore((s) => s.data);
+
+  const history = useStatsStore((s) => s.history);
+  const stats = useStatsStore((s) => s.stats);
+  const histLoading = useStatsStore((s) => s.histLoading);
+  const loadHistory = useStatsStore((s) => s.loadHistory);
 
   const [activeTournaments, setActiveTournaments] = useState([]);
   const [tournLoading, setTournLoading] = useState(true);
@@ -146,8 +175,8 @@ export default function HomeScreen({ navigation }) {
       .then((r) => setActiveTournaments(r.data || []))
       .catch(() => setActiveTournaments([]))
       .finally(() => setTournLoading(false));
-    await Promise.all([lb, tourn, refreshProfile?.()]);
-  }, [loadLeaderboard, refreshProfile]);
+    await Promise.all([lb, tourn, loadHistory(), refreshProfile?.()]);
+  }, [loadLeaderboard, loadHistory, refreshProfile]);
 
   useEffect(() => {
     loadAll();
@@ -161,8 +190,10 @@ export default function HomeScreen({ navigation }) {
   };
 
   const firstName = user?.name?.split(' ')[0] || 'Joueur';
-  const stats = deriveStats(user?.stats);
   const podium = (top || []).slice(0, 3);
+  const streak = profileStreak(user?.stats);
+  const loadingStats = histLoading && history === null;
+  const recent = (history || []).slice(0, 3);
 
   return (
     <SafeAreaView edges={['top']} style={styles.root}>
@@ -184,7 +215,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.headerLeft}>
             <View style={styles.greetingRow}>
               <Logo size={40} />
-              <Body style={styles.greeting}>Bonjour, {firstName} 👋</Body>
+              <Body style={styles.greeting}>{t('home.greeting', { name: firstName })}</Body>
             </View>
             <View style={styles.levelWrap}>
               <LevelBadge level={user?.level ?? 1} xp={user?.total_xp ?? 0} />
@@ -197,16 +228,6 @@ export default function HomeScreen({ navigation }) {
               accessibilityLabel="Ouvrir le profil"
             >
               <Avatar name={user?.name || firstName} size={48} gold />
-            </Pressable>
-            <Pressable
-              style={styles.bell}
-              hitSlop={6}
-              accessibilityLabel="Notifications"
-            >
-              <Body style={styles.bellEmoji}>🔔</Body>
-              {/* Placeholder « non lu » : pastille rouge statique en attendant
-                  un endpoint de notifications dédié. */}
-              <View style={styles.bellDot} />
             </Pressable>
           </View>
         </View>
@@ -222,13 +243,13 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.playText}>
               <Heading color={colors.white} style={styles.playTitle}>
-                Prêt pour un nouveau quiz ?
+                {t('home.playCard.title')}
               </Heading>
               <Body color={colors.textOnDarkMuted} style={styles.playDesc}>
-                Choisis ton thème et bats ton record.
+                {t('home.playCard.subtitle')}
               </Body>
               <AppButton
-                title="Jouer"
+                title={t('home.playCard.button')}
                 variant="primary"
                 size="md"
                 fullWidth={false}
@@ -246,20 +267,14 @@ export default function HomeScreen({ navigation }) {
             end={{ x: 1, y: 1 }}
             style={styles.challengeCard}
           >
-            {/* Pas d'API de complétion par jour : badge « NOUVEAU » statique. */}
-            <View style={styles.newPill}>
-              <Label color={colors.cream} style={styles.newPillText}>
-                NOUVEAU
-              </Label>
-            </View>
             <Heading color={colors.green900} style={styles.challengeTitle}>
-              ❓ Défi du jour
+              ❓ {t('home.dailyChallenge.title')}
             </Heading>
             <Body color={colors.green900} style={styles.challengeDesc}>
-              Réponds à 1 question bonus par jour
+              {t('home.dailyChallenge.subtitle')}
             </Body>
             <AppButton
-              title="Relever le défi"
+              title={t('home.dailyChallenge.button')}
               variant="secondary"
               size="md"
               fullWidth={false}
@@ -268,14 +283,74 @@ export default function HomeScreen({ navigation }) {
             />
           </LinearGradient>
 
+          {/* Mes stats rapides */}
+          <View style={styles.sectionHeaderTight}>
+            <Heading color={colors.green900}>{t('home.myStats.title')}</Heading>
+          </View>
+
+          <View style={styles.statsGrid}>
+            {loadingStats ? (
+              [0, 1, 2, 3].map((i) => <StatCardSkeleton key={i} />)
+            ) : (
+              <>
+                <StatCard
+                  icon="🎯"
+                  iconBg={ICON_BG.games}
+                  value={fmtNum(stats.totalGames)}
+                  label={t('home.myStats.games')}
+                  sub={stats.todayGames > 0 ? `+${stats.todayGames} aujourd'hui` : null}
+                />
+                <StatCard
+                  icon="⭐"
+                  iconBg={ICON_BG.avg}
+                  value={fmtNum(stats.avgScore)}
+                  valueColor={stats.avgScore > 500 ? colors.gold500 : colors.green900}
+                  label={t('home.myStats.avgScore')}
+                  sub={stats.totalGames > 0 ? `sur ${stats.totalGames} parties` : null}
+                />
+                <StatCard
+                  icon="📈"
+                  iconBg={ICON_BG.rate}
+                  value={stats.totalGames > 0 ? `${stats.successRate}%` : '—'}
+                  valueColor={stats.totalGames > 0 ? rateColor(stats.successRate) : colors.green900}
+                  label={t('home.myStats.successRate')}
+                />
+                <StatCard
+                  icon="🔥"
+                  iconBg={ICON_BG.streak}
+                  value={streak.max ?? '—'}
+                  label={t('home.myStats.maxStreak')}
+                  sub={streak.current ? `🔥 Actuel : ${streak.current}` : null}
+                />
+              </>
+            )}
+          </View>
+
+          {/* Dernières parties */}
+          {recent.length > 0 ? (
+            <>
+              <View style={styles.sectionHeader}>
+                <Heading color={colors.green900}>Dernières parties</Heading>
+                <Pressable onPress={() => navigation.navigate('Stats')} hitSlop={6}>
+                  <Body style={styles.seeAll}>Voir tout →</Body>
+                </Pressable>
+              </View>
+              <View style={styles.lastList}>
+                {recent.map((g, i) => (
+                  <LastGameRow key={String(g.session_id || i)} game={g} />
+                ))}
+              </View>
+            </>
+          ) : null}
+
           {/* Tournois */}
           <View style={styles.sectionHeader}>
-            <Heading color={colors.green900}>Tournois</Heading>
+            <Heading color={colors.green900}>{t('home.tournaments.title')}</Heading>
             <Pressable
               onPress={() => navigation.navigate('Tournaments')}
               hitSlop={6}
             >
-              <Body style={styles.seeAll}>Voir tout →</Body>
+              <Body style={styles.seeAll}>{t('home.tournaments.seeAll')}</Body>
             </Pressable>
           </View>
 
@@ -330,13 +405,13 @@ export default function HomeScreen({ navigation }) {
             </ScrollView>
           ) : (
             <AppCard tone="cream" padding="md" elevation="soft">
-              <Body muted>Aucun tournoi ouvert.</Body>
+              <Body muted>{t('home.tournaments.none')}</Body>
             </AppCard>
           )}
 
           {/* Classement */}
           <View style={styles.sectionHeaderTight}>
-            <Heading color={colors.green900}>Classement</Heading>
+            <Heading color={colors.green900}>{t('home.leaderboard.title')}</Heading>
           </View>
 
           {lbLoading ? (
@@ -382,7 +457,7 @@ export default function HomeScreen({ navigation }) {
                         isFirst && styles.podiumScoreFirst,
                       ]}
                     >
-                      {row.score}
+                      {fmtNum(row.score)}
                     </Body>
                   </View>
                 );
@@ -395,35 +470,12 @@ export default function HomeScreen({ navigation }) {
           )}
 
           <AppButton
-            title="Voir le classement complet"
+            title={t('home.leaderboard.seeAll')}
             variant="ghost"
             size="md"
             onPress={() => navigation.navigate('Stats')}
             style={styles.lbButton}
           />
-
-          {/* Mes stats rapides */}
-          <View style={styles.sectionHeaderTight}>
-            <Heading color={colors.green900}>Mes stats rapides</Heading>
-          </View>
-
-          <View style={styles.statsGrid}>
-            {STAT_DEFS.map((def) => (
-              <AppCard
-                key={def.key}
-                tone="cream"
-                padding="md"
-                elevation="soft"
-                style={styles.statCard}
-              >
-                <Body style={styles.statEmoji}>{def.emoji}</Body>
-                <StatValue value={stats[def.key]} />
-                <Label muted style={styles.statLabel}>
-                  {def.label}
-                </Label>
-              </AppCard>
-            ))}
-          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -454,26 +506,6 @@ const styles = StyleSheet.create({
   },
   levelWrap: { marginTop: spacing.sm },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  bell: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(94, 202, 132, 0.14)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bellEmoji: { fontSize: 18, color: colors.white },
-  bellDot: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 9,
-    height: 9,
-    borderRadius: radius.pill,
-    backgroundColor: colors.red400,
-    borderWidth: 1.5,
-    borderColor: colors.green900,
-  },
 
   // Corps
   body: {
@@ -507,16 +539,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     ...shadow.gold,
   },
-  newPill: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    backgroundColor: colors.green900,
-    borderRadius: radius.pill,
-    paddingVertical: 3,
-    paddingHorizontal: spacing.sm,
-  },
-  newPillText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs },
   challengeTitle: { fontFamily: fonts.titleBold, fontSize: fontSizes.base },
   challengeDesc: { fontSize: fontSizes.sm, marginTop: spacing.xs },
   challengeBtn: { marginTop: spacing.md, alignSelf: 'flex-start' },
@@ -534,6 +556,82 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   seeAll: { fontFamily: fonts.bodySemiBold, color: colors.gold500 },
+
+  // Stats
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  statCard: {
+    width: '47.5%',
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    ...shadow.soft,
+  },
+  statIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statIconText: { fontSize: 24 },
+  statValue: {
+    fontFamily: fonts.titleExtraBold,
+    fontSize: fontSizes.xxl,
+    color: colors.green900,
+    marginTop: spacing.md,
+  },
+  statLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  statSub: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.xs,
+    color: colors.green500,
+    marginTop: 2,
+  },
+  skelGap: { marginTop: spacing.md },
+  skelGapSm: { marginTop: spacing.sm },
+
+  // Dernières parties
+  lastList: { gap: spacing.sm },
+  lastRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.surfaceCream,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+  },
+  lastRowGood: { backgroundColor: colors.successBgSoft, borderColor: colors.successBg },
+  lastRowBad: { backgroundColor: colors.errorBg, borderColor: colors.errorBorder },
+  lastEmoji: { fontSize: 24 },
+  lastMid: { flex: 1 },
+  lastTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: fontSizes.md,
+    color: colors.textDark,
+  },
+  lastSub: {
+    fontFamily: fonts.bodyRegular,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    marginTop: 1,
+  },
+  lastScore: {
+    fontFamily: fonts.titleBold,
+    fontSize: fontSizes.lg,
+    color: colors.green900,
+  },
 
   // Tournois
   hScroll: { gap: spacing.md, paddingRight: spacing.lg, paddingBottom: spacing.xs },
@@ -595,21 +693,4 @@ const styles = StyleSheet.create({
   podiumScoreFirst: { color: colors.gold500, fontSize: fontSizes.lg },
   podiumGap: { marginTop: spacing.sm },
   lbButton: { marginTop: spacing.lg },
-
-  // Stats
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  statCard: { width: '47.5%' },
-  statEmoji: { fontSize: 22 },
-  statValue: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xxl,
-    color: colors.green900,
-    marginTop: spacing.xs,
-  },
-  statLabel: { marginTop: 2 },
 });

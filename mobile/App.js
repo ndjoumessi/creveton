@@ -21,6 +21,7 @@ import {
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
 
+import './src/i18n';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ToastProvider } from './src/components';
 import { initDatabase } from './src/services/database';

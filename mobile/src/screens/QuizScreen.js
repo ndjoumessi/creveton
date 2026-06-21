@@ -8,6 +8,7 @@
 // /sessions/submit reste appelé à la fin (avec session_id).
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -32,6 +33,7 @@ const ANSWER_DELAY_MS = 1500;
 const TIMEOUT_DELAY_MS = 2000;
 
 export default function QuizScreen({ navigation }) {
+  const { t } = useTranslation();
   const toast = useToast();
   const questions = useGameStore((s) => s.questions);
   const currentIndex = useGameStore((s) => s.currentIndex);
@@ -96,10 +98,10 @@ export default function QuizScreen({ navigation }) {
   }, [timerAnim]);
 
   const confirmQuit = useCallback(() => {
-    Alert.alert('Quitter la partie ?', 'Ta progression sera perdue.', [
-      { text: 'Continuer', style: 'cancel' },
+    Alert.alert(t('quiz.quit'), t('quiz.quitConfirm'), [
+      { text: t('quiz.quitConfirmNo'), style: 'cancel' },
       {
-        text: 'Quitter',
+        text: t('quiz.quitConfirmYes'),
         style: 'destructive',
         onPress: () => {
           clearTimers();
@@ -107,7 +109,7 @@ export default function QuizScreen({ navigation }) {
         },
       },
     ]);
-  }, [clearTimers, navigation]);
+  }, [clearTimers, navigation, t]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -298,7 +300,7 @@ export default function QuizScreen({ navigation }) {
   }, [correctStreak, streakBounce]);
 
   if (submitting) return <LoadingScreen message="Calcul du score…" />;
-  if (!question) return <LoadingScreen message="Chargement…" />;
+  if (!question) return <LoadingScreen message={t('common.loading')} />;
 
   const streakScale = streakBounce.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] });
   const autoNextWidth = autoNextAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
@@ -310,8 +312,8 @@ export default function QuizScreen({ navigation }) {
         <Pressable onPress={confirmQuit} hitSlop={10} style={styles.quit}>
           <Text style={styles.quitText}>✕</Text>
         </Pressable>
-        <Text style={styles.counter}>Q {currentIndex + 1}/{total}</Text>
-        <Text style={styles.score}>⚡ {displayScore} pts</Text>
+        <Text style={styles.counter}>{t('quiz.question', { current: currentIndex + 1, total })}</Text>
+        <Text style={styles.score}>⚡ {displayScore} {t('quiz.pts')}</Text>
       </View>
 
       {/* Timer circulaire centré */}
@@ -327,7 +329,7 @@ export default function QuizScreen({ navigation }) {
       {/* Streak badge */}
       {correctStreak >= 3 && !answered ? (
         <Animated.View style={[styles.streak, { transform: [{ scale: streakScale }] }]}>
-          <Text style={styles.streakText}>🔥 ×{correctStreak}</Text>
+          <Text style={styles.streakText}>{t('quiz.streak', { n: correctStreak })}</Text>
         </Animated.View>
       ) : null}
 
@@ -358,7 +360,7 @@ export default function QuizScreen({ navigation }) {
           style={styles.skip}
           hitSlop={8}
         >
-          <Text style={styles.skipText}>Passer</Text>
+          <Text style={styles.skipText}>{t('quiz.skip')}</Text>
         </Pressable>
       ) : null}
 
@@ -377,7 +379,7 @@ export default function QuizScreen({ navigation }) {
             {answered.explanation
               ? `💡 ${answered.explanation}`
               : answered.isCorrect
-                ? '✓ Bonne réponse !'
+                ? t('quiz.goodAnswer')
                 : '✗ Mauvaise réponse.'}
           </Text>
           <View style={styles.autoTrack}>
@@ -390,6 +392,7 @@ export default function QuizScreen({ navigation }) {
 }
 
 function OptionRow({ letter, text, optionIndex, answered, onPress }) {
+  const { t } = useTranslation();
   const scale = useRef(new Animated.Value(1)).current;
 
   const isSelected = answered && answered.selectedIndex === optionIndex;
@@ -443,7 +446,7 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
           <Text style={[styles.badgeText, badgeText]}>{glyph}</Text>
         </View>
         <View style={styles.optBody}>
-          {showGoodLabel ? <Text style={styles.goodLabel}>✓ Bonne réponse</Text> : null}
+          {showGoodLabel ? <Text style={styles.goodLabel}>{t('quiz.goodAnswer')}</Text> : null}
           <Text style={[styles.optText, label]}>{text}</Text>
         </View>
       </Pressable>

@@ -1,0 +1,263 @@
+{
+  "splash": {
+    "tagline": "Quiz. Competition. Cameroon. 🇨🇲"
+  },
+  "auth": {
+    "welcome": "Welcome back 👋",
+    "welcomeSubtitle": "Play and beat your records.",
+    "email": "Email",
+    "password": "Password",
+    "login": "Sign in",
+    "loginLoading": "Signing in...",
+    "noAccount": "No account yet?",
+    "signup": "Sign up",
+    "register": {
+      "title": "Create an account",
+      "step1": "Who are you?",
+      "step2": "Your account",
+      "step3": "Your profile",
+      "fullName": "Full name",
+      "phone": "Phone (+237)",
+      "email": "Email address",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "city": "City",
+      "age": "Age",
+      "gender": "Gender",
+      "genderM": "Male",
+      "genderF": "Female",
+      "genderN": "Not specified",
+      "language": "Language",
+      "next": "Next →",
+      "back": "← Back",
+      "create": "Create my account",
+      "alreadyAccount": "Already have an account?",
+      "loginLink": "Sign in"
+    },
+    "otp": {
+      "title": "Verify your phone 📱",
+      "subtitle": "6-digit code sent to",
+      "validate": "Validate",
+      "resend": "Resend code",
+      "resendIn": "Resend available in",
+      "invalidCode": "Incorrect code",
+      "expiredCode": "Code expired"
+    }
+  },
+  "home": {
+    "greeting": "Hello, {{name}} 👋",
+    "playCard": {
+      "title": "Ready for a new quiz?",
+      "subtitle": "Choose your theme and beat your record.",
+      "button": "Play"
+    },
+    "dailyChallenge": {
+      "title": "Daily challenge",
+      "subtitle": "Answer 1 bonus question per day",
+      "button": "Take the challenge",
+      "badge": "NEW"
+    },
+    "tournaments": {
+      "title": "Tournaments",
+      "seeAll": "See all →",
+      "none": "No open tournaments."
+    },
+    "leaderboard": {
+      "title": "Leaderboard",
+      "seeAll": "See full leaderboard"
+    },
+    "myStats": {
+      "title": "My quick stats",
+      "games": "Games",
+      "avgScore": "Average score",
+      "successRate": "Success rate",
+      "maxStreak": "Max streak"
+    }
+  },
+  "gameStart": {
+    "title": "New game",
+    "chooseTheme": "Choose your theme",
+    "chooseLevel": "Choose your level",
+    "recap": "{{theme}} · {{level}} · {{count}} questions · {{time}}s/Q",
+    "launch": "Start ▶",
+    "available": "questions available",
+    "themes": {
+      "culture": "Culture",
+      "geographie": "Geography",
+      "histoire": "History",
+      "industrie": "Industry",
+      "sport": "Sport",
+      "science": "Science"
+    },
+    "levels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "expert": "Expert"
+    }
+  },
+  "quiz": {
+    "question": "Q {{current}}/{{total}}",
+    "pts": "pts",
+    "skip": "Skip",
+    "quit": "Quit",
+    "quitConfirm": "Are you sure you want to quit the game?",
+    "quitConfirmYes": "Quit",
+    "quitConfirmNo": "Continue",
+    "goodAnswer": "✓ Correct answer",
+    "next": "Next →",
+    "streak": "🔥 ×{{n}}",
+    "timeout": "Time's up!"
+  },
+  "results": {
+    "finalScore": "Final score",
+    "maxPts": "/ 1000 pts max",
+    "correct": "Correct ✓",
+    "xpEarned": "XP earned ⚡",
+    "avgTime": "Average time ⏱",
+    "recap": "Summary",
+    "xpGained": "XP gained: +{{xp}} XP",
+    "speedBonus": "including +{{bonus}} speed",
+    "levelUp": "🎉 Level up! You are now {{level}}",
+    "newRecord": "🏆 New record!",
+    "replay": "Play again",
+    "home": "Back to home",
+    "share": "Share 📤",
+    "shareMessage": "I scored {{score}} pts on Creveton! 🇨🇲 Quiz. Competition. Cameroon.",
+    "correct_label": "Correct",
+    "wrong_label": "Wrong"
+  },
+  "tournaments": {
+    "title": "Tournaments",
+    "freeBanner": "🏆 Free tournaments — XP & badges to win!",
+    "tabs": {
+      "active": "Active",
+      "upcoming": "Upcoming",
+      "finished": "Finished"
+    },
+    "card": {
+      "players": "players",
+      "questions": "questions",
+      "perQ": "s/Q",
+      "reward": "XP & badges",
+      "join": "Join",
+      "running": "RUNNING",
+      "startsIn": "Starts in"
+    },
+    "confirmJoin": {
+      "title": "Join the tournament",
+      "message": "You are about to join {{name}}",
+      "reward": "Rewards: XP & badges",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    },
+    "empty": "No open tournaments.",
+    "emptySubtitle": "Come back soon for new tournaments"
+  },
+  "challenge": {
+    "title": "Challenges",
+    "friend": {
+      "title": "Challenge a friend",
+      "subtitle": "Share the same questions",
+      "button": "Choose a friend"
+    },
+    "random": {
+      "title": "Random opponent",
+      "subtitle": "Take on a player of your level",
+      "button": "Start"
+    },
+    "active": "My ongoing challenges",
+    "recent": "Recent challenges",
+    "accept": "Take the challenge",
+    "pending": "Pending",
+    "won": "Win",
+    "lost": "Loss"
+  },
+  "stats": {
+    "title": "Statistics",
+    "tabs": {
+      "myStats": "My stats",
+      "leaderboard": "Leaderboard"
+    },
+    "kpi": {
+      "games": "Games played",
+      "avgScore": "Average score",
+      "successRate": "Success rate",
+      "maxStreak": "Max streak"
+    },
+    "performanceByTheme": "Performance by theme",
+    "history": "History of the last 10 games",
+    "myPosition": "My position",
+    "trend": {
+      "up": "↑ +{{n}} this week",
+      "down": "↓ {{n}} this week",
+      "stable": "→ stable"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "level": "Level {{n}} · {{name}}",
+    "edit": "Edit profile",
+    "myLevel": "My level",
+    "xpToNext": "{{xp}} XP left to the next level",
+    "maxLevel": "Maximum level reached 🏆",
+    "wallet": {
+      "title": "FCFA Wallet",
+      "unavailable": "Available with paid tournaments."
+    },
+    "badges": {
+      "title": "My badges",
+      "locked": "Play {{n}} games to unlock"
+    },
+    "invite": "Invite a friend",
+    "inviteMessage": "Join me on Creveton! Code: {{code}} 🇨🇲",
+    "logout": "Sign out",
+    "editModal": {
+      "title": "Edit profile",
+      "city": "City",
+      "age": "Age",
+      "gender": "Gender",
+      "language": "Language",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "levelNames": {
+      "1": "Novice",
+      "2": "Apprentice",
+      "3": "Player",
+      "4": "Expert",
+      "5": "Champion"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "pts": "pts",
+    "xp": "XP",
+    "level": "Lvl",
+    "rank": "#{{n}}",
+    "games": "games",
+    "questions": "questions",
+    "agoMinutes": "{{n}} min ago",
+    "agoHours": "{{n}}h ago",
+    "agoDays": "{{n}}d ago",
+    "justNow": "just now",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "tabs": {
+    "home": "Home",
+    "play": "Play",
+    "tournaments": "Tournaments",
+    "stats": "Stats",
+    "profile": "Profile"
+  }
+}

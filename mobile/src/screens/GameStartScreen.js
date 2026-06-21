@@ -5,6 +5,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import { Screen, Title, Body, AppButton, useToast } from '../components';
 import { THEMES, LEVELS, GAME } from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
@@ -18,6 +19,7 @@ const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
 
 export default function GameStartScreen({ navigation, route }) {
   const preset = route.params?.presetTheme;
+  const { t } = useTranslation();
   const toast = useToast();
   const [theme, setTheme] = useState(preset || null);
   const [level, setLevel] = useState('beginner');
@@ -44,9 +46,14 @@ export default function GameStartScreen({ navigation, route }) {
 
   const recap = useMemo(() => {
     if (!theme) return null;
-    const t = TIME_BY_LEVEL[level] || 30;
-    return `${themeLabel(theme)} · ${levelLabel(level)} · ${GAME.questionsPerSession} questions · ${t}s/Q`;
-  }, [theme, level]);
+    const time = TIME_BY_LEVEL[level] || 30;
+    return t('gameStart.recap', {
+      theme: t(`gameStart.themes.${theme}`, themeLabel(theme)),
+      level: t(`gameStart.levels.${level}`, levelLabel(level)),
+      count: GAME.questionsPerSession,
+      time,
+    });
+  }, [theme, level, t]);
 
   // Le récap apparaît en glissant vers le bas quand thème + niveau sont choisis.
   const recapAnim = useRef(new Animated.Value(0)).current;
@@ -118,17 +125,17 @@ export default function GameStartScreen({ navigation, route }) {
         <Pressable onPress={() => navigation.navigate('Home')} hitSlop={8}>
           <Text style={styles.back}>←</Text>
         </Pressable>
-        <Title style={styles.headerTitle}>Nouvelle partie</Title>
+        <Title style={styles.headerTitle}>{t('gameStart.title')}</Title>
       </View>
 
-      <Text style={styles.section}>Choisis ton thème</Text>
+      <Text style={styles.section}>{t('gameStart.chooseTheme')}</Text>
       <View style={styles.grid}>
-        {THEMES.map((t, i) => {
-          const active = t.key === theme;
+        {THEMES.map((th, i) => {
+          const active = th.key === theme;
           const anim = cardAnims[i];
           return (
             <Animated.View
-              key={t.key}
+              key={th.key}
               style={[
                 styles.gridItem,
                 {
@@ -144,9 +151,9 @@ export default function GameStartScreen({ navigation, route }) {
                 },
               ]}
             >
-              <Pressable onPress={() => setTheme(t.key)}>
+              <Pressable onPress={() => setTheme(th.key)}>
                 <LinearGradient
-                  colors={themeGradients[t.key] || themeGradients.industrie}
+                  colors={themeGradients[th.key] || themeGradients.industrie}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={[styles.themeCard, active && styles.themeCardActive]}
@@ -156,8 +163,10 @@ export default function GameStartScreen({ navigation, route }) {
                       <Text style={styles.checkText}>✓</Text>
                     </View>
                   ) : null}
-                  <Text style={styles.themeEmoji}>{t.emoji}</Text>
-                  <Text style={styles.themeName}>{t.label}</Text>
+                  <Text style={styles.themeEmoji}>{th.emoji}</Text>
+                  <Text style={styles.themeName}>
+                    {t(`gameStart.themes.${th.key}`, th.label)}
+                  </Text>
                   <Text style={styles.themeMeta}>
                     {GAME.questionsPerSession} questions / partie
                   </Text>
@@ -168,7 +177,7 @@ export default function GameStartScreen({ navigation, route }) {
         })}
       </View>
 
-      <Text style={styles.section}>Choisis ton niveau</Text>
+      <Text style={styles.section}>{t('gameStart.chooseLevel')}</Text>
       <View style={styles.levels}>
         {LEVELS.map((l) => {
           const active = l.key === level;
@@ -178,7 +187,9 @@ export default function GameStartScreen({ navigation, route }) {
               onPress={() => setLevel(l.key)}
               style={[styles.levelPill, active && styles.levelPillActive]}
             >
-              <Text style={[styles.levelText, active && styles.levelTextActive]}>{l.label}</Text>
+              <Text style={[styles.levelText, active && styles.levelTextActive]}>
+                {t(`gameStart.levels.${l.key}`, l.label)}
+              </Text>
             </Pressable>
           );
         })}
@@ -211,7 +222,7 @@ export default function GameStartScreen({ navigation, route }) {
 
       <Animated.View style={{ transform: [{ scale: pulse }] }}>
         <AppButton
-          title="Lancer ▶"
+          title={t('gameStart.launch')}
           variant="primary"
           size="lg"
           loading={loading}

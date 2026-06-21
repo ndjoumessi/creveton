@@ -3,6 +3,7 @@
 // Données issues de /sessions/submit (API §6), lues depuis le gameStore.
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Animated, Easing, StyleSheet, Share } from 'react-native';
 import {
   Screen,
@@ -23,6 +24,7 @@ import { hapticSuccess } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
 
 export default function ResultsScreen({ route, navigation }) {
+  const { t } = useTranslation();
   const { ok, error } = route.params || {};
   const result = useGameStore((s) => s.result);
   const reset = useGameStore((s) => s.reset);
@@ -52,7 +54,7 @@ export default function ResultsScreen({ route, navigation }) {
         title="Score non enregistré"
         message={error?.message || "La partie n'a pas pu être soumise. Réessaie."}
         onRetry={goHome}
-        retryLabel="Retour à l'accueil"
+        retryLabel={t('results.home')}
       />
     );
   }
@@ -61,6 +63,7 @@ export default function ResultsScreen({ route, navigation }) {
 }
 
 function ResultsContent({ result, onReplay, onHome }) {
+  const { t } = useTranslation();
   const total = result.total_questions || 0;
   const correct = result.correct_count || 0;
   const pct = total ? Math.round((correct / total) * 100) : 0;
@@ -190,7 +193,7 @@ function ResultsContent({ result, onReplay, onHome }) {
 
   const onShare = () => {
     Share.share({
-      message: `J'ai scoré ${result.score || 0} pts sur Creveton ! 🇨🇲`,
+      message: t('results.shareMessage', { score: result.score || 0 }),
     });
   };
 
@@ -215,7 +218,7 @@ function ResultsContent({ result, onReplay, onHome }) {
             { opacity: recordSlide, transform: [{ translateY: recordTranslateY }] },
           ]}
         >
-          <Text style={styles.recordText}>🏆 Nouveau record !</Text>
+          <Text style={styles.recordText}>{t('results.newRecord')}</Text>
         </Animated.View>
       ) : null}
 
@@ -227,7 +230,7 @@ function ResultsContent({ result, onReplay, onHome }) {
           {heroEmoji}
         </Animated.Text>
         <Label color={colors.textOnDarkMuted} style={styles.scoreLabel}>
-          Score final
+          {t('results.finalScore')}
         </Label>
         <Text style={styles.score}>{displayScore}</Text>
         <Label color={colors.textOnDarkMuted}>
@@ -237,14 +240,14 @@ function ResultsContent({ result, onReplay, onHome }) {
 
       {/* STATS */}
       <View style={styles.statsRow}>
-        <Stat value={`${correct}/${total}`} label="Bonnes ✓" />
-        <Stat value={`+${result.xp_earned ?? 0}`} label="XP gagnés ⚡" />
-        <Stat value={avgSeconds} label="Temps moyen ⏱" />
+        <Stat value={`${correct}/${total}`} label={t('results.correct')} />
+        <Stat value={`+${result.xp_earned ?? 0}`} label={t('results.xpEarned')} />
+        <Stat value={avgSeconds} label={t('results.avgTime')} />
       </View>
 
       {/* RÉCAP */}
       <Heading color={colors.cream} style={styles.sectionTitle}>
-        Récapitulatif
+        {t('results.recap')}
       </Heading>
       <AppCard tone="light" padding="md" radius={radius.xl} style={styles.recapCard}>
         {review.length ? (
@@ -275,7 +278,7 @@ function ResultsContent({ result, onReplay, onHome }) {
                 <Text
                   style={[styles.recapTag, good ? styles.tagGood : styles.tagBad]}
                 >
-                  {good ? 'Correct' : 'Faux'}
+                  {good ? t('results.correct_label') : t('results.wrong_label')}
                 </Text>
               </View>
             );
@@ -288,8 +291,8 @@ function ResultsContent({ result, onReplay, onHome }) {
       {/* XP */}
       <View style={styles.xpBlock}>
         <Label color={colors.cream} style={styles.xpLabel}>
-          XP gagné : +{result.xp_earned ?? 0} XP
-          {result.speed_bonus ? ` (dont +${result.speed_bonus} vitesse)` : ''}
+          {t('results.xpGained', { xp: result.xp_earned ?? 0 })}
+          {result.speed_bonus ? ` (${t('results.speedBonus', { bonus: result.speed_bonus })})` : ''}
         </Label>
         <View style={styles.xpTrack}>
           <Animated.View style={[styles.xpFill, { width: xpWidth }]} />
@@ -332,10 +335,10 @@ function ResultsContent({ result, onReplay, onHome }) {
 
       {/* ACTIONS */}
       <View style={styles.actions}>
-        <AppButton title="Partager 📤" variant="ghost" onPress={onShare} fullWidth />
-        <AppButton title="Rejouer" variant="secondary" onPress={onReplay} fullWidth />
+        <AppButton title={t('results.share')} variant="ghost" onPress={onShare} fullWidth />
+        <AppButton title={t('results.replay')} variant="secondary" onPress={onReplay} fullWidth />
         <AppButton
-          title="Retour à l'accueil"
+          title={t('results.home')}
           variant="primary"
           onPress={onHome}
           fullWidth

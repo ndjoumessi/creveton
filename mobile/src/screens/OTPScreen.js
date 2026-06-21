@@ -15,6 +15,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Screen, Logo, Title, Body, Label, AppButton, useToast } from '../components';
 import { useAuthStore } from '../store/authStore';
 import {
@@ -44,6 +45,7 @@ function prettyPhone(raw) {
 }
 
 export default function OTPScreen({ route, navigation }) {
+  const { t } = useTranslation();
   const { phone, otpExpiresAt } = route.params || {};
   const verifyOtp = useAuthStore((s) => s.verifyOtp);
   const resendOtp = useAuthStore((s) => s.resendOtp);
@@ -204,7 +206,7 @@ export default function OTPScreen({ route, navigation }) {
         hitSlop={8}
       >
         <Body color={colors.green700} style={styles.backText}>
-          ← Retour
+          {t('auth.register.back')}
         </Body>
       </Pressable>
 
@@ -217,9 +219,9 @@ export default function OTPScreen({ route, navigation }) {
           <Body style={styles.badgeEmoji}>📱</Body>
         </Animated.View>
 
-        <Title style={styles.heading}>Vérifie ton téléphone 📱</Title>
+        <Title style={styles.heading}>{t('auth.otp.title')}</Title>
         <Body muted style={styles.subtitle}>
-          Code envoyé au{'\n'}
+          {t('auth.otp.subtitle')}{'\n'}
           <Body style={styles.phone}>{prettyPhone(phone)}</Body>
         </Body>
       </View>
@@ -264,7 +266,7 @@ export default function OTPScreen({ route, navigation }) {
 
       <View style={styles.timerRow}>
         {expired ? (
-          <Label color={colors.errorText}>Code expiré</Label>
+          <Label color={colors.errorText}>{t('auth.otp.expiredCode')}</Label>
         ) : (
           <>
             <Label muted>Expire dans </Label>
@@ -274,7 +276,7 @@ export default function OTPScreen({ route, navigation }) {
       </View>
 
       <AppButton
-        title="Vérifier"
+        title={t('auth.otp.validate')}
         size="md"
         onPress={() => submit(code)}
         loading={loading}
@@ -292,7 +294,7 @@ export default function OTPScreen({ route, navigation }) {
           style={styles.resend}
           color={canResend ? colors.green700 : colors.textFaint}
         >
-          {resending ? 'Renvoi en cours…' : 'Renvoyer le code'}
+          {resending ? 'Renvoi en cours…' : t('auth.otp.resend')}
         </Body>
       </Pressable>
     </Screen>

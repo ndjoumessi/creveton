@@ -3,6 +3,7 @@
 // En-tête sombre, corps clair (crème) avec cartes blanches.
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Animated, FlatList, StyleSheet, Pressable, Modal } from 'react-native';
 import {
   Screen,
@@ -22,10 +23,11 @@ import { colors, fonts, fontSizes, radius, spacing, themeAccent, shadow } from '
 import { formatDateTime } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
+// labelKey → clé i18n (tournaments.tabs.*) résolue au rendu ; key/statuses = logique.
 const TABS = [
-  { key: 'active', label: 'Actifs', statuses: ['open', 'running'] },
-  { key: 'upcoming', label: 'À venir', statuses: ['scheduled'] },
-  { key: 'past', label: 'Terminés', statuses: ['closed', 'paid'] },
+  { key: 'active', labelKey: 'active', statuses: ['open', 'running'] },
+  { key: 'upcoming', labelKey: 'upcoming', statuses: ['scheduled'] },
+  { key: 'past', labelKey: 'finished', statuses: ['closed', 'paid'] },
 ];
 
 const TYPE_LABEL = {
@@ -48,6 +50,7 @@ function formatCountdown(startsAt) {
 }
 
 export default function TournamentScreen() {
+  const { t: tr } = useTranslation();
   const toast = useToast();
   const [tab, setTab] = useState('active');
   const [items, setItems] = useState([]);
@@ -103,11 +106,11 @@ export default function TournamentScreen() {
     <Screen dark padded={false}>
       {/* En-tête sombre */}
       <View style={styles.header}>
-        <Title color={colors.cream}>Tournois</Title>
+        <Title color={colors.cream}>{tr('tournaments.title')}</Title>
 
         <View style={styles.banner}>
           <Text style={styles.bannerText}>
-            🏆 Tournois gratuits — XP & badges à gagner !
+            {tr('tournaments.freeBanner')}
           </Text>
         </View>
 
@@ -122,7 +125,7 @@ export default function TournamentScreen() {
                 hitSlop={8}
               >
                 <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                  {t.label}
+                  {tr(`tournaments.tabs.${t.labelKey}`)}
                 </Text>
                 <View style={[styles.tabUnderline, active && styles.tabUnderlineActive]} />
               </Pressable>
@@ -174,21 +177,21 @@ export default function TournamentScreen() {
           <View style={styles.confirmCard}>
             <Text style={styles.confirmEmoji}>🏆</Text>
             <Heading style={styles.confirmTitle}>
-              Tu vas rejoindre {confirm?.name}
+              {tr('tournaments.confirmJoin.message', { name: confirm?.name })}
             </Heading>
             <Body muted style={styles.confirmText}>
-              Récompenses : XP & badges
+              {tr('tournaments.confirmJoin.reward')}
             </Body>
             <View style={styles.confirmActions}>
               <AppButton
                 variant="primary"
-                title="Confirmer"
+                title={tr('tournaments.confirmJoin.confirm')}
                 fullWidth
                 onPress={confirmJoin}
               />
               <AppButton
                 variant="ghost"
-                title="Annuler"
+                title={tr('tournaments.confirmJoin.cancel')}
                 fullWidth
                 style={styles.confirmCancel}
                 onPress={() => setConfirm(null)}
@@ -202,6 +205,7 @@ export default function TournamentScreen() {
 }
 
 function TournamentCard({ t, onJoin }) {
+  const { t: tr } = useTranslation();
   const accent = themeAccent[t.theme] || colors.green500;
   const free = (t.entry_fee ?? 0) === 0 || t.type === 'free';
   const full = (t.registered_players ?? 0) >= (t.max_players ?? 0);
@@ -212,7 +216,7 @@ function TournamentCard({ t, onJoin }) {
     : 0;
   const countdown = formatCountdown(t.starts_at);
 
-  let ctaTitle = "S'inscrire";
+  let ctaTitle = tr('tournaments.card.join');
   let ctaVariant = 'primary';
   let ctaDisabled = false;
   if (!free) {
@@ -252,19 +256,19 @@ function TournamentCard({ t, onJoin }) {
 
         <View style={styles.metaBlock}>
           <Body style={styles.metaLine}>
-            👥 {t.registered_players ?? 0} / {t.max_players ?? 0} joueurs
+            👥 {t.registered_players ?? 0} / {t.max_players ?? 0} {tr('tournaments.card.players')}
           </Body>
           <FillBar ratio={ratio} />
           {countdown ? (
-            <Body style={styles.countdownLine}>⏳ Commence dans {countdown}</Body>
+            <Body style={styles.countdownLine}>⏳ {tr('tournaments.card.startsIn')} {countdown}</Body>
           ) : (
             <Body muted style={styles.metaLineMuted}>
               📅 {formatDateTime(t.starts_at) || 'Date à venir'}
             </Body>
           )}
           <Body muted style={styles.metaLineMuted}>
-            ⏱ {t.format?.questions ?? '—'} questions · {t.format?.time_per_q_s ?? '—'}s par
-            question
+            ⏱ {t.format?.questions ?? '—'} {tr('tournaments.card.questions')} · {t.format?.time_per_q_s ?? '—'}
+            {tr('tournaments.card.perQ')}
           </Body>
         </View>
 
@@ -299,6 +303,7 @@ function FillBar({ ratio }) {
 }
 
 function RunningPill() {
+  const { t: tr } = useTranslation();
   const pulse = useRef(new Animated.Value(0.5)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -314,18 +319,19 @@ function RunningPill() {
   return (
     <Animated.View style={[styles.runningPill, { opacity: pulse }]}>
       <View style={styles.runningDot} />
-      <Text style={styles.runningText}>EN COURS</Text>
+      <Text style={styles.runningText}>{tr('tournaments.card.running')}</Text>
     </Animated.View>
   );
 }
 
 function EmptyTournaments() {
+  const { t: tr } = useTranslation();
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyEmoji}>🏆</Text>
-      <Heading style={styles.emptyTitle}>Aucun tournoi</Heading>
+      <Heading style={styles.emptyTitle}>{tr('tournaments.empty')}</Heading>
       <Body muted style={styles.emptyText}>
-        Reviens bientôt pour de nouveaux tournois.
+        {tr('tournaments.emptySubtitle')}
       </Body>
     </View>
   );

@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Text, View, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import HomeScreen from '../screens/HomeScreen';
 import GameStartScreen from '../screens/GameStartScreen';
 import TournamentScreen from '../screens/TournamentScreen';
@@ -17,15 +18,16 @@ import { colors, fonts, fontSizes, shadow, spacing } from '../constants/theme';
 const Tab = createBottomTabNavigator();
 
 const ICONS = { Home: '🏠', Play: '▶', Tournaments: '🏆', Stats: '📊', Profile: '👤' };
-const LABELS = {
-  Home: 'Accueil',
-  Play: 'Jouer',
-  Tournaments: 'Tournois',
-  Stats: 'Stats',
-  Profile: 'Profil',
+const LABEL_KEYS = {
+  Home: 'tabs.home',
+  Play: 'tabs.play',
+  Tournaments: 'tabs.tournaments',
+  Stats: 'tabs.stats',
+  Profile: 'tabs.profile',
 };
 
 function TabItem({ routeName, focused }) {
+  const { t } = useTranslation();
   const lift = useRef(new Animated.Value(focused ? 1 : 0)).current;
   useEffect(() => {
     Animated.spring(lift, {
@@ -46,7 +48,7 @@ function TabItem({ routeName, focused }) {
       >
         {ICONS[routeName]}
       </Animated.Text>
-      <Text style={[styles.label, { color }]}>{LABELS[routeName]}</Text>
+      <Text style={[styles.label, { color }]}>{t(LABEL_KEYS[routeName])}</Text>
       <View style={[styles.dot, focused && styles.dotActive]} />
     </View>
   );

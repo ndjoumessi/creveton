@@ -1,0 +1,263 @@
+{
+  "splash": {
+    "tagline": "Quiz. Compétition. Cameroun. 🇨🇲"
+  },
+  "auth": {
+    "welcome": "Bon retour 👋",
+    "welcomeSubtitle": "Joue et bats tes records.",
+    "email": "Email",
+    "password": "Mot de passe",
+    "login": "Se connecter",
+    "loginLoading": "Connexion...",
+    "noAccount": "Pas encore de compte ?",
+    "signup": "S'inscrire",
+    "register": {
+      "title": "Créer un compte",
+      "step1": "Qui es-tu ?",
+      "step2": "Ton compte",
+      "step3": "Ton profil",
+      "fullName": "Nom complet",
+      "phone": "Téléphone (+237)",
+      "email": "Adresse email",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "city": "Ville",
+      "age": "Âge",
+      "gender": "Sexe",
+      "genderM": "Homme",
+      "genderF": "Femme",
+      "genderN": "Non précisé",
+      "language": "Langue",
+      "next": "Suivant →",
+      "back": "← Retour",
+      "create": "Créer mon compte",
+      "alreadyAccount": "Déjà un compte ?",
+      "loginLink": "Se connecter"
+    },
+    "otp": {
+      "title": "Vérifie ton téléphone 📱",
+      "subtitle": "Code à 6 chiffres envoyé au",
+      "validate": "Valider",
+      "resend": "Renvoyer le code",
+      "resendIn": "Renvoi possible dans",
+      "invalidCode": "Code incorrect",
+      "expiredCode": "Code expiré"
+    }
+  },
+  "home": {
+    "greeting": "Bonjour, {{name}} 👋",
+    "playCard": {
+      "title": "Prêt pour un nouveau quiz ?",
+      "subtitle": "Choisis ton thème et bats ton record.",
+      "button": "Jouer"
+    },
+    "dailyChallenge": {
+      "title": "Défi du jour",
+      "subtitle": "Réponds à 1 question bonus par jour",
+      "button": "Relever le défi",
+      "badge": "NOUVEAU"
+    },
+    "tournaments": {
+      "title": "Tournois",
+      "seeAll": "Voir tout →",
+      "none": "Aucun tournoi ouvert."
+    },
+    "leaderboard": {
+      "title": "Classement",
+      "seeAll": "Voir le classement complet"
+    },
+    "myStats": {
+      "title": "Mes stats rapides",
+      "games": "Parties",
+      "avgScore": "Score moyen",
+      "successRate": "Taux réussite",
+      "maxStreak": "Streak max"
+    }
+  },
+  "gameStart": {
+    "title": "Nouvelle partie",
+    "chooseTheme": "Choisis ton thème",
+    "chooseLevel": "Choisis ton niveau",
+    "recap": "{{theme}} · {{level}} · {{count}} questions · {{time}}s/Q",
+    "launch": "Lancer ▶",
+    "available": "questions disponibles",
+    "themes": {
+      "culture": "Culture",
+      "geographie": "Géographie",
+      "histoire": "Histoire",
+      "industrie": "Industrie",
+      "sport": "Sport",
+      "science": "Science"
+    },
+    "levels": {
+      "beginner": "Débutant",
+      "intermediate": "Intermédiaire",
+      "expert": "Expert"
+    }
+  },
+  "quiz": {
+    "question": "Q {{current}}/{{total}}",
+    "pts": "pts",
+    "skip": "Passer",
+    "quit": "Quitter",
+    "quitConfirm": "Voulez-vous vraiment quitter la partie ?",
+    "quitConfirmYes": "Quitter",
+    "quitConfirmNo": "Continuer",
+    "goodAnswer": "✓ Bonne réponse",
+    "next": "Suivant →",
+    "streak": "🔥 ×{{n}}",
+    "timeout": "Temps écoulé !"
+  },
+  "results": {
+    "finalScore": "Score final",
+    "maxPts": "/ 1000 pts max",
+    "correct": "Bonnes ✓",
+    "xpEarned": "XP gagnés ⚡",
+    "avgTime": "Temps moyen ⏱",
+    "recap": "Récapitulatif",
+    "xpGained": "XP gagné : +{{xp}} XP",
+    "speedBonus": "dont +{{bonus}} vitesse",
+    "levelUp": "🎉 Niveau supérieur ! Tu es maintenant {{level}}",
+    "newRecord": "🏆 Nouveau record !",
+    "replay": "Rejouer",
+    "home": "Retour à l'accueil",
+    "share": "Partager 📤",
+    "shareMessage": "J'ai scoré {{score}} pts sur Creveton ! 🇨🇲 Quiz. Compétition. Cameroun.",
+    "correct_label": "Correct",
+    "wrong_label": "Faux"
+  },
+  "tournaments": {
+    "title": "Tournois",
+    "freeBanner": "🏆 Tournois gratuits — XP & badges à gagner !",
+    "tabs": {
+      "active": "Actifs",
+      "upcoming": "À venir",
+      "finished": "Terminés"
+    },
+    "card": {
+      "players": "joueurs",
+      "questions": "questions",
+      "perQ": "s/Q",
+      "reward": "XP & badges",
+      "join": "S'inscrire",
+      "running": "EN COURS",
+      "startsIn": "Commence dans"
+    },
+    "confirmJoin": {
+      "title": "Rejoindre le tournoi",
+      "message": "Tu vas rejoindre {{name}}",
+      "reward": "Récompenses : XP & badges",
+      "confirm": "Confirmer",
+      "cancel": "Annuler"
+    },
+    "empty": "Aucun tournoi ouvert.",
+    "emptySubtitle": "Reviens bientôt pour de nouveaux tournois"
+  },
+  "challenge": {
+    "title": "Challenges",
+    "friend": {
+      "title": "Défier un ami",
+      "subtitle": "Partagez les mêmes questions",
+      "button": "Choisir un ami"
+    },
+    "random": {
+      "title": "Adversaire aléatoire",
+      "subtitle": "Affronte un joueur de ton niveau",
+      "button": "Lancer"
+    },
+    "active": "Mes challenges en cours",
+    "recent": "Défis récents",
+    "accept": "Relever le défi",
+    "pending": "En attente",
+    "won": "Victoire",
+    "lost": "Défaite"
+  },
+  "stats": {
+    "title": "Statistiques",
+    "tabs": {
+      "myStats": "Mes stats",
+      "leaderboard": "Classement"
+    },
+    "kpi": {
+      "games": "Parties jouées",
+      "avgScore": "Score moyen",
+      "successRate": "Taux réussite",
+      "maxStreak": "Streak max"
+    },
+    "performanceByTheme": "Performance par thème",
+    "history": "Historique des 10 dernières parties",
+    "myPosition": "Ma position",
+    "trend": {
+      "up": "↑ +{{n}} cette semaine",
+      "down": "↓ {{n}} cette semaine",
+      "stable": "→ stable"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "level": "Niveau {{n}} · {{name}}",
+    "edit": "Modifier le profil",
+    "myLevel": "Mon niveau",
+    "xpToNext": "Encore {{xp}} XP pour le niveau suivant",
+    "maxLevel": "Niveau maximum atteint 🏆",
+    "wallet": {
+      "title": "Wallet FCFA",
+      "unavailable": "Disponible avec les tournois payants."
+    },
+    "badges": {
+      "title": "Mes badges",
+      "locked": "Joue {{n}} parties pour débloquer"
+    },
+    "invite": "Inviter un ami",
+    "inviteMessage": "Rejoins-moi sur Creveton ! Code : {{code}} 🇨🇲",
+    "logout": "Se déconnecter",
+    "editModal": {
+      "title": "Modifier le profil",
+      "city": "Ville",
+      "age": "Âge",
+      "gender": "Sexe",
+      "language": "Langue",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
+    "levelNames": {
+      "1": "Novice",
+      "2": "Apprenti",
+      "3": "Joueur",
+      "4": "Expert",
+      "5": "Champion"
+    }
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "yes": "Oui",
+    "no": "Non",
+    "pts": "pts",
+    "xp": "XP",
+    "level": "Niv.",
+    "rank": "#{{n}}",
+    "games": "parties",
+    "questions": "questions",
+    "agoMinutes": "il y a {{n}} min",
+    "agoHours": "il y a {{n}}h",
+    "agoDays": "il y a {{n}}j",
+    "justNow": "à l'instant",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier"
+  },
+  "tabs": {
+    "home": "Accueil",
+    "play": "Jouer",
+    "tournaments": "Tournois",
+    "stats": "Stats",
+    "profile": "Profil"
+  }
+}

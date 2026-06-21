@@ -3,10 +3,12 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, StyleSheet, Pressable, Text, Animated, Modal, Share } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Screen, Avatar, AppCard, AppButton, AppInput, Body, useToast } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { wallet, users } from '../services/endpoints';
 import { parseApiError } from '../services/api';
+import { setLanguage } from '../i18n';
 import { LANGS, SEXES } from '../constants/config';
 import {
   colors,
@@ -21,6 +23,12 @@ import { hapticLight } from '../utils/haptics';
 
 const LANG_LABEL = (key) =>
   LANGS.find((l) => l.key === key)?.label || (key === 'en' ? 'English' : 'Français');
+
+// Sélecteur de langue (deux pilules) — drapeau + libellé (propre nom, non traduit).
+const LANG_PILLS = [
+  { key: 'fr', flag: '🇫🇷', label: 'Français' },
+  { key: 'en', flag: '🇬🇧', label: 'English' },
+];
 
 // Badges dérivés honnêtement du niveau atteint.
 function deriveBadges(level) {
@@ -68,6 +76,7 @@ function InfoRow({ emoji, label, value, first }) {
 }
 
 export default function ProfileScreen() {
+  const { t, i18n } = useTranslation();
   const toast = useToast();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -114,6 +123,26 @@ export default function ProfileScreen() {
     }
   }, [ville, age, sexe, lang, setUser, refreshProfile, toast]);
 
+  // Bascule de langue : applique instantanément (i18n + AsyncStorage) puis,
+  // si connecté, persiste le choix côté backend (PATCH /users/me { lang }).
+  const changeLanguage = useCallback(
+    async (next) => {
+      if (next === i18n.language) return;
+      hapticLight();
+      await setLanguage(next);
+      setLang(next);
+      if (!user) return;
+      try {
+        const updated = await users.update({ lang: next });
+        if (updated) setUser(updated);
+        else await refreshProfile?.();
+      } catch (e) {
+        toast.show({ type: 'error', message: parseApiError(e).message });
+      }
+    },
+    [i18n.language, user, setUser, refreshProfile, toast],
+  );
+
   const loadWallet = useCallback(async () => {
     try {
       const res = await wallet.get();
@@ -159,7 +188,9 @@ export default function ProfileScreen() {
         <Text style={styles.headerName} numberOfLines={1}>
           {user?.name || 'Joueur'}
         </Text>
-        <Body color={colors.textOnDarkMuted}>Niveau {level} · Champion en devenir</Body>
+        <Body color={colors.textOnDarkMuted}>
+          {t('profile.level', { n: level, name: t(`profile.levelNames.${level}`) })}
+        </Body>
       </View>
 
       <View style={styles.body}>
@@ -179,28 +210,28 @@ export default function ProfileScreen() {
 
         {/* Progression */}
         <AppCard tone="light" padding="md" elevation="soft" radius={radius.xl} style={styles.card}>
-          <Text style={styles.cardTitle}>Mon niveau</Text>
+          <Text style={styles.cardTitle}>{t('profile.myLevel')}</Text>
           <View style={styles.progressHead}>
             <Text style={styles.progressLevel}>Niveau {level}</Text>
             <Text style={styles.progressXp}>
               {progress.current.toLocaleString('fr-FR')} /{' '}
-              {progress.needed.toLocaleString('fr-FR')} XP
+              {progress.needed.toLocaleString('fr-FR')} {t('common.xp')}
             </Text>
           </View>
           <XpBar pct={progress.pct} />
           <Body muted style={styles.progressHint}>
             {progress.isMax
-              ? 'Niveau maximum atteint 🏆'
-              : `Encore ${remaining.toLocaleString('fr-FR')} XP pour le niveau suivant.`}
+              ? t('profile.maxLevel')
+              : t('profile.xpToNext', { xp: remaining.toLocaleString('fr-FR') })}
           </Body>
         </AppCard>
 
         {/* Wallet */}
         {walletState === 'disabled' ? (
           <AppCard tone="cream" padding="md" elevation="soft" radius={radius.xl} style={styles.card}>
-            <Text style={styles.cardTitle}>💰 Wallet FCFA</Text>
+            <Text style={styles.cardTitle}>💰 {t('profile.wallet.title')}</Text>
             <Body color={colors.textMuted} style={styles.walletHint}>
-              Disponible avec les tournois payants.
+              {t('profile.wallet.unavailable')}
             </Body>
           </AppCard>
         ) : walletState === 'loading' ? null : (
@@ -221,7 +252,7 @@ export default function ProfileScreen() {
         )}
 
         {/* Badges */}
-        <Text style={styles.sectionTitle}>Mes badges</Text>
+        <Text style={styles.sectionTitle}>{t('profile.badges.title')}</Text>
         <View style={styles.badgeGrid}>
           {badges.map((b) => (
             <Pressable
@@ -245,15 +276,37 @@ export default function ProfileScreen() {
           ))}
         </View>
 
+        {/* Langue */}
+        <Text style={styles.sectionTitle}>{t('profile.editModal.language')}</Text>
+        <View style={styles.langRow}>
+          {LANG_PILLS.map((l) => {
+            const active = i18n.language === l.key;
+            return (
+              <Pressable
+                key={l.key}
+                onPress={() => changeLanguage(l.key)}
+                style={[styles.langPill, active && styles.langPillActive]}
+              >
+                <Text style={styles.langFlag}>{l.flag}</Text>
+                <Text style={[styles.langPillText, active && styles.langPillTextActive]}>
+                  {l.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
         {/* Inviter un ami */}
         <AppButton
           variant="ghost"
-          title="Inviter un ami 🎁"
+          title={`${t('profile.invite')} 🎁`}
           fullWidth
           style={styles.invite}
           onPress={() =>
             Share.share({
-              message: `Rejoins-moi sur Creveton ! Code : ${user?.referral_code || 'CREV'}`,
+              message: t('profile.inviteMessage', {
+                code: user?.referral_code || 'CREV',
+              }),
             })
           }
         />
@@ -261,7 +314,7 @@ export default function ProfileScreen() {
         {/* Déconnexion */}
         <AppButton
           variant="danger"
-          title="Se déconnecter"
+          title={t('profile.logout')}
           fullWidth
           style={styles.logout}
           onPress={logout}
@@ -278,23 +331,23 @@ export default function ProfileScreen() {
         <Pressable style={styles.sheetBackdrop} onPress={() => setEditOpen(false)} />
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Modifier mon profil</Text>
+          <Text style={styles.sheetTitle}>{t('profile.editModal.title')}</Text>
 
           <AppInput
-            label="Ville"
+            label={t('profile.editModal.city')}
             value={ville}
             onChangeText={setVille}
             placeholder="Ta ville"
           />
           <AppInput
-            label="Âge"
+            label={t('profile.editModal.age')}
             value={age}
             onChangeText={setAge}
             keyboardType="number-pad"
             placeholder="Ton âge"
           />
 
-          <Text style={styles.fieldLabel}>Sexe</Text>
+          <Text style={styles.fieldLabel}>{t('profile.editModal.gender')}</Text>
           <View style={styles.pillRow}>
             {SEXES.map((s) => {
               const sel = s.key === sexe;
@@ -312,14 +365,18 @@ export default function ProfileScreen() {
             })}
           </View>
 
-          <Text style={styles.fieldLabel}>Langue</Text>
+          <Text style={styles.fieldLabel}>{t('profile.editModal.language')}</Text>
           <View style={styles.pillRow}>
             {LANGS.map((l) => {
               const sel = l.key === lang;
               return (
                 <Pressable
                   key={l.key}
-                  onPress={() => setLang(l.key)}
+                  onPress={() => {
+                    setLang(l.key);
+                    // Applique instantanément l'UI ; le PATCH backend suit à l'enregistrement.
+                    setLanguage(l.key);
+                  }}
                   style={[styles.pill, sel && styles.pillActive]}
                 >
                   <Text style={[styles.pillText, sel && styles.pillTextActive]}>
@@ -333,14 +390,14 @@ export default function ProfileScreen() {
           <View style={styles.sheetActions}>
             <AppButton
               variant="primary"
-              title="Enregistrer"
+              title={t('profile.editModal.save')}
               fullWidth
               loading={saving}
               onPress={saveEdit}
             />
             <AppButton
               variant="ghost"
-              title="Annuler"
+              title={t('profile.editModal.cancel')}
               fullWidth
               style={styles.sheetCancel}
               onPress={() => setEditOpen(false)}
@@ -476,6 +533,29 @@ const styles = StyleSheet.create({
   badgeLabel: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, flexShrink: 1 },
   badgeLabelUnlocked: { color: colors.gold500 },
   badgeLabelLocked: { color: colors.textFaint },
+
+  // Sélecteur de langue
+  langRow: { flexDirection: 'row', gap: spacing.md },
+  langPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  langPillActive: { backgroundColor: colors.goldVeil, borderColor: colors.gold500 },
+  langFlag: { fontSize: 18 },
+  langPillText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: fontSizes.md,
+    color: colors.textBody,
+  },
+  langPillTextActive: { color: colors.gold500 },
 
   invite: { marginTop: spacing.xl },
   logout: { marginTop: spacing.md },

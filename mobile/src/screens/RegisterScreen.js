@@ -16,6 +16,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Logo, AppButton, AuthField } from '../components';
 import { useAuthStore } from '../store/authStore';
 import {
@@ -29,9 +30,9 @@ import { SEXES, LANGS } from '../constants/config';
 import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 
 const STEPS = [
-  { title: 'Qui es-tu ?', n: '1/3' },
-  { title: 'Ton compte', n: '2/3' },
-  { title: 'Ton profil', n: '3/3' },
+  { titleKey: 'auth.register.step1', n: '1/3' },
+  { titleKey: 'auth.register.step2', n: '2/3' },
+  { titleKey: 'auth.register.step3', n: '3/3' },
 ];
 
 const CITIES = [
@@ -41,6 +42,7 @@ const CITIES = [
 ];
 
 export default function RegisterScreen({ navigation }) {
+  const { t } = useTranslation();
   const register = useAuthStore((s) => s.register);
   const loading = useAuthStore((s) => s.loading);
 
@@ -146,19 +148,19 @@ export default function RegisterScreen({ navigation }) {
           </View>
 
           <Text style={styles.stepN}>Étape {STEPS[step].n}</Text>
-          <Text style={styles.title}>{STEPS[step].title}</Text>
+          <Text style={styles.title}>{t(STEPS[step].titleKey)}</Text>
 
           {step === 0 ? (
             <>
               <AuthField
-                label="Nom complet"
+                label={t('auth.register.fullName')}
                 defaultValue={values.current.name}
                 onChangeText={(t) => (values.current.name = t)}
                 error={errors.name}
                 autoCapitalize="words"
                 textContentType="name"
               />
-              <Text style={styles.fieldLabel}>Téléphone</Text>
+              <Text style={styles.fieldLabel}>{t('auth.register.phone')}</Text>
               <View style={styles.phoneRow}>
                 <View style={styles.prefix}>
                   <Text style={styles.prefixText}>+237</Text>
@@ -177,7 +179,7 @@ export default function RegisterScreen({ navigation }) {
           {step === 1 ? (
             <>
               <AuthField
-                label="Email"
+                label={t('auth.register.email')}
                 defaultValue={values.current.email}
                 onChangeText={(t) => (values.current.email = t)}
                 error={errors.email}
@@ -187,7 +189,7 @@ export default function RegisterScreen({ navigation }) {
                 textContentType="emailAddress"
               />
               <AuthField
-                label="Mot de passe"
+                label={t('auth.register.password')}
                 defaultValue={values.current.password}
                 onChangeText={(t) => (values.current.password = t)}
                 error={errors.password}
@@ -196,7 +198,7 @@ export default function RegisterScreen({ navigation }) {
                 rightToggle={{ active: showPwd, onToggle: () => setShowPwd((v) => !v) }}
               />
               <AuthField
-                label="Confirmer le mot de passe"
+                label={t('auth.register.confirmPassword')}
                 defaultValue={values.current.confirm}
                 onChangeText={(t) => (values.current.confirm = t)}
                 error={errors.confirm}
@@ -208,7 +210,7 @@ export default function RegisterScreen({ navigation }) {
 
           {step === 2 ? (
             <>
-              <Text style={styles.fieldLabel}>Ville</Text>
+              <Text style={styles.fieldLabel}>{t('auth.register.city')}</Text>
               <Pressable style={styles.select} onPress={() => setCityOpen(true)}>
                 <Text style={[styles.selectText, !ville && styles.selectPlaceholder]}>
                   {ville || 'Choisis ta ville'}
@@ -217,17 +219,24 @@ export default function RegisterScreen({ navigation }) {
               </Pressable>
 
               <AuthField
-                label="Âge"
+                label={t('auth.register.age')}
                 defaultValue={values.current.age}
                 onChangeText={(t) => (values.current.age = t.replace(/\D/g, '').slice(0, 2))}
                 keyboardType="number-pad"
                 style={styles.ageField}
               />
 
-              <Text style={styles.fieldLabel}>Sexe</Text>
-              <Pills options={SEXES} value={sexe} onChange={setSexe} />
+              <Text style={styles.fieldLabel}>{t('auth.register.gender')}</Text>
+              <Pills
+                options={SEXES.map((o) => ({
+                  ...o,
+                  label: t(`auth.register.gender${o.key === 'H' ? 'M' : o.key}`),
+                }))}
+                value={sexe}
+                onChange={setSexe}
+              />
 
-              <Text style={[styles.fieldLabel, styles.mt]}>Langue</Text>
+              <Text style={[styles.fieldLabel, styles.mt]}>{t('auth.register.language')}</Text>
               <Pills options={LANGS} value={lang} onChange={setLang} />
             </>
           ) : null}
@@ -235,7 +244,7 @@ export default function RegisterScreen({ navigation }) {
           {errors._global ? <Text style={styles.err}>{errors._global}</Text> : null}
 
           <AppButton
-            title={isLast ? 'Créer mon compte' : 'Suivant →'}
+            title={isLast ? t('auth.register.create') : t('auth.register.next')}
             variant="primary"
             size="lg"
             loading={loading && isLast}
@@ -243,7 +252,7 @@ export default function RegisterScreen({ navigation }) {
             style={styles.submit}
           />
           <Pressable style={styles.backBtn} onPress={onBack} hitSlop={8}>
-            <Text style={styles.backText}>← Retour</Text>
+            <Text style={styles.backText}>{t('auth.register.back')}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -253,6 +262,7 @@ export default function RegisterScreen({ navigation }) {
         <Pressable style={styles.modalBackdrop} onPress={() => setCityOpen(false)}>
           <View style={styles.modalSheet}>
             <Text style={styles.modalTitle}>Choisis ta ville</Text>
+            {/* TODO i18n: pas de clé pour le titre/placeholder du sélecteur de ville */}
             <FlatList
               data={CITIES}
               keyExtractor={(c) => c}
