@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -77,6 +78,10 @@ if (!env.isTest) {
     })
   );
 }
+
+// --- Fichiers téléversés (avatars) servis statiquement ---
+// Placé avant le 404 pour ne pas être masqué par notFound.
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // --- Routes API versionnées ---
 app.use(env.apiPrefix, routes);

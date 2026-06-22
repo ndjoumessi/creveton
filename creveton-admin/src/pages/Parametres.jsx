@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   User, Shield, ToggleLeft, Bell, Settings as Cog, Plug, Info,
-  Camera, Save, Check, Monitor, Database, Zap, Server, Download,
+  Save, Check, Monitor, Database, Zap, Server, Download,
   RefreshCw, LogOut, KeyRound, AlertTriangle, Globe,
 } from 'lucide-react';
 import settingsService from '../services/settings.service';
@@ -12,9 +12,9 @@ import authService from '../services/auth.service';
 import { useApiData } from '../hooks/useApiData';
 import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
-import { num } from '../utils/format';
+import { num, dateFr, dateTimeFr } from '../utils/format';
 import PageHeader from '../components/PageHeader';
-import Avatar from '../components/Avatar';
+import AvatarUpload from '../components/AvatarUpload';
 import PasswordInput from '../components/PasswordInput';
 import { Skeleton } from '../components/Skeleton';
 import { notify } from '../components/Toast';
@@ -31,6 +31,16 @@ const SECTIONS = [
 
 const ROLE_KEYS = { player: 'player', moderator: 'moderator', admin: 'admin', super_admin: 'super_admin' };
 const APP_VERSION = '1.0.0-MVP';
+
+// Préférences locales (sans colonne backend dédiée) : fuseau & thème d'interface.
+const TZ_KEY = 'creveton_admin_tz';
+const TIMEZONES = ['Africa/Douala', 'Africa/Lagos', 'Europe/Paris', 'America/New_York'];
+const TZ_LABELS = {
+  'Africa/Douala': 'Africa/Douala (UTC+1)',
+  'Africa/Lagos': 'Africa/Lagos (UTC+1)',
+  'Europe/Paris': 'Europe/Paris (UTC+1)',
+  'America/New_York': 'America/New_York (UTC-5)',
+};
 
 // Préférences de notification (sans backend dédié → persistées localement).
 const NOTIF_DEFAULTS = {
@@ -108,19 +118,34 @@ export default function Parametres() {
 /* ───────────────────────── Compte ───────────────────────── */
 function AccountSection({ user, lang, setLang }) {
   const { t } = useTranslation();
+  const updateUser = useAuthStore((s) => s.updateUser);
+  // Profil frais (avatar_url, dates) — repli sur le profil du store.
+  const { data: me } = useApiData(() => settingsService.getMe().catch(() => null), []);
+
   const [name, setName] = useState(user.name || '');
-  const [ville, setVille] = useState(user.ville || '');
+  const [tz, setTz] = useState(() => localStorage.getItem(TZ_KEY) || 'Africa/Douala');
+  const [savedTz, setSavedTz] = useState(tz);
+  const [formLang, setFormLang] = useState(lang);
   const [busy, setBusy] = useState(false);
-  const dirty = name.trim() !== (user.name || '') || ville.trim() !== (user.ville || '');
+  const [ok, setOk] = useState(false);
+
+  const avatarUrl = user.avatar_url ?? me?.avatar_url ?? null;
+  const createdAt = user.created_at ?? me?.created_at ?? null;
+  const lastActive = user.last_active_at ?? me?.last_active_at ?? null;
+  const roleLabel = ROLE_KEYS[user.role] ? t(`settings.account.roles.${ROLE_KEYS[user.role]}`) : (user.role || '—');
+
+  const dirty = name.trim() !== (user.name || '') || tz !== savedTz || formLang !== lang;
 
   const save = async () => {
     if (!name.trim()) { notify.error(t('settings.account.nameRequired')); return; }
     setBusy(true);
     try {
-      const updated = await settingsService.updateMe({ name: name.trim(), ville: ville.trim() || undefined });
-      useAuthStore.setState({ user: { ...user, ...updated } });
-      try { sessionStorage.setItem('creveton_admin_user', JSON.stringify({ ...user, ...updated })); } catch { /* ignore */ }
-      notify.success(t('settings.account.updated'));
+      const updated = await settingsService.updateMe({ name: name.trim(), lang: formLang });
+      localStorage.setItem(TZ_KEY, tz); setSavedTz(tz);
+      if (formLang !== lang) setLang(formLang);
+      updateUser({ ...updated });
+      notify.success(t('settings.account.saved'));
+      setOk(true); setTimeout(() => setOk(false), 2000);
     } catch { notify.error(t('settings.account.updateFailed')); } finally { setBusy(false); }
   };
 
@@ -129,42 +154,74 @@ function AccountSection({ user, lang, setLang }) {
       <h3 className="card-title">{t('settings.sections.account')}</h3>
       <p className="card-sub" style={{ marginBottom: 18 }}>{t('settings.account.cardSub')}</p>
 
-      <div className="set-identity">
-        <div className="set-avatar">
-          <Avatar name={user.name} size="xl" />
-          <span className="set-avatar-cam" title={t('settings.account.changeAvatar')}><Camera size={15} /></span>
+      {/* Ligne 1 — avatar (upload) + infos en lecture seule */}
+      <div className="set-acc-top">
+        <div className="set-acc-avatar">
+          <AvatarUpload
+            name={user.name}
+            avatarUrl={avatarUrl}
+            onUploaded={(url) => updateUser({ avatar_url: url })}
+            onRemoved={() => updateUser({ avatar_url: null })}
+          />
+          <div className="set-acc-name">{user.name || '—'}</div>
+          <span className="badge badge-gold-soft">{roleLabel}</span>
+          <div className="set-acc-formats">{t('settings.account.acceptedFormats')}</div>
         </div>
-        <div>
-          <div className="set-identity-name">{user.name || '—'}</div>
-          <div className="set-identity-mail">{user.email || '—'}</div>
-          <span className="badge badge-level" style={{ marginTop: 6, display: 'inline-block' }}>{ROLE_KEYS[user.role] ? t(`settings.account.roles.${ROLE_KEYS[user.role]}`) : user.role}</span>
-        </div>
+
+        <dl className="set-acc-info">
+          <div className="set-kv">
+            <dt>{t('settings.account.emailAddress')}</dt>
+            <dd>{user.email || '—'} <span className="set-verified">{t('settings.account.verified')}</span></dd>
+          </div>
+          <div className="set-kv">
+            <dt>{t('settings.account.role')}</dt>
+            <dd><span className="badge badge-gold-soft">{roleLabel}</span> <span className="set-muted-note">{t('settings.account.notEditable')}</span></dd>
+          </div>
+          <div className="set-kv">
+            <dt>{t('settings.account.memberSince')}</dt>
+            <dd>{createdAt ? dateFr(createdAt) : '—'}</dd>
+          </div>
+          <div className="set-kv">
+            <dt>{t('settings.account.lastLogin')}</dt>
+            <dd>{lastActive ? dateTimeFr(lastActive) : '—'}</dd>
+          </div>
+        </dl>
       </div>
 
+      <div className="set-divider" />
+
+      {/* Ligne 2 — formulaire éditable */}
+      <h4 className="set-acc-edit-title">{t('settings.account.editableInfo')}</h4>
       <div className="set-form">
         <div className="field">
           <label>{t('settings.account.displayName')}</label>
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder={t('settings.account.namePlaceholder')} />
         </div>
         <div className="field">
-          <label>{t('settings.account.city')}</label>
-          <input className="input" value={ville} onChange={(e) => setVille(e.target.value)} maxLength={100} placeholder={t('settings.account.cityPlaceholder')} />
+          <label>{t('settings.account.timezone')}</label>
+          <select className="select" value={tz} onChange={(e) => setTz(e.target.value)}>
+            {TIMEZONES.map((z) => <option key={z} value={z}>{TZ_LABELS[z]}</option>)}
+          </select>
         </div>
         <div className="field">
-          <label>{t('settings.account.emailReadOnly')}</label>
-          <input className="input" value={user.email || ''} readOnly disabled />
+          <label>{t('settings.account.interfaceLang')}</label>
+          <div className="set-pill-row">
+            <button type="button" className={`set-choice ${formLang === 'fr' ? 'is-active' : ''}`} onClick={() => setFormLang('fr')}>🇫🇷 Français</button>
+            <button type="button" className={`set-choice ${formLang === 'en' ? 'is-active' : ''}`} onClick={() => setFormLang('en')}>🇬🇧 English</button>
+          </div>
         </div>
         <div className="field">
-          <label>{t('settings.account.language')}</label>
-          <div className="set-lang">
-            <button type="button" className={`set-lang-btn ${lang === 'fr' ? 'is-active' : ''}`} onClick={() => setLang('fr')}>FR</button>
-            <button type="button" className={`set-lang-btn ${lang === 'en' ? 'is-active' : ''}`} onClick={() => setLang('en')}>EN</button>
+          <label>{t('settings.account.theme')}</label>
+          <div className="set-pill-row">
+            <button type="button" className="set-choice is-active">☀️ {t('settings.account.themeLight')}</button>
+            <button type="button" className="set-choice" disabled title={t('settings.account.themeDarkSoon')}>🌙 {t('settings.account.themeDark')}</button>
           </div>
         </div>
       </div>
 
-      <button className="btn btn-gold" disabled={!dirty || busy} onClick={save}>
-        <Save size={15} /> {t('settings.account.save')}
+      <button className={`btn btn-gold ${ok ? 'is-ok' : ''}`} disabled={(!dirty && !ok) || busy} onClick={save}>
+        {busy ? <RefreshCw size={15} className="spin" /> : <Save size={15} />}
+        {ok ? t('settings.account.saved') : t('settings.account.saveChanges')}
       </button>
     </div>
   );

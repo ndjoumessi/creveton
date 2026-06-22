@@ -40,4 +40,18 @@ export const useAuthStore = create((set, get) => ({
     sessionStorage.removeItem(USER_KEY);
     set({ user: null });
   },
+
+  // Remplace le profil courant (ex. après édition du compte) — persiste en session.
+  setUser(user) {
+    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    set({ user });
+  },
+
+  // Applique un patch partiel au profil courant (ex. { avatar_url }) et propage
+  // immédiatement dans toute l'UI (header, paramètres…).
+  updateUser(patch) {
+    const next = { ...(get().user || {}), ...patch };
+    sessionStorage.setItem(USER_KEY, JSON.stringify(next));
+    set({ user: next });
+  },
 }));

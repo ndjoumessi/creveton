@@ -71,7 +71,11 @@ export default function Header() {
 
       <div className="header-sep" />
 
-      <div className="profile-avatar" title={user?.name || 'Admin'}>{initials}</div>
+      {user?.avatar_url ? (
+        <img className="profile-avatar profile-avatar-img" src={user.avatar_url} alt={user?.name || 'Admin'} title={user?.name || 'Admin'} />
+      ) : (
+        <div className="profile-avatar" title={user?.name || 'Admin'}>{initials}</div>
+      )}
 
       <button className="header-btn" onClick={() => setConfirmLogout(true)} title={t('header.logout')} aria-label={t('header.logout')}>
         <LogOut size={17} />

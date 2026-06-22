@@ -32,6 +32,11 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:4000',
           changeOrigin: true,
         },
+        // Fichiers statiques (avatars uploadés) servis par le backend hors /api/v1.
+        '/uploads': {
+          target: 'http://localhost:4000',
+          changeOrigin: true,
+        },
       },
     },
   };

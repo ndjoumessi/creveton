@@ -1,0 +1,277 @@
+/* AvatarUpload — Cockpit Émeraude. Classes préfixées .av- ; aucune collision. */
+
+.av-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Le cercle (120px) + sa zone cliquable. */
+.av-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: #d4a017;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.av-circle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.35);
+}
+
+.av-circle.is-busy {
+  cursor: default;
+}
+
+.av-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.av-initials {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1;
+  color: #0b2e1a;
+  user-select: none;
+}
+
+/* Overlay de survol : caméra + libellé. */
+.av-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.av-overlay-label {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+
+.av-circle:hover .av-overlay,
+.av-circle:focus-visible .av-overlay {
+  opacity: 1;
+}
+
+.av-circle.is-busy .av-overlay {
+  opacity: 0 !important;
+}
+
+/* Anneau de progression SVG autour du cercle. */
+.av-ring {
+  position: absolute;
+  inset: -6px;
+  width: 132px;
+  height: 132px;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.av-ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 6;
+}
+
+.av-ring-fill {
+  fill: none;
+  stroke: #d4a017;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 200ms ease;
+}
+
+.av-ring-pct {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  fill: #fff;
+}
+
+.av-ring-veil {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(11, 46, 26, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Lien de suppression + confirmation inline. */
+.av-remove-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+.av-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text, #374151);
+}
+
+.av-confirm-q {
+  font-weight: 600;
+}
+
+/* ---- Modale de recadrage ---- */
+.av-crop {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.av-crop-viewport {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0b2e1a;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.av-crop-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+.av-crop-img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  will-change: transform;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  max-width: none;
+}
+
+/* Masque circulaire (contour) + grille tiers. */
+.av-crop-mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.av-crop-mask-circle {
+  position: absolute;
+  inset: 6px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 9999px rgba(11, 46, 26, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.av-crop-grid {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 6px;
+}
+
+.av-crop-grid::before,
+.av-crop-grid::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.av-crop-grid::before {
+  left: 33.33%;
+  right: 33.33%;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  border-right: 1px solid rgba(255, 255, 255, 0.25);
+  background: none;
+}
+
+.av-crop-grid::after {
+  top: 33.33%;
+  bottom: 33.33%;
+  left: 0;
+  right: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  background: none;
+}
+
+.av-crop-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.av-crop-zoom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.av-crop-zoom-label {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted, #6b7280);
+  min-width: 44px;
+}
+
+.av-crop-zoom input[type='range'] {
+  flex: 1;
+  accent-color: #2a8a4f;
+}
+
+.av-crop-rotate {
+  display: flex;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .av-overlay,
+  .av-ring,
+  .av-ring-fill {
+    transition: none;
+  }
+}

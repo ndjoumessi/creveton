@@ -65,8 +65,31 @@ export function revokeOtherSessions() {
   return api.post('/auth/sessions/revoke-others').then((r) => r.data);
 }
 
+/**
+ * POST /users/me/avatar — upload du blob recadré (WebP).
+ * `onProgress(percent)` appelé pendant le transfert. Renvoie { avatar_url }.
+ */
+export function uploadAvatar(blob, onProgress) {
+  const form = new FormData();
+  form.append('avatar', blob, 'avatar.webp');
+  return api
+    .post('/users/me/avatar', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (e) => {
+        if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+      },
+    })
+    .then((r) => r.data);
+}
+
+/** DELETE /users/me/avatar — retire la photo du compte connecté. */
+export function removeAvatar() {
+  return api.delete('/users/me/avatar').then((r) => r.data);
+}
+
 export default {
   getFlags, setFlag, getSystem, getIntegrations,
   recomputeSuccessRates, recomputeXp, exportQuestions, exportUsers,
   getMe, updateMe, getSessions, revokeOtherSessions,
+  uploadAvatar, removeAvatar,
 };

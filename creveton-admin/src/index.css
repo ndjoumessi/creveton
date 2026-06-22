@@ -109,6 +109,7 @@ input, select, textarea { font-family: inherit; }
 .lang-toggle button { padding: 5px 12px; font-size: 12px; font-weight: 600; background: transparent; border: none; color: rgba(255, 255, 255, 0.55); border-radius: var(--radius-pill); transition: var(--t-fast); }
 .lang-toggle button.active { background: rgba(255, 255, 255, 0.12); color: #fff; }
 .profile-avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--gold); color: var(--green900); display: grid; place-items: center; font-family: 'Outfit'; font-weight: 700; font-size: 14px; flex: none; }
+.profile-avatar-img { object-fit: cover; padding: 0; }
 
 /* ===================== Buttons ===================== */
 .btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 9px 15px; border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13.5px; transition: all var(--t-fast); }
@@ -314,6 +315,7 @@ table.data tbody tr:last-child td { border-bottom: none; }
 
 /* Avatars colorés */
 .avatar-c { width: 36px; height: 36px; border-radius: 10px; color: #fff; display: grid; place-items: center; font-family: 'Outfit'; font-weight: 700; font-size: 13px; flex: none; }
+.avatar-img { object-fit: cover; background: var(--surface-2); }
 .avatar-md { width: 44px; height: 44px; border-radius: 12px; font-size: 16px; }
 .avatar-lg { width: 64px; height: 64px; border-radius: 16px; font-size: 22px; }
 .avatar-xl { width: 72px; height: 72px; border-radius: 18px; font-size: 26px; }

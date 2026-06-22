@@ -35,6 +35,7 @@ function toPublic(row) {
     // DECIMAL est renvoyé en string par node-postgres → on expose un nombre.
     wallet_balance: row.wallet_balance != null ? Number(row.wallet_balance) : 0,
     referral_code: row.referral_code,
+    avatar_url: row.avatar_url ?? null,
     created_at: row.created_at,
     last_active_at: row.last_active_at ?? null,
   };
@@ -148,6 +149,24 @@ async function incrementWallet(id, delta, executor = db) {
     [id, delta]
   );
   return rows[0] ? Number(rows[0].wallet_balance) : null;
+}
+
+/** Enregistre l'URL relative de l'avatar (déjà écrit sur disque par le contrôleur). */
+async function setAvatar(id, url) {
+  const { rows } = await db.query(
+    `UPDATE users SET avatar_url = $2 WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
+    [id, url]
+  );
+  return rows[0] || null;
+}
+
+/** Supprime l'URL d'avatar (remet à NULL). */
+async function clearAvatar(id) {
+  const { rows } = await db.query(
+    `UPDATE users SET avatar_url = NULL WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
+    [id]
+  );
+  return rows[0] || null;
 }
 
 // ---------------------------------------------------------------------------
@@ -406,6 +425,8 @@ module.exports = {
   levelForXp,
   XP_LEVELS,
   setPassword,
+  setAvatar,
+  clearAvatar,
   generateUniqueReferralCode,
   // admin
   listAdmin,
