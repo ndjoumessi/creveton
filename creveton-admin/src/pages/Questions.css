@@ -658,7 +658,7 @@
 .q-stats-ex-text { flex: 1; min-width: 0; font-size: 12.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .q-stats-ex-rate { flex: none; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .q-stats-ex-rate.low { color: var(--red); }
-.q-stats-ex-rate.high { color: var(--green500); }
+.q-stats-ex-rate.high { color: var(--green700); }
 
 /* ===================== Barre vue (table/kanban) + densité ===================== */
 .q-view-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
@@ -706,8 +706,11 @@
 .q-kanban-body { display: flex; flex-direction: column; gap: 10px; min-height: 40px; }
 .q-kanban-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: grab; box-shadow: var(--shadow); transition: transform 0.12s, box-shadow 0.12s; }
 .q-kanban-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.q-kanban-card:active { cursor: grabbing; }
 .q-kanban-card.dragging { opacity: 0.5; }
-.q-kanban-card.is-rejected { border-left: 3px solid var(--red); }
+/* Rejetée : bordure pleine + teinte (jamais de liseré latéral), sens doublé par le tag. */
+.q-kanban-card.is-rejected { border-color: #f3b4b4; background: #fef6f6; }
+.q-kanban-tag-rejected { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: #b91c1c; background: #fee2e2; padding: 2px 8px; border-radius: 7px; }
 .q-kanban-card-text { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4; margin-bottom: 9px; }
 .q-kanban-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .q-kanban-card-foot { font-size: 11.5px; color: var(--muted); }
@@ -767,3 +770,13 @@
 .q-mp-opt.wrong { background: #fdeceb; border-color: var(--red); color: #b91c1c; }
 .q-phone--night .q-mp-opt.wrong { background: rgba(231,76,60,0.18); }
 .q-phone-hint { font-size: 12px; color: var(--muted); text-align: center; padding: 6px 0; }
+
+/* Accessibilité : respecte la préférence « réduire les animations ». */
+@media (prefers-reduced-motion: reduce) {
+  .q-stats-panel { animation: none; }
+  .q-exp-btn,
+  .q-kanban-card,
+  .q-inline-trigger,
+  .q-dist-bar { transition: none; }
+  .q-kanban-card:hover { transform: none; }
+}

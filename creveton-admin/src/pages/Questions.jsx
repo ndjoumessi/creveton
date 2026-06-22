@@ -870,6 +870,7 @@ function KanbanBoard({ rows, onOpen, onMove }) {
                   <div className="q-kanban-card-meta">
                     <ThemeBadge theme={q.theme} />
                     <LevelPill level={q.level} />
+                    {q.status === 'rejected' && <span className="q-kanban-tag-rejected"><XCircle size={11} /> Rejetée</span>}
                   </div>
                   <div className="q-kanban-card-foot">{t('questions.misc.createdOn', { date: dateFr(q.created_at) })}</div>
                 </div>
