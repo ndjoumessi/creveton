@@ -3,6 +3,8 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const ApiError = require('../utils/ApiError');
+const logger = require('../config/logger');
+const { redis } = require('../config/redis');
 const teamModel = require('../models/team.model');
 const userModel = require('../models/user.model');
 const settingsModel = require('../models/settings.model');
@@ -18,6 +20,10 @@ const settingsModel = require('../models/settings.model');
 
 const BCRYPT_COST = 12;
 const PERMISSIONS_KEY = 'role_permissions';
+const INVITE_TTL_SEC = 72 * 3600; // 72 h pour accepter l'invitation.
+const inviteKey = (token) => `invite:${token}`;
+// Base de la console admin pour les liens d'invitation (configurable).
+const ADMIN_BASE_URL = (process.env.ADMIN_BASE_URL || 'https://admin.creveton.cm').replace(/\/$/, '');
 
 const ROLE_LIST = ['super_admin', 'admin', 'moderator', 'player'];
 const SYSTEM_ROLES = ['super_admin', 'player'];
@@ -70,11 +76,6 @@ const DEFAULT_ROLE_PERMISSIONS = {
   player: {},
 };
 
-/** Mot de passe temporaire conforme à la politique (≥8, 1 majuscule, 1 chiffre). */
-function generateTempPassword() {
-  return `Crv${crypto.randomBytes(5).toString('hex')}1A`;
-}
-
 /** Téléphone synthétique unique (colonne NOT NULL UNIQUE) pour un compte invité. */
 function syntheticPhone() {
   return `+237${crypto.randomInt(600000000, 699999999)}`;
@@ -115,15 +116,14 @@ async function memberActivity(id) {
 }
 
 /**
- * POST /admin/team/invite — crée un compte modérateur/admin avec mot de passe
- * temporaire (réutilise userModel.createInvited). super_admin non invitable
- * (verrouillé par le validateur). Réessaie sur collision de téléphone synthétique.
+ * POST /admin/team/invite — crée un compte modérateur/admin INACTIF (sans mot de
+ * passe) et génère un lien d'invitation (token UUID en Redis, TTL 72 h). Le compte
+ * s'active à l'acceptation (accept-invite). super_admin non invitable (validateur).
+ * @returns {Promise<{ user: object, invite_url: string }>}
  */
 async function invite({ email, name, role }) {
   if (await userModel.findByEmail(email)) throw new ApiError('EMAIL_ALREADY_USED');
 
-  const tempPassword = generateTempPassword();
-  const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_COST);
   const referralCode = await userModel.generateUniqueReferralCode();
 
   let user;
@@ -133,7 +133,8 @@ async function invite({ email, name, role }) {
         name,
         email,
         role,
-        password_hash: passwordHash,
+        // Pas de mot de passe → compte inactif tant que l'invitation n'est pas acceptée.
+        password_hash: null,
         phone: syntheticPhone(),
         referral_code: referralCode,
       });
@@ -147,18 +148,71 @@ async function invite({ email, name, role }) {
     }
   }
 
-  return { id: user.id, email: user.email, name: user.name, role: user.role, temporary_password: tempPassword };
+  const token = crypto.randomUUID();
+  await redis.set(inviteKey(token), JSON.stringify({ user_id: user.id }), 'EX', INVITE_TTL_SEC);
+  const inviteUrl = `${ADMIN_BASE_URL}/accept-invite?token=${token}`;
+  // TODO: brancher l'envoi d'email (Resend/SMTP). En attendant, on journalise le lien.
+  logger.info('Invitation équipe créée', { email, role, invite_url: inviteUrl });
+
+  return {
+    user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    invite_url: inviteUrl,
+  };
 }
 
-/** PATCH /admin/team/:id/role — change le rôle (réutilise userModel.setRole). */
-async function setRole(id, role) {
+/**
+ * POST /admin/team/accept-invite (public) — valide le token Redis, pose le mot de
+ * passe et consomme le token. Active de fait le compte (il devient connectable).
+ */
+async function acceptInvite({ token, password }) {
+  const raw = await redis.get(inviteKey(token));
+  if (!raw) throw new ApiError('INVITE_EXPIRED');
+  let userId;
+  try {
+    userId = JSON.parse(raw).user_id;
+  } catch {
+    throw new ApiError('INVITE_EXPIRED');
+  }
+
+  const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
+  const updated = await userModel.setPassword(userId, passwordHash);
+  if (!updated) throw new ApiError('USER_NOT_FOUND');
+  await redis.del(inviteKey(token));
+
+  return { message: 'Compte activé' };
+}
+
+/**
+ * PATCH /admin/team/:id/role — change le rôle d'un membre.
+ * Garde-fous : on ne modifie ni son propre rôle, ni celui d'un super_admin.
+ */
+async function setRole(id, role, actorId) {
+  if (actorId && id === actorId) {
+    throw new ApiError('FORBIDDEN', { message: 'Impossible de modifier votre propre rôle.' });
+  }
+  const target = await userModel.findById(id);
+  if (!target) throw new ApiError('USER_NOT_FOUND');
+  if (target.role === 'super_admin') {
+    throw new ApiError('FORBIDDEN', { message: 'Le rôle d’un super_admin ne peut pas être modifié.' });
+  }
   const updated = await userModel.setRole(id, role);
   if (!updated) throw new ApiError('USER_NOT_FOUND');
   return { id: updated.id, role: updated.role };
 }
 
-/** DELETE /admin/team/:id — soft delete RGPD (réutilise userModel.softDelete). */
-async function remove(id) {
+/**
+ * DELETE /admin/team/:id — désactive (soft delete RGPD) un membre.
+ * Garde-fous : on ne se supprime pas soi-même, ni un super_admin.
+ */
+async function remove(id, actorId) {
+  if (actorId && id === actorId) {
+    throw new ApiError('FORBIDDEN', { message: 'Impossible de vous désactiver vous-même.' });
+  }
+  const target = await userModel.findById(id);
+  if (!target) throw new ApiError('USER_NOT_FOUND');
+  if (target.role === 'super_admin') {
+    throw new ApiError('FORBIDDEN', { message: 'Un super_admin ne peut pas être désactivé.' });
+  }
   const deleted = await userModel.softDelete(id);
   if (!deleted) throw new ApiError('USER_NOT_FOUND');
   return deleted;
@@ -215,6 +269,7 @@ module.exports = {
   memberStats,
   memberActivity,
   invite,
+  acceptInvite,
   setRole,
   remove,
   listRoles,

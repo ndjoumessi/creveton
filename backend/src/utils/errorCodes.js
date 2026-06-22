@@ -45,6 +45,7 @@ const ERROR_CODES = {
   TOURNAMENT_ALREADY_RUNNING: { http: 409, message: 'Le tournoi est déjà en cours.' },
 
   OTP_EXPIRED: { http: 410, message: 'Le code OTP a expiré.' },
+  INVITE_EXPIRED: { http: 410, message: "L'invitation est invalide ou a expiré." },
 
   INVALID_CORRECT_OPTION_COUNT: { http: 422, message: 'Il doit y avoir exactement une bonne réponse.' },
   TOURNAMENT_NOT_OPEN: { http: 422, message: "Le tournoi n'est pas ouvert aux inscriptions." },

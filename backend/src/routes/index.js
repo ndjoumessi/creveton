@@ -12,6 +12,9 @@ const userRoutes = require('./user.routes');
 const walletRoutes = require('./wallet.routes');
 const adminRoutes = require('./admin');
 const webhookRoutes = require('./webhook.routes');
+const validate = require('../middlewares/validate');
+const teamValidators = require('../validators/team.validator');
+const teamController = require('../controllers/admin/team.admin.controller');
 
 const router = express.Router();
 
@@ -28,6 +31,9 @@ router.use('/tournaments', tournamentRoutes);
 router.use('/challenges', challengeRoutes);
 router.use('/users', userRoutes);
 router.use('/wallet', walletRoutes);
+// Acceptation d'invitation équipe — PUBLIC (l'invité n'a pas encore de session).
+// Déclarée AVANT le mount /admin pour échapper à son middleware authenticate.
+router.post('/admin/team/accept-invite', validate(teamValidators.acceptInvite), teamController.acceptInvite);
 router.use('/admin', adminRoutes);
 router.use('/webhooks', webhookRoutes);
 

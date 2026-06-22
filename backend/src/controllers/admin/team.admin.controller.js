@@ -16,19 +16,24 @@ const stats = asyncHandler(async (req, res) => {
   return ok(res, await teamService.memberStats());
 });
 
-/** POST /admin/team/invite — crée un compte modérateur/admin. */
+/** POST /admin/team/invite — crée un compte modérateur/admin + lien d'invitation. */
 const invite = asyncHandler(async (req, res) => {
   return created(res, await teamService.invite(req.body));
 });
 
-/** PATCH /admin/team/:id/role — change le rôle d'un membre. */
-const changeRole = asyncHandler(async (req, res) => {
-  return ok(res, await teamService.setRole(req.params.id, req.body.role));
+/** POST /admin/team/accept-invite (public) — active le compte via le token Redis. */
+const acceptInvite = asyncHandler(async (req, res) => {
+  return ok(res, await teamService.acceptInvite(req.body));
 });
 
-/** DELETE /admin/team/:id — soft delete RGPD. */
+/** PATCH /admin/team/:id/role — change le rôle d'un membre (garde-fous dans le service). */
+const changeRole = asyncHandler(async (req, res) => {
+  return ok(res, await teamService.setRole(req.params.id, req.body.role, req.user.id));
+});
+
+/** DELETE /admin/team/:id — désactive un membre (garde-fous dans le service). */
 const remove = asyncHandler(async (req, res) => {
-  await teamService.remove(req.params.id);
+  await teamService.remove(req.params.id, req.user.id);
   return noContent(res);
 });
 
@@ -47,4 +52,4 @@ const patchRolePermissions = asyncHandler(async (req, res) => {
   return ok(res, await teamService.setRolePermissions(req.params.role, req.body.permissions, req.user.id));
 });
 
-module.exports = { list, stats, invite, changeRole, remove, activity, roles, patchRolePermissions };
+module.exports = { list, stats, invite, acceptInvite, changeRole, remove, activity, roles, patchRolePermissions };
