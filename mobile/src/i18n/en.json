@@ -430,5 +430,23 @@
     "tournaments": "Tournaments",
     "stats": "Stats",
     "profile": "Profile"
+  },
+  "tournamentLive": {
+    "waitingTitle": "Waiting to start…",
+    "waitingSubtitle": "You are in. The round will begin shortly.",
+    "counter": "Question {{current}}/{{total}}",
+    "answered": "Answer sent",
+    "correctAnswer": "Correct answer",
+    "explanationFallback": "Answer revealed",
+    "leaderboard": "Leaderboard",
+    "leaderboardEmpty": "No score yet",
+    "you": "You",
+    "pts": "pts",
+    "endedTitle": "Tournament over!",
+    "rank": "Your rank",
+    "score": "Your score",
+    "xpNote": "Your XP has been credited to your profile.",
+    "back": "Back to tournaments",
+    "joinError": "Could not join"
   }
 }

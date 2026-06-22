@@ -430,5 +430,23 @@
     "tournaments": "Tournois",
     "stats": "Stats",
     "profile": "Profil"
+  },
+  "tournamentLive": {
+    "waitingTitle": "En attente du démarrage…",
+    "waitingSubtitle": "Tu es inscrit. La manche va bientôt commencer.",
+    "counter": "Question {{current}}/{{total}}",
+    "answered": "Réponse envoyée",
+    "correctAnswer": "Bonne réponse",
+    "explanationFallback": "Réponse révélée",
+    "leaderboard": "Classement",
+    "leaderboardEmpty": "Aucun score pour l'instant",
+    "you": "Vous",
+    "pts": "pts",
+    "endedTitle": "Tournoi terminé !",
+    "rank": "Ton rang",
+    "score": "Ton score",
+    "xpNote": "Ton XP a été créditée à ton profil.",
+    "back": "Retour aux tournois",
+    "joinError": "Inscription impossible"
   }
 }
