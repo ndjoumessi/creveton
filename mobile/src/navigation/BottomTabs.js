@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import HomeScreen from '../screens/HomeScreen';
 import GameStartScreen from '../screens/GameStartScreen';
 import TournamentScreen from '../screens/TournamentScreen';
+import ChallengesScreen from '../screens/ChallengesScreen';
 import StatsScreen from '../screens/StatsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { tournaments as tournamentsApi } from '../services/endpoints';
@@ -17,11 +18,12 @@ import { colors, fonts, fontSizes, shadow, spacing } from '../constants/theme';
 
 const Tab = createBottomTabNavigator();
 
-const ICONS = { Home: '🏠', Play: '▶', Tournaments: '🏆', Stats: '📊', Profile: '👤' };
+const ICONS = { Home: '🏠', Play: '▶', Tournaments: '🏆', Challenges: '⚔️', Stats: '📊', Profile: '👤' };
 const LABEL_KEYS = {
   Home: 'tabs.home',
   Play: 'tabs.play',
   Tournaments: 'tabs.tournaments',
+  Challenges: 'tabs.challenges',
   Stats: 'tabs.stats',
   Profile: 'tabs.profile',
 };
@@ -99,6 +101,7 @@ export default function BottomTabs() {
           tabBarBadgeStyle: styles.badge,
         }}
       />
+      <Tab.Screen name="Challenges" component={ChallengesScreen} />
       <Tab.Screen name="Stats" component={StatsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

@@ -4,14 +4,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { levelForXp } from '../utils/format';
 
 export default function LevelBadge({ level = 1, xp, variant = 'gold', style }) {
   const gold = variant === 'gold';
+  // Niveau dérivé de l'XP (cohérent même si le `level` reçu est périmé / en avance
+  // sur total_xp — évite tout affichage incohérent).
+  const displayLevel = xp !== undefined ? levelForXp(xp) : level;
   return (
     <View style={[styles.badge, gold ? styles.gold : styles.soft, style]}>
       <Text style={styles.star}>★</Text>
       <Text style={[styles.text, gold ? styles.textGold : styles.textSoft]}>
-        Niv. {level}
+        Niv. {displayLevel}
         {xp !== undefined ? ` · ${Number(xp).toLocaleString('fr-FR')} XP` : ''}
       </Text>
     </View>

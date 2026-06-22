@@ -10,5 +10,6 @@ export { default as QuizScreen } from './QuizScreen';
 export { default as ResultsScreen } from './ResultsScreen';
 export { default as TournamentScreen } from './TournamentScreen';
 export { default as ChallengeScreen } from './ChallengeScreen';
+export { default as ChallengesScreen } from './ChallengesScreen';
 export { default as StatsScreen } from './StatsScreen';
 export { default as ProfileScreen } from './ProfileScreen';

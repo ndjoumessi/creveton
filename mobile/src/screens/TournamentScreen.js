@@ -286,10 +286,14 @@ function TournamentCard({ t, onJoin }) {
               📅 {formatDateTime(t.starts_at) || tr('tournaments.misc.dateTbd')}
             </Body>
           )}
-          <Body muted style={styles.metaLineMuted}>
-            ⏱ {t.format?.questions ?? '—'} {tr('tournaments.card.questions')} · {t.format?.time_per_q_s ?? '—'}
-            {tr('tournaments.card.perQ')}
-          </Body>
+          {/* `format` n'est pas stocké en base (count/time passés au /start) → l'API
+              renvoie null. On masque la ligne plutôt que d'afficher des tirets. */}
+          {t.format?.questions != null && t.format?.time_per_q_s != null ? (
+            <Body muted style={styles.metaLineMuted}>
+              ⏱ {t.format.questions} {tr('tournaments.card.questions')} · {t.format.time_per_q_s}
+              {tr('tournaments.card.perQ')}
+            </Body>
+          ) : null}
         </View>
 
         <AppButton
