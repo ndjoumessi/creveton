@@ -131,6 +131,8 @@ export default function ProfileScreen() {
       hapticLight();
       await setLanguage(next);
       setLang(next);
+      // Toast résolu dans la nouvelle langue (i18n.language a déjà basculé).
+      toast.show({ type: 'success', message: t('profile.notify.languageChanged') });
       if (!user) return;
       try {
         const updated = await users.update({ lang: next });
@@ -140,7 +142,7 @@ export default function ProfileScreen() {
         toast.show({ type: 'error', message: parseApiError(e).message });
       }
     },
-    [i18n.language, user, setUser, refreshProfile, toast],
+    [i18n.language, user, setUser, refreshProfile, toast, t],
   );
 
   const loadWallet = useCallback(async () => {
@@ -545,17 +547,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderInput,
     backgroundColor: colors.surface,
   },
-  langPillActive: { backgroundColor: colors.goldVeil, borderColor: colors.gold500 },
+  langPillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
   langFlag: { fontSize: 18 },
   langPillText: {
     fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.md,
     color: colors.textBody,
   },
-  langPillTextActive: { color: colors.gold500 },
+  langPillTextActive: { color: colors.white },
 
   invite: { marginTop: spacing.xl },
   logout: { marginTop: spacing.md },

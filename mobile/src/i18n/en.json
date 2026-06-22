@@ -381,7 +381,8 @@
       "language": "Language"
     },
     "notify": {
-      "updated": "Profile updated"
+      "updated": "Profile updated",
+      "languageChanged": "Language changed"
     },
     "placeholder": {
       "city": "Your city",
