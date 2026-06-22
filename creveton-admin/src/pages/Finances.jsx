@@ -34,14 +34,26 @@ const OUTFLOW_TYPES = ['withdraw', 'payout', 'refund'];
 const KYC_THRESHOLD = 10000;
 
 const EMPTY_FILTERS = { status: '', type: '', provider: '', period: '30' };
+// On charge large (≤100) pour laisser la DataTable paginer côté client ; au-delà,
+// le curseur `next_cursor` de l'API permettrait un « charger plus » (futur).
+const PAGE_LIMIT = 100;
 
-// Filtre période (fonction pure module : l'horloge est lue hors du rendu React
-// pour respecter react-hooks/purity — même approche que Utilisateurs).
-function filterByPeriod(rows, period) {
+// Borne basse de période → `from` ISO envoyé à l'API (filtrage serveur).
+// Hors rendu React (appelée dans le fetcher), donc Date.now() est admis.
+function periodFromISO(period) {
   const days = PERIOD_DAYS[period];
-  if (!days) return rows;
-  const cutoff = Date.now() - days * 86400000;
-  return rows.filter((tx) => new Date(tx.created_at).getTime() >= cutoff);
+  if (!days) return undefined;
+  return new Date(Date.now() - days * 86400000).toISOString();
+}
+
+/** Déclenche le téléchargement d'un Blob via un <a download> éphémère. */
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 export default function Finances() {
@@ -54,21 +66,22 @@ export default function Finances() {
   const [busy, setBusy] = useState(false);
   const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
 
-  const { data: summary, loading: summaryLoading } = useApiData(() => financesService.summary(), []);
+  const { data: summary, loading: summaryLoading, refetch: refetchSummary } = useApiData(() => financesService.summary(), []);
   const { data: dailyData } = useApiData(() => financesService.daily(30), []);
   const { data: txData, loading: txLoading, refetch: refetchTx } = useApiData(
-    () => financesService.transactions({ status: filters.status, type: filters.type, provider: filters.provider }),
-    [filters.status, filters.type, filters.provider],
+    () => financesService.transactions({
+      status: filters.status, type: filters.type, provider: filters.provider,
+      from: periodFromISO(filters.period), limit: PAGE_LIMIT,
+    }),
+    [filters.status, filters.type, filters.provider, filters.period],
   );
   const { data: kycData, refetch: refetchKyc } = useApiData(
-    () => financesService.transactions({ type: 'withdraw', status: 'pending' }),
+    () => financesService.transactions({ type: 'withdraw', status: 'pending', limit: PAGE_LIMIT }),
     [],
   );
 
+  // Période + filtres sont appliqués côté serveur (status/type/provider/from).
   const rows = useMemo(() => txData?.data || [], [txData]);
-
-  // Filtre période appliqué côté client (l'API mock ne le gère pas encore).
-  const filteredRows = useMemo(() => filterByPeriod(rows, filters.period), [rows, filters.period]);
 
   const kycRows = useMemo(
     () => (kycData?.data || []).filter((tx) => tx.amount > KYC_THRESHOLD),
@@ -80,7 +93,7 @@ export default function Finances() {
     [dailyData],
   );
 
-  const refetchAll = () => { refetchTx(); refetchKyc(); };
+  const refetchAll = () => { refetchTx(); refetchKyc(); refetchSummary(); };
 
   const runConfirm = async () => {
     if (!confirmAction) return;
@@ -91,7 +104,7 @@ export default function Finances() {
         await financesService.validate(tx.id);
         notify.success(t('finances.notify.validated'));
       } else {
-        await financesService.reject(tx.id);
+        await financesService.reject(tx.id, confirmAction.reason);
         notify.success(t('finances.notify.rejected'));
       }
       setConfirmAction(null);
@@ -103,30 +116,30 @@ export default function Finances() {
     }
   };
 
-  const exportCsv = () => {
-    // TODO: privilégier GET /admin/transactions/export?format=csv quand l'endpoint
-    // existera. En attendant, génération côté client depuis la vue filtrée.
-    if (!filteredRows.length) { notify.error(t('finances.notify.nothingToExport')); return; }
-    const csv = Papa.unparse(filteredRows.map((tx) => ({
-      id: tx.id,
-      date: tx.created_at,
-      user_email: tx.user_email,
-      type: tx.type,
-      amount: tx.amount,
-      currency: tx.currency || 'XAF',
-      provider: tx.provider,
-      status: tx.status,
-      reference: tx.reference || '',
-    })));
-    // BOM () en tête pour qu'Excel ouvre l'UTF-8 correctement.
-    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `creveton_transactions_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    notify.success(t('finances.notify.exported', { count: filteredRows.length }));
+  const dlName = () => `creveton_transactions_${new Date().toISOString().slice(0, 10)}.csv`;
+
+  const exportCsv = async () => {
+    const params = {
+      status: filters.status, type: filters.type, provider: filters.provider,
+      from: periodFromISO(filters.period),
+    };
+    try {
+      // Export serveur (CSV, plafonné à 10 000 lignes côté backend).
+      const blob = await financesService.exportCsv(params);
+      triggerDownload(blob, dlName());
+      notify.success(t('finances.notify.exported', { count: rows.length }));
+    } catch {
+      // Repli client (edge) : CSV depuis la vue chargée si l'endpoint échoue.
+      if (!rows.length) { notify.error(t('finances.notify.nothingToExport')); return; }
+      const csv = Papa.unparse(rows.map((tx) => ({
+        id: tx.id, date: tx.created_at, user_email: tx.user_email, type: tx.type,
+        amount: tx.amount, currency: tx.currency || 'XAF', provider: tx.provider,
+        status: tx.status, reference: tx.reference || '',
+      })));
+      // BOM en tête pour qu'Excel lise l'UTF-8.
+      triggerDownload(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' }), dlName());
+      notify.success(t('finances.notify.exported', { count: rows.length }));
+    }
   };
 
   const columns = [
@@ -216,31 +229,28 @@ export default function Finances() {
         )}
       />
 
-      {/* Bannière honnêteté : données de démonstration (endpoints à brancher). */}
-      <div className="fin-demo">ⓘ {t('finances.demoBanner')}</div>
-
       {/* KPIs */}
       <div className="grid grid-kpi fin-section">
         <KpiCard
           icon={<Wallet size={22} />} tone="green"
           label={t('finances.kpi.volume')}
-          value={summaryLoading ? '—' : fcfa(s.volume_total)}
+          value={summaryLoading ? '—' : fcfa(s.volume_total?.amount)}
           spark={(dailyData?.points || []).slice(-7).map((p) => p.volume)}
         />
         <KpiCard
           icon={<ArrowDownLeft size={22} />} tone="blue"
           label={t('finances.kpi.deposits')}
-          value={summaryLoading ? '—' : fcfa(s.deposits)}
+          value={summaryLoading ? '—' : fcfa(s.deposits?.amount)}
         />
         <KpiCard
           icon={<ArrowUpRight size={22} />} tone="gold"
           label={t('finances.kpi.withdrawals')}
-          value={summaryLoading ? '—' : fcfa(s.withdrawals)}
+          value={summaryLoading ? '—' : fcfa(s.withdrawals?.amount)}
         />
         <KpiCard
           icon={<Clock size={22} />} tone="violet"
-          label={t('finances.kpi.pending', { amount: fcfa(s.pending_amount) })}
-          value={summaryLoading ? '—' : (s.pending_count ?? 0)}
+          label={t('finances.kpi.pending', { amount: fcfa(s.pending?.amount) })}
+          value={summaryLoading ? '—' : (s.pending?.count ?? 0)}
         />
       </div>
 
@@ -290,7 +300,7 @@ export default function Finances() {
 
       <DataTable
         columns={columns}
-        data={filteredRows}
+        data={rows}
         loading={txLoading}
         onRowClick={setSelectedTx}
         emptyMessage={t('finances.empty.transactions')}
