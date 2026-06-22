@@ -111,6 +111,23 @@ async function setStatus(id, status, { endsAt } = {}) {
   return rows[0] || null;
 }
 
+/** IDs des joueurs inscrits à un tournoi (pour la manche live). */
+async function participantUserIds(id) {
+  const { rows } = await db.query(
+    'SELECT user_id FROM tournament_participants WHERE tournament_id = $1',
+    [id]
+  );
+  return rows.map((r) => r.user_id);
+}
+
+/** Écrit le score d'un participant (fin de manche live). */
+async function setScore(tournamentId, userId, score, executor = db) {
+  await executor.query(
+    'UPDATE tournament_participants SET score = $3 WHERE tournament_id = $1 AND user_id = $2',
+    [tournamentId, userId, score]
+  );
+}
+
 /** Participants triés par score décroissant (pour le classement/payout). */
 async function rankedParticipants(id, executor = db) {
   const { rows } = await executor.query(
@@ -139,6 +156,8 @@ module.exports = {
   participantsDetailed,
   countParticipants,
   setStatus,
+  participantUserIds,
+  setScore,
   rankedParticipants,
   setResult,
   getClient: () => db.getClient(),

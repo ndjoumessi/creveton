@@ -15,6 +15,12 @@ const list = Joi.object({
   type: Joi.string().valid(...TOURNAMENT_TYPES).optional(),
 });
 
+/** POST /tournaments/:id/start (admin) — lance la manche live. */
+const start = Joi.object({
+  count: Joi.number().integer().min(1).max(100).default(10),
+  time_per_q_s: Joi.number().integer().min(5).max(120).default(15),
+});
+
 /** POST /tournaments/:id/join */
 const join = Joi.object({
   payment: Joi.object({
@@ -37,4 +43,4 @@ const adminCreate = Joi.object({
   starts_at: Joi.date().iso().required(),
 });
 
-module.exports = { list, join, adminCreate };
+module.exports = { list, start, join, adminCreate };
