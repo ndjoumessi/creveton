@@ -63,6 +63,11 @@ export const clearStoredUser = () => removeItem(STORAGE_KEYS.user);
 // Sync --------------------------------------------------------------------
 export const getLastSyncAt = () => getItem(STORAGE_KEYS.lastSyncAt);
 export const setLastSyncAt = (iso) => setItem(STORAGE_KEYS.lastSyncAt, iso);
+export const clearLastSyncAt = () => removeItem(STORAGE_KEYS.lastSyncAt);
+
+// URL de l'API du dernier sync (invalidation de cache au changement d'environnement).
+export const getCacheApiUrl = () => getItem(STORAGE_KEYS.cacheApiUrl);
+export const setCacheApiUrl = (url) => setItem(STORAGE_KEYS.cacheApiUrl, url);
 
 export default {
   getItem,
@@ -79,4 +84,7 @@ export default {
   clearStoredUser,
   getLastSyncAt,
   setLastSyncAt,
+  clearLastSyncAt,
+  getCacheApiUrl,
+  setCacheApiUrl,
 };

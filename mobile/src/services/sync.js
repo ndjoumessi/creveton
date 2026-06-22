@@ -17,9 +17,16 @@ import {
   upsertQuestions,
   softDeleteQuestions,
   countQuestions,
+  clearQuestions,
 } from './database';
-import { getLastSyncAt, setLastSyncAt } from './storage';
-import { FOREGROUND_SYNC_THRESHOLD_MS } from '../constants/config';
+import {
+  getLastSyncAt,
+  setLastSyncAt,
+  clearLastSyncAt,
+  getCacheApiUrl,
+  setCacheApiUrl,
+} from './storage';
+import { FOREGROUND_SYNC_THRESHOLD_MS, API_URL } from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
 
 let isSyncing = false;
@@ -63,6 +70,18 @@ export async function runSync({ force = false } = {}) {
   store.setStatus('syncing');
   try {
     await initDatabase();
+
+    // Invalidation de cache par URL d'API : si EXPO_PUBLIC_API_URL a changé depuis
+    // le dernier sync (ex. local → staging), les question_ids en cache n'existent
+    // pas sur le nouveau backend (« Question introuvable »). On purge SQLite + le
+    // curseur de sync → le bloc ci-dessous repart sur un snapshot complet.
+    const cachedUrl = await getCacheApiUrl();
+    if (cachedUrl && cachedUrl !== API_URL) {
+      await clearQuestions();
+      await clearLastSyncAt();
+      store.setLastSyncAt(null);
+    }
+
     const since = await getLastSyncAt();
     let result;
     if (!since) {
@@ -78,6 +97,8 @@ export async function runSync({ force = false } = {}) {
     store.setCount(count);
     store.setStatus('idle');
     store.setError(null);
+    // Mémorise l'URL de l'API de ce sync réussi (référence pour l'invalidation).
+    await setCacheApiUrl(API_URL);
     return result;
   } catch (e) {
     // Non bloquant : on log l'état mais on n'interrompt pas l'UI.

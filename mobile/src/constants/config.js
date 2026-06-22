@@ -14,6 +14,9 @@ export const STORAGE_KEYS = {
   refreshToken: 'crv.refresh_token',
   user: 'crv.user',
   lastSyncAt: 'crv.last_sync_at',
+  // URL de l'API utilisée lors du dernier sync — sert à invalider le cache de
+  // questions si l'on change d'environnement (ex. local → staging).
+  cacheApiUrl: 'crv.cache_api_url',
 };
 
 // Délai au-delà duquel un retour au premier plan déclenche un delta sync (CDC §2.8)

@@ -255,12 +255,18 @@ export default function QuizScreen({ navigation }) {
     ]
   );
 
-  // Démarre le timer à chaque nouvelle question.
+  // (Re)démarre le timer à chaque nouvelle question. Dépendances : currentIndex
+  // (la question) ET timeLimit (durée selon le niveau) — `timeLimit` était lu mais
+  // manquant des deps, ce qui pouvait faire repartir/figer le timer sur la mauvaise
+  // valeur. Le décompte est piloté par une DEADLINE absolue (et non un compteur qui
+  // se décrémente), donc il repart toujours de la valeur correcte, sans dérive.
   useEffect(() => {
     advancedRef.current = false;
     setAnswered(null);
     setSecondsLeft(timeLimit);
-    questionStart.current = Date.now();
+    const start = Date.now();
+    questionStart.current = start;
+    const deadline = start + timeLimit * 1000;
     explainY.setValue(40);
     explainOpacity.setValue(0);
     autoNextAnim.setValue(0);
@@ -273,26 +279,24 @@ export default function QuizScreen({ navigation }) {
       useNativeDriver: false,
     }).start();
 
-    intervalRef.current = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          clearInterval(intervalRef.current);
-          handleAnswer({ selectedIndex: null, timedOut: true });
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
+    const tick = () => {
+      const remaining = Math.max(0, deadline - Date.now());
+      setSecondsLeft(Math.ceil(remaining / 1000));
+      if (remaining <= 0) {
+        clearInterval(intervalRef.current);
+        handleAnswer({ selectedIndex: null, timedOut: true });
+      }
+    };
+    intervalRef.current = setInterval(tick, 250);
 
     return () => {
       clearInterval(intervalRef.current);
       clearTimeout(advanceRef.current);
-      // Stoppe l'animation en cours AVANT le re-déclenchement de l'effet → évite
-      // qu'une ancienne animation survive au changement de question (reset parasite).
+      // Stoppe l'animation en cours AVANT le re-déclenchement de l'effet.
       timerAnim.stopAnimation();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex]);
+  }, [currentIndex, timeLimit]);
 
   // Bounce du badge de série.
   useEffect(() => {
@@ -319,10 +323,11 @@ export default function QuizScreen({ navigation }) {
         <Text style={styles.score}>⚡ {displayScore} {t('quiz.pts')}</Text>
       </View>
 
-      {/* Timer circulaire centré — key={currentIndex} : remount propre par question
-          (réinitialise l'état interne de pulsation, pas de carry-over visuel). */}
+      {/* Timer circulaire centré. Pas de `key` : la valeur (progress/seconds) est
+          pilotée par le parent et réinitialisée à chaque question — remonter le
+          composant ne ferait qu'afficher une frame périmée (faux « reset »). */}
       <View style={styles.timerWrap}>
-        <CircularTimer key={currentIndex} size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
+        <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
       </View>
 
       {/* Progress dots */}
