@@ -42,7 +42,13 @@
           "imageWidth": 200
         }
       ],
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "color": "#0b2e1a",
+          "sounds": []
+        }
+      ]
     ],
     "extra": {
       "eas": {}
