@@ -12,6 +12,7 @@ import Parties from './pages/Parties';
 import Tournois from './pages/Tournois';
 import TournoiDetail from './pages/TournoiDetail';
 import Utilisateurs from './pages/Utilisateurs';
+import Finances from './pages/Finances';
 import Parametres from './pages/Parametres';
 import TeamPage from './pages/TeamPage';
 import RolesPage from './pages/RolesPage';
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/tournaments" element={<Tournois />} />
         <Route path="/tournaments/:id" element={<TournoiDetail />} />
         <Route path="/users" element={<Utilisateurs />} />
+        <Route path="/finances" element={<Finances />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/team/roles" element={<RolesPage />} />
         <Route path="/support" element={<SupportPage />} />

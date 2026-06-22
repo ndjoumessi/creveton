@@ -14,7 +14,9 @@
     "teamSection": "Team",
     "team": "Team members",
     "roles": "Roles & permissions",
-    "support": "Player support"
+    "support": "Player support",
+    "finances": "Finances",
+    "financeSection": "Finances"
   },
   "header": {
     "live": "Live",
@@ -1661,6 +1663,90 @@
       "resolved": "Ticket resolved.",
       "statusChanged": "Status updated.",
       "reportIgnored": "Report ignored."
+    }
+  },
+  "finances": {
+    "title": "Finances",
+    "subtitle": "Transactions, withdrawals and KYC validation",
+    "demoBanner": "Demo data — finance endpoints pending on the backend.",
+    "exportCsv": "Export CSV",
+    "kpi": {
+      "volume": "Total volume",
+      "deposits": "Deposits",
+      "withdrawals": "Withdrawals",
+      "pending": "Pending · {{amount}}"
+    },
+    "chart": {
+      "title": "Transaction volume (30 days)",
+      "volume": "Volume"
+    },
+    "filters": {
+      "allStatuses": "All statuses",
+      "allTypes": "All types",
+      "allProviders": "All providers",
+      "period7": "7 days",
+      "period30": "30 days",
+      "period90": "90 days"
+    },
+    "columns": {
+      "date": "Date",
+      "user": "User",
+      "type": "Type",
+      "amount": "Amount",
+      "provider": "Provider",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "actions": {
+      "validate": "Validate",
+      "detail": "View detail",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "detail": {
+      "title": "Transaction detail",
+      "id": "ID",
+      "reference": "Reference",
+      "user": "User",
+      "email": "Email",
+      "amount": "Amount",
+      "type": "Type",
+      "provider": "Provider",
+      "status": "Status",
+      "date": "Date"
+    },
+    "kyc": {
+      "title": "Withdrawals awaiting KYC validation",
+      "requestedAt": "Requested on {{date}}"
+    },
+    "confirm": {
+      "approveTitle": "Approve withdrawal",
+      "approveBody": "Confirm approval of the {{amount}} withdrawal for {{name}}? The payout will be triggered.",
+      "rejectTitle": "Reject withdrawal",
+      "rejectBody": "Confirm rejection of the {{amount}} withdrawal for {{name}}?"
+    },
+    "notify": {
+      "validated": "Transaction validated",
+      "rejected": "Transaction rejected",
+      "exported": "{{count}} transactions exported",
+      "nothingToExport": "No transaction to export",
+      "actionFailed": "Action failed"
+    },
+    "providers": {
+      "orange_money": "Orange Money",
+      "mtn_momo": "MTN MoMo",
+      "campay": "Campay"
+    },
+    "types": {
+      "deposit": "Deposit",
+      "withdraw": "Withdrawal",
+      "payout": "Payout",
+      "entry_fee": "Entry fee",
+      "refund": "Refund"
+    },
+    "empty": {
+      "transactions": "No transaction",
+      "kyc": "No withdrawal awaiting validation."
     }
   }
 }
