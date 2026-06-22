@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   Logo,
   Heading,
@@ -30,7 +31,6 @@ import { useAuthStore } from '../store/authStore';
 import { useLeaderboardStore } from '../store/leaderboardStore';
 import { useStatsStore } from '../store/statsStore';
 import { tournaments as tournamentsApi } from '../services/endpoints';
-import { profileStreak } from '../services/stats.service';
 import { runSync } from '../services/sync';
 import {
   colors,
@@ -186,6 +186,12 @@ export default function HomeScreen({ navigation }) {
     loadAll();
   }, [loadAll]);
 
+  // Rafraîchit l'historique (→ taux de réussite + streak max) au retour sur l'accueil,
+  // par ex. après une partie — sinon les stats resteraient figées.
+  useFocusEffect(
+    useCallback(() => { loadHistory(); }, [loadHistory]),
+  );
+
   const onRefresh = async () => {
     setRefreshing(true);
     runSync?.();
@@ -195,7 +201,8 @@ export default function HomeScreen({ navigation }) {
 
   const firstName = user?.name?.split(' ')[0] || 'Joueur';
   const podium = (top || []).slice(0, 3);
-  const streak = profileStreak(user?.stats);
+  // Streak max dérivé de l'historique (— si aucune partie jouée).
+  const streakMax = stats.totalGames > 0 ? stats.maxStreak : null;
   const loadingStats = histLoading && history === null;
   const recent = (history || []).slice(0, 3);
 
@@ -322,9 +329,8 @@ export default function HomeScreen({ navigation }) {
                 <StatCard
                   icon="🔥"
                   iconBg={ICON_BG.streak}
-                  value={streak.max ?? '—'}
+                  value={streakMax != null ? streakMax : '—'}
                   label={t('home.myStats.maxStreak')}
-                  sub={streak.current ? t('home.misc.currentStreak', { count: streak.current }) : null}
                 />
               </>
             )}

@@ -19,6 +19,7 @@ function toView(row) {
     score: row.score,
     correct_count: row.correct_count,
     question_count: row.question_count,
+    streak_max: row.streak_max ?? 0,
     xp_earned: row.xp_earned,
     played_at: row.played_at,
   };
@@ -33,8 +34,8 @@ function toView(row) {
 async function create(data, executor = db) {
   const { rows } = await executor.query(
     `INSERT INTO game_sessions
-       (user_id, mode, theme, level, score, correct_count, question_count, xp_earned, answers)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)
+       (user_id, mode, theme, level, score, correct_count, question_count, streak_max, xp_earned, answers)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)
      RETURNING *`,
     [
       data.user_id,
@@ -44,6 +45,7 @@ async function create(data, executor = db) {
       data.score,
       data.correct_count,
       data.question_count,
+      data.streak_max ?? 0,
       data.xp_earned,
       JSON.stringify(data.answers || []),
     ]

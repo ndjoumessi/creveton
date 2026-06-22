@@ -229,9 +229,6 @@
     },
     "empty": "No open tournaments.",
     "emptySubtitle": "Come back soon for new tournaments",
-    "notify": {
-      "joinSoon": "Registration coming soon."
-    },
     "error": {
       "title": "Unable to load"
     },
@@ -429,6 +426,75 @@
     "play": "Play",
     "tournaments": "Tournaments",
     "stats": "Stats",
-    "profile": "Profile"
+    "profile": "Profile",
+    "challenges": "Duels"
+  },
+  "tournamentLive": {
+    "waitingTitle": "Waiting to start…",
+    "waitingSubtitle": "You are in. The round will begin shortly.",
+    "counter": "Question {{current}}/{{total}}",
+    "answered": "Answer sent",
+    "correctAnswer": "Correct answer",
+    "explanationFallback": "Answer revealed",
+    "leaderboard": "Leaderboard",
+    "leaderboardEmpty": "No score yet",
+    "you": "You",
+    "pts": "pts",
+    "endedTitle": "Tournament over!",
+    "rank": "Your rank",
+    "score": "Your score",
+    "xpNote": "Your XP has been credited to your profile.",
+    "back": "Back to tournaments",
+    "joinError": "Could not join",
+    "player": "Player"
+  },
+  "challengesHub": {
+    "title": "Challenges",
+    "new": "New",
+    "demoBanner": "Demo data — list endpoint pending",
+    "tabs": {
+      "received": "Received",
+      "sent": "Sent",
+      "completed": "Finished"
+    },
+    "card": {
+      "level": "Level {{n}}",
+      "questions": "{{n}} Q",
+      "sentAgo": "Sent {{ago}}",
+      "myScore": "My score: {{score}} pts",
+      "waiting": "Waiting…",
+      "vs": "vs"
+    },
+    "actions": {
+      "decline": "Decline",
+      "accept": "Accept & play",
+      "cancel": "Cancel"
+    },
+    "result": {
+      "win": "Win",
+      "loss": "Loss",
+      "draw": "Draw",
+      "xp": "+{{xp}} XP"
+    },
+    "empty": {
+      "received": "No challenges received.",
+      "sent": "No challenges sent.",
+      "completed": "No finished duels."
+    },
+    "sheet": {
+      "title": "New challenge",
+      "theme": "Theme",
+      "level": "Difficulty",
+      "opponent": "Opponent",
+      "searchPlaceholder": "Search a friend…",
+      "searchSoon": "Friend search coming soon — random opponent for now.",
+      "launch": "Start the challenge"
+    },
+    "notify": {
+      "declined": "Challenge declined",
+      "cancelled": "Challenge cancelled",
+      "accepted": "Challenge accepted",
+      "soon": "Coming soon"
+    }
   }
 }

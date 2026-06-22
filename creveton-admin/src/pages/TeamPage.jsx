@@ -3,10 +3,11 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
   UserPlus, Eye, ShieldCheck, KeyRound, UserX, UserCheck, Trash2,
-  MoreVertical, Users, Check,
+  MoreVertical, Users, Check, Clock,
 } from 'lucide-react';
 import teamService from '../services/team.service';
 import { useApiData } from '../hooks/useApiData';
+import { useAuthStore } from '../store/authStore';
 import {
   MODULES, ACTIONS, isApplicable, ROLE_META,
   DEFAULT_ROLE_PERMISSIONS, accessibleModules,
@@ -21,14 +22,41 @@ import EmptyState from '../components/EmptyState';
 import { notify } from '../components/Toast';
 import './TeamPage.css';
 
-// Rôles invitables (l'or reste rare : super_admin déconseillé mais possible).
-const INVITE_ROLES = ['super_admin', 'admin', 'moderator'];
+// Rôles invitables (le backend n'accepte que moderator|admin pour l'invitation).
+const INVITE_ROLES = ['admin', 'moderator'];
 const MAX_PERM_PILLS = 3;
 const TABS = ['profil', 'permissions', 'activite'];
 
 /** Vrai si un membre est actif (statut). */
 function isActive(status) {
   return status === 'active';
+}
+
+const INVITE_TTL_MS = 72 * 3600 * 1000; // 72 h (cf. backend teamService).
+
+// Échéance d'une invitation (created_at + 72 h). Fonctions pures module → l'horloge
+// est lue hors du rendu React (react-hooks/purity).
+function inviteExpiry(createdAt) {
+  if (!createdAt) return null;
+  const ms = new Date(createdAt).getTime() + INVITE_TTL_MS - Date.now();
+  if (ms <= 0) return { expired: true };
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return { expired: false, urgent: ms < 2 * 3600000, label: h >= 1 ? `${h}h ${m}min` : `${m}min` };
+}
+
+// KPIs d'équipe : un membre jamais connecté (last_active_at nul) est considéré
+// comme une invitation en attente.
+function teamKpis(members) {
+  const now = Date.now();
+  const week = 7 * 86400000;
+  let active = 0;
+  let pending = 0;
+  for (const m of members) {
+    if (m.last_active_at && now - new Date(m.last_active_at).getTime() <= week) active += 1;
+    if (!m.last_active_at) pending += 1;
+  }
+  return { total: members.length, active, pending };
 }
 
 /* ─────────────── Badges ─────────────── */
@@ -78,7 +106,7 @@ function PermissionPills({ role }) {
 }
 
 /* ─────────────── Menu contextuel d'une ligne ─────────────── */
-function RowMenu({ member, onView, onEditRole, onPermissions, onReset, onToggleSuspend, onDelete }) {
+function RowMenu({ member, canManage = false, onView, onEditRole, onPermissions, onReset, onToggleSuspend, onDelete }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const active = isActive(member.status);
@@ -100,13 +128,17 @@ function RowMenu({ member, onView, onEditRole, onPermissions, onReset, onToggleS
           <button type="button" className="team-menu-backdrop" aria-label={t('team.actions.view')} onClick={(e) => { e.stopPropagation(); close(); }} />
           <div className="team-menu" role="menu" onClick={(e) => e.stopPropagation()}>
             <button type="button" onClick={() => { close(); onView(member); }}><Eye size={14} /> {t('team.actions.view')}</button>
-            <button type="button" onClick={() => { close(); onEditRole(member); }}><ShieldCheck size={14} /> {t('team.actions.editRole')}</button>
             <button type="button" onClick={() => { close(); onPermissions(member); }}><ShieldCheck size={14} /> {t('team.actions.managePermissions')}</button>
-            <button type="button" onClick={() => { close(); onReset(member); }}><KeyRound size={14} /> {t('team.actions.resetPassword')}</button>
-            <button type="button" onClick={() => { close(); onToggleSuspend(member); }}>
-              {active ? <UserX size={14} /> : <UserCheck size={14} />} {active ? t('team.actions.suspend') : t('team.actions.reactivate')}
-            </button>
-            <button type="button" className="danger" onClick={() => { close(); onDelete(member); }}><Trash2 size={14} /> {t('team.actions.delete')}</button>
+            {canManage && (
+              <>
+                <button type="button" onClick={() => { close(); onEditRole(member); }}><ShieldCheck size={14} /> {t('team.actions.editRole')}</button>
+                <button type="button" onClick={() => { close(); onReset(member); }}><KeyRound size={14} /> {t('team.actions.resetPassword')}</button>
+                <button type="button" onClick={() => { close(); onToggleSuspend(member); }}>
+                  {active ? <UserX size={14} /> : <UserCheck size={14} />} {active ? t('team.actions.suspend') : t('team.actions.reactivate')}
+                </button>
+                <button type="button" className="danger" onClick={() => { close(); onDelete(member); }}><Trash2 size={14} /> {t('team.actions.delete')}</button>
+              </>
+            )}
           </div>
         </>
       )}
@@ -263,11 +295,19 @@ function DrawerBody({ member, tab, setTab }) {
 function InviteModal({ open, onClose, onInvited }) {
   const { t } = useTranslation();
   const [sending, setSending] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState(null);
+  const [copied, setCopied] = useState(false);
   const {
     register, handleSubmit, watch, reset, formState: { errors },
   } = useForm({ defaultValues: { email: '', name: '', role: 'moderator', message: '' } });
 
-  useEffect(() => { if (open) reset({ email: '', name: '', role: 'moderator', message: '' }); }, [open, reset]);
+  useEffect(() => {
+    if (open) {
+      reset({ email: '', name: '', role: 'moderator', message: '' });
+      setInviteUrl(null);
+      setCopied(false);
+    }
+  }, [open, reset]);
 
   const role = watch('role');
   const name = watch('name');
@@ -282,15 +322,61 @@ function InviteModal({ open, onClose, onInvited }) {
         role: payload.role,
         message: payload.message?.trim() || undefined,
       });
-      notify.success(t('team.notify.invited', { password: res.temporary_password || '' }));
+      // L'email n'est pas encore envoyé automatiquement → on affiche le lien à copier.
+      setInviteUrl(res.invite_url || null);
+      notify.success(t('team.notify.inviteCreated'));
       onInvited();
-      onClose();
     } catch {
       notify.error(t('team.notify.inviteFailed'));
     } finally {
       setSending(false);
     }
   };
+
+  const copyLink = () => {
+    if (!inviteUrl) return;
+    navigator.clipboard?.writeText(inviteUrl)
+      .then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })
+      .catch(() => notify.error(t('team.notify.copyFailed')));
+  };
+
+  // Écran de confirmation : lien d'invitation copiable.
+  if (inviteUrl) {
+    return (
+      <Modal
+        open={open}
+        onClose={onClose}
+        title={t('team.modal.inviteCreatedTitle')}
+        width={560}
+        footer={<button type="button" className="btn btn-primary" onClick={onClose}>{t('common.close')}</button>}
+      >
+        <div className="stack" style={{ gap: 14 }}>
+          <p style={{ fontSize: 14, margin: 0 }}>{t('team.modal.inviteLinkHint')}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <code
+              style={{
+                flex: 1,
+                minWidth: 220,
+                background: 'var(--bg-mute)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '9px 12px',
+                fontSize: 12.5,
+                wordBreak: 'break-all',
+                color: 'var(--text)',
+              }}
+            >
+              {inviteUrl}
+            </code>
+            <button type="button" className="btn btn-sm btn-gold" onClick={copyLink}>
+              {copied ? <Check size={14} /> : <KeyRound size={14} />} {copied ? t('team.modal.copied') : t('team.modal.copyLink')}
+            </button>
+          </div>
+          <p className="muted" style={{ fontSize: 12.5, margin: 0 }}>{t('team.modal.inviteLinkExpiry')}</p>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal
@@ -434,6 +520,12 @@ function RoleModal({ member, onClose, onSaved }) {
 /* ─────────────── Page ─────────────── */
 export default function TeamPage() {
   const { t } = useTranslation();
+  const currentUser = useAuthStore((s) => s.user);
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+  // Un membre est gérable (rôle / désactivation) seulement par un super_admin,
+  // jamais sur soi-même ni sur un autre super_admin (miroir des garde-fous backend).
+  const canManage = (m) => isSuperAdmin && m.role !== 'super_admin' && m.id !== currentUser?.id;
+
   const [selected, setSelected] = useState(null);
   const [tab, setTab] = useState('profil');
   const [showInvite, setShowInvite] = useState(false);
@@ -441,9 +533,9 @@ export default function TeamPage() {
   const [deleteFor, setDeleteFor] = useState(null);
 
   const { data, loading, refetch } = useApiData(() => teamService.list(), []);
-  const { data: statsData, refetch: refetchStats } = useApiData(() => teamService.stats(), []);
+  const { refetch: refetchStats } = useApiData(() => teamService.stats(), []);
   const members = useMemo(() => data?.data || [], [data]);
-  const stats = statsData || {};
+  const kpis = useMemo(() => teamKpis(members), [members]);
 
   const refreshAll = () => { refetch(); refetchStats(); };
 
@@ -483,7 +575,7 @@ export default function TeamPage() {
       <PageHeader
         title={t('team.title')}
         description={t('team.subtitle')}
-        actions={(
+        actions={isSuperAdmin && (
           <button type="button" className="btn btn-primary" onClick={() => setShowInvite(true)}>
             <UserPlus size={16} /> {t('team.invite')}
           </button>
@@ -492,10 +584,9 @@ export default function TeamPage() {
 
       {/* Bandeau de statistiques (sombre) */}
       <div className="dark-banner">
-        <div className="item team-stat"><div className="v">{stats.total ?? '—'}</div><div className="l">{t('team.stats.total')}</div></div>
-        <div className="item team-stat"><div className="v" style={{ color: 'var(--gold)' }}>{stats.super_admins ?? '—'}</div><div className="l">{t('team.stats.superAdmins')}</div></div>
-        <div className="item team-stat"><div className="v" style={{ color: '#5eca84' }}>{stats.admins ?? '—'}</div><div className="l">{t('team.stats.admins')}</div></div>
-        <div className="item team-stat"><div className="v" style={{ color: '#7fb1ff' }}>{stats.moderators ?? '—'}</div><div className="l">{t('team.stats.moderators')}</div></div>
+        <div className="item team-stat"><div className="v">{kpis.total}</div><div className="l">{t('team.stats.total', 'Total membres')}</div></div>
+        <div className="item team-stat"><div className="v" style={{ color: '#5eca84' }}>{kpis.active}</div><div className="l">{t('team.stats.active7d', 'Actifs (7 j)')}</div></div>
+        <div className="item team-stat"><div className="v" style={{ color: 'var(--gold)' }}>{kpis.pending}</div><div className="l">{t('team.stats.pendingInvites', 'Invitations en attente')}</div></div>
       </div>
 
       {/* Table des membres */}
@@ -533,12 +624,22 @@ export default function TeamPage() {
                     <td><RoleBadge role={m.role} /></td>
                     <td><PermissionPills role={m.role} /></td>
                     <td><StatusDot status={m.status} /></td>
-                    <td><span className="team-muted-cell">{m.last_active_at ? dateTimeFr(m.last_active_at) : '—'}</span></td>
+                    <td>
+                      {m.last_active_at ? (
+                        <span className="team-muted-cell">{dateTimeFr(m.last_active_at)}</span>
+                      ) : (() => {
+                        const exp = inviteExpiry(m.created_at);
+                        if (!exp) return <span className="team-muted-cell">—</span>;
+                        if (exp.expired) return <span className="team-invite-exp expired"><Clock size={12} /> {t('team.invite.expired', 'Invitation expirée')}</span>;
+                        return <span className={`team-invite-exp ${exp.urgent ? 'urgent' : ''}`}><Clock size={12} /> {t('team.invite.expiresIn', { time: exp.label, defaultValue: 'Expire dans {{time}}' })}</span>;
+                      })()}
+                    </td>
                     <td><span className="team-muted-cell">{dateFr(m.created_at)}</span></td>
                     <td>
                       <div className="team-actions" onClick={(e) => e.stopPropagation()}>
                         <RowMenu
                           member={m}
+                          canManage={canManage(m)}
                           onView={openMember}
                           onEditRole={setRoleFor}
                           onPermissions={openPermissions}
@@ -562,7 +663,7 @@ export default function TeamPage() {
         onClose={() => setSelected(null)}
         title={t('team.columns.member')}
         width={560}
-        footer={selected && (
+        footer={selected && canManage(selected) && (
           <div className="team-foot">
             <button type="button" className="btn btn-ghost-soft" onClick={() => setRoleFor(selected)}><ShieldCheck size={14} /> {t('team.actions.editRole')}</button>
             <button type="button" className="btn btn-ghost-soft" onClick={() => doReset(selected)}><KeyRound size={14} /> {t('team.actions.resetPassword')}</button>

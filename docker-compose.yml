@@ -1,0 +1,58 @@
+# Stack Creveton — Postgres + Redis + backend (API) + admin (console).
+# Secrets via .env racine (cf. .env.example). Lancer : docker compose up --build
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: creveton_dev
+      POSTGRES_USER: creveton
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U creveton"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://creveton:${POSTGRES_PASSWORD}@postgres:5432/creveton_dev
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      NODE_ENV: production
+    # Le schéma est appliqué par le migrateur de l'app (idempotent, table
+    # schema_migrations) avant le démarrage — pas via docker-entrypoint-initdb.d :
+    # les migrations vivent dans src/models/migrations/ et sont gérées par migrate.js.
+    command: sh -c "node src/models/migrate.js && node src/server.js"
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  admin:
+    build:
+      context: ./creveton-admin
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4000/api/v1}
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  redisdata:

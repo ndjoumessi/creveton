@@ -706,6 +706,14 @@
 .q-table--compact td { height: 42px; }
 .q-table--spacious td { height: 70px; }
 
+/* Mode compact : masque les colonnes secondaires (taux de réussite, date) et la
+   sous-ligne d'explication, et réduit la taille du texte d'énoncé → vraie densité. */
+.q-table--compact .q-col-secondary { display: none; }
+.q-table--compact .q-statement-sub { display: none; }
+.q-table--compact .q-statement-text { font-size: 12.5px; }
+/* Mode spacieux : énoncé légèrement plus aéré. */
+.q-table--spacious .q-statement-text { font-size: 15px; }
+
 /* ===================== Dépliage de ligne + édition inline ===================== */
 .q-th-exp { width: 34px; }
 .q-cell-exp { width: 34px; cursor: pointer; }

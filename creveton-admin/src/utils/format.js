@@ -56,6 +56,32 @@ export function dateFr(iso, pattern = 'dd MMM yyyy') {
 
 export const dateTimeFr = (iso) => dateFr(iso, "dd MMM yyyy 'à' HH'h'mm");
 
+/** Date courante ramenée au fuseau de l'admin (champs locaux = heure murale du fuseau). */
+function zonedNow() {
+  const now = new Date();
+  return activeTimeZone ? toZoned(now, activeTimeZone) : now;
+}
+
+/** Clé calendaire 'yyyy-MM-dd' d'un instant, dans le fuseau de l'admin. null si vide. */
+export function dayKey(iso) {
+  return iso ? dateFr(iso, 'yyyy-MM-dd') : null;
+}
+
+/**
+ * Les N derniers jours (du plus ancien au plus récent), jusqu'à aujourd'hui dans
+ * le fuseau de l'admin : `[{ key: 'yyyy-MM-dd', label: '21 juin' }, …]`. Les clés
+ * sont alignées sur `dayKey()` pour permettre l'agrégation par jour calendaire.
+ */
+export function lastDays(n) {
+  const t = zonedNow();
+  const out = [];
+  for (let i = n - 1; i >= 0; i -= 1) {
+    const d = new Date(t.getFullYear(), t.getMonth(), t.getDate() - i);
+    out.push({ key: format(d, 'yyyy-MM-dd'), label: format(d, 'd MMMM', { locale: fr }) });
+  }
+  return out;
+}
+
 /** Initiales (2 max) d'un nom. */
 export function initials(name) {
   return (name || '?').split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -71,10 +97,15 @@ export function avatarColor(name) {
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
 
-/** Vrai si une date ISO tombe aujourd'hui (heure locale). */
+/** Vrai si une date ISO tombe aujourd'hui — dans le fuseau de l'admin si défini. */
 export function isToday(iso) {
   if (!iso) return false;
-  const d = new Date(iso);
-  const now = new Date();
+  let d = new Date(iso);
+  let now = new Date();
+  if (Number.isNaN(d.getTime())) return false;
+  if (activeTimeZone) {
+    d = toZoned(d, activeTimeZone);
+    now = toZoned(now, activeTimeZone);
+  }
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 }

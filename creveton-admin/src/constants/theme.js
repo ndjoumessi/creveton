@@ -49,12 +49,14 @@ export const questionStatusColors = {
   archived: { bg: '#e5e7eb', fg: '#4b5563', label: 'Archivée' },
 };
 
+// Couleurs sémantiques de statut tournoi (CDC §2.4) : scheduled gris · open bleu ·
+// running vert (pulse via .is-live) · closed amber · paid or · cancelled rouge.
 export const tournamentStatusColors = {
   scheduled: { bg: '#f3f4f6', fg: '#6b7280', label: 'Programmé' },
-  open: { bg: '#dcfce7', fg: '#15803d', label: 'Inscriptions' },
-  running: { bg: '#fef3c7', fg: '#a16207', label: 'En cours' },
-  closed: { bg: '#e5e7eb', fg: '#4b5563', label: 'Clôturé' },
-  paid: { bg: '#dcfce7', fg: '#15803d', label: 'Payé' },
+  open: { bg: '#dbeafe', fg: '#2563eb', label: 'Inscriptions' },
+  running: { bg: '#dcfce7', fg: '#15803d', label: 'En cours' },
+  closed: { bg: '#fef3c7', fg: '#b45309', label: 'Clôturé' },
+  paid: { bg: '#fdf6e3', fg: '#b8860b', label: 'Payé' },
   cancelled: { bg: '#fee2e2', fg: '#dc2626', label: 'Annulé' },
 };
 

@@ -36,6 +36,47 @@ async function create(input, createdBy) {
   return tournamentModel.toView(row, 0);
 }
 
+/**
+ * POST /tournaments/:id/join — inscription d'un joueur.
+ *
+ * Tournois GRATUITS (entry_fee = 0) : inscription immédiate, statut « confirmed »
+ * (idempotent grâce à addParticipant / ON CONFLICT DO NOTHING). Tournois PAYANTS :
+ * derrière le flag `tournaments.paid.enabled` (CDC §3.5/§3.6). Tant qu'il est false,
+ * 403 FEATURE_DISABLED ; le paiement Mobile Money reste à brancher à l'activation.
+ */
+async function joinTournament(tournamentId, userId) {
+  const t = await tournamentModel.findById(tournamentId);
+  if (!t || t.deleted_at) throw new ApiError('TOURNAMENT_NOT_FOUND');
+
+  if (Number(t.entry_fee) > 0) {
+    if (!env.features.tournamentsPaidEnabled) {
+      throw new ApiError('FEATURE_DISABLED', {
+        message: 'Les tournois payants sont désactivés (mode gratuit forcé). Flag tournaments.paid.enabled = false.',
+      });
+    }
+    // Flag activé : le paiement Mobile Money reste à implémenter (module transactions).
+    throw new ApiError('FEATURE_DISABLED');
+  }
+
+  if (t.status !== 'open') {
+    throw new ApiError('TOURNAMENT_NOT_OPEN', { message: `Statut « ${t.status} » : inscriptions fermées.` });
+  }
+
+  if (t.max_players != null) {
+    const count = await tournamentModel.countParticipants(tournamentId);
+    if (count >= t.max_players) throw new ApiError('TOURNAMENT_FULL');
+  }
+
+  await tournamentModel.addParticipant(tournamentId, userId);
+
+  return {
+    tournament_id: tournamentId,
+    user_id: userId,
+    status: 'confirmed',
+    entry_fee: 0,
+  };
+}
+
 /** GET /admin/tournaments — liste tous les tournois (vue admin) + synthèse. */
 async function listAll() {
   const rows = await tournamentModel.findAll();
@@ -152,4 +193,4 @@ async function payout(id) {
   }
 }
 
-module.exports = { create, listAll, getDetail, start, cancel, payout, MIN_PLAYERS_TO_START, PRIZE_SPLIT };
+module.exports = { create, joinTournament, listAll, getDetail, start, cancel, payout, MIN_PLAYERS_TO_START, PRIZE_SPLIT };

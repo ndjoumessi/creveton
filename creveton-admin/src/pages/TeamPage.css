@@ -171,3 +171,7 @@
   .team-invite-grid { grid-template-columns: 1fr; }
   .team-kv { grid-template-columns: 1fr; }
 }
+
+/* Échéance d'invitation en attente (rouge si < 2 h ou expirée). */
+.team-invite-exp { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #8a6400; padding: 2px 8px; border-radius: 999px; background: #fdf6e3; white-space: nowrap; }
+.team-invite-exp.urgent, .team-invite-exp.expired { color: #dc2626; background: #fee2e2; }

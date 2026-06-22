@@ -11,6 +11,10 @@ const updateMe = Joi.object({
   sexe: Joi.string().valid(...SEXES).optional(),
   lang: Joi.string().valid(...LANGS).optional(),
   timezone: Joi.string().max(64).optional(),
+  // Jeton push Expo. On accepte toute chaîne ici (max 255) ; le format réel
+  // (ExponentPushToken[...]) est vérifié au niveau modèle — un jeton invalide
+  // est ignoré sans faire échouer la mise à jour du profil.
+  push_token: Joi.string().max(255).allow(null).optional(),
   password: Joi.string()
     .min(8)
     .pattern(/[A-Z]/)

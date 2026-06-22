@@ -45,9 +45,14 @@ export function computeStats(history) {
   );
 
   const totalCorrect = history.reduce((s, g) => s + num(g.correct_count), 0);
-  const totalQuestions = history.reduce((s, g) => s + num(g.total_questions), 0);
+  // L'historique expose `question_count` (toView) ; on tolère aussi `total_questions`.
+  const totalQuestions = history.reduce((s, g) => s + num(g.question_count ?? g.total_questions), 0);
   const successRate =
     totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+  // Meilleure série (streak) sur l'historique chargé — désormais persistée par
+  // partie (migration 015). null si aucune partie ; 0 possible (anciennes parties).
+  const maxStreak = history.reduce((m, g) => Math.max(m, num(g.streak_max)), 0);
 
   // Agrégation par thème.
   const byTheme = {};
@@ -81,7 +86,7 @@ export function computeStats(history) {
     totalGames,
     avgScore,
     successRate,
-    maxStreak: null, // absent de l'historique — voir profileStreak
+    maxStreak, // dérivé de l'historique (streak_max persisté par partie)
     favoriteTheme,
     byTheme,
     scoreEvolution,

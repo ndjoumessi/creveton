@@ -17,7 +17,7 @@ import { useAuthStore } from '../store/authStore';
 import { USER_STATUS_KEYS } from '../constants/enums';
 import { themeBadgeColors, levelLabels } from '../constants/theme';
 import {
-  num, dateFr, dateTimeFr, isToday,
+  num, dateFr, dateTimeFr, isToday, dayKey, lastDays,
 } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
@@ -135,28 +135,15 @@ function deriveStats(sessions) {
   };
 }
 
-/** Construit la heatmap des 30 derniers jours (réelle, depuis played_at). */
+/** Construit la heatmap des 30 derniers jours (réelle, depuis played_at) — les
+ *  jours sont bucketés dans le fuseau de l'admin (dayKey/lastDays). */
 function buildHeatmap(sessions) {
   const counts = {};
   sessions.forEach((s) => {
-    const d = new Date(s.played_at);
-    if (Number.isNaN(d.getTime())) return;
-    const key = d.toISOString().slice(0, 10);
-    counts[key] = (counts[key] || 0) + 1;
+    const key = dayKey(s.played_at);
+    if (key) counts[key] = (counts[key] || 0) + 1;
   });
-  const days = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  for (let i = 29; i >= 0; i -= 1) {
-    const d = new Date(today.getTime() - i * DAY);
-    const key = d.toISOString().slice(0, 10);
-    days.push({
-      key,
-      count: counts[key] || 0,
-      label: d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }),
-    });
-  }
-  return days;
+  return lastDays(30).map(({ key, label }) => ({ key, label, count: counts[key] || 0 }));
 }
 const heatLevel = (c) => (c === 0 ? 0 : c <= 2 ? 1 : c <= 5 ? 2 : 3);
 

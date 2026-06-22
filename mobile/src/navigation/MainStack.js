@@ -7,6 +7,7 @@ import BottomTabs from './BottomTabs';
 import QuizScreen from '../screens/QuizScreen';
 import ResultsScreen from '../screens/ResultsScreen';
 import ChallengeScreen from '../screens/ChallengeScreen';
+import TournamentLiveScreen from '../screens/TournamentLiveScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -30,6 +31,13 @@ export default function MainStack() {
         name="Challenge"
         component={ChallengeScreen}
         options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+      />
+      {/* Manche de tournoi temps réel — plein écran, pas de retour gestuel pour
+          ne pas quitter une manche en cours par accident. */}
+      <Stack.Screen
+        name="TournamentLive"
+        component={TournamentLiveScreen}
+        options={{ gestureEnabled: false, animation: 'fade' }}
       />
     </Stack.Navigator>
   );

@@ -50,13 +50,18 @@ async function findById(id) {
   return rows[0] || null;
 }
 
+// Format d'un Expo Push Token (ExponentPushToken[...] ou ExpoPushToken[...]).
+const PUSH_TOKEN_RE = /^Expo(nent)?PushToken\[[^\]]+\]$/;
+
 /** Met à jour le profil de l'utilisateur courant (champs autorisés uniquement). */
 async function updateProfile(id, fields) {
-  const ALLOWED = ['name', 'ville', 'age', 'sexe', 'lang', 'timezone'];
+  const ALLOWED = ['name', 'ville', 'age', 'sexe', 'lang', 'timezone', 'push_token'];
   const sets = [];
   const params = [id];
   for (const key of ALLOWED) {
     if (fields[key] !== undefined) {
+      // push_token au format invalide → ignoré (n'altère pas la maj du profil).
+      if (key === 'push_token' && fields[key] !== null && !PUSH_TOKEN_RE.test(fields[key])) continue;
       params.push(fields[key]);
       sets.push(`${key} = $${params.length}`);
     }
@@ -331,7 +336,7 @@ async function referralCount(code) {
 async function findManyByIds(ids) {
   if (!ids || ids.length === 0) return [];
   const { rows } = await db.query(
-    `SELECT id, name, level, ville FROM users WHERE id = ANY($1::uuid[])`,
+    `SELECT id, name, level, ville, push_token FROM users WHERE id = ANY($1::uuid[])`,
     [ids]
   );
   const byId = new Map(rows.map((r) => [r.id, r]));

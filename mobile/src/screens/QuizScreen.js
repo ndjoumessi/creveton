@@ -287,6 +287,9 @@ export default function QuizScreen({ navigation }) {
     return () => {
       clearInterval(intervalRef.current);
       clearTimeout(advanceRef.current);
+      // Stoppe l'animation en cours AVANT le re-déclenchement de l'effet → évite
+      // qu'une ancienne animation survive au changement de question (reset parasite).
+      timerAnim.stopAnimation();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
@@ -316,9 +319,10 @@ export default function QuizScreen({ navigation }) {
         <Text style={styles.score}>⚡ {displayScore} {t('quiz.pts')}</Text>
       </View>
 
-      {/* Timer circulaire centré */}
+      {/* Timer circulaire centré — key={currentIndex} : remount propre par question
+          (réinitialise l'état interne de pulsation, pas de carry-over visuel). */}
       <View style={styles.timerWrap}>
-        <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
+        <CircularTimer key={currentIndex} size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
       </View>
 
       {/* Progress dots */}

@@ -1,0 +1,96 @@
+/* Page Finances — classes préfixées `.fin-`. Tokens via variables (dark mode OK). */
+
+.fin-section { margin-top: 18px; }
+
+/* Bannière « données de démonstration » */
+.fin-demo {
+  margin-top: 14px;
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  background: rgba(212, 160, 23, 0.12);
+  border: 1px solid rgba(212, 160, 23, 0.4);
+  color: var(--gold);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* Cellule utilisateur (nom + email) */
+.fin-user { display: flex; flex-direction: column; gap: 2px; }
+
+/* Pastille de type de transaction */
+.fin-type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-mute);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* Montant : entrant (vert) / sortant (rouge) */
+.fin-amount { font-family: 'Outfit', sans-serif; font-weight: 700; }
+.fin-amount.in { color: var(--green500); }
+.fin-amount.out { color: var(--red); }
+
+/* Actions de ligne du tableau */
+.fin-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+
+/* Barre de filtres */
+.fin-filters { display: flex; flex-wrap: wrap; gap: 10px; }
+.fin-filters .select { min-width: 160px; flex: 1 1 160px; }
+
+/* Section KYC */
+.fin-kyc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.fin-kyc-count {
+  margin-left: auto;
+  min-width: 22px;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(212, 160, 23, 0.16);
+  color: var(--gold);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+}
+.fin-kyc-list { display: flex; flex-direction: column; }
+.fin-kyc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.fin-kyc-item:first-child { border-top: 0; }
+.fin-kyc-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.fin-kyc-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fin-kyc-actions { display: flex; gap: 8px; }
+
+/* Détail transaction (modal) */
+.fin-detail { display: flex; flex-direction: column; gap: 0; margin: 0; }
+.fin-detail > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.fin-detail > div:first-child { border-top: 0; }
+.fin-detail dt { color: var(--muted); font-size: 13px; }
+.fin-detail dd { margin: 0; font-weight: 600; color: var(--text); text-align: right; word-break: break-word; }
+
+/* Recherche par référence + ligne de total de page. */
+.fin-search { display: inline-flex; align-items: center; gap: 8px; flex: 1 1 240px; min-width: 200px; color: var(--muted); }
+.fin-search .input { flex: 1; }
+.fin-total-row td { font-weight: 700; border-top: 2px solid var(--border); background: var(--bg-mute); padding-top: 10px; padding-bottom: 10px; }

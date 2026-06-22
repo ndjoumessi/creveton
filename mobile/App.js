@@ -30,10 +30,7 @@ import {
   startSyncLifecycle,
   stopSyncLifecycle,
 } from './src/services/sync';
-import {
-  registerForPushNotifications,
-  attachNotificationListeners,
-} from './src/services/notifications';
+import { usePushNotifications } from './src/hooks/usePushNotifications';
 import { colors } from './src/constants/theme';
 
 // Garde le splash natif visible pendant l'initialisation.
@@ -41,6 +38,9 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
   const [ready, setReady] = useState(false);
+
+  // Notifications push : enregistrement du token (après auth) + deep link sur tap.
+  usePushNotifications();
 
   const [fontsLoaded] = useFonts({
     Outfit_400Regular,
@@ -52,9 +52,9 @@ export default function App() {
     SpaceGrotesk_700Bold,
   });
 
-  // Init des services au démarrage (DB + premier sync + push), non bloquant.
+  // Init des services au démarrage (DB + premier sync), non bloquant. Les
+  // notifications push sont gérées par usePushNotifications().
   useEffect(() => {
-    let detachNotifs = () => {};
     (async () => {
       try {
         await initDatabase();
@@ -64,13 +64,9 @@ export default function App() {
       // Sync en arrière-plan — ne bloque pas l'affichage.
       runSync();
       startSyncLifecycle();
-      // Notifications push (force_sync, tournament_start, etc.).
-      registerForPushNotifications();
-      detachNotifs = attachNotificationListeners();
       setReady(true);
     })();
     return () => {
-      detachNotifs();
       stopSyncLifecycle();
     };
   }, []);

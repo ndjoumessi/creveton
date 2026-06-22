@@ -28,7 +28,7 @@ function pageWindow(current, count) {
 /**
  * Table générique : colonnes configurables, tri, pagination cliente (numéros).
  */
-export default function DataTable({ columns, data = [], loading, pageSize = 20, onRowClick, emptyMessage }) {
+export default function DataTable({ columns, data = [], loading, pageSize = 20, onRowClick, emptyMessage, pageFooter }) {
   const [sorting, setSorting] = useState([]);
   const table = useReactTable({
     data,
@@ -79,6 +79,11 @@ export default function DataTable({ columns, data = [], loading, pageSize = 20, 
               </tr>
             ))}
           </tbody>
+          {pageFooter && (
+            <tfoot>
+              {pageFooter(table.getRowModel().rows.map((r) => r.original))}
+            </tfoot>
+          )}
         </table>
       </div>
 

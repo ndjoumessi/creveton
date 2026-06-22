@@ -8,6 +8,7 @@ const logger = require('../config/logger');
 const { LEVEL_XP_THRESHOLDS } = require('../utils/constants');
 const scoreService = require('./scoreService');
 const leaderboardService = require('./leaderboardService');
+const pushService = require('./pushService');
 const questionModel = require('../models/question.model');
 const userModel = require('../models/user.model');
 const sessionModel = require('../models/session.model');
@@ -89,6 +90,7 @@ async function submitSession({ userId, mode = 'normal', theme, level, startedAt,
           score: result.score,
           correct_count: result.correct_count,
           question_count: result.total_questions,
+          streak_max: result.streak_max,
           xp_earned: result.xp_earned,
           answers: persistedAnswers,
         },
@@ -109,6 +111,23 @@ async function submitSession({ userId, mode = 'normal', theme, level, startedAt,
       await leaderboardService.recordScore({ userId, theme, score: result.score });
     } catch (err) {
       logger.warn('Mise à jour classement échouée (non bloquant)', { error: err.message });
+    }
+
+    // 6 bis. Notif « niveau supérieur » (fire-and-forget, best-effort : ne doit
+    // JAMAIS affecter le déroulé de la partie → tout est encapsulé dans la chaîne).
+    if (levels.level_after > levels.level_before) {
+      Promise.resolve()
+        .then(() => userModel.findById(userId))
+        .then((u) => {
+          if (u?.push_token) {
+            pushService.sendPush(u.push_token, {
+              title: '🎉 Niveau supérieur !',
+              body: `Tu passes au niveau ${levels.level_after} — continue comme ça !`,
+              data: { type: 'level_up', new_level: levels.level_after },
+            });
+          }
+        })
+        .catch(() => {});
     }
 
     // 7. Réponse (contrat §6).

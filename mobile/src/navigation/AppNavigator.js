@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import AuthStack from './AuthStack';
 import MainStack from './MainStack';
+import { navigationRef } from './navigationRef';
 import { LoadingScreen } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { colors } from '../constants/theme';
@@ -41,7 +42,7 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer ref={navigationRef} theme={navTheme}>
       {isAuthenticated ? <MainStack /> : <AuthStack />}
     </NavigationContainer>
   );

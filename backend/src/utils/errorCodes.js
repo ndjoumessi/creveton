@@ -25,6 +25,7 @@ const ERROR_CODES = {
   FORBIDDEN: { http: 403, message: 'Rôle insuffisant.' },
   FEATURE_DISABLED: { http: 403, message: 'Fonctionnalité indisponible.' },
   MODE_NOT_ALLOWED: { http: 403, message: 'Action réservée au mode normal.' },
+  NOT_PARTICIPANT: { http: 403, message: "Vous n'êtes pas inscrit à ce tournoi." },
 
   USER_NOT_FOUND: { http: 404, message: 'Utilisateur introuvable.' },
   QUESTION_NOT_FOUND: { http: 404, message: 'Question introuvable.' },
@@ -40,11 +41,17 @@ const ERROR_CODES = {
   ALREADY_REGISTERED: { http: 409, message: 'Déjà inscrit à ce tournoi.' },
   TOURNAMENT_FULL: { http: 409, message: 'Tournoi complet.' },
   ALREADY_PLAYED: { http: 409, message: 'Challenge déjà joué.' },
+  ALREADY_ANSWERED: { http: 409, message: 'Réponse déjà enregistrée pour cette question.' },
+  TOURNAMENT_ALREADY_RUNNING: { http: 409, message: 'Le tournoi est déjà en cours.' },
 
   OTP_EXPIRED: { http: 410, message: 'Le code OTP a expiré.' },
+  INVITE_EXPIRED: { http: 410, message: "L'invitation est invalide ou a expiré." },
 
   INVALID_CORRECT_OPTION_COUNT: { http: 422, message: 'Il doit y avoir exactement une bonne réponse.' },
   TOURNAMENT_NOT_OPEN: { http: 422, message: "Le tournoi n'est pas ouvert aux inscriptions." },
+  TOURNAMENT_NOT_RUNNING: { http: 422, message: "Le tournoi n'est pas en cours." },
+  NOT_ENOUGH_QUESTIONS: { http: 422, message: 'Pas assez de questions approuvées pour lancer ce tournoi.' },
+  ANSWER_TOO_LATE: { http: 422, message: 'Le temps imparti pour cette question est écoulé.' },
   CHALLENGE_EXPIRED: { http: 422, message: 'Challenge expiré.' },
   CHEAT_DETECTED: { http: 422, message: 'Comportement suspect détecté.' },
 

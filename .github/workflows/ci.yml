@@ -109,3 +109,24 @@ jobs:
       - run: npm ci --omit=dev
       - name: App loads with production deps only
         run: node -e "require('./src/app'); console.log('✓ app loads')"
+
+  # 4) ADMIN -----------------------------------------------------------------
+  admin:
+    name: Admin — lint + build
+    runs-on: ubuntu-latest
+    # La console admin vit dans creveton-admin/ (override du working-directory racine).
+    defaults:
+      run:
+        working-directory: creveton-admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: creveton-admin/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+        env:
+          VITE_API_URL: http://localhost:4000/api/v1

@@ -6,6 +6,7 @@ import { View, StyleSheet, Pressable, Text, Animated, Modal, Share } from 'react
 import { useTranslation } from 'react-i18next';
 import { Screen, Avatar, AppCard, AppButton, AppInput, Body, useToast } from '../components';
 import { useAuthStore } from '../store/authStore';
+import { useStatsStore } from '../store/statsStore';
 import { wallet, users } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { setLanguage } from '../i18n';
@@ -75,6 +76,16 @@ function InfoRow({ emoji, label, value, first }) {
   );
 }
 
+/** Une stat compacte de la rangée du header (valeur Outfit 700 + libellé). */
+function ProfStat({ value, label }) {
+  return (
+    <View style={styles.profStat}>
+      <Text style={styles.profStatValue}>{value}</Text>
+      <Text style={styles.profStatLabel}>{label}</Text>
+    </View>
+  );
+}
+
 export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
   const toast = useToast();
@@ -82,6 +93,12 @@ export default function ProfileScreen() {
   const logout = useAuthStore((s) => s.logout);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const setUser = useAuthStore((s) => s.setUser);
+
+  // Stats joueur (parties, taux, streak, rang) pour la rangée sous le header.
+  const stats = useStatsStore((s) => s.stats);
+  const myRank = useStatsStore((s) => s.myRank);
+  const loadHistory = useStatsStore((s) => s.loadHistory);
+  const loadLeaderboard = useStatsStore((s) => s.loadLeaderboard);
 
   // walletState: 'loading' | 'disabled' | { balance, currency }
   const [walletState, setWalletState] = useState('loading');
@@ -159,11 +176,22 @@ export default function ProfileScreen() {
     loadWallet();
   }, [loadWallet]);
 
+  // Stats + rang global pour la rangée de stats du header.
+  useEffect(() => {
+    loadHistory();
+    loadLeaderboard({ currentUserId: user?.id });
+  }, [loadHistory, loadLeaderboard, user?.id]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refreshProfile?.(), loadWallet()]);
+    await Promise.all([
+      refreshProfile?.(),
+      loadWallet(),
+      loadHistory(),
+      loadLeaderboard({ currentUserId: user?.id }),
+    ]);
     setRefreshing(false);
-  }, [refreshProfile, loadWallet]);
+  }, [refreshProfile, loadWallet, loadHistory, loadLeaderboard, user?.id]);
 
   const totalXp = user?.total_xp ?? 0;
   const progress = levelProgress(totalXp);
@@ -190,9 +218,21 @@ export default function ProfileScreen() {
         <Text style={styles.headerName} numberOfLines={1}>
           {user?.name || t('profile.misc.defaultName')}
         </Text>
-        <Body color={colors.textOnDarkMuted}>
-          {t('profile.level', { n: level, name: t(`profile.levelNames.${level}`) })}
-        </Body>
+        <Text style={styles.headerLevel}>
+          {t('profile.misc.levelXp', { level, xp: totalXp.toLocaleString('fr-FR'), defaultValue: 'Niveau {{level}} · {{xp}} XP' })}
+        </Text>
+        {/* Barre de progression XP dans le header (or sur fond vert foncé). */}
+        <View style={styles.headerXpTrack}>
+          <View style={[styles.headerXpFill, { width: `${Math.round(progress.pct * 100)}%` }]} />
+        </View>
+
+        {/* Rangée de stats compacte (4 chiffres). */}
+        <View style={styles.statsRow}>
+          <ProfStat value={String(stats.totalGames || 0)} label={t('profile.stats.games', 'Parties')} />
+          <ProfStat value={stats.totalGames > 0 ? `${stats.successRate}%` : '—'} label={t('profile.stats.successRate', 'Taux réussite')} />
+          <ProfStat value={stats.totalGames > 0 ? `${stats.maxStreak}` : '—'} label={t('profile.stats.streak', 'Streak max')} />
+          <ProfStat value={myRank?.rank ? `#${myRank.rank}` : '—'} label={t('profile.stats.rank', 'Rang global')} />
+        </View>
       </View>
 
       <View style={styles.body}>
@@ -440,6 +480,32 @@ const styles = StyleSheet.create({
     color: colors.cream,
     marginTop: spacing.xs,
   },
+  headerLevel: {
+    fontFamily: fonts.titleSemiBold,
+    fontSize: fontSizes.md,
+    color: colors.gold400,
+    marginTop: 2,
+  },
+  headerXpTrack: {
+    width: '100%',
+    height: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.cardOnDark,
+    overflow: 'hidden',
+    marginTop: spacing.xs,
+  },
+  headerXpFill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.gold400 },
+  statsRow: {
+    flexDirection: 'row',
+    width: '100%',
+    backgroundColor: colors.green700,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+  },
+  profStat: { flex: 1, alignItems: 'center', gap: 2 },
+  profStatValue: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.cream },
+  profStatLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textOnDarkMuted, textAlign: 'center', paddingHorizontal: 2 },
 
   body: { padding: spacing.lg },
 

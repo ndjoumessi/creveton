@@ -229,9 +229,6 @@
     },
     "empty": "Aucun tournoi ouvert.",
     "emptySubtitle": "Reviens bientôt pour de nouveaux tournois",
-    "notify": {
-      "joinSoon": "Inscription bientôt disponible."
-    },
     "error": {
       "title": "Chargement impossible"
     },
@@ -429,6 +426,75 @@
     "play": "Jouer",
     "tournaments": "Tournois",
     "stats": "Stats",
-    "profile": "Profil"
+    "profile": "Profil",
+    "challenges": "Défis"
+  },
+  "tournamentLive": {
+    "waitingTitle": "En attente du démarrage…",
+    "waitingSubtitle": "Tu es inscrit. La manche va bientôt commencer.",
+    "counter": "Question {{current}}/{{total}}",
+    "answered": "Réponse envoyée",
+    "correctAnswer": "Bonne réponse",
+    "explanationFallback": "Réponse révélée",
+    "leaderboard": "Classement",
+    "leaderboardEmpty": "Aucun score pour l'instant",
+    "you": "Vous",
+    "pts": "pts",
+    "endedTitle": "Tournoi terminé !",
+    "rank": "Ton rang",
+    "score": "Ton score",
+    "xpNote": "Ton XP a été créditée à ton profil.",
+    "back": "Retour aux tournois",
+    "joinError": "Inscription impossible",
+    "player": "Joueur"
+  },
+  "challengesHub": {
+    "title": "Challenges",
+    "new": "Nouveau",
+    "demoBanner": "Données de démonstration — liste à brancher",
+    "tabs": {
+      "received": "Reçus",
+      "sent": "Envoyés",
+      "completed": "Terminés"
+    },
+    "card": {
+      "level": "Niveau {{n}}",
+      "questions": "{{n}} Q",
+      "sentAgo": "Envoyé {{ago}}",
+      "myScore": "Mon score : {{score}} pts",
+      "waiting": "En attente…",
+      "vs": "vs"
+    },
+    "actions": {
+      "decline": "Refuser",
+      "accept": "Accepter et jouer",
+      "cancel": "Annuler"
+    },
+    "result": {
+      "win": "Victoire",
+      "loss": "Défaite",
+      "draw": "Égalité",
+      "xp": "+{{xp}} XP"
+    },
+    "empty": {
+      "received": "Aucun challenge reçu.",
+      "sent": "Aucun challenge envoyé.",
+      "completed": "Aucun duel terminé."
+    },
+    "sheet": {
+      "title": "Nouveau challenge",
+      "theme": "Thème",
+      "level": "Difficulté",
+      "opponent": "Adversaire",
+      "searchPlaceholder": "Rechercher un ami…",
+      "searchSoon": "Recherche d’amis bientôt disponible — adversaire aléatoire pour l’instant.",
+      "launch": "Lancer le challenge"
+    },
+    "notify": {
+      "declined": "Challenge refusé",
+      "cancelled": "Challenge annulé",
+      "accepted": "Challenge accepté",
+      "soon": "Bientôt disponible"
+    }
   }
 }

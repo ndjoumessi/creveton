@@ -63,4 +63,69 @@ async function sendForceSync(questionIds) {
   }
 }
 
-module.exports = { sendForceSync, FORCE_SYNC_TOPIC };
+// Push CIBLÉ via l'API HTTP d'Expo (https://docs.expo.dev/push-notifications/sending-notifications/).
+// On utilise fetch (comme sendForceSync) plutôt que `expo-server-sdk` : ce dernier
+// est ESM-only et incompatible avec le runner Jest CommonJS du projet. Même
+// service de livraison, sans dépendance ni transform supplémentaire.
+const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+const EXPO_PUSH_CHUNK = 100; // limite Expo : 100 messages / requête.
+const EXPO_TOKEN_RE = /^Expo(nent)?PushToken\[[^\]]+\]$/;
+
+/** Vrai si `token` a le format d'un Expo Push Token (ExponentPushToken[...]). */
+function isExpoPushToken(token) {
+  return typeof token === 'string' && EXPO_TOKEN_RE.test(token);
+}
+
+/**
+ * Envoie une notification push CIBLÉE à un ou plusieurs Expo Push Tokens.
+ *
+ * Contrairement à `sendForceSync` (broadcast FCM par topic, data-only), ici on
+ * adresse des appareils précis (notification visible). Ne lève JAMAIS : les
+ * erreurs sont seulement loggées → appel fire-and-forget sûr.
+ *
+ * @param {string|string[]} tokens  ExponentPushToken[...]
+ * @param {object} payload
+ * @param {string} payload.title
+ * @param {string} payload.body
+ * @param {object} [payload.data]   données pour le deep link (type, ids…)
+ */
+async function sendPush(tokens, { title, body, data = {} } = {}) {
+  const list = (Array.isArray(tokens) ? tokens : [tokens]).filter(Boolean);
+  const valid = list.filter(isExpoPushToken);
+  if (!valid.length) return;
+
+  const messages = valid.map((to) => ({
+    to,
+    title,
+    body,
+    data,
+    sound: 'default',
+    priority: 'high',
+  }));
+
+  try {
+    for (let i = 0; i < messages.length; i += EXPO_PUSH_CHUNK) {
+      const chunk = messages.slice(i, i + EXPO_PUSH_CHUNK);
+      const res = await fetch(EXPO_PUSH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(chunk),
+      });
+      if (!res.ok) {
+        logger.warn('Push HTTP non-OK', { status: res.status });
+        continue;
+      }
+      const json = await res.json().catch(() => null);
+      const receipts = (json && json.data) || [];
+      receipts.forEach((r, idx) => {
+        if (r.status === 'error') {
+          logger.warn('Push échoué', { token: chunk[idx]?.to, error: r.message });
+        }
+      });
+    }
+  } catch (err) {
+    logger.error('pushService.sendPush crash', { error: err.message });
+  }
+}
+
+module.exports = { sendForceSync, sendPush, isExpoPushToken, FORCE_SYNC_TOPIC };

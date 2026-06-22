@@ -15,6 +15,12 @@ const role = Joi.object({
   role: Joi.string().valid('moderator', 'admin', 'super_admin').required(),
 });
 
+/** POST /admin/team/accept-invite — activation publique (token Redis + mot de passe). */
+const acceptInvite = Joi.object({
+  token: Joi.string().uuid().required(),
+  password: Joi.string().min(8).pattern(/[A-Z]/).pattern(/\d/).required(),
+});
+
 /**
  * PATCH /admin/team/roles/:role/permissions
  * Matrice { [module]: { [action]: bool } } — valeurs booléennes uniquement.
@@ -28,4 +34,4 @@ const permissions = Joi.object({
     .required(),
 });
 
-module.exports = { invite, role, permissions };
+module.exports = { invite, role, acceptInvite, permissions };

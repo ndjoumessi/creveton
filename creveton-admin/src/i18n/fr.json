@@ -14,7 +14,9 @@
     "teamSection": "Équipe",
     "team": "Membres de l'équipe",
     "roles": "Rôles & permissions",
-    "support": "Support joueurs"
+    "support": "Support joueurs",
+    "finances": "Finances",
+    "financeSection": "Finances"
   },
   "header": {
     "live": "Live",
@@ -1486,7 +1488,9 @@
       "removed": "Membre retiré.",
       "removeFailed": "Suppression impossible.",
       "permissionsSaved": "Permissions enregistrées.",
-      "permissionsFailed": "Enregistrement impossible."
+      "permissionsFailed": "Enregistrement impossible.",
+      "inviteCreated": "Invitation créée — copiez le lien à transmettre.",
+      "copyFailed": "Copie impossible."
     },
     "confirm": {
       "deleteTitle": "Retirer le membre",
@@ -1519,7 +1523,12 @@
         "super_admin": "Déconseillé — réserver au fondateur",
         "admin": "Recommandé pour les gestionnaires",
         "moderator": "Idéal pour les éditeurs de contenu"
-      }
+      },
+      "inviteCreatedTitle": "Invitation créée",
+      "inviteLinkHint": "L'email n'est pas encore envoyé automatiquement. Copiez ce lien et transmettez-le au nouveau membre :",
+      "inviteLinkExpiry": "Ce lien expire dans 72 heures.",
+      "copyLink": "Copier le lien",
+      "copied": "Copié"
     }
   },
   "roles": {
@@ -1661,6 +1670,111 @@
       "resolved": "Ticket résolu.",
       "statusChanged": "Statut mis à jour.",
       "reportIgnored": "Signalement ignoré."
+    }
+  },
+  "finances": {
+    "title": "Finances",
+    "subtitle": "Transactions, retraits et validation KYC",
+    "demoBanner": "Données de démonstration — endpoints finances à brancher côté backend.",
+    "exportCsv": "Exporter CSV",
+    "kpi": {
+      "volume": "Volume total",
+      "deposits": "Dépôts",
+      "withdrawals": "Retraits",
+      "pending": "En attente · {{amount}}"
+    },
+    "chart": {
+      "title": "Volume des transactions (30 j)",
+      "volume": "Volume"
+    },
+    "filters": {
+      "allStatuses": "Tous les statuts",
+      "allTypes": "Tous les types",
+      "allProviders": "Tous les providers",
+      "period7": "7 jours",
+      "period30": "30 jours",
+      "period90": "90 jours"
+    },
+    "columns": {
+      "date": "Date",
+      "user": "Utilisateur",
+      "type": "Type",
+      "amount": "Montant",
+      "provider": "Provider",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "actions": {
+      "validate": "Valider",
+      "detail": "Voir détail",
+      "approve": "Approuver",
+      "reject": "Rejeter"
+    },
+    "detail": {
+      "title": "Détail de la transaction",
+      "id": "ID",
+      "reference": "Référence",
+      "user": "Utilisateur",
+      "email": "Email",
+      "amount": "Montant",
+      "type": "Type",
+      "provider": "Provider",
+      "status": "Statut",
+      "date": "Date"
+    },
+    "kyc": {
+      "title": "Retraits en attente de validation KYC",
+      "requestedAt": "Demandé le {{date}}"
+    },
+    "confirm": {
+      "approveTitle": "Approuver le retrait",
+      "approveBody": "Confirmer l’approbation du retrait de {{amount}} pour {{name}} ? Le paiement sera déclenché.",
+      "rejectTitle": "Rejeter le retrait",
+      "rejectBody": "Confirmer le rejet du retrait de {{amount}} pour {{name}} ?"
+    },
+    "notify": {
+      "validated": "Transaction validée",
+      "rejected": "Transaction rejetée",
+      "exported": "{{count}} transactions exportées",
+      "nothingToExport": "Aucune transaction à exporter",
+      "actionFailed": "Action impossible"
+    },
+    "providers": {
+      "orange_money": "Orange Money",
+      "mtn_momo": "MTN MoMo",
+      "campay": "Campay"
+    },
+    "types": {
+      "deposit": "Dépôt",
+      "withdraw": "Retrait",
+      "payout": "Payout",
+      "entry_fee": "Inscription",
+      "refund": "Remboursement"
+    },
+    "empty": {
+      "transactions": "Aucune transaction",
+      "kyc": "Aucun retrait en attente de validation."
+    }
+  },
+  "acceptInvite": {
+    "title": "Rejoindre l’équipe",
+    "subtitle": "Définissez votre mot de passe pour activer votre compte.",
+    "missingToken": "Lien d'invitation invalide ou incomplet.",
+    "password": "Mot de passe",
+    "confirm": "Confirmer le mot de passe",
+    "submit": "Activer mon compte",
+    "loading": "Activation…",
+    "success": "Compte activé. Redirection vers la connexion…",
+    "validation": {
+      "passwordRequired": "Mot de passe requis.",
+      "passwordPolicy": "8 caractères minimum, dont 1 majuscule et 1 chiffre.",
+      "confirmRequired": "Veuillez confirmer le mot de passe.",
+      "mismatch": "Les mots de passe ne correspondent pas."
+    },
+    "notify": {
+      "success": "Compte activé.",
+      "expired": "Cette invitation est invalide ou a expiré.",
+      "failed": "Échec de l'activation."
     }
   }
 }

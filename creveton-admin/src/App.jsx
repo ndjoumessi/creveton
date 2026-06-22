@@ -4,6 +4,7 @@ import useThemeStore from './store/themeStore';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
+import AcceptInvite from './pages/AcceptInvite';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Classement from './pages/Classement';
@@ -12,6 +13,7 @@ import Parties from './pages/Parties';
 import Tournois from './pages/Tournois';
 import TournoiDetail from './pages/TournoiDetail';
 import Utilisateurs from './pages/Utilisateurs';
+import Finances from './pages/Finances';
 import Parametres from './pages/Parametres';
 import TeamPage from './pages/TeamPage';
 import RolesPage from './pages/RolesPage';
@@ -33,6 +35,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/landing" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/accept-invite" element={<AcceptInvite />} />
 
       {/* Console d'administration (protégée par PrivateRoute) */}
       <Route
@@ -49,6 +52,7 @@ export default function App() {
         <Route path="/tournaments" element={<Tournois />} />
         <Route path="/tournaments/:id" element={<TournoiDetail />} />
         <Route path="/users" element={<Utilisateurs />} />
+        <Route path="/finances" element={<Finances />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/team/roles" element={<RolesPage />} />
         <Route path="/support" element={<SupportPage />} />

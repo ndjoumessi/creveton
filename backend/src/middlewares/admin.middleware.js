@@ -42,6 +42,11 @@ const PERMISSIONS = {
   'analytics:read': 'moderator',
   'dashboard:read': 'admin',
 
+  // Finances : lecture/journal financier + validation manuelle des transactions
+  // (réf. permissions admin « finances »). Minimum admin (moderator exclu).
+  'transactions:read': 'admin',
+  'transactions:manage': 'admin',
+
   'system:read': 'admin',
   'system:manage': 'super_admin',
 

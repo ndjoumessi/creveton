@@ -1,8 +1,9 @@
 import { NavLink, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings, UsersRound, ShieldCheck, Headphones } from 'lucide-react';
+import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings, UsersRound, ShieldCheck, Headphones, Wallet } from 'lucide-react';
 import dashboardService from '../../services/dashboard.service';
 import { useApiData } from '../../hooks/useApiData';
+import { useAuthStore } from '../../store/authStore';
 import Logo from '../Logo';
 
 const NAV = [
@@ -26,10 +27,16 @@ const NAV = [
     items: [{ to: '/users', labelKey: 'nav.users', icon: Users }],
   },
   {
+    titleKey: 'nav.financeSection',
+    // Accès finances réservé à admin+ (miroir de permissions.js finances.read).
+    items: [{ to: '/finances', labelKey: 'nav.finances', icon: Wallet, roles: ['admin', 'super_admin'] }],
+  },
+  {
     titleKey: 'nav.teamSection',
     items: [
-      { to: '/team', labelKey: 'nav.team', icon: UsersRound, end: true },
-      { to: '/team/roles', labelKey: 'nav.roles', icon: ShieldCheck },
+      // Équipe & rôles : réservés à admin+ (team:read = admin côté backend).
+      { to: '/team', labelKey: 'nav.team', icon: UsersRound, end: true, roles: ['admin', 'super_admin'] },
+      { to: '/team/roles', labelKey: 'nav.roles', icon: ShieldCheck, roles: ['admin', 'super_admin'] },
       { to: '/support', labelKey: 'nav.support', icon: Headphones },
     ],
   },
@@ -41,9 +48,18 @@ const NAV = [
 
 export default function Sidebar() {
   const { t } = useTranslation();
+  const role = useAuthStore((s) => s.role)();
   // Compteur de questions en attente pour le badge de notification.
   const { data } = useApiData(() => dashboardService.overview().catch(() => null), [], { pollMs: 60000 });
   const pending = data?.pending_questions?.length || 0;
+
+  // Filtre les entrées gardées par rôle (item.roles), puis masque les sections vides.
+  const sections = NAV
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.roles || item.roles.includes(role)),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <aside className="sidebar">
@@ -52,7 +68,7 @@ export default function Sidebar() {
         <span className="sidebar-brand-name">Creveton</span>
       </Link>
       <nav className="sidebar-nav">
-        {NAV.map((section) => (
+        {sections.map((section) => (
           <div className="nav-section" key={section.titleKey}>
             <div className="nav-section-title">{t(section.titleKey)}</div>
             {section.items.map(({ to, labelKey, icon: Icon, end, badgeKey }) => {

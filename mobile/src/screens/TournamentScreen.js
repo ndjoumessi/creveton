@@ -4,6 +4,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
 import { View, Text, Animated, FlatList, StyleSheet, Pressable, Modal } from 'react-native';
 import {
   Screen,
@@ -53,7 +54,10 @@ function formatCountdown(startsAt) {
 export default function TournamentScreen() {
   const { t: tr } = useTranslation();
   const toast = useToast();
+  const navigation = useNavigation();
   const [tab, setTab] = useState('active');
+  // Inscription en cours (désactive le bouton de confirmation le temps de l'appel).
+  const [joining, setJoining] = useState(false);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -97,10 +101,22 @@ export default function TournamentScreen() {
     setConfirm(t);
   };
 
-  const confirmJoin = () => {
-    setConfirm(null);
-    // Pas encore d'endpoint d'inscription : on reste honnête.
-    toast.show({ type: 'info', message: tr('tournaments.notify.joinSoon') });
+  // POST /tournaments/:id/join (gratuit → 201 confirmed) puis bascule sur la
+  // manche live. Erreurs (complet, fermé, flag payant…) → toast du message API.
+  const confirmJoin = async () => {
+    const target = confirm;
+    if (!target || joining) return;
+    setJoining(true);
+    try {
+      await tournamentsApi.join(target.id);
+      setConfirm(null);
+      navigation.navigate('TournamentLive', { tournamentId: target.id });
+    } catch (e) {
+      setConfirm(null);
+      toast.show({ type: 'error', message: parseApiError(e).message || tr('tournamentLive.joinError') });
+    } finally {
+      setJoining(false);
+    }
   };
 
   return (
@@ -188,6 +204,7 @@ export default function TournamentScreen() {
                 variant="primary"
                 title={tr('tournaments.confirmJoin.confirm')}
                 fullWidth
+                disabled={joining}
                 onPress={confirmJoin}
               />
               <AppButton
@@ -269,10 +286,14 @@ function TournamentCard({ t, onJoin }) {
               📅 {formatDateTime(t.starts_at) || tr('tournaments.misc.dateTbd')}
             </Body>
           )}
-          <Body muted style={styles.metaLineMuted}>
-            ⏱ {t.format?.questions ?? '—'} {tr('tournaments.card.questions')} · {t.format?.time_per_q_s ?? '—'}
-            {tr('tournaments.card.perQ')}
-          </Body>
+          {/* `format` n'est pas stocké en base (count/time passés au /start) → l'API
+              renvoie null. On masque la ligne plutôt que d'afficher des tirets. */}
+          {t.format?.questions != null && t.format?.time_per_q_s != null ? (
+            <Body muted style={styles.metaLineMuted}>
+              ⏱ {t.format.questions} {tr('tournaments.card.questions')} · {t.format.time_per_q_s}
+              {tr('tournaments.card.perQ')}
+            </Body>
+          ) : null}
         </View>
 
         <AppButton
