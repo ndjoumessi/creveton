@@ -10,6 +10,7 @@ const updateMe = Joi.object({
   age: Joi.number().integer().min(6).max(99).optional(),
   sexe: Joi.string().valid(...SEXES).optional(),
   lang: Joi.string().valid(...LANGS).optional(),
+  timezone: Joi.string().max(64).optional(),
   password: Joi.string()
     .min(8)
     .pattern(/[A-Z]/)

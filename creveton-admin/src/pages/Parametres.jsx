@@ -32,8 +32,7 @@ const SECTIONS = [
 const ROLE_KEYS = { player: 'player', moderator: 'moderator', admin: 'admin', super_admin: 'super_admin' };
 const APP_VERSION = '1.0.0-MVP';
 
-// Préférences locales (sans colonne backend dédiée) : fuseau & thème d'interface.
-const TZ_KEY = 'creveton_admin_tz';
+// Fuseau persisté côté backend (users.timezone) ; thème = préférence locale (v2).
 const TIMEZONES = ['Africa/Douala', 'Africa/Lagos', 'Europe/Paris', 'America/New_York'];
 const TZ_LABELS = {
   'Africa/Douala': 'Africa/Douala (UTC+1)',
@@ -123,8 +122,7 @@ function AccountSection({ user, lang, setLang }) {
   const { data: me } = useApiData(() => settingsService.getMe().catch(() => null), []);
 
   const [name, setName] = useState(user.name || '');
-  const [tz, setTz] = useState(() => localStorage.getItem(TZ_KEY) || 'Africa/Douala');
-  const [savedTz, setSavedTz] = useState(tz);
+  const [tz, setTz] = useState(user.timezone || me?.timezone || 'Africa/Douala');
   const [formLang, setFormLang] = useState(lang);
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);
@@ -134,14 +132,13 @@ function AccountSection({ user, lang, setLang }) {
   const lastActive = user.last_active_at ?? me?.last_active_at ?? null;
   const roleLabel = ROLE_KEYS[user.role] ? t(`settings.account.roles.${ROLE_KEYS[user.role]}`) : (user.role || '—');
 
-  const dirty = name.trim() !== (user.name || '') || tz !== savedTz || formLang !== lang;
+  const dirty = name.trim() !== (user.name || '') || tz !== (user.timezone || 'Africa/Douala') || formLang !== lang;
 
   const save = async () => {
     if (!name.trim()) { notify.error(t('settings.account.nameRequired')); return; }
     setBusy(true);
     try {
-      const updated = await settingsService.updateMe({ name: name.trim(), lang: formLang });
-      localStorage.setItem(TZ_KEY, tz); setSavedTz(tz);
+      const updated = await settingsService.updateMe({ name: name.trim(), lang: formLang, timezone: tz });
       if (formLang !== lang) setLang(formLang);
       updateUser({ ...updated });
       notify.success(t('settings.account.saved'));

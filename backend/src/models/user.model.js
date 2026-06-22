@@ -11,7 +11,7 @@ const db = require('../config/database');
 
 // Colonnes sérialisées vers le client (objet User abrégé §15) — jamais le hash.
 const PUBLIC_COLUMNS = `
-  id, name, email, phone, phone_verified, ville, age, sexe, lang,
+  id, name, email, phone, phone_verified, ville, age, sexe, lang, timezone,
   total_xp, level, role, wallet_balance, referral_code,
   created_at, last_active_at
 `;
@@ -29,6 +29,7 @@ function toPublic(row) {
     age: row.age ?? null,
     sexe: row.sexe ?? null,
     lang: row.lang,
+    timezone: row.timezone ?? null,
     total_xp: row.total_xp,
     level: row.level,
     role: row.role,
@@ -51,7 +52,7 @@ async function findById(id) {
 
 /** Met à jour le profil de l'utilisateur courant (champs autorisés uniquement). */
 async function updateProfile(id, fields) {
-  const ALLOWED = ['name', 'ville', 'age', 'sexe', 'lang'];
+  const ALLOWED = ['name', 'ville', 'age', 'sexe', 'lang', 'timezone'];
   const sets = [];
   const params = [id];
   for (const key of ALLOWED) {
