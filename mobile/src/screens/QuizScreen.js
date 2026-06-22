@@ -7,7 +7,7 @@
 // Anti-triche : tournoi/challenge n'appellent pas l'endpoint (repli surbrillance).
 // /sessions/submit reste appelé à la fin (avec session_id).
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -256,11 +256,18 @@ export default function QuizScreen({ navigation }) {
   );
 
   // (Re)démarre le timer à chaque nouvelle question. Dépendances : currentIndex
-  // (la question) ET timeLimit (durée selon le niveau) — `timeLimit` était lu mais
-  // manquant des deps, ce qui pouvait faire repartir/figer le timer sur la mauvaise
-  // valeur. Le décompte est piloté par une DEADLINE absolue (et non un compteur qui
-  // se décrémente), donc il repart toujours de la valeur correcte, sans dérive.
-  useEffect(() => {
+  // (la question) ET timeLimit (durée selon le niveau).
+  //
+  // `useLayoutEffect` (et non `useEffect`) : au changement de question, React rend
+  // d'abord la nouvelle vue alors que `secondsLeft`/`timerAnim` portent ENCORE la
+  // valeur figée de la question précédente → un effet post-paint laisserait voir une
+  // « frame périmée » (l'ancien chiffre + l'arc figé) avant la réinit. Un effet de
+  // layout s'exécute AVANT le paint : `setValue(1)` + `setSecondsLeft(timeLimit)`
+  // sont appliqués dans le même cycle, le timer repart toujours plein et net.
+  //
+  // Le décompte est piloté par une DEADLINE absolue (et non un compteur décrémenté),
+  // donc il repart toujours de la valeur correcte (timeLimit du niveau), sans dérive.
+  useLayoutEffect(() => {
     advancedRef.current = false;
     setAnswered(null);
     setSecondsLeft(timeLimit);

@@ -83,15 +83,24 @@ export const useGameStore = create((set, get) => ({
   submit: async () => {
     const { mode, theme, level, startedAt, answers, sessionId } = get();
     set({ submitting: true, error: null });
+    const payload = {
+      mode,
+      theme,
+      level,
+      started_at: startedAt,
+      session_id: sessionId || undefined,
+      answers,
+    };
+    // Logs de diagnostic (dev only) : confirme l'envoi du POST, le payload (les
+    // question_ids doivent être des UUID valides du backend ciblé) et la réponse.
+    if (__DEV__) {
+      console.log('[sessions/submit] payload:', JSON.stringify(payload, null, 2));
+    }
     try {
-      const result = await sessionsApi.submit({
-        mode,
-        theme,
-        level,
-        started_at: startedAt,
-        session_id: sessionId || undefined,
-        answers,
-      });
+      const result = await sessionsApi.submit(payload);
+      if (__DEV__) {
+        console.log('[sessions/submit] response:', JSON.stringify(result, null, 2));
+      }
       // Temps moyen par réponse — calculé localement (les `answers` portent
       // toujours `elapsed_ms`, contrairement au review[] de l'API qui peut l'omettre).
       // On ne le recalcule pas si l'API le fournit déjà.
@@ -106,6 +115,9 @@ export const useGameStore = create((set, get) => ({
       return { ok: true, result: merged };
     } catch (e) {
       const err = parseApiError(e);
+      if (__DEV__) {
+        console.log('[sessions/submit] error:', err.code, err.message);
+      }
       set({ submitting: false, error: err.message });
       return { ok: false, error: err };
     }
