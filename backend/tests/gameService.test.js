@@ -111,12 +111,13 @@ describe('gameService.submitSession', () => {
     expect(db.getClient).not.toHaveBeenCalled();
   });
 
-  test('≥2 réponses < 1 s → CHEAT_DETECTED et verrou libéré', async () => {
+  test('≥3 réponses < 1 s → CHEAT_DETECTED et verrou libéré', async () => {
     redis.set.mockResolvedValue('OK');
     questionModel.findSolutions.mockResolvedValue(
       new Map([
         ['q1', { correct_index: 0 }],
         ['q2', { correct_index: 0 }],
+        ['q3', { correct_index: 0 }],
       ])
     );
     await expect(
@@ -125,6 +126,7 @@ describe('gameService.submitSession', () => {
         answers: [
           { question_id: 'q1', selected_index: 0, elapsed_ms: 400, skipped: false },
           { question_id: 'q2', selected_index: 0, elapsed_ms: 700, skipped: false },
+          { question_id: 'q3', selected_index: 0, elapsed_ms: 600, skipped: false },
         ],
       })
     ).rejects.toMatchObject({ code: 'CHEAT_DETECTED', httpStatus: 422 });
@@ -132,12 +134,20 @@ describe('gameService.submitSession', () => {
     expect(redis.del).toHaveBeenCalledWith('session:idem:u1:' + new Date(baseArgs.startedAt).getTime());
   });
 
-  test('une seule réponse < 1 s n’est pas de la triche', async () => {
+  test('2 réponses < 1 s ne sont pas de la triche (seuil assoupli à 3)', async () => {
     wireHappyPath();
-    questionModel.findSolutions.mockResolvedValue(new Map([['q1', { correct_index: 0 }]]));
+    questionModel.findSolutions.mockResolvedValue(
+      new Map([
+        ['q1', { correct_index: 0 }],
+        ['q2', { correct_index: 0 }],
+      ])
+    );
     const res = await gameService.submitSession({
       ...baseArgs,
-      answers: [{ question_id: 'q1', selected_index: 0, elapsed_ms: 500, skipped: false }],
+      answers: [
+        { question_id: 'q1', selected_index: 0, elapsed_ms: 500, skipped: false },
+        { question_id: 'q2', selected_index: 0, elapsed_ms: 400, skipped: false },
+      ],
     });
     expect(res.session_id).toBe('sess-1');
   });

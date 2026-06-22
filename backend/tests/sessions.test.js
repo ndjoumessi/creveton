@@ -94,8 +94,8 @@ t('streak cassé par une mauvaise réponse + pas de bonus si lent', async () => 
   expect(r.body.streak_max).toBe(1); // jamais 2 d'affilée
 });
 
-t('anti-triche : ≥2 réponses < 1 s → 422 CHEAT_DETECTED, rien persisté', async () => {
-  const { token, user, questions } = await setup(2);
+t('anti-triche : ≥3 réponses < 1 s → 422 CHEAT_DETECTED, rien persisté', async () => {
+  const { token, user, questions } = await setup(3);
   const body = {
     mode: 'normal',
     theme: 'geographie',
@@ -104,6 +104,7 @@ t('anti-triche : ≥2 réponses < 1 s → 422 CHEAT_DETECTED, rien persisté', a
     answers: [
       { question_id: questions[0].id, selected_index: 0, elapsed_ms: 300, skipped: false },
       { question_id: questions[1].id, selected_index: 1, elapsed_ms: 700, skipped: false },
+      { question_id: questions[2].id, selected_index: 0, elapsed_ms: 600, skipped: false },
     ],
   };
   const r = await submit(token, body);

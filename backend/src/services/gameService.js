@@ -26,13 +26,14 @@ const sessionModel = require('../models/session.model');
  *   7. réponse avec review[] (révélation des bonnes réponses autorisée ici)
  */
 
-// ≥ 2 réponses sous 1 s ⇒ triche (« répétées », spec §6).
-const CHEAT_FAST_REPEAT = 2;
+// ≥ 3 réponses sous 1 s ⇒ triche (« répétées »). Seuil assoupli (était 2) pour
+// réduire les faux positifs sur les joueurs légitimement rapides.
+const CHEAT_FAST_REPEAT = 3;
 const IDEMPOTENCY_TTL_SEC = 24 * 3600;
 // Blitz : timer global 60 s + petite marge réseau ⇒ au-delà = horloge trafiquée.
 const BLITZ_MAX_MS = 62 * 1000;
 // Mode normal — feedback immédiat (POST /sessions/answer).
-const ANSWER_CHEAT_MIN_MS = 500; // répondre sous 500 ms ⇒ triche
+const ANSWER_CHEAT_MIN_MS = 300; // répondre sous 300 ms ⇒ triche (assoupli, était 500)
 const LIVE_SESSION_TTL_SEC = 2 * 3600; // durée de vie de l'état live (streak)
 
 /** Niveau joueur (1–5) à partir de l'XP cumulée (seuils CDC §4.1). */

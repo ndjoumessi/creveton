@@ -7,7 +7,7 @@ const app = require('../src/app');
 /**
  * Tests d'intégration POST /sessions/answer (spec §6 — feedback immédiat mode
  * normal solo) : feedback, points/bonus vitesse, streak conservé en Redis,
- * anti-triche < 500 ms, mode tournoi/challenge interdit. Postgres + Redis réels.
+ * anti-triche < 300 ms, mode tournoi/challenge interdit. Postgres + Redis réels.
  */
 
 let ready = false;
@@ -84,9 +84,9 @@ t('bonne réponse lente → pas de bonus de vitesse', async () => {
   expect(r.body.speed_bonus).toBe(0);
 });
 
-t('anti-triche : réponse < 500 ms → 422 CHEAT_DETECTED', async () => {
+t('anti-triche : réponse < 300 ms → 422 CHEAT_DETECTED', async () => {
   const { token, questions } = await setup(1);
-  const r = await answer(token, { question_id: questions[0].id, selected_index: 1, elapsed_ms: 300 });
+  const r = await answer(token, { question_id: questions[0].id, selected_index: 1, elapsed_ms: 200 });
   expect(r.status).toBe(422);
   expect(r.body.error.code).toBe('CHEAT_DETECTED');
 });
