@@ -28,9 +28,9 @@
 
 /* ── Toolbar + switch vue ── */
 .tour-toolbar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
-.tour-view-switch { display: inline-flex; gap: 2px; background: #f3f4f6; border-radius: 9px; padding: 3px; }
+.tour-view-switch { display: inline-flex; gap: 2px; background: var(--bg-mute); border-radius: 9px; padding: 3px; }
 .tour-view-btn { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; padding: 6px 14px; border-radius: 7px; transition: var(--t-fast); }
-.tour-view-btn.is-active { background: #fff; color: var(--green900); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.tour-view-btn.is-active { background: var(--surface); color: var(--green900); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
 
 /* ── Grille de cartes ── */
 .tour-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
@@ -51,9 +51,9 @@
 .tour-card-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
 .tour-card-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; color: var(--green900); line-height: 1.25; }
 .tour-card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-.tour-badge { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 7px; background: #f3f4f6; color: var(--text); }
+.tour-badge { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 7px; background: var(--bg-mute); color: var(--text); }
 .tour-badge-free { background: #e3f3ea; color: var(--green700); }
-.tour-badge-soft { background: #f3f4f6; color: var(--muted); }
+.tour-badge-soft { background: var(--bg-mute); color: var(--muted); }
 
 .tour-players-top { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); font-weight: 600; }
 .tour-players-bar { height: 7px; background: #eef1ee; border-radius: 999px; overflow: hidden; margin-top: 6px; }
@@ -95,4 +95,4 @@
 @media (max-width: 900px) { .tour-detail-grid { grid-template-columns: 1fr; } }
 .tour-detail-fill { height: 7px; background: #eef1ee; border-radius: 999px; overflow: hidden; margin-bottom: 5px; max-width: 220px; }
 .tour-detail-fill > span { display: block; height: 100%; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; }
-.tour-rank { display: inline-flex; align-items: center; gap: 3px; min-width: 26px; height: 24px; padding: 0 7px; border-radius: 999px; background: #f3f4f6; color: var(--muted); font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px; justify-content: center; font-variant-numeric: tabular-nums; }
+.tour-rank { display: inline-flex; align-items: center; gap: 3px; min-width: 26px; height: 24px; padding: 0 7px; border-radius: 999px; background: var(--bg-mute); color: var(--muted); font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px; justify-content: center; font-variant-numeric: tabular-nums; }

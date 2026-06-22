@@ -34,7 +34,7 @@
   font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: var(--text);
   text-align: left; transition: background var(--t-fast);
 }
-.fsel-opt:hover { background: #f8faf8; }
+.fsel-opt:hover { background: var(--surface-2); }
 .fsel-opt.is-selected { background: rgba(42, 138, 79, 0.08); color: var(--green700); font-weight: 600; }
 .fsel-opt-ic { font-size: 14px; line-height: 1; flex: none; }
 .fsel-opt-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }

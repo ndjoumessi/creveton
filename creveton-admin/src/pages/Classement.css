@@ -203,7 +203,7 @@
   font-family: 'Outfit', system-ui, sans-serif;
   font-weight: 700;
   font-size: 26px;
-  color: #374151;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
   margin-top: 10px;
   line-height: 1;
@@ -249,7 +249,7 @@
   font-family: 'Outfit', system-ui, sans-serif;
   font-weight: 700;
   font-size: 20px;
-  color: #9ca3af;
+  color: var(--fg-faint);
   font-variant-numeric: tabular-nums;
 }
 

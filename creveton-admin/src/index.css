@@ -21,12 +21,18 @@
   /* Neutres teintés vert */
   --bg: #f0f4f0;
   --surface: #ffffff;
-  --surface-2: #fafdf8;
+  --surface-2: #f8faf8;
+  --bg-input: #f9fafb;
+  --bg-mute: #f3f4f6;
   --border: #e5e7eb;
   --border-green: #d6e6db;
   --text: #374151;
   --ink: #0b2e1a;
   --muted: #6b7280;
+  --fg-faint: #9ca3af;
+  /* Surfaces sombres structurelles (sidebar/header) — flippées en thème nuit. */
+  --bg-sidebar: #0b2e1a;
+  --bg-header: #0b2e1a;
   /* Layout */
   --sidebar-w: 240px;
   --header-h: 64px;
@@ -45,6 +51,48 @@
   --t-modal: 200ms ease;
   font-family: 'Space Grotesk', system-ui, sans-serif;
 }
+
+/* ── Thème sombre « Cockpit Émeraude Nuit » : on ne flippe QUE les tokens
+   sémantiques (surfaces / textes / bordures / ombres). Les couleurs de marque
+   (vert, or, rouge) restent identiques. La majeure partie de l'UI s'assombrit
+   automatiquement via ces variables. ── */
+[data-theme="dark"] {
+  --bg: #0a0f0a;
+  --surface: #111a11;
+  --surface-2: #162016;
+  --bg-input: #1a261a;
+  --bg-mute: #1b2e1b;
+  --border: #1e2e1e;
+  --border-green: #25402a;
+  --text: #a5d6a7;
+  --ink: #e8f5e9;
+  --muted: #81c784;
+  --fg-faint: #4f8a55;
+  --bg-sidebar: #071009;
+  --bg-header: #0d150d;
+  --cream: #15220f;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* Transition douce au basculement de thème (exceptions : graphes & opt-out). */
+*, *::before, *::after {
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+}
+.no-transition, .no-transition *, .recharts-wrapper, .recharts-wrapper *, [data-no-transition] {
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
+
+/* Scrollbar custom (webkit) — discrète, teintée vert. */
+* { scrollbar-color: var(--green500) transparent; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(42, 138, 79, 0.35); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(42, 138, 79, 0.55); background-clip: padding-box; }
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
@@ -74,7 +122,7 @@ input, select, textarea { font-family: inherit; }
 .app-content { padding: 28px 32px; flex: 1; max-width: 1560px; }
 
 /* ===================== Sidebar ===================== */
-.sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w); background: var(--green900); display: flex; flex-direction: column; z-index: 30; }
+.sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w); background: var(--bg-sidebar); display: flex; flex-direction: column; z-index: 30; }
 .sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: var(--header-h); border-bottom: 1px solid var(--green700); }
 /* Le carré or EST le logo — pas de fond vert */
 .sidebar-logo { width: 38px; height: 38px; border-radius: 10px; background: var(--gold); display: grid; place-items: center; color: var(--green900); font-family: 'Outfit'; font-weight: 800; font-size: 21px; flex: none; box-shadow: var(--shadow-gold); }
@@ -93,7 +141,7 @@ input, select, textarea { font-family: inherit; }
 .nav-badge { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--gold); color: var(--green900); font-family: 'Outfit'; font-weight: 700; font-size: 11px; display: grid; place-items: center; }
 
 /* ===================== Header (sombre) ===================== */
-.header { position: sticky; top: 0; height: var(--header-h); background: var(--green900); border-bottom: 1px solid var(--green700); display: flex; align-items: center; gap: 14px; padding: 0 24px; z-index: 20; }
+.header { position: sticky; top: 0; height: var(--header-h); background: var(--bg-header); border-bottom: 1px solid var(--green700); display: flex; align-items: center; gap: 14px; padding: 0 24px; z-index: 20; }
 .breadcrumb { font-family: 'Space Grotesk'; font-size: 14px; display: flex; align-items: center; gap: 8px; }
 .breadcrumb .crumb-muted { color: rgba(255, 255, 255, 0.5); }
 .breadcrumb .crumb-sep { color: rgba(255, 255, 255, 0.3); }
@@ -108,6 +156,8 @@ input, select, textarea { font-family: inherit; }
 .lang-toggle { display: inline-flex; gap: 2px; background: rgba(255, 255, 255, 0.06); border-radius: var(--radius-pill); padding: 3px; }
 .lang-toggle button { padding: 5px 12px; font-size: 12px; font-weight: 600; background: transparent; border: none; color: rgba(255, 255, 255, 0.55); border-radius: var(--radius-pill); transition: var(--t-fast); }
 .lang-toggle button.active { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.header-theme-btn { width: 34px; height: 34px; flex: none; border-radius: 9px; border: 1px solid var(--green700); background: transparent; color: rgba(255, 255, 255, 0.8); display: grid; place-items: center; cursor: pointer; transition: var(--t-fast); }
+.header-theme-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
 .profile-avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--gold); color: var(--green900); display: grid; place-items: center; font-family: 'Outfit'; font-weight: 700; font-size: 14px; flex: none; }
 .profile-avatar-img { object-fit: cover; padding: 0; }
 
@@ -195,7 +245,7 @@ input, select, textarea { font-family: inherit; }
 /* ===================== Tables ===================== */
 .table-wrap { overflow-x: auto; }
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; color: var(--text); }
-table.data th { text-align: left; color: var(--muted); font-family: 'Space Grotesk'; font-weight: 600; font-size: 12px; letter-spacing: 0.4px; text-transform: uppercase; padding: 13px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; user-select: none; background: #f8faf8; }
+table.data th { text-align: left; color: var(--muted); font-family: 'Space Grotesk'; font-weight: 600; font-size: 12px; letter-spacing: 0.4px; text-transform: uppercase; padding: 13px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; user-select: none; background: var(--surface-2); }
 table.data th.sortable { cursor: pointer; }
 table.data th.sortable:hover { color: var(--ink); }
 table.data td { padding: 0 16px; height: 56px; border-bottom: 1px solid var(--border); vertical-align: middle; }
@@ -219,7 +269,7 @@ table.data tbody tr:last-child td { border-bottom: none; }
 .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
 .field label { font-size: 13px; font-weight: 600; color: var(--ink); }
 .input, .select, .textarea { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; background: var(--surface); color: var(--text); transition: border var(--t-fast), box-shadow var(--t-fast); }
-.input::placeholder, .textarea::placeholder { color: #9ca3af; }
+.input::placeholder, .textarea::placeholder { color: var(--fg-faint); }
 .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--green500); box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.12); }
 .textarea { min-height: 84px; resize: vertical; }
 .field-error { color: var(--red); font-size: 12px; }

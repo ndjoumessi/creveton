@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, LogOut, Command } from 'lucide-react';
+import { RefreshCw, LogOut, Command, Moon, Sun } from 'lucide-react';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
+import useThemeStore from '../../store/themeStore';
 import { triggerRefresh } from '../../hooks/useApiData';
 import { notify } from '../Toast';
 import Modal from '../Modal';
@@ -27,6 +28,12 @@ export default function Header() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const isDark = useThemeStore((s) => s.isDark);
+  const toggleTheme = useThemeStore((s) => s.toggle);
+  const onToggleTheme = () => {
+    toggleTheme();
+    notify.success(isDark ? t('settings.account.themeToastLight') : t('settings.account.themeToastDark'));
+  };
 
   const title = TITLE_KEYS[pathname] ? t(TITLE_KEYS[pathname]) : t('header.console');
   const initials = (user?.name || 'AD').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -66,6 +73,15 @@ export default function Header() {
         <button className={lang === 'fr' ? 'active' : ''} onClick={() => setLang('fr')}>FR</button>
         <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
       </div>
+
+      <button
+        className="header-theme-btn"
+        onClick={onToggleTheme}
+        title={isDark ? t('header.themeLight') : t('header.themeDark')}
+        aria-label={isDark ? t('header.themeLight') : t('header.themeDark')}
+      >
+        {isDark ? <Sun size={16} /> : <Moon size={16} />}
+      </button>
 
       <button className="header-btn" onClick={onRefresh} title={t('header.refresh')}><RefreshCw size={15} /> {t('header.refresh')}</button>
 

@@ -9,13 +9,13 @@
 /* ─────────────── Table ─────────────── */
 .team-table-card { overflow: visible; }
 .team-row { cursor: pointer; }
-.team-row:hover { background: #f8faf8; }
+.team-row:hover { background: var(--surface-2); }
 
 .team-cell-member { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .team-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .team-id-name { line-height: 1.25; font-size: 15px; }
-.team-id-mail { line-height: 1.3; font-size: 13px; color: #6b7280; }
-.team-muted-cell { font-size: 13px; color: #6b7280; white-space: nowrap; }
+.team-id-mail { line-height: 1.3; font-size: 13px; color: var(--muted); }
+.team-muted-cell { font-size: 13px; color: var(--muted); white-space: nowrap; }
 
 /* Badge rôle (bordure pleine + teinte, jamais de bande latérale) */
 .team-role-badge {
@@ -27,7 +27,7 @@
 .team-role-gold { background: #fdf6e3; color: #8a6400; border-color: #ecd9a0; }
 .team-role-green { background: #dcfce7; color: #15803d; border-color: #b6e8c6; }
 .team-role-blue { background: #e6f0ff; color: #2563eb; border-color: #c2d8fb; }
-.team-role-gray { background: #f3f4f6; color: #6b7280; border-color: #e0e2e6; }
+.team-role-gray { background: var(--bg-mute); color: var(--muted); border-color: #e0e2e6; }
 
 /* Pills de permissions */
 .team-perm-pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -36,7 +36,7 @@
   background: #f0f7f0; border: 1px solid var(--border-green, #d6e6db);
   color: var(--green700); font-size: 11.5px; font-weight: 600; white-space: nowrap;
 }
-.team-perm-more { font-size: 11.5px; font-weight: 600; color: #9ca3af; }
+.team-perm-more { font-size: 11.5px; font-weight: 600; color: var(--fg-faint); }
 
 /* Statut avec point */
 .team-status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; white-space: nowrap; }
@@ -45,7 +45,7 @@
 .team-st-active .team-status-dot { background: #22c55e; animation: team-pulse 1.8s ease-in-out infinite; }
 .team-st-susp { color: #b45309; }
 .team-st-susp .team-status-dot { background: #f59e0b; }
-.team-st-inactive { color: #6b7280; }
+.team-st-inactive { color: var(--muted); }
 .team-st-inactive .team-status-dot { background: #9ca3af; }
 @keyframes team-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); } 50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); } }
 
@@ -55,7 +55,7 @@
 .team-menu-backdrop { position: fixed; inset: 0; z-index: 40; background: transparent; border: 0; cursor: default; }
 .team-menu {
   position: absolute; right: 0; top: calc(100% + 4px); z-index: 41;
-  min-width: 210px; background: #fff;
+  min-width: 210px; background: var(--surface);
   border: 1px solid var(--border); border-radius: 12px;
   box-shadow: 0 14px 40px -12px rgba(11, 46, 26, 0.3);
   padding: 6px; display: flex; flex-direction: column;
@@ -63,7 +63,7 @@
 .team-menu button {
   display: flex; align-items: center; gap: 9px;
   padding: 9px 11px; border: 0; background: none; border-radius: 8px;
-  font-size: 13px; color: #374151; cursor: pointer; text-align: left; width: 100%;
+  font-size: 13px; color: var(--text); cursor: pointer; text-align: left; width: 100%;
 }
 .team-menu button:hover { background: #f0f7f0; }
 .team-menu button.danger { color: #dc2626; }
@@ -84,40 +84,40 @@
 .team-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
 .team-tab {
   border: 0; background: none; cursor: pointer;
-  padding: 10px 14px; font-size: 14px; font-weight: 600; color: #6b7280;
+  padding: 10px 14px; font-size: 14px; font-weight: 600; color: var(--muted);
   border-bottom: 2px solid transparent; margin-bottom: -1px;
   transition: color var(--t-fast);
 }
 .team-tab:hover { color: var(--green700); }
-.team-tab.active { color: #0b2e1a; border-bottom-color: var(--gold); font-family: 'Outfit', sans-serif; }
+.team-tab.active { color: var(--ink); border-bottom-color: var(--gold); font-family: 'Outfit', sans-serif; }
 .team-tab-body { padding-bottom: 4px; }
 
-.team-section-title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13.5px; color: #0b2e1a; margin-bottom: 10px; }
+.team-section-title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13.5px; color: var(--ink); margin-bottom: 10px; }
 .team-empty-note { font-size: 13px; }
 
 /* Onglet Profil — liste clé/valeur */
 .team-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin: 0; }
 .team-kv > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .team-kv-full { grid-column: 1 / -1; }
-.team-kv dt { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #9ca3af; }
-.team-kv dd { margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 14px; color: #0b2e1a; word-break: break-word; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.team-role-desc { font-size: 12.5px; color: #6b7280; font-weight: 400; }
+.team-kv dt { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--fg-faint); }
+.team-kv dd { margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 14px; color: var(--ink); word-break: break-word; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.team-role-desc { font-size: 12.5px; color: var(--muted); font-weight: 400; }
 .team-phone { display: inline-flex; align-items: center; gap: 6px; }
 
 /* Onglet Permissions — matrice lecture seule */
-.team-perm-note { font-size: 13px; color: #6b7280; background: #f8faf8; border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; margin: 0; }
+.team-perm-note { font-size: 13px; color: var(--muted); background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; margin: 0; }
 .team-perm-locked { font-size: 13px; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 9px 12px; margin: 0; }
 .team-matrix-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
 .team-matrix { width: 100%; border-collapse: collapse; font-size: 13px; }
 .team-matrix th, .team-matrix td { padding: 9px 12px; text-align: center; border-bottom: 1px solid var(--border); }
-.team-matrix thead th { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: #6b7280; background: #f8faf8; }
+.team-matrix thead th { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted); background: var(--surface-2); }
 .team-matrix tbody tr:last-child th, .team-matrix tbody tr:last-child td { border-bottom: none; }
-.team-matrix th[scope="row"] { text-align: left; font-weight: 600; color: #0b2e1a; white-space: nowrap; }
+.team-matrix th[scope="row"] { text-align: left; font-weight: 600; color: var(--ink); white-space: nowrap; }
 .team-matrix thead th:first-child { text-align: left; }
 .team-cell-na { color: #d1d5db; }
 .team-check {
   display: inline-grid; place-items: center; width: 20px; height: 20px;
-  border-radius: 6px; border: 1px solid var(--border); background: #fff; color: transparent;
+  border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: transparent;
 }
 .team-check.on { background: var(--green500); border-color: var(--green500); color: #fff; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
@@ -128,13 +128,13 @@
 .team-timeline-item:not(:last-child)::before {
   content: ''; position: absolute; left: 7px; top: 16px; bottom: 0; width: 2px; background: var(--border);
 }
-.team-timeline-dot { width: 12px; height: 12px; border-radius: 999px; background: var(--green500); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border-green, #d6e6db); flex: none; margin-top: 4px; z-index: 1; }
+.team-timeline-dot { width: 12px; height: 12px; border-radius: 999px; background: var(--green500); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-green, #d6e6db); flex: none; margin-top: 4px; z-index: 1; }
 .team-timeline-body { flex: 1; min-width: 0; }
-.team-timeline-text { font-size: 13.5px; color: #0b2e1a; }
+.team-timeline-text { font-size: 13.5px; color: var(--ink); }
 .team-timeline-text strong { font-weight: 600; }
 .team-timeline-q { color: #4b5563; }
 .team-timeline-reason { font-size: 12.5px; color: #b45309; background: #fffbeb; border-radius: 8px; padding: 5px 9px; margin-top: 5px; }
-.team-timeline-when { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+.team-timeline-when { font-size: 12px; color: var(--fg-faint); margin-top: 3px; }
 
 /* Footer du drawer */
 .team-foot { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
@@ -154,15 +154,15 @@
 .team-role-choice.on { border-color: var(--green500); background: #f0f7f0; }
 .team-role-choice input { position: absolute; opacity: 0; pointer-events: none; }
 .team-role-choice-head { display: flex; align-items: center; gap: 8px; }
-.team-role-choice-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; color: #0b2e1a; }
+.team-role-choice-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); }
 .team-role-choice-desc { font-size: 12.5px; color: #4b5563; }
-.team-role-choice-hint { font-size: 11.5px; color: #9ca3af; font-style: italic; }
+.team-role-choice-hint { font-size: 11.5px; color: var(--fg-faint); font-style: italic; }
 
 /* Colonne aperçu */
 .team-invite-preview { display: flex; flex-direction: column; gap: 16px; }
-.team-preview-card { background: #f8faf8; border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
-.team-preview-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; color: #0b2e1a; }
-.team-preview-greeting { font-size: 14px; font-weight: 600; color: #0b2e1a; margin-top: 12px; }
+.team-preview-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+.team-preview-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
+.team-preview-greeting { font-size: 14px; font-weight: 600; color: var(--ink); margin-top: 12px; }
 .team-preview-body { font-size: 13.5px; color: #4b5563; margin: 6px 0 14px; line-height: 1.5; }
 .team-preview-cta { width: 100%; justify-content: center; opacity: 0.7; cursor: not-allowed; }
 .team-preview-perms .team-perm-pills { gap: 7px; }

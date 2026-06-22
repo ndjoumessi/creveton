@@ -40,7 +40,7 @@
 }
 .roles-badge-system {
   font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
-  color: var(--muted); background: #fff; border: 1px solid var(--border);
+  color: var(--muted); background: var(--surface); border: 1px solid var(--border);
   padding: 1px 8px; border-radius: 999px;
 }
 .roles-card-members {
@@ -59,7 +59,7 @@
   border: 1px solid transparent; line-height: 1.6; white-space: nowrap;
 }
 .roles-pill-on { color: var(--green700); background: #e3f3ea; border-color: var(--border-green); }
-.roles-pill-off { color: var(--muted); background: #f3f4f6; border-color: var(--border); text-decoration: line-through; }
+.roles-pill-off { color: var(--muted); background: var(--bg-mute); border-color: var(--border); text-decoration: line-through; }
 
 .roles-super { display: flex; flex-direction: column; gap: 10px; }
 .roles-super-risk {
@@ -101,7 +101,7 @@
 /* Case à cocher animée (bouton accessible). */
 .roles-check {
   width: 20px; height: 20px; border-radius: 6px;
-  border: 1.5px solid #cbd5e1; background: #fff; color: #fff;
+  border: 1.5px solid #cbd5e1; background: var(--surface); color: #fff;
   display: inline-grid; place-items: center; cursor: pointer;
   transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
 }

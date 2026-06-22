@@ -12,6 +12,7 @@ import authService from '../services/auth.service';
 import { useApiData } from '../hooks/useApiData';
 import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
+import useThemeStore from '../store/themeStore';
 import { num, dateFr, dateTimeFr } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import AvatarUpload from '../components/AvatarUpload';
@@ -126,6 +127,15 @@ function AccountSection({ user, lang, setLang }) {
   const [formLang, setFormLang] = useState(lang);
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);
+  // Thème : appliqué instantanément (hors bouton « Sauvegarder »).
+  const isDark = useThemeStore((s) => s.isDark);
+  const setDark = useThemeStore((s) => s.setDark);
+  const [hoverDark, setHoverDark] = useState(null);
+  const previewDark = hoverDark ?? isDark;
+  const toggleTheme = () => {
+    setDark(!isDark);
+    notify.success(!isDark ? t('settings.account.themeToastDark') : t('settings.account.themeToastLight'));
+  };
 
   const avatarUrl = user.avatar_url ?? me?.avatar_url ?? null;
   const createdAt = user.created_at ?? me?.created_at ?? null;
@@ -207,11 +217,35 @@ function AccountSection({ user, lang, setLang }) {
             <button type="button" className={`set-choice ${formLang === 'en' ? 'is-active' : ''}`} onClick={() => setFormLang('en')}>🇬🇧 English</button>
           </div>
         </div>
-        <div className="field">
+        <div className="field set-theme-field">
           <label>{t('settings.account.theme')}</label>
-          <div className="set-pill-row">
-            <button type="button" className="set-choice is-active">☀️ {t('settings.account.themeLight')}</button>
-            <button type="button" className="set-choice" disabled title={t('settings.account.themeDarkSoon')}>🌙 {t('settings.account.themeDark')}</button>
+          <div className="set-theme-toggle" onMouseLeave={() => setHoverDark(null)}>
+            <span className={`set-theme-side ${!previewDark ? 'is-on' : ''}`}>☀️ {t('settings.account.themeLight')}</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isDark}
+              aria-label={t('settings.account.theme')}
+              className={`set-switch ${isDark ? 'on' : ''}`}
+              onClick={toggleTheme}
+              onMouseEnter={() => setHoverDark(!isDark)}
+              onFocus={() => setHoverDark(!isDark)}
+              onBlur={() => setHoverDark(null)}
+            >
+              <span className="set-switch-thumb" />
+            </button>
+            <span className={`set-theme-side ${previewDark ? 'is-on' : ''}`}>🌙 {t('settings.account.themeDark')}</span>
+          </div>
+
+          <div className="set-theme-preview-wrap">
+            <span className="set-theme-preview-cap">{t('settings.account.themePreview')}</span>
+            <div className={`set-theme-preview ${previewDark ? 'is-dark' : ''}`} aria-hidden="true">
+              <span className="stp-sidebar" />
+              <span className="stp-main">
+                <span className="stp-header" />
+                <span className="stp-cards"><span /><span /><span /></span>
+              </span>
+            </div>
           </div>
         </div>
       </div>

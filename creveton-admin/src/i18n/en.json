@@ -33,7 +33,9 @@
       "placeholder": "Search a page, a player, a question…",
       "empty": "No results.",
       "aria": "Command palette"
-    }
+    },
+    "themeDark": "Dark theme",
+    "themeLight": "Light theme"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1047,7 +1049,10 @@
       "saved": "✓ Changes saved",
       "noChanges": "No changes",
       "emailAddress": "Email address",
-      "role": "Role"
+      "role": "Role",
+      "themeToastDark": "Dark theme enabled 🌙",
+      "themeToastLight": "Light theme enabled ☀️",
+      "themePreview": "Theme preview"
     },
     "security": {
       "changePassword": "Change password",

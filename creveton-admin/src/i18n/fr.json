@@ -33,7 +33,9 @@
       "placeholder": "Rechercher une page, un joueur, une question…",
       "empty": "Aucun résultat.",
       "aria": "Palette de commandes"
-    }
+    },
+    "themeDark": "Thème sombre",
+    "themeLight": "Thème clair"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1039,7 +1041,7 @@
       "editableInfo": "Informations modifiables",
       "namePlaceholder": "Votre nom",
       "interfaceLang": "Langue de l'interface",
-      "theme": "Thème interface",
+      "theme": "Thème de l'interface",
       "themeLight": "Clair",
       "themeDark": "Sombre",
       "themeDarkSoon": "Sombre (v2)",
@@ -1047,7 +1049,10 @@
       "saved": "✓ Modifications sauvegardées",
       "noChanges": "Aucune modification",
       "emailAddress": "Adresse email",
-      "role": "Rôle"
+      "role": "Rôle",
+      "themeToastDark": "Thème sombre activé 🌙",
+      "themeToastLight": "Thème clair activé ☀️",
+      "themePreview": "Aperçu du thème"
     },
     "security": {
       "changePassword": "Changer le mot de passe",

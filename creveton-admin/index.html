@@ -8,6 +8,21 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Anti-flash : applique le thème AVANT le rendu React. Lit la préférence
+      // persistée (zustand : { state: { isDark } }) sinon suit le système.
+      (function () {
+        try {
+          var dark;
+          var raw = localStorage.getItem('creveton_admin_theme');
+          if (raw) { dark = !!(JSON.parse(raw).state || {}).isDark; }
+          else { dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+          var root = document.documentElement;
+          root.setAttribute('data-theme', dark ? 'dark' : 'light');
+          if (dark) root.classList.add('dark');
+        } catch (e) { /* défaut : clair */ }
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

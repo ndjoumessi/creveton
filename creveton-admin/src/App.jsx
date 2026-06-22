@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import useThemeStore from './store/themeStore';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
@@ -16,6 +18,15 @@ import RolesPage from './pages/RolesPage';
 import SupportPage from './pages/SupportPage';
 
 export default function App() {
+  const isDark = useThemeStore((s) => s.isDark);
+
+  // Applique le thème sur <html> (data-theme + classe) à chaque changement.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    root.classList.toggle('dark', isDark);
+  }, [isDark]);
+
   return (
     <Routes>
       {/* Routes publiques : la racine affiche la landing (vitrine grand public) */}
