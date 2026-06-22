@@ -19,11 +19,36 @@ export function pct(ratio, digits = 1) {
   return `${(ratio * 100).toFixed(digits).replace('.', ',')} %`;
 }
 
-/** Date courte FR : "21 juin 2026". */
+// Fuseau horaire actif (préférence de l'admin connecté, users.timezone). Quand
+// défini, les dates sont affichées dans CE fuseau plutôt que celui du navigateur.
+// Synchronisé depuis authStore via setDateTimeZone() (cf. Layout).
+let activeTimeZone = null;
+
+/** Définit le fuseau d'affichage (IANA, ex. 'Africa/Douala'). null = navigateur. */
+export function setDateTimeZone(tz) {
+  activeTimeZone = tz || null;
+}
+
+/**
+ * Renvoie une Date dont les champs LOCAUX (lus par date-fns) valent l'heure
+ * « murale » du fuseau cible — sans dépendance externe (Intl natif). On reformate
+ * l'instant dans le fuseau cible puis on le ré-interprète en heure locale.
+ */
+function toZoned(date, tz) {
+  try {
+    return new Date(date.toLocaleString('en-US', { timeZone: tz }));
+  } catch {
+    return date;
+  }
+}
+
+/** Date courte FR : "21 juin 2026" — dans le fuseau de l'admin si défini. */
 export function dateFr(iso, pattern = 'dd MMM yyyy') {
   if (!iso) return '—';
   try {
-    return format(typeof iso === 'string' ? parseISO(iso) : iso, pattern, { locale: fr });
+    let d = typeof iso === 'string' ? parseISO(iso) : iso;
+    if (activeTimeZone) d = toZoned(d, activeTimeZone);
+    return format(d, pattern, { locale: fr });
   } catch {
     return '—';
   }
