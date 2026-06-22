@@ -7,6 +7,7 @@ const questionService = require('./questionService');
 const questionModel = require('../models/question.model');
 const challengeModel = require('../models/challenge.model');
 const userModel = require('../models/user.model');
+const pushService = require('./pushService');
 
 /**
  * Défis 1v1 (réf. spec §9). Les deux joueurs répondent au MÊME set figé
@@ -68,6 +69,22 @@ async function create({ userId, opponentId, theme, level, stake = 0 }) {
     question_ids: rows.map((r) => r.id),
     status: 'pending',
   });
+
+  // Notif « défi reçu » à l'adversaire désigné (fire-and-forget, best-effort).
+  if (opponentId) {
+    Promise.resolve()
+      .then(() => Promise.all([userModel.findById(userId), userModel.findById(opponentId)]))
+      .then(([challenger, opp]) => {
+        if (opp?.push_token) {
+          pushService.sendPush(opp.push_token, {
+            title: '⚔️ Nouveau défi !',
+            body: `${challenger?.name || 'Un joueur'} te défie sur ${theme}`,
+            data: { type: 'challenge_received', challenge_id: challenge.id },
+          });
+        }
+      })
+      .catch(() => {});
+  }
 
   return {
     challenge_id: challenge.id,
@@ -144,6 +161,26 @@ async function submit({ userId, challengeId, answers }) {
   if (xpBonus > 0) await userModel.creditSessionXp(winnerId, xpBonus);
 
   const final = await challengeModel.finalize(challengeId, winnerId);
+
+  // Notif « résultat » aux deux joueurs (fire-and-forget, best-effort).
+  Promise.resolve()
+    .then(() => userModel.findManyByIds([final.challenger_id, final.opponent_id]))
+    .then((players) => {
+      const byId = new Map(players.map((p) => [p.id, p]));
+      const scoreLine = `${final.score_challenger} vs ${final.score_opponent}`;
+      [final.challenger_id, final.opponent_id].forEach((pid) => {
+        const p = byId.get(pid);
+        if (!p?.push_token) return;
+        const won = winnerId && pid === winnerId;
+        pushService.sendPush(p.push_token, {
+          title: !winnerId ? '🤝 Match nul' : won ? '🏆 Victoire !' : '💔 Défaite',
+          body: `Résultat : ${scoreLine}`,
+          data: { type: 'challenge_result', challenge_id: final.id },
+        });
+      });
+    })
+    .catch(() => {});
+
   return {
     challenge_id: final.id,
     status: 'completed',

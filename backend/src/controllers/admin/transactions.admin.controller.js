@@ -36,7 +36,7 @@ const exportCsv = asyncHandler(async (req, res) => {
     t.reference,
   ].map(csvCell).join(','));
   // BOM pour qu'Excel lise l'UTF-8 ; CRLF entre lignes (RFC 4180).
-  const csv = `﻿${[header, ...lines].join('\r\n')}\r\n`;
+  const csv = `\uFEFF${[header, ...lines].join('\r\n')}\r\n`;
   const filename = `creveton_transactions_${new Date().toISOString().slice(0, 10)}.csv`;
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

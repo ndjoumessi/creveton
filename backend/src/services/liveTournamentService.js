@@ -7,6 +7,7 @@ const logger = require('../config/logger');
 const ApiError = require('../utils/ApiError');
 const scoreService = require('./scoreService');
 const leaderboardService = require('./leaderboardService');
+const pushService = require('./pushService');
 const tournamentModel = require('../models/tournament.model');
 const questionModel = require('../models/question.model');
 const sessionModel = require('../models/session.model');
@@ -117,6 +118,23 @@ async function start(tournamentId, { count, timePerQSec }) {
   await writeState(tournamentId, state);
   if (userIds.length) await redis.sadd(participantsKey(tournamentId), ...userIds);
   await redis.expire(participantsKey(tournamentId), STATE_TTL_SEC);
+
+  // Notif « le tournoi démarre » aux inscrits (fire-and-forget, best-effort).
+  if (userIds.length) {
+    Promise.resolve()
+      .then(() => userModel.findManyByIds(userIds))
+      .then((users) => {
+        const tokens = users.map((u) => u.push_token).filter(Boolean);
+        if (tokens.length) {
+          pushService.sendPush(tokens, {
+            title: '🏆 Le tournoi commence !',
+            body: `${t.name} démarre — rejoins la manche !`,
+            data: { type: 'tournament_start', tournament_id: tournamentId },
+          });
+        }
+      })
+      .catch(() => {});
+  }
 
   logger.info('Tournoi live démarré', { tournament_id: tournamentId, questions: rows.length });
   return { tournament_id: tournamentId, total: rows.length, status: 'running' };

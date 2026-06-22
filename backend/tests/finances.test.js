@@ -171,7 +171,7 @@ t('GET /admin/transactions/export — CSV bien formé, colonnes correctes', asyn
   expect(res.status).toBe(200);
   expect(res.headers['content-type']).toContain('text/csv');
   expect(res.headers['content-disposition']).toContain('attachment');
-  const body = res.text.replace(/^﻿/, '');
+  const body = res.text.replace(/^\uFEFF/, '');
   const lines = body.trim().split('\r\n');
   expect(lines[0]).toBe('id,date,user_email,type,amount,currency,provider,status,reference');
   // La ligne de données contient l'id et la référence de la transaction.
