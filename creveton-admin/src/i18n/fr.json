@@ -1488,7 +1488,9 @@
       "removed": "Membre retiré.",
       "removeFailed": "Suppression impossible.",
       "permissionsSaved": "Permissions enregistrées.",
-      "permissionsFailed": "Enregistrement impossible."
+      "permissionsFailed": "Enregistrement impossible.",
+      "inviteCreated": "Invitation créée — copiez le lien à transmettre.",
+      "copyFailed": "Copie impossible."
     },
     "confirm": {
       "deleteTitle": "Retirer le membre",
@@ -1521,7 +1523,12 @@
         "super_admin": "Déconseillé — réserver au fondateur",
         "admin": "Recommandé pour les gestionnaires",
         "moderator": "Idéal pour les éditeurs de contenu"
-      }
+      },
+      "inviteCreatedTitle": "Invitation créée",
+      "inviteLinkHint": "L'email n'est pas encore envoyé automatiquement. Copiez ce lien et transmettez-le au nouveau membre :",
+      "inviteLinkExpiry": "Ce lien expire dans 72 heures.",
+      "copyLink": "Copier le lien",
+      "copied": "Copié"
     }
   },
   "roles": {
@@ -1747,6 +1754,27 @@
     "empty": {
       "transactions": "Aucune transaction",
       "kyc": "Aucun retrait en attente de validation."
+    }
+  },
+  "acceptInvite": {
+    "title": "Rejoindre l’équipe",
+    "subtitle": "Définissez votre mot de passe pour activer votre compte.",
+    "missingToken": "Lien d'invitation invalide ou incomplet.",
+    "password": "Mot de passe",
+    "confirm": "Confirmer le mot de passe",
+    "submit": "Activer mon compte",
+    "loading": "Activation…",
+    "success": "Compte activé. Redirection vers la connexion…",
+    "validation": {
+      "passwordRequired": "Mot de passe requis.",
+      "passwordPolicy": "8 caractères minimum, dont 1 majuscule et 1 chiffre.",
+      "confirmRequired": "Veuillez confirmer le mot de passe.",
+      "mismatch": "Les mots de passe ne correspondent pas."
+    },
+    "notify": {
+      "success": "Compte activé.",
+      "expired": "Cette invitation est invalide ou a expiré.",
+      "failed": "Échec de l'activation."
     }
   }
 }

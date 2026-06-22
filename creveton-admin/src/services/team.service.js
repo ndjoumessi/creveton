@@ -16,11 +16,22 @@ export function stats() {
   return withMock(() => api.get('/admin/team/stats').then((r) => r.data), () => mockTeamStats);
 }
 
-/** POST /admin/team/invite { email, name, role, message? } */
+/** POST /admin/team/invite { email, name, role, message? } → { user, invite_url } */
 export function invite(payload) {
   return withMock(
     () => api.post('/admin/team/invite', payload).then((r) => r.data),
-    () => ({ id: `mock-${Date.now()}`, ...payload, temporary_password: 'Temp1234!' }),
+    () => ({
+      user: { id: `mock-${Date.now()}`, name: payload.name, email: payload.email, role: payload.role },
+      invite_url: `https://admin.creveton.cm/accept-invite?token=mock-${Date.now()}`,
+    }),
+  );
+}
+
+/** POST /admin/team/accept-invite { token, password } (public) */
+export function acceptInvite(token, password) {
+  return withMock(
+    () => api.post('/admin/team/accept-invite', { token, password }).then((r) => r.data),
+    () => ({ message: 'Compte activé' }),
   );
 }
 
@@ -52,4 +63,4 @@ export function setRolePermissions(role, permissions) {
   );
 }
 
-export default { list, stats, invite, setRole, remove, activity, roles, setRolePermissions };
+export default { list, stats, invite, acceptInvite, setRole, remove, activity, roles, setRolePermissions };

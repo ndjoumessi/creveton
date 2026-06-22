@@ -4,6 +4,7 @@ import useThemeStore from './store/themeStore';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
+import AcceptInvite from './pages/AcceptInvite';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Classement from './pages/Classement';
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/landing" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/accept-invite" element={<AcceptInvite />} />
 
       {/* Console d'administration (protégée par PrivateRoute) */}
       <Route

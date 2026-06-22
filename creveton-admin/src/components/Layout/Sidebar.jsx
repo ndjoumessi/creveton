@@ -34,8 +34,9 @@ const NAV = [
   {
     titleKey: 'nav.teamSection',
     items: [
-      { to: '/team', labelKey: 'nav.team', icon: UsersRound, end: true },
-      { to: '/team/roles', labelKey: 'nav.roles', icon: ShieldCheck },
+      // Équipe & rôles : réservés à admin+ (team:read = admin côté backend).
+      { to: '/team', labelKey: 'nav.team', icon: UsersRound, end: true, roles: ['admin', 'super_admin'] },
+      { to: '/team/roles', labelKey: 'nav.roles', icon: ShieldCheck, roles: ['admin', 'super_admin'] },
       { to: '/support', labelKey: 'nav.support', icon: Headphones },
     ],
   },
