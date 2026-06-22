@@ -335,6 +335,7 @@ function draftFromQuestion(q) {
 }
 
 function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [textFr, setTextFr] = useState('');
   const [opts, setOpts] = useState(['', '', '', '']);
@@ -376,7 +377,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const canCreate = textOk && !textOver && optsOk && correctOk;
   const nextDisabled = (step === 0 && !(textOk && !textOver)) || (step === 1 && !(optsOk && correctOk));
 
-  const STEP_LABELS = ['Contenu', 'Options', 'Métadonnées'];
+  const STEP_LABELS = [t('questions.modal.step1'), t('questions.modal.step2'), t('questions.modal.step3')];
   const THEME_EMOJI = { geographie: '🌍', culture: '📚', histoire: '🏛️', industrie: '🏭', sport: '⚽', science: '🔬' };
 
   const submit = () => {
@@ -394,24 +395,24 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
 
   const footer = (
     <>
-      <button className="btn btn-ghost-soft" onClick={close}>Annuler</button>
+      <button className="btn btn-ghost-soft" onClick={close}>{t('questions.modal.cancel')}</button>
       <div style={{ flex: 1 }} />
-      {step > 0 && <button className="btn" onClick={() => setStep((s) => Math.max(0, s - 1))}><ChevronLeft size={15} /> Précédent</button>}
+      {step > 0 && <button className="btn" onClick={() => setStep((s) => Math.max(0, s - 1))}><ChevronLeft size={15} /> {t('questions.modal.previous')}</button>}
       {step < 2 && (
         <button className="btn btn-primary" onClick={() => setStep((s) => Math.min(2, s + 1))} disabled={nextDisabled}>
-          Suivant <ChevronRight size={15} />
+          {t('questions.modal.next')} <ChevronRight size={15} />
         </button>
       )}
       {step === 2 && (
         <button className="btn btn-success" onClick={submit} disabled={!canCreate || submitting}>
-          <Plus size={15} /> Enregistrer
+          <Plus size={15} /> {t('questions.modal.save')}
         </button>
       )}
     </>
   );
 
   return (
-    <Modal open={open} onClose={close} title={prefill ? 'Modifier la question' : 'Nouvelle question'} footer={footer} width={860}>
+    <Modal open={open} onClose={close} title={prefill ? t('questions.modal.edit') : t('questions.modal.create')} footer={footer} width={860}>
       <div className="steps">
         {STEP_META.map((s, i) => (
           <div key={s.key} style={{ display: 'contents' }}>
@@ -429,28 +430,28 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
           {step === 0 && (
             <>
               <div className="field">
-                <label>Énoncé (FR)</label>
+                <label>{t('questions.modal.statement')}</label>
                 <textarea
                   ref={taRef}
                   className="textarea q-grow"
                   rows={4}
-                  placeholder="Quelle est la capitale… ?"
+                  placeholder={t('questions.placeholder.statement')}
                   value={textFr}
                   onChange={(e) => { setTextFr(e.target.value); autoGrow(e.target); }}
                 />
                 <div className={`char-count ${textOver ? 'over' : ''}`}>{textFr.length} / {MAX_TEXT}</div>
                 <div className={`valid-hint ${textOk && !textOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
                   {textOk && !textOver
-                    ? <><Check size={13} /> Énoncé valide</>
-                    : <><AlertCircle size={13} /> {textOver ? `Énoncé trop long (max ${MAX_TEXT})` : 'Énoncé trop court (10 caractères min.)'}</>}
+                    ? <><Check size={13} /> {t('questions.validation.statementOk')}</>
+                    : <><AlertCircle size={13} /> {textOver ? t('questions.validation.statementTooLong', { max: MAX_TEXT }) : t('questions.validation.statementTooShort')}</>}
                 </div>
               </div>
               <div className="field" style={{ marginBottom: 0 }}>
-                <label>Explication <span className="q-opt-label">(optionnelle)</span></label>
+                <label>{t('questions.modal.explanation')} <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span></label>
                 <textarea
                   className="textarea"
                   rows={3}
-                  placeholder="Explication affichée après la réponse…"
+                  placeholder={t('questions.placeholder.explanationCreate')}
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
                 />
@@ -460,21 +461,21 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
 
           {step === 1 && (
             <div className="field" style={{ marginBottom: 0 }}>
-              <label>Options — choisissez la bonne réponse</label>
+              <label>{t('questions.modal.optionsChoose')}</label>
               {opts.map((v, i) => (
                 <div className={`q-opt-row ${correct === i ? 'is-correct' : ''}`} key={LETTERS[i]}>
                   <span className="q-opt-letter">{LETTERS[i]}</span>
-                  <input className="input" placeholder={`Option ${LETTERS[i]}`} value={v} onChange={(e) => setOpt(i, e.target.value)} />
-                  <label className="q-opt-radio" title="Marquer comme bonne réponse">
+                  <input className="input" placeholder={t('questions.placeholder.option', { letter: LETTERS[i] })} value={v} onChange={(e) => setOpt(i, e.target.value)} />
+                  <label className="q-opt-radio" title={t('questions.modal.markCorrect')}>
                     <input type="radio" name="q-correct-option" checked={correct === i} onChange={() => setCorrect(i)} />
-                    <span>Bonne</span>
+                    <span>{t('questions.modal.goodAnswer')}</span>
                   </label>
                 </div>
               ))}
               <div className={`valid-hint ${optsOk && correctOk ? 'ok' : 'ko'}`}>
                 {optsOk && correctOk
-                  ? <><Check size={13} /> Réponses valides</>
-                  : <><AlertCircle size={13} /> {!optsOk ? 'Renseignez au moins 2 options' : 'La bonne réponse doit avoir un texte'}</>}
+                  ? <><Check size={13} /> {t('questions.validation.optionsOk')}</>
+                  : <><AlertCircle size={13} /> {!optsOk ? t('questions.validation.optionsMin') : t('questions.validation.correctHasText')}</>}
               </div>
             </div>
           )}
@@ -482,24 +483,24 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
           {step === 2 && (
             <>
               <div className="field">
-                <label>Thème</label>
+                <label>{t('questions.modal.theme')}</label>
                 <select className="select" value={theme} onChange={(e) => setTheme(e.target.value)}>
-                  {THEME_KEYS.map((k) => <option key={k} value={k}>{`${THEME_EMOJI[k] || ''} ${themeLabels[k]}`}</option>)}
+                  {THEME_KEYS.map((k) => <option key={k} value={k}>{`${THEME_EMOJI[k] || ''} ${t(`questions.themes.${k}`, themeLabels[k])}`}</option>)}
                 </select>
               </div>
               <div className="field">
-                <label>Niveau</label>
+                <label>{t('questions.modal.level')}</label>
                 <div className="q-level-pills">
                   {LEVEL_KEYS.map((k) => (
-                    <button type="button" key={k} className={`q-level-choice ${level === k ? 'is-active' : ''}`} onClick={() => setLevel(k)}>{levelLabels[k]}</button>
+                    <button type="button" key={k} className={`q-level-choice ${level === k ? 'is-active' : ''}`} onClick={() => setLevel(k)}>{t(`questions.levels.${k}`, levelLabels[k])}</button>
                   ))}
                 </div>
               </div>
               <div className="field" style={{ marginBottom: 0 }}>
-                <label>Tags <span className="q-opt-label">(Entrée pour ajouter)</span></label>
+                <label>{t('questions.modal.tags')} <span className="q-opt-label">{t('questions.modal.tagsHint')}</span></label>
                 <input
                   className="input"
-                  placeholder="Ex. capitale"
+                  placeholder={t('questions.placeholder.tagExample')}
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
@@ -510,7 +511,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                     {tags.map((tag) => (
                       <span className="q-tag" key={tag}>
                         {tag}
-                        <button type="button" onClick={() => setTags((p) => p.filter((x) => x !== tag))} aria-label={`Retirer ${tag}`}><X size={12} /></button>
+                        <button type="button" onClick={() => setTags((p) => p.filter((x) => x !== tag))} aria-label={t('questions.a11y.removeTag', { tag })}><X size={12} /></button>
                       </span>
                     ))}
                   </div>
@@ -518,8 +519,8 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
               </div>
               <div className={`valid-hint ${canCreate ? 'ok' : 'ko'}`}>
                 {canCreate
-                  ? <><Check size={13} /> Prêt à enregistrer</>
-                  : <><AlertCircle size={13} /> Complétez l’énoncé et les réponses</>}
+                  ? <><Check size={13} /> {t('questions.validation.readyToSave')}</>
+                  : <><AlertCircle size={13} /> {t('questions.validation.completeToSaveShort')}</>}
               </div>
             </>
           )}
@@ -527,18 +528,18 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
 
         {/* Aperçu mobile — NON interactif (pointer-events: none en CSS) */}
         <aside className="q-preview" aria-hidden="true">
-          <div className="q-preview-cap">Aperçu mobile</div>
+          <div className="q-preview-cap">{t('questions.misc.mobilePreview')}</div>
           <div className="mobile-preview">
             <div className="row wrap" style={{ gap: 6 }}>
               <ThemeBadge theme={theme} />
               <LevelBadge level={level} />
             </div>
             <div className="mp-timer"><span style={{ width: '60%' }} /></div>
-            <div className="mp-q">{trimmed || 'Votre énoncé apparaîtra ici…'}</div>
+            <div className="mp-q">{trimmed || t('questions.placeholder.statementPreview')}</div>
             {opts.map((o, i) => (
               <div className={`mp-opt ${i === correct && o.trim() ? 'correct' : ''}`} key={LETTERS[i]}>
                 <span className="mp-letter">{LETTERS[i]}</span>
-                <span className="q-opt-text">{o.trim() || `Option ${LETTERS[i]}`}</span>
+                <span className="q-opt-text">{o.trim() || t('questions.placeholder.option', { letter: LETTERS[i] })}</span>
                 {i === correct && o.trim() && <Check size={15} />}
               </div>
             ))}
@@ -611,10 +612,11 @@ function ConfirmModal({ open, title, message, confirmLabel, onConfirm, onClose, 
 
 /* ---------- Aperçu mobile (drawer) — option lue, bonne réponse mise en valeur ---------- */
 function PreviewOption({ letter, text, correct }) {
+  const { t } = useTranslation();
   return (
     <div className={`q-mp-opt ${correct ? 'correct' : ''}`}>
       <span className="q-mp-letter">{letter}</span>
-      <span className="q-mp-opt-text">{text || `Option ${letter}`}</span>
+      <span className="q-mp-opt-text">{text || t('questions.placeholder.option', { letter })}</span>
       {correct && <Check size={15} className="q-mp-check" />}
     </div>
   );
@@ -890,7 +892,7 @@ function KanbanBoard({ rows, onOpen, onMove }) {
                   <div className="q-kanban-card-meta">
                     <ThemeBadge theme={q.theme} />
                     <LevelPill level={q.level} />
-                    {q.status === 'rejected' && <span className="q-kanban-tag-rejected"><XCircle size={11} /> Rejetée</span>}
+                    {q.status === 'rejected' && <span className="q-kanban-tag-rejected"><XCircle size={11} /> {t('questions.statuses.rejected')}</span>}
                   </div>
                   <div className="q-kanban-card-foot">{t('questions.misc.createdOn', { date: dateFr(q.created_at) })}</div>
                 </div>
@@ -1559,7 +1561,7 @@ export default function Questions() {
                 <div className="q-tabpane">
                   {detail.status === 'rejected' && (
                     <div className="q-banner-reject">
-                      <XCircle size={16} /> Cette question a été rejetée. Resoumettez-la après correction.
+                      <XCircle size={16} /> {t('questions.misc.rejectedBanner')}
                     </div>
                   )}
 
@@ -1577,8 +1579,8 @@ export default function Questions() {
 
                   <div className={`q-phone ${previewNight ? 'q-phone--night' : ''}`}>
                     <div className="q-phone-top">
-                      <span className="q-phone-step">Q 3/10</span>
-                      <span className="q-phone-pts">● 350 pts</span>
+                      <span className="q-phone-step">{t('questions.preview.demoStep')}</span>
+                      <span className="q-phone-pts">{t('questions.preview.demoPoints')}</span>
                     </div>
                     <div className="q-phone-timer"><span style={{ width: '60%' }} /></div>
                     <div className="q-phone-q">{detail.text_fr}</div>
@@ -1600,35 +1602,35 @@ export default function Questions() {
                             disabled={answered}
                           >
                             <span className="q-mp-letter">{LETTERS[i]}</span>
-                            <span className="q-mp-opt-text">{o.text || `Option ${LETTERS[i]}`}</span>
+                            <span className="q-mp-opt-text">{o.text || t('questions.placeholder.option', { letter: LETTERS[i] })}</span>
                             {showCorrect && <Check size={15} className="q-mp-check" />}
                             {showWrong && <X size={15} className="q-mp-check" />}
                           </button>
                         );
                       })}
                     </div>
-                    {testPick === -1 && <div className="q-phone-hint">Sélectionnez une réponse…</div>}
+                    {testPick === -1 && <div className="q-phone-hint">{t('questions.preview.selectAnswer')}</div>}
                     {(testPick == null || testPick >= 0) && correctIdx >= 0 && (
-                      <div className="q-phone-answer">✓ Bonne réponse : {LETTERS[correctIdx]}. {opts[correctIdx]?.text}</div>
+                      <div className="q-phone-answer">{t('questions.preview.correctAnswer', { letter: LETTERS[correctIdx], text: opts[correctIdx]?.text })}</div>
                     )}
                     {detail.explanation && (testPick == null || testPick >= 0) && (
                       <div className="q-phone-explain"><span>💡</span><span>{detail.explanation}</span></div>
                     )}
                   </div>
 
-                  <div className="q-section-label">Énoncé (brut)</div>
+                  <div className="q-section-label">{t('questions.misc.statementRaw')}</div>
                   <textarea className="textarea q-raw" readOnly value={detail.text_fr || ''} rows={3} />
 
                   {detail.explanation && (
                     <>
-                      <div className="q-section-label">Explication complète</div>
+                      <div className="q-section-label">{t('questions.misc.fullExplanation')}</div>
                       <div className="explain">{detail.explanation}</div>
                     </>
                   )}
 
                   {detail.source && (
                     <>
-                      <div className="q-section-label">Source</div>
+                      <div className="q-section-label">{t('questions.misc.source')}</div>
                       <div className="q-source">{detail.source}</div>
                     </>
                   )}

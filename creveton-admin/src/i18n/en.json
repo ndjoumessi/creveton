@@ -300,7 +300,11 @@
       "cancel": "Cancel",
       "next": "Next",
       "previous": "Previous",
-      "charCount": "characters left"
+      "charCount": "characters left",
+      "explanationOptional": "(optional)",
+      "optionsChoose": "Options — choose the correct answer",
+      "markCorrect": "Mark as correct answer",
+      "tagsHint": "(Enter to add)"
     },
     "notify": {
       "importFailed": "Import failed.",
@@ -333,7 +337,9 @@
       "readyToSave": "Ready to save",
       "completeToSave": "Complete the statement and answers to save",
       "reasonOk": "Reason sufficient",
-      "reasonMin": "Provide a reason (3 characters min.)"
+      "reasonMin": "Provide a reason (3 characters min.)",
+      "correctHasText": "The correct answer must have text",
+      "completeToSaveShort": "Complete the statement and answers"
     },
     "confirm": {
       "rejectTitle": "Reject the question",
@@ -358,7 +364,9 @@
       "option": "Option {{letter}}",
       "explanation": "Why this answer is correct…",
       "tags": "Type then Enter (e.g. capital)",
-      "rejectReason": "Explain why this question is rejected…"
+      "rejectReason": "Explain why this question is rejected…",
+      "explanationCreate": "Explanation shown after the answer…",
+      "tagExample": "e.g. capital"
     },
     "events": {
       "created": "Created",
@@ -450,6 +458,12 @@
       "activeLabel": "Active filters:",
       "found": "{{count}} of {{total}} questions",
       "clearAll": "Clear all filters"
+    },
+    "preview": {
+      "demoStep": "Q 3/10",
+      "demoPoints": "● 350 pts",
+      "selectAnswer": "Select an answer…",
+      "correctAnswer": "✓ Correct answer: {{letter}}. {{text}}"
     }
   },
   "users": {
@@ -738,7 +752,15 @@
       "createNew": "Create a tournament",
       "freeOnly": "Free · XP & badges",
       "full": "Full",
-      "startLabel": "Start"
+      "startLabel": "Start",
+      "startsInMin": "Starts in {{m}} min",
+      "startsInHm": "Starts in {{h}}h {{m}}min",
+      "placeholderName": "Tournament name",
+      "paid": "Paid",
+      "free": "Free",
+      "formatBadge": "{{q}} Q · {{s}}s",
+      "playersCount": "{{n}} / {{max}} players",
+      "dateTbd": "Date to be set"
     },
     "statuses": {
       "scheduled": "Scheduled",
@@ -753,7 +775,11 @@
       "cancel": "Cancel",
       "viewParticipants": "View entrants",
       "live": "Live",
-      "results": "Results"
+      "results": "Results",
+      "liveFollow": "Live tracking",
+      "detail": "Details",
+      "createShort": "Create",
+      "validateResults": "Validate results"
     },
     "modal": {
       "title": "Create a tournament",
@@ -773,7 +799,30 @@
       "previous": "Previous",
       "next": "Next",
       "create": "Create tournament",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "stepIdentity": "Identity",
+      "stepFormat": "Format",
+      "stepValidation": "Validation",
+      "namePlaceholder": "e.g. Grand Cameroon Culture Quiz",
+      "nameValid": "Valid name",
+      "nameMin": "5 characters minimum",
+      "descriptionOptional": "Description (optional)",
+      "descriptionPlaceholder": "Introduce the tournament to players…",
+      "maxPlayersShort": "Max players",
+      "questions": "Questions",
+      "timePerQ": "Time / Q",
+      "seconds": "{{n}}s",
+      "startDateTime": "Start date & time",
+      "dateFuture": "The date must be in the future.",
+      "lockedBannerPre": "Type forced to",
+      "lockedBannerFree": "Free",
+      "lockedBannerPost": "(XP & badges) — paid tournaments require a license (CDC §6).",
+      "nameLabel": "Name",
+      "formatLabel": "Format",
+      "formatValue": "{{q}} questions · {{s}}s / question",
+      "startLabel": "Start",
+      "completeRequired": "Complete the name (≥ 5 chars) and a future date.",
+      "livePreview": "Live preview"
     },
     "detail": {
       "info": "Information",
@@ -787,7 +836,31 @@
       "provisionalRank": "Provisional rank",
       "score": "Score",
       "registeredAt": "Registered on",
-      "liveRanking": "LIVE RANKING"
+      "liveRanking": "LIVE RANKING",
+      "pageTitle": "Tournament",
+      "notFoundTitle": "Tournament not found",
+      "notFoundMessage": "This tournament does not exist or has been deleted.",
+      "back": "Back",
+      "allTournaments": "All tournaments",
+      "mixedThemes": "Mixed themes",
+      "mixed": "Mixed",
+      "registered": "Registered",
+      "completion": "Completion",
+      "topScore": "Best score",
+      "type": "Type",
+      "freeType": "Free (XP & badges)",
+      "rewards": "Rewards",
+      "players": "Players",
+      "end": "End",
+      "podium": "Podium",
+      "participantsFinal": "Participants · final ranking",
+      "autoRefresh": "Automatically refreshed every 10 s.",
+      "registeredHere": "Registered for this tournament.",
+      "noParticipantsTitle": "No participants",
+      "noParticipantsMessage": "No one has registered for this tournament yet.",
+      "player": "Player",
+      "city": "City",
+      "gain": "Payout"
     },
     "notification": "just joined",
     "types": {
@@ -799,7 +872,8 @@
     },
     "empty": {
       "title": "No tournaments",
-      "subtitle": "Launch your first free tournament to engage the community."
+      "subtitle": "Launch your first free tournament to engage the community.",
+      "message": "Create your first free tournament."
     },
     "placeholder": {
       "name": "Grand National Quiz",
@@ -810,14 +884,17 @@
       "startDateRequired": "Start date required"
     },
     "confirm": {
-      "cancel": "Cancel the tournament “{{name}}”?"
+      "cancel": "Cancel the tournament “{{name}}”?",
+      "cancelSimple": "Cancel this tournament?"
     },
     "notify": {
       "startFailed": "Could not start.",
       "cancelFailed": "Could not cancel.",
       "publishFailed": "Could not publish.",
       "createFailed": "Could not create.",
-      "resultsPublished": "Results published."
+      "resultsPublished": "Results published.",
+      "startFailedMin": "Unable to start (min. 2 players).",
+      "actionFailed": "Action failed."
     },
     "a11y": {
       "rankPlace": "Rank {{rank}}"
@@ -828,6 +905,37 @@
       "paidSoon": "Paid tournaments are coming soon.",
       "themeQuestionsHelp": "This tournament will have ~{{count}} questions available on this theme.",
       "previewHint": "This tournament will have <b>{{available}}</b> questions available and <b>{{perGame}}</b> questions per game ({{seconds}}s each)."
+    },
+    "headStats": "Free competitions · {{scheduled}} scheduled · {{running}} running · {{closed}} finished",
+    "banner": {
+      "title": "Paid tournaments — awaiting license",
+      "progress": "License acquisition: in progress",
+      "cdc": "CDC §6"
+    },
+    "statsPanel": {
+      "total": "Total tournaments",
+      "registered": "Registered players",
+      "running": "Running",
+      "finished": "Finished"
+    },
+    "table": {
+      "name": "Name",
+      "type": "Type",
+      "theme": "Theme",
+      "players": "Players",
+      "status": "Status",
+      "rewards": "Rewards",
+      "date": "Date",
+      "actions": "Actions",
+      "xpReward": "🏅 XP"
+    },
+    "toast": {
+      "newRegistrations": "👤 {{count}} new registration(s)",
+      "started": "\"{{name}}\" started",
+      "startedSimple": "Tournament started",
+      "cancelled": "Tournament cancelled.",
+      "created": "Tournament created (scheduled).",
+      "resultsValidated": "Results validated"
     }
   },
   "leaderboard": {
@@ -886,7 +994,21 @@
       "displayName": "Display name",
       "timezone": "Timezone",
       "language": "Interface language",
-      "save": "Save"
+      "save": "Save",
+      "cardSub": "Your administrator account information.",
+      "changeAvatar": "Change avatar (coming soon)",
+      "city": "City",
+      "cityPlaceholder": "E.g. Yaoundé",
+      "emailReadOnly": "Email (read-only)",
+      "nameRequired": "Display name is required.",
+      "updated": "Profile updated.",
+      "updateFailed": "Update failed.",
+      "roles": {
+        "player": "Player",
+        "moderator": "Moderator",
+        "admin": "Administrator",
+        "super_admin": "Super admin"
+      }
     },
     "security": {
       "changePassword": "Change password",
@@ -902,7 +1024,31 @@
       "change": "Change",
       "activeSessions": "Active sessions",
       "revokeOthers": "Revoke other sessions",
-      "loginHistory": "Login history"
+      "loginHistory": "Login history",
+      "requirements": "≥ 8 characters, 1 uppercase, 1 digit, 1 special character.",
+      "confirmShort": "Confirm",
+      "strengthScale": {
+        "veryWeak": "Very weak",
+        "weak": "Weak",
+        "medium": "Medium",
+        "strong": "Strong",
+        "veryStrong": "Very strong"
+      },
+      "ruleLength": "8 characters minimum",
+      "ruleUppercase": "One uppercase letter",
+      "ruleDigit": "One digit",
+      "ruleSpecial": "One special character",
+      "changeFailed": "Failed to change password.",
+      "revoked": "{{count}} session(s) revoked.",
+      "revokeFailed": "Revocation failed.",
+      "sessionsSub": "Sessions open on your devices (JWT / refresh tokens).",
+      "revokeOthersShort": "Revoke others",
+      "noSessions": "No active session.",
+      "sessionLabel": "Session {{masked}}",
+      "sessionCurrent": "current",
+      "expiresIn": "Expires in {{days}} d",
+      "expiryUnknown": "Unknown expiry",
+      "historyNote": "Detailed login history (IP, device) is not yet logged on the server side."
     },
     "flags": {
       "paidTournaments": "Paid tournaments",
@@ -916,7 +1062,11 @@
       "demoMode": "Demo mode",
       "demoModeDesc": "Use mock data for product demos",
       "inactive": "Inactive since launch",
-      "requiresLicense": "Requires a license"
+      "requiresLicense": "Requires a license",
+      "toggled": "“{{label}}” {{state}}.",
+      "toggleFailed": "Change failed (super admin required).",
+      "cdcTitle": "Specification §6",
+      "lockedStatus": "Inactive since launch · requires a Ministry of Finance licence."
     },
     "notifications": {
       "email": "Email alerts",
@@ -931,7 +1081,13 @@
       "diskSpace": "Disk space > 80%",
       "dailySummary": "Daily summary",
       "dailySummaryDesc": "Sign-ups, games, revenue of the day",
-      "sendTime": "Send time"
+      "sendTime": "Send time",
+      "crashRateLong": "Crash rate > 1%",
+      "pendingModerationLong": "Question pending moderation for > 24 h",
+      "highLatencyLong": "API latency > 1 s",
+      "diskSpaceLong": "Disk space > 80%",
+      "dailySummaryRow": "Receive the daily summary (signups, games)",
+      "localNote": "Preferences saved locally. Actual alert delivery will be wired in v2."
     },
     "system": {
       "services": "Service status",
@@ -951,7 +1107,24 @@
       "nodeVersion": "Node.js version",
       "nodeVersionHint": "Backend server runtime.",
       "pgVersion": "PostgreSQL version",
-      "pgVersionHint": "Database engine."
+      "pgVersionHint": "Database engine.",
+      "operational": "Operational",
+      "down": "Unavailable",
+      "backendApi": "Backend API",
+      "nodeUptimeExtra": "Node {{version}} · uptime {{hours}} h",
+      "pgExtra": "{{version}} · {{connections}} connections",
+      "redisExtra": "{{keys}} keys",
+      "memoryHeap": "Node.js memory (heap)",
+      "rowsCount": "{{count}} rows",
+      "done": "done",
+      "actionFailed": "{{label}}: failed.",
+      "ratesRecomputed": "Success rates recomputed",
+      "levelsRecomputed": "XP levels recomputed",
+      "exportQuestionsBtn": "Export questions (JSON)",
+      "exportUsersBtn": "Export users (CSV)",
+      "exportQuestionsDone": "Questions export (JSON) downloaded.",
+      "exportUsersDone": "Users export (CSV) downloaded.",
+      "exportFailed": "Export failed."
     },
     "integrations": {
       "twilio": "Twilio (SMS OTP)",
@@ -963,7 +1136,9 @@
       "testPush": "Send a test notification",
       "waitingPayments": "Will be configured when paid tournaments are activated",
       "showKey": "Show key",
-      "hideKey": "Hide key"
+      "hideKey": "Hide key",
+      "testV2Title": "Test available in v2",
+      "keysNote": "API keys stay on the server (never exposed). Test sends will be wired in v2."
     },
     "about": {
       "version": "Version",
@@ -974,7 +1149,16 @@
       "credits": "Built with ❤️ for Cameroon 🇨🇲",
       "brand": "Creveton Admin",
       "environment": "Environment",
-      "backend": "Backend"
+      "backend": "Backend",
+      "cardTitle": "About Creveton",
+      "appVersion": "App version",
+      "backendVersion": "Backend version",
+      "nodeJs": "Node.js",
+      "postgres": "PostgreSQL",
+      "connectedAs": "Connected as",
+      "lastUpdateDated": "Last update: June 21, 2026",
+      "creditsPrefix": "Built with",
+      "creditsSuffix": "for Cameroon 🇨🇲"
     },
     "desc": {
       "account": "Your administrator details. Identity comes from the backend (read-only).",
@@ -1016,7 +1200,8 @@
       "paidBanner": "Paid tournaments will be unlocked once the gaming license is obtained (CDC §6).",
       "updating": "Updating…",
       "update": "Update"
-    }
+    },
+    "pageDescription": "Account, security, feature flags, system and integrations."
   },
   "login": {
     "title": "Creveton",

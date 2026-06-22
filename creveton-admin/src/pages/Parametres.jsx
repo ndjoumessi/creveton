@@ -1,5 +1,6 @@
 import './Parametres.css';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   User, Shield, ToggleLeft, Bell, Settings as Cog, Plug, Info,
   Camera, Save, Check, Monitor, Database, Zap, Server, Download,
@@ -19,16 +20,16 @@ import { Skeleton } from '../components/Skeleton';
 import { notify } from '../components/Toast';
 
 const SECTIONS = [
-  { key: 'account', label: 'Compte', icon: User },
-  { key: 'security', label: 'Sécurité', icon: Shield },
-  { key: 'flags', label: 'Feature flags', icon: ToggleLeft },
-  { key: 'notifications', label: 'Notifications', icon: Bell },
-  { key: 'system', label: 'Système', icon: Cog },
-  { key: 'integrations', label: 'Intégrations', icon: Plug },
-  { key: 'about', label: 'À propos', icon: Info },
+  { key: 'account', icon: User },
+  { key: 'security', icon: Shield },
+  { key: 'flags', icon: ToggleLeft },
+  { key: 'notifications', icon: Bell },
+  { key: 'system', icon: Cog },
+  { key: 'integrations', icon: Plug },
+  { key: 'about', icon: Info },
 ];
 
-const ROLE_LABELS = { player: 'Joueur', moderator: 'Modérateur', admin: 'Administrateur', super_admin: 'Super admin' };
+const ROLE_KEYS = { player: 'player', moderator: 'moderator', admin: 'admin', super_admin: 'super_admin' };
 const APP_VERSION = '1.0.0-MVP';
 
 // Préférences de notification (sans backend dédié → persistées localement).
@@ -44,16 +45,17 @@ function loadNotifs() {
 
 function bytesMb(n) { return n != null ? `${Math.round(n / 1e6)} Mo` : '—'; }
 
-/** Force d'un mot de passe → score 0–4 + libellé. */
-function passwordStrength(pwd) {
-  if (!pwd) return { score: 0, label: '—' };
+const STRENGTH_KEYS = ['veryWeak', 'weak', 'medium', 'strong', 'veryStrong'];
+
+/** Force d'un mot de passe → score 0–4. */
+function passwordStrengthScore(pwd) {
+  if (!pwd) return 0;
   let s = 0;
   if (pwd.length >= 8) s += 1;
   if (/[A-Z]/.test(pwd)) s += 1;
   if (/\d/.test(pwd)) s += 1;
   if (/[^A-Za-z0-9]/.test(pwd)) s += 1;
-  const labels = ['Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort'];
-  return { score: s, label: labels[s] };
+  return s;
 }
 
 /** Toggle custom réutilisable. */
@@ -67,6 +69,7 @@ function Toggle({ checked, onChange, disabled }) {
 }
 
 export default function Parametres() {
+  const { t } = useTranslation();
   const [section, setSection] = useState('account');
   const user = useAuthStore((s) => s.user) || {};
   const lang = useUiStore((s) => s.lang);
@@ -75,14 +78,14 @@ export default function Parametres() {
 
   return (
     <>
-      <PageHeader title="Paramètres" description="Compte, sécurité, feature flags, système et intégrations." />
+      <PageHeader title={t('settings.title')} description={t('settings.pageDescription')} />
       <div className="settings-layout">
         <nav className="settings-nav">
           {SECTIONS.map((sct) => {
             const Icon = sct.icon;
             return (
               <button key={sct.key} className={section === sct.key ? 'active' : ''} onClick={() => setSection(sct.key)}>
-                <Icon size={16} /> {sct.label}
+                <Icon size={16} /> {t(`settings.sections.${sct.key}`)}
               </button>
             );
           })}
@@ -104,54 +107,55 @@ export default function Parametres() {
 
 /* ───────────────────────── Compte ───────────────────────── */
 function AccountSection({ user, lang, setLang }) {
+  const { t } = useTranslation();
   const [name, setName] = useState(user.name || '');
   const [ville, setVille] = useState(user.ville || '');
   const [busy, setBusy] = useState(false);
   const dirty = name.trim() !== (user.name || '') || ville.trim() !== (user.ville || '');
 
   const save = async () => {
-    if (!name.trim()) { notify.error('Le nom d’affichage est requis.'); return; }
+    if (!name.trim()) { notify.error(t('settings.account.nameRequired')); return; }
     setBusy(true);
     try {
       const updated = await settingsService.updateMe({ name: name.trim(), ville: ville.trim() || undefined });
       useAuthStore.setState({ user: { ...user, ...updated } });
       try { sessionStorage.setItem('creveton_admin_user', JSON.stringify({ ...user, ...updated })); } catch { /* ignore */ }
-      notify.success('Profil mis à jour.');
-    } catch { notify.error('Mise à jour impossible.'); } finally { setBusy(false); }
+      notify.success(t('settings.account.updated'));
+    } catch { notify.error(t('settings.account.updateFailed')); } finally { setBusy(false); }
   };
 
   return (
     <div className="card card-pad">
-      <h3 className="card-title">Compte</h3>
-      <p className="card-sub" style={{ marginBottom: 18 }}>Informations de votre compte administrateur.</p>
+      <h3 className="card-title">{t('settings.sections.account')}</h3>
+      <p className="card-sub" style={{ marginBottom: 18 }}>{t('settings.account.cardSub')}</p>
 
       <div className="set-identity">
         <div className="set-avatar">
           <Avatar name={user.name} size="xl" />
-          <span className="set-avatar-cam" title="Changer l’avatar (à venir)"><Camera size={15} /></span>
+          <span className="set-avatar-cam" title={t('settings.account.changeAvatar')}><Camera size={15} /></span>
         </div>
         <div>
           <div className="set-identity-name">{user.name || '—'}</div>
           <div className="set-identity-mail">{user.email || '—'}</div>
-          <span className="badge badge-level" style={{ marginTop: 6, display: 'inline-block' }}>{ROLE_LABELS[user.role] || user.role}</span>
+          <span className="badge badge-level" style={{ marginTop: 6, display: 'inline-block' }}>{ROLE_KEYS[user.role] ? t(`settings.account.roles.${ROLE_KEYS[user.role]}`) : user.role}</span>
         </div>
       </div>
 
       <div className="set-form">
         <div className="field">
-          <label>Nom d’affichage</label>
+          <label>{t('settings.account.displayName')}</label>
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
         </div>
         <div className="field">
-          <label>Ville</label>
-          <input className="input" value={ville} onChange={(e) => setVille(e.target.value)} maxLength={100} placeholder="Ex. Yaoundé" />
+          <label>{t('settings.account.city')}</label>
+          <input className="input" value={ville} onChange={(e) => setVille(e.target.value)} maxLength={100} placeholder={t('settings.account.cityPlaceholder')} />
         </div>
         <div className="field">
-          <label>Email (lecture seule)</label>
+          <label>{t('settings.account.emailReadOnly')}</label>
           <input className="input" value={user.email || ''} readOnly disabled />
         </div>
         <div className="field">
-          <label>Langue de l’interface</label>
+          <label>{t('settings.account.language')}</label>
           <div className="set-lang">
             <button type="button" className={`set-lang-btn ${lang === 'fr' ? 'is-active' : ''}`} onClick={() => setLang('fr')}>FR</button>
             <button type="button" className={`set-lang-btn ${lang === 'en' ? 'is-active' : ''}`} onClick={() => setLang('en')}>EN</button>
@@ -160,7 +164,7 @@ function AccountSection({ user, lang, setLang }) {
       </div>
 
       <button className="btn btn-gold" disabled={!dirty || busy} onClick={save}>
-        <Save size={15} /> Sauvegarder
+        <Save size={15} /> {t('settings.account.save')}
       </button>
     </div>
   );
@@ -168,11 +172,13 @@ function AccountSection({ user, lang, setLang }) {
 
 /* ───────────────────────── Sécurité ───────────────────────── */
 function SecuritySection() {
+  const { t } = useTranslation();
   const [cur, setCur] = useState('');
   const [nw, setNw] = useState('');
   const [cf, setCf] = useState('');
   const [busy, setBusy] = useState(false);
-  const strength = passwordStrength(nw);
+  const strengthScore = passwordStrengthScore(nw);
+  const strengthLabel = nw ? t(`settings.security.strengthScale.${STRENGTH_KEYS[strengthScore]}`) : '—';
   const rules = {
     len: nw.length >= 8, maj: /[A-Z]/.test(nw), num: /\d/.test(nw), spec: /[^A-Za-z0-9]/.test(nw),
   };
@@ -186,74 +192,74 @@ function SecuritySection() {
     setBusy(true);
     try {
       await authService.changePassword(cur, nw);
-      notify.success('Mot de passe modifié.');
+      notify.success(t('settings.notify.passwordUpdated'));
       setCur(''); setNw(''); setCf('');
-    } catch (e) { notify.error(e?.response?.data?.error?.message || 'Échec du changement de mot de passe.'); }
+    } catch (e) { notify.error(e?.response?.data?.error?.message || t('settings.security.changeFailed')); }
     finally { setBusy(false); }
   };
 
   const revokeOthers = async () => {
     try {
       const r = await settingsService.revokeOtherSessions();
-      notify.success(`${r.revoked} session(s) révoquée(s).`);
+      notify.success(t('settings.security.revoked', { count: r.revoked }));
       refetch();
-    } catch { notify.error('Révocation impossible.'); }
+    } catch { notify.error(t('settings.security.revokeFailed')); }
   };
 
   return (
     <>
       <div className="card card-pad">
-        <h3 className="card-title">Changer le mot de passe</h3>
-        <p className="card-sub" style={{ marginBottom: 16 }}>≥ 8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial.</p>
+        <h3 className="card-title">{t('settings.security.changePassword')}</h3>
+        <p className="card-sub" style={{ marginBottom: 16 }}>{t('settings.security.requirements')}</p>
         <div className="set-form">
-          <div className="field"><label>Mot de passe actuel</label><PasswordInput value={cur} onChange={(e) => setCur(e.target.value)} /></div>
-          <div className="field"><label>Nouveau mot de passe</label><PasswordInput value={nw} onChange={(e) => setNw(e.target.value)} /></div>
-          <div className="field"><label>Confirmer</label><PasswordInput value={cf} onChange={(e) => setCf(e.target.value)} /></div>
+          <div className="field"><label>{t('settings.security.current')}</label><PasswordInput value={cur} onChange={(e) => setCur(e.target.value)} /></div>
+          <div className="field"><label>{t('settings.security.new')}</label><PasswordInput value={nw} onChange={(e) => setNw(e.target.value)} /></div>
+          <div className="field"><label>{t('settings.security.confirmShort')}</label><PasswordInput value={cf} onChange={(e) => setCf(e.target.value)} /></div>
         </div>
         {nw && (
           <div className="set-strength">
             <div className="set-strength-bar">
-              {[0, 1, 2, 3].map((i) => <span key={i} className={`set-strength-seg ${i < strength.score ? `s${strength.score}` : ''}`} />)}
+              {[0, 1, 2, 3].map((i) => <span key={i} className={`set-strength-seg ${i < strengthScore ? `s${strengthScore}` : ''}`} />)}
             </div>
-            <span className="set-strength-label">{strength.label}</span>
+            <span className="set-strength-label">{strengthLabel}</span>
           </div>
         )}
         <ul className="set-rules">
-          <li className={rules.len ? 'ok' : ''}><Check size={13} /> 8 caractères minimum</li>
-          <li className={rules.maj ? 'ok' : ''}><Check size={13} /> Une majuscule</li>
-          <li className={rules.num ? 'ok' : ''}><Check size={13} /> Un chiffre</li>
-          <li className={rules.spec ? 'ok' : ''}><Check size={13} /> Un caractère spécial</li>
+          <li className={rules.len ? 'ok' : ''}><Check size={13} /> {t('settings.security.ruleLength')}</li>
+          <li className={rules.maj ? 'ok' : ''}><Check size={13} /> {t('settings.security.ruleUppercase')}</li>
+          <li className={rules.num ? 'ok' : ''}><Check size={13} /> {t('settings.security.ruleDigit')}</li>
+          <li className={rules.spec ? 'ok' : ''}><Check size={13} /> {t('settings.security.ruleSpecial')}</li>
         </ul>
-        {cf && nw !== cf && <div className="field-error">Les mots de passe ne correspondent pas.</div>}
-        <button className="btn btn-gold" disabled={!canSubmit || busy} onClick={submit}><KeyRound size={15} /> Changer le mot de passe</button>
+        {cf && nw !== cf && <div className="field-error">{t('settings.validation.noMatch')}</div>}
+        <button className="btn btn-gold" disabled={!canSubmit || busy} onClick={submit}><KeyRound size={15} /> {t('settings.security.changePassword')}</button>
       </div>
 
       <div className="card card-pad" style={{ marginTop: 16 }}>
         <div className="between">
           <div>
-            <h3 className="card-title">Sessions actives</h3>
-            <p className="card-sub">Sessions ouvertes via vos appareils (JWT / refresh tokens).</p>
+            <h3 className="card-title">{t('settings.security.activeSessions')}</h3>
+            <p className="card-sub">{t('settings.security.sessionsSub')}</p>
           </div>
-          <button className="btn btn-danger-ghost btn-sm" onClick={revokeOthers}><LogOut size={14} /> Révoquer les autres</button>
+          <button className="btn btn-danger-ghost btn-sm" onClick={revokeOthers}><LogOut size={14} /> {t('settings.security.revokeOthersShort')}</button>
         </div>
         {loadingSessions ? (
           <Skeleton w="100%" h={48} r={10} style={{ marginTop: 10 }} />
         ) : (sessions || []).length === 0 ? (
-          <p className="muted" style={{ marginTop: 10 }}>Aucune session active.</p>
+          <p className="muted" style={{ marginTop: 10 }}>{t('settings.security.noSessions')}</p>
         ) : (
           <div className="set-sessions">
             {sessions.map((s) => (
               <div className="set-session" key={s.sid}>
                 <span className="set-session-ic"><Monitor size={16} /></span>
                 <div className="set-session-main">
-                  <span className="set-session-id">Session {s.masked}{s.current && <span className="set-session-cur">actuelle</span>}</span>
-                  <span className="set-session-exp">{s.expires_in_s != null ? `Expire dans ${Math.round(s.expires_in_s / 86400)} j` : 'Expiration inconnue'}</span>
+                  <span className="set-session-id">{t('settings.security.sessionLabel', { masked: s.masked })}{s.current && <span className="set-session-cur">{t('settings.security.sessionCurrent')}</span>}</span>
+                  <span className="set-session-exp">{s.expires_in_s != null ? t('settings.security.expiresIn', { days: Math.round(s.expires_in_s / 86400) }) : t('settings.security.expiryUnknown')}</span>
                 </div>
               </div>
             ))}
           </div>
         )}
-        <div className="set-note"><AlertTriangle size={14} /> L’historique détaillé des connexions (IP, appareil) n’est pas encore journalisé côté serveur.</div>
+        <div className="set-note"><AlertTriangle size={14} /> {t('settings.security.historyNote')}</div>
       </div>
     </>
   );
@@ -261,6 +267,7 @@ function SecuritySection() {
 
 /* ───────────────────────── Feature flags ───────────────────────── */
 function FlagsSection({ setMaintenance }) {
+  const { t } = useTranslation();
   const { data: flags, loading, setData } = useApiData(() => settingsService.getFlags(), []);
 
   const toggle = async (flag, enabled) => {
@@ -270,10 +277,10 @@ function FlagsSection({ setMaintenance }) {
       const updated = await settingsService.setFlag(flag.key, enabled);
       setData(updated);
       if (flag.key === 'maintenance_mode') setMaintenance(enabled);
-      notify.success(`« ${flag.label} » ${enabled ? 'activé' : 'désactivé'}.`);
+      notify.success(t('settings.flags.toggled', { label: flag.label, state: enabled ? t('settings.notify.on') : t('settings.notify.off') }));
     } catch {
       setData((prev) => (prev || []).map((f) => (f.key === flag.key ? { ...f, enabled: !enabled } : f)));
-      notify.error('Modification impossible (super admin requis).');
+      notify.error(t('settings.flags.toggleFailed'));
     }
   };
 
@@ -286,10 +293,10 @@ function FlagsSection({ setMaintenance }) {
           <div className="set-flag-main">
             <div className="set-flag-title">
               {flag.label}
-              {flag.locked && <span className="set-flag-badge" title="Cahier des charges §6">🔒 CDC §6</span>}
+              {flag.locked && <span className="set-flag-badge" title={t('settings.flags.cdcTitle')}>🔒 CDC §6</span>}
             </div>
             <p className="set-flag-desc">{flag.description}</p>
-            {flag.locked && <p className="set-flag-status">Inactif depuis le lancement · requiert une licence du Ministère des Finances.</p>}
+            {flag.locked && <p className="set-flag-status">{t('settings.flags.lockedStatus')}</p>}
           </div>
           <Toggle checked={flag.enabled} onChange={(v) => toggle(flag, v)} disabled={!flag.editable} />
         </div>
@@ -300,6 +307,7 @@ function FlagsSection({ setMaintenance }) {
 
 /* ───────────────────────── Notifications ───────────────────────── */
 function NotificationsSection() {
+  const { t } = useTranslation();
   const [prefs, setPrefs] = useState(loadNotifs);
   const set = (key, val) => {
     const next = { ...prefs, [key]: val };
@@ -315,37 +323,38 @@ function NotificationsSection() {
   return (
     <>
       <div className="card card-pad">
-        <h3 className="card-title">Alertes email</h3>
-        {renderRow('signup', 'Nouvelle inscription')}
-        {renderRow('perfect', 'Partie avec score parfait (10/10)')}
-        {renderRow('reported', 'Question signalée incorrecte')}
-        {renderRow('crash', 'Taux de crash > 1 %')}
-        {renderRow('mod_24h', 'Question en attente de modération depuis > 24 h')}
+        <h3 className="card-title">{t('settings.notifications.email')}</h3>
+        {renderRow('signup', t('settings.notifications.newSignup'))}
+        {renderRow('perfect', t('settings.notifications.perfectScore'))}
+        {renderRow('reported', t('settings.notifications.reportedQuestion'))}
+        {renderRow('crash', t('settings.notifications.crashRateLong'))}
+        {renderRow('mod_24h', t('settings.notifications.pendingModerationLong'))}
       </div>
       <div className="card card-pad" style={{ marginTop: 16 }}>
-        <h3 className="card-title">Alertes système</h3>
-        {renderRow('latency', 'Latence API > 1 s')}
-        {renderRow('redis', 'Redis indisponible')}
-        {renderRow('disk', 'Espace disque > 80 %')}
+        <h3 className="card-title">{t('settings.notifications.system')}</h3>
+        {renderRow('latency', t('settings.notifications.highLatencyLong'))}
+        {renderRow('redis', t('settings.notifications.redisDown'))}
+        {renderRow('disk', t('settings.notifications.diskSpaceLong'))}
       </div>
       <div className="card card-pad" style={{ marginTop: 16 }}>
-        <h3 className="card-title">Résumé quotidien</h3>
-        {renderRow('daily', 'Recevoir le résumé quotidien (inscriptions, parties)')}
+        <h3 className="card-title">{t('settings.notifications.dailySummary')}</h3>
+        {renderRow('daily', t('settings.notifications.dailySummaryRow'))}
       </div>
-      <div className="set-note"><AlertTriangle size={14} /> Préférences enregistrées localement. L’envoi effectif des alertes sera branché en v2.</div>
+      <div className="set-note"><AlertTriangle size={14} /> {t('settings.notifications.localNote')}</div>
     </>
   );
 }
 
 /* ───────────────────────── Système ───────────────────────── */
 function ServiceCard({ icon, label, ok, latency, extra }) {
+  const { t } = useTranslation();
   return (
     <div className="set-sys-card">
       <span className="set-sys-ic">{icon}</span>
       <div className="set-sys-body">
         <div className="set-sys-name">{label}</div>
         <div className={`set-sys-state ${ok ? 'ok' : 'down'}`}>
-          <span className="dot" /> {ok ? 'Opérationnel' : 'Indisponible'}{latency != null ? ` · ${latency} ms` : ''}
+          <span className="dot" /> {ok ? t('settings.system.operational') : t('settings.system.down')}{latency != null ? ` · ${latency} ms` : ''}
         </div>
         {extra && <div className="set-sys-extra">{extra}</div>}
       </div>
@@ -354,6 +363,7 @@ function ServiceCard({ icon, label, ok, latency, extra }) {
 }
 
 function SystemSection() {
+  const { t } = useTranslation();
   const { data: sys, loading } = useApiData(() => settingsService.getSystem(), [], { pollMs: 15000 });
   const [running, setRunning] = useState(null);
 
@@ -361,8 +371,8 @@ function SystemSection() {
     setRunning(key);
     try {
       const r = await fn();
-      notify.success(`${label} — ${r.updated != null ? `${num(r.updated)} lignes` : 'terminé'}.`);
-    } catch { notify.error(`${label} : échec.`); } finally { setRunning(null); }
+      notify.success(`${label} — ${r.updated != null ? t('settings.system.rowsCount', { count: num(r.updated) }) : t('settings.system.done')}.`);
+    } catch { notify.error(t('settings.system.actionFailed', { label })); } finally { setRunning(null); }
   };
 
   if (loading && !sys) return <Skeleton w="100%" h={320} r={14} />;
@@ -372,24 +382,24 @@ function SystemSection() {
   return (
     <>
       <div className="card card-pad">
-        <h3 className="card-title">État des services</h3>
+        <h3 className="card-title">{t('settings.system.services')}</h3>
         <div className="set-sys-grid">
-          <ServiceCard icon={<Server size={18} />} label="Backend API" ok latency={null} extra={`Node ${sys?.node?.version} · uptime ${Math.floor((sys?.node?.uptime_s || 0) / 3600)} h`} />
-          <ServiceCard icon={<Database size={18} />} label="PostgreSQL" ok={!sys?.pg?.error} latency={sys?.pg?.latency_ms} extra={`${sys?.pg?.version || ''} · ${sys?.pg?.connections ?? '—'} connexions`} />
-          <ServiceCard icon={<Zap size={18} />} label="Redis" ok={sys?.redis?.status === 'ready'} latency={sys?.redis?.latency_ms} extra={`${sys?.redis?.keys ?? '—'} clés`} />
+          <ServiceCard icon={<Server size={18} />} label={t('settings.system.backendApi')} ok latency={null} extra={t('settings.system.nodeUptimeExtra', { version: sys?.node?.version, hours: Math.floor((sys?.node?.uptime_s || 0) / 3600) })} />
+          <ServiceCard icon={<Database size={18} />} label="PostgreSQL" ok={!sys?.pg?.error} latency={sys?.pg?.latency_ms} extra={t('settings.system.pgExtra', { version: sys?.pg?.version || '', connections: sys?.pg?.connections ?? '—' })} />
+          <ServiceCard icon={<Zap size={18} />} label="Redis" ok={sys?.redis?.status === 'ready'} latency={sys?.redis?.latency_ms} extra={t('settings.system.redisExtra', { keys: sys?.redis?.keys ?? '—' })} />
         </div>
       </div>
 
       <div className="card card-pad" style={{ marginTop: 16 }}>
-        <h3 className="card-title">Ressources</h3>
+        <h3 className="card-title">{t('settings.system.resources')}</h3>
         <div className="set-res">
           <div className="set-res-row">
-            <span className="set-res-label">Mémoire Node.js (heap)</span>
+            <span className="set-res-label">{t('settings.system.memoryHeap')}</span>
             <span className="progress"><span style={{ width: `${memPct}%` }} /></span>
             <span className="set-res-val">{bytesMb(sys?.memory?.heap_used)} / {bytesMb(sys?.memory?.heap_total)}</span>
           </div>
           <div className="set-res-row">
-            <span className="set-res-label">Connexions DB actives</span>
+            <span className="set-res-label">{t('settings.system.dbConnections')}</span>
             <span className="progress"><span style={{ width: `${poolPct}%` }} /></span>
             <span className="set-res-val">{sys?.db?.pool_total ?? 0} / {sys?.db?.max ?? 10}</span>
           </div>
@@ -397,19 +407,19 @@ function SystemSection() {
       </div>
 
       <div className="card card-pad" style={{ marginTop: 16 }}>
-        <h3 className="card-title">Maintenance</h3>
+        <h3 className="card-title">{t('settings.system.maintenance')}</h3>
         <div className="set-maint">
-          <button className="btn" disabled={running === 'sr'} onClick={() => action('sr', settingsService.recomputeSuccessRates, 'Taux de réussite recalculés')}>
-            {running === 'sr' ? <RefreshCw size={15} className="spin" /> : <RefreshCw size={15} />} Recalculer les taux de réussite
+          <button className="btn" disabled={running === 'sr'} onClick={() => action('sr', settingsService.recomputeSuccessRates, t('settings.system.ratesRecomputed'))}>
+            {running === 'sr' ? <RefreshCw size={15} className="spin" /> : <RefreshCw size={15} />} {t('settings.system.recalcRates')}
           </button>
-          <button className="btn" disabled={running === 'xp'} onClick={() => action('xp', settingsService.recomputeXp, 'Niveaux XP recalculés')}>
-            {running === 'xp' ? <RefreshCw size={15} className="spin" /> : <RefreshCw size={15} />} Recalculer les niveaux XP
+          <button className="btn" disabled={running === 'xp'} onClick={() => action('xp', settingsService.recomputeXp, t('settings.system.levelsRecomputed'))}>
+            {running === 'xp' ? <RefreshCw size={15} className="spin" /> : <RefreshCw size={15} />} {t('settings.system.recalcLevels')}
           </button>
-          <button className="btn" onClick={() => settingsService.exportQuestions().then(() => notify.success('Export questions (JSON) téléchargé.')).catch(() => notify.error('Export impossible.'))}>
-            <Download size={15} /> Exporter les questions (JSON)
+          <button className="btn" onClick={() => settingsService.exportQuestions().then(() => notify.success(t('settings.system.exportQuestionsDone'))).catch(() => notify.error(t('settings.system.exportFailed')))}>
+            <Download size={15} /> {t('settings.system.exportQuestionsBtn')}
           </button>
-          <button className="btn" onClick={() => settingsService.exportUsers().then(() => notify.success('Export utilisateurs (CSV) téléchargé.')).catch(() => notify.error('Export impossible.'))}>
-            <Download size={15} /> Exporter les utilisateurs (CSV)
+          <button className="btn" onClick={() => settingsService.exportUsers().then(() => notify.success(t('settings.system.exportUsersDone'))).catch(() => notify.error(t('settings.system.exportFailed')))}>
+            <Download size={15} /> {t('settings.system.exportUsersBtn')}
           </button>
         </div>
       </div>
@@ -419,6 +429,7 @@ function SystemSection() {
 
 /* ───────────────────────── Intégrations ───────────────────────── */
 function IntegrationsSection() {
+  const { t } = useTranslation();
   const { data: list, loading } = useApiData(() => settingsService.getIntegrations(), []);
   if (loading && !list) return <Skeleton w="100%" h={240} r={14} />;
   return (
@@ -428,37 +439,39 @@ function IntegrationsSection() {
           <div className="set-integration-head">
             <span className="set-integration-name">{it.label}</span>
             <span className={`set-integration-state ${it.configured ? 'ok' : 'off'}`}>
-              <span className="dot" /> {it.configured ? 'Configuré' : 'Non configuré'}
+              <span className="dot" /> {it.configured ? t('settings.integrations.configured') : t('settings.integrations.notConfigured')}
             </span>
           </div>
           <p className="set-integration-detail">{it.detail}</p>
           {it.testable && (
-            <button className="btn btn-sm" disabled title="Test disponible en v2">
-              <Plug size={14} /> {it.testable === 'sms' ? 'Envoyer un SMS test' : 'Envoyer une notification test'}
+            <button className="btn btn-sm" disabled title={t('settings.integrations.testV2Title')}>
+              <Plug size={14} /> {it.testable === 'sms' ? t('settings.integrations.testSms') : t('settings.integrations.testPush')}
             </button>
           )}
         </div>
       ))}
-      <div className="set-note"><AlertTriangle size={14} /> Les clés API restent côté serveur (jamais exposées). Les envois de test seront branchés en v2.</div>
+      <div className="set-note"><AlertTriangle size={14} /> {t('settings.integrations.keysNote')}</div>
     </div>
   );
 }
 
 /* ───────────────────────── À propos ───────────────────────── */
 function AboutSection({ user }) {
+  const { t } = useTranslation();
   const { data: health } = useApiData(() => healthService.get(), []);
+  const roleLabel = ROLE_KEYS[user.role] ? t(`settings.account.roles.${ROLE_KEYS[user.role]}`) : (user.role || '—');
   const items = useMemo(() => ([
-    { k: 'Version application', v: APP_VERSION, badge: true },
-    { k: 'Version backend', v: health?.version || '—' },
-    { k: 'Node.js', v: health?.system?.node || '—' },
-    { k: 'PostgreSQL', v: health?.system?.postgres || '—' },
-    { k: 'Connecté en tant que', v: `${user.name || '—'} (${ROLE_LABELS[user.role] || user.role || '—'})` },
-  ]), [health, user]);
+    { k: t('settings.about.appVersion'), v: APP_VERSION, badge: true },
+    { k: t('settings.about.backendVersion'), v: health?.version || '—' },
+    { k: t('settings.about.nodeJs'), v: health?.system?.node || '—' },
+    { k: t('settings.about.postgres'), v: health?.system?.postgres || '—' },
+    { k: t('settings.about.connectedAs'), v: `${user.name || '—'} (${roleLabel})` },
+  ]), [health, user, t, roleLabel]);
 
   return (
     <div className="card card-pad">
       <div className="set-about-head">
-        <h3 className="card-title">À propos de Creveton</h3>
+        <h3 className="card-title">{t('settings.about.cardTitle')}</h3>
         <span className="set-version-badge">{APP_VERSION}</span>
       </div>
       <dl className="kv" style={{ marginTop: 14 }}>
@@ -469,12 +482,12 @@ function AboutSection({ user }) {
           </div>
         ))}
       </dl>
-      <div className="set-about-meta">Dernière mise à jour : 21 juin 2026</div>
+      <div className="set-about-meta">{t('settings.about.lastUpdateDated')}</div>
       <div className="set-about-links">
-        <a href="https://github.com/ndjoumessi/creveton" target="_blank" rel="noreferrer"><Globe size={14} /> GitHub</a>
-        <a href="/docs" target="_blank" rel="noreferrer"><Info size={14} /> Documentation</a>
+        <a href="https://github.com/ndjoumessi/creveton" target="_blank" rel="noreferrer"><Globe size={14} /> {t('settings.about.github')}</a>
+        <a href="/docs" target="_blank" rel="noreferrer"><Info size={14} /> {t('settings.about.documentation')}</a>
       </div>
-      <div className="set-credits">Construit avec <span className="set-heart">❤</span> pour le Cameroun 🇨🇲</div>
+      <div className="set-credits">{t('settings.about.creditsPrefix')} <span className="set-heart">❤</span> {t('settings.about.creditsSuffix')}</div>
     </div>
   );
 }
