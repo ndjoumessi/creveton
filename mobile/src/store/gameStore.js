@@ -92,8 +92,18 @@ export const useGameStore = create((set, get) => ({
         session_id: sessionId || undefined,
         answers,
       });
-      set({ result, submitting: false });
-      return { ok: true, result };
+      // Temps moyen par réponse — calculé localement (les `answers` portent
+      // toujours `elapsed_ms`, contrairement au review[] de l'API qui peut l'omettre).
+      // On ne le recalcule pas si l'API le fournit déjà.
+      const timed = answers.filter((a) => typeof a.elapsed_ms === 'number' && !a.skipped);
+      const avgMs = timed.length
+        ? Math.round(timed.reduce((s, a) => s + a.elapsed_ms, 0) / timed.length)
+        : null;
+      const merged = (typeof result.avg_time_ms === 'number' || avgMs == null)
+        ? result
+        : { ...result, avg_time_ms: avgMs };
+      set({ result: merged, submitting: false });
+      return { ok: true, result: merged };
     } catch (e) {
       const err = parseApiError(e);
       set({ submitting: false, error: err.message });
