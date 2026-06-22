@@ -2,12 +2,12 @@
 
 const fs = require('fs');
 const path = require('path');
-const notImplemented = require('../utils/notImplemented');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { ok, noContent } = require('../utils/response');
 const walletService = require('../services/walletService');
 const userModel = require('../models/user.model');
+const sessionModel = require('../models/session.model');
 
 // Dossier de stockage des avatars (absolu, racine du projet backend).
 const AVATARS_DIR = path.join(__dirname, '../../uploads/avatars');
@@ -86,8 +86,21 @@ module.exports = {
     await userModel.clearAvatar(userId);
     return noContent(res);
   }),
-  // GET /users/me/history
-  history: notImplemented('GET /users/me/history'),
+  // GET /users/me/history — historique paginé des parties du joueur (cursor = offset).
+  // Alimente les stats rapides + « dernières parties » de l'accueil mobile.
+  history: asyncHandler(async (req, res) => {
+    const { limit, cursor } = req.query;
+    const offset = Math.max(0, parseInt(cursor, 10) || 0);
+    const { rows, hasMore } = await sessionModel.listByUser(req.user.id, { limit, offset });
+    return ok(res, {
+      data: rows.map(sessionModel.toView),
+      page: {
+        limit,
+        next_cursor: hasMore ? String(offset + limit) : null,
+        has_more: hasMore,
+      },
+    });
+  }),
   // GET /users/me/transactions (derrière le flag payant) → historique paginé
   transactions: asyncHandler(async (req, res) => {
     const result = await walletService.listTransactions({

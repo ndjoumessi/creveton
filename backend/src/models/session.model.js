@@ -12,6 +12,7 @@ function toView(row) {
   if (!row) return null;
   return {
     id: row.id,
+    session_id: row.id, // alias attendu par la vue joueur (historique mobile)
     user_id: row.user_id,
     mode: row.mode,
     theme: row.theme ?? null,
