@@ -1,5 +1,6 @@
-import { useState, useMemo, useRef, useEffect, Fragment } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import {
   Plus, Upload, Search, Check, Eye, Send, ThumbsUp, ThumbsDown,
   Archive, RotateCcw, Zap, Download, ChevronUp, ChevronDown, ChevronsUpDown,
@@ -18,15 +19,46 @@ import ThemeBadge from '../components/ThemeBadge';
 import Gauge from '../components/Gauge';
 import Modal from '../components/Modal';
 import Drawer from '../components/Drawer';
+import FilterSelect from '../components/FilterSelect';
 import EmptyState from '../components/EmptyState';
 import { SkeletonTable } from '../components/Skeleton';
 import { notify } from '../components/Toast';
 import './Questions.css';
 
 const STATUSES = ['draft', 'pending_review', 'approved', 'rejected', 'archived'];
-const EMPTY_FILTERS = { theme: '', level: '', status: '', q: '' };
 const PAGE_SIZE = 20;
 const LETTERS = ['A', 'B', 'C', 'D'];
+const THEME_EMOJI = { geographie: '🌍', culture: '📚', histoire: '🏛️', industrie: '🏭', sport: '🏃', science: '🔬' };
+const LEVEL_EMOJI = { beginner: '🟢', intermediate: '🟡', expert: '🔴' };
+const PERIODS = ['today', 'week', 'month'];
+
+/** Vrai si la date ISO tombe dans la période (today|week|month). Date.now hors rendu. */
+function inPeriod(iso, period) {
+  if (!period || !iso) return true;
+  const d = new Date(iso).getTime();
+  if (Number.isNaN(d)) return false;
+  const now = Date.now();
+  const day = 86400000;
+  if (period === 'today') { const s = new Date(now); s.setHours(0, 0, 0, 0); return d >= s.getTime(); }
+  if (period === 'week') return d >= now - 7 * day;
+  if (period === 'month') return d >= now - 30 * day;
+  return true;
+}
+
+// Pills d'accès rapide : { id, type: all|status|theme|level, value, icon }.
+const QUICK_PILLS = [
+  { id: 'all', type: 'all', icon: '🌟' },
+  { id: 'approved', type: 'status', value: 'approved', icon: '✓' },
+  { id: 'pending_review', type: 'status', value: 'pending_review', icon: '⏳' },
+  { id: 'draft', type: 'status', value: 'draft', icon: '📝' },
+  { id: 'rejected', type: 'status', value: 'rejected', icon: '⚠️' },
+  { id: 'geographie', type: 'theme', value: 'geographie', icon: '🌍' },
+  { id: 'culture', type: 'theme', value: 'culture', icon: '📚' },
+  { id: 'histoire', type: 'theme', value: 'histoire', icon: '🏛️' },
+  { id: 'industrie', type: 'theme', value: 'industrie', icon: '🏭' },
+  { id: 'beginner', type: 'level', value: 'beginner', icon: '🟢' },
+  { id: 'expert', type: 'level', value: 'expert', icon: '🔴' },
+];
 const STATEMENT_MAX = 70;
 
 /* ---------- Helpers d'affichage (purs : aucun Date.now()/new Date() implicite) ---------- */
@@ -875,7 +907,16 @@ function KanbanBoard({ rows, onOpen, onMove }) {
 /* ---------- Page ---------- */
 export default function Questions() {
   const { t } = useTranslation();
-  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  // Filtres persistés dans l'URL (rechargeable / partageable : ?theme=&level=…).
+  const [params, setParams] = useSearchParams();
+  const filters = useMemo(() => ({
+    theme: params.get('theme') || '',
+    level: params.get('level') || '',
+    status: params.get('status') || '',
+    q: params.get('q') || '',
+  }), [params]);
+  const period = params.get('period') || '';
+  const [searchInput, setSearchInput] = useState(params.get('q') || '');
   const [showImport, setShowImport] = useState(false);
   const [creating, setCreating] = useState(false);
   const [prefill, setPrefill] = useState(null);
@@ -908,9 +949,30 @@ export default function Questions() {
   const approvedCount = useMemo(() => rows.filter((r) => r.status === 'approved').length, [rows]);
   const pendingCount = useMemo(() => rows.filter((r) => r.status === 'pending_review').length, [rows]);
 
-  const hasFilters = filters.theme || filters.level || filters.status || filters.q;
-  const setF = (k, v) => { setFilters((f) => ({ ...f, [k]: v })); setPage(0); };
-  const resetFilters = () => { setFilters(EMPTY_FILTERS); setPage(0); };
+  const hasFilters = Boolean(filters.theme || filters.level || filters.status || filters.q || period);
+
+  const updateParams = useCallback((patch) => {
+    setParams((prev) => {
+      const next = new URLSearchParams(prev);
+      Object.entries(patch).forEach(([k, v]) => { if (v) next.set(k, v); else next.delete(k); });
+      return next;
+    }, { replace: true });
+    setPage(0);
+  }, [setParams]);
+  const setF = (k, v) => updateParams({ [k]: v });
+  const resetFilters = useCallback(() => { setSearchInput(''); setParams({}, { replace: true }); setPage(0); }, [setParams]);
+
+  // Recherche : debounce 300 ms avant d'écrire dans l'URL (→ requête API).
+  useEffect(() => {
+    const id = setTimeout(() => { if (searchInput !== filters.q) updateParams({ q: searchInput }); }, 300);
+    return () => clearTimeout(id);
+  }, [searchInput, filters.q, updateParams]);
+  // Resynchronise l'input si q change via une pill / un reset / l'URL.
+  useEffect(() => { setSearchInput((s) => (s === filters.q ? s : filters.q)); }, [filters.q]);
+
+  // Total de référence (sans filtre) pour l'affichage « X sur N ».
+  const grandTotalRef = useRef(0);
+  useEffect(() => { if (!hasFilters) grandTotalRef.current = rows.length; }, [hasFilters, rows.length]);
 
   // --- Tri (préservé : cycle asc/desc par colonne) ---
   const toggleSort = (key) => {
@@ -918,7 +980,7 @@ export default function Questions() {
     setPage(0);
   };
   const sortedRows = useMemo(() => {
-    const arr = [...rows];
+    const arr = rows.filter((r) => inPeriod(r.created_at, period));
     const { key, dir } = sort;
     arr.sort((a, b) => {
       const va = a[key]; const vb = b[key];
@@ -930,7 +992,9 @@ export default function Questions() {
       return 0;
     });
     return arr;
-  }, [rows, sort]);
+  }, [rows, sort, period]);
+  const resultCount = sortedRows.length;
+  const grandTotal = grandTotalRef.current || rows.length;
 
   const pageCount = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE));
   const pageRows = useMemo(
@@ -1139,12 +1203,33 @@ export default function Questions() {
     );
   };
 
-  const activePills = [
-    filters.theme && { k: 'theme', label: `${t('questions.columns.theme')} : ${t(`questions.themes.${filters.theme}`, themeLabels[filters.theme] || filters.theme)}` },
-    filters.level && { k: 'level', label: `${t('questions.columns.level')} : ${t(`questions.levels.${filters.level}`, levelLabels[filters.level] || filters.level)}` },
-    filters.status && { k: 'status', label: `${t('questions.columns.status')} : ${t(`questions.statuses.${filters.status}`, questionStatusColors[filters.status]?.label || filters.status)}` },
-    filters.q && { k: 'q', label: `${t('common.search')} : « ${filters.q} »` },
+  // Options des selects custom (réutilise les libellés i18n existants).
+  const themeOptions = [{ value: '', label: t('questions.allThemes') }, ...THEME_KEYS.map((k) => ({ value: k, label: t(`questions.themes.${k}`, themeLabels[k]), icon: THEME_EMOJI[k] }))];
+  const levelOptions = [{ value: '', label: t('questions.allLevels') }, ...LEVEL_KEYS.map((k) => ({ value: k, label: t(`questions.levels.${k}`, levelLabels[k]), icon: LEVEL_EMOJI[k] }))];
+  const statusOptions = [{ value: '', label: t('questions.allStatuses') }, ...STATUSES.map((s) => ({ value: s, label: t(`questions.statuses.${s}`, questionStatusColors[s].label), dot: questionStatusColors[s].fg }))];
+  const periodOptions = [{ value: '', label: t('questions.filters.allPeriods') }, ...PERIODS.map((p) => ({ value: p, label: t(`questions.filters.periods.${p}`), icon: '📅' }))];
+
+  // Résumé des filtres actifs (segments de la barre de statut).
+  const activeSegments = [
+    filters.theme && `${t('questions.columns.theme')}: ${t(`questions.themes.${filters.theme}`, themeLabels[filters.theme])}`,
+    filters.level && `${t('questions.columns.level')}: ${t(`questions.levels.${filters.level}`, levelLabels[filters.level])}`,
+    filters.status && `${t('questions.columns.status')}: ${t(`questions.statuses.${filters.status}`, questionStatusColors[filters.status]?.label)}`,
+    period && t(`questions.filters.periods.${period}`),
+    filters.q && `${t('common.search')}: « ${filters.q} »`,
   ].filter(Boolean);
+
+  // Pills d'accès rapide.
+  const pillActive = (p) => (p.type === 'all' ? !hasFilters : filters[p.type] === p.value);
+  const applyPill = (p) => {
+    if (p.type === 'all') { resetFilters(); return; }
+    updateParams({ [p.type]: filters[p.type] === p.value ? '' : p.value }); // toggle
+  };
+  const pillLabel = (p) => {
+    if (p.type === 'all') return t('questions.filters.quickAll');
+    if (p.type === 'theme') return t(`questions.themes.${p.value}`, themeLabels[p.value]);
+    if (p.type === 'level') return t(`questions.levels.${p.value}`, levelLabels[p.value]);
+    return t(`questions.statuses.${p.value}`, questionStatusColors[p.value]?.label);
+  };
 
   return (
     <>
@@ -1211,36 +1296,52 @@ export default function Questions() {
         </div>
       </div>
 
-      {/* Barre filtres sticky */}
-      <div className="q-filters">
-        <div className="q-filter-row">
-          <div className="q-search">
-            <Search size={16} />
-            <input className="input" placeholder={t('questions.search')} value={filters.q} onChange={(e) => setF('q', e.target.value)} />
-          </div>
-          <select className="select" value={filters.theme} onChange={(e) => setF('theme', e.target.value)}>
-            <option value="">{t('questions.allThemes')}</option>
-            {THEME_KEYS.map((k) => <option key={k} value={k}>{t(`questions.themes.${k}`, themeLabels[k])}</option>)}
-          </select>
-          <select className="select" value={filters.level} onChange={(e) => setF('level', e.target.value)}>
-            <option value="">{t('questions.allLevels')}</option>
-            {LEVEL_KEYS.map((k) => <option key={k} value={k}>{t(`questions.levels.${k}`, levelLabels[k])}</option>)}
-          </select>
-          <select className="select" value={filters.status} onChange={(e) => setF('status', e.target.value)}>
-            <option value="">{t('questions.allStatuses')}</option>
-            {STATUSES.map((s) => <option key={s} value={s}>{t(`questions.statuses.${s}`, questionStatusColors[s].label)}</option>)}
-          </select>
-          {hasFilters && (
-            <button className="btn btn-ghost-soft" onClick={resetFilters}>{t('questions.reset')}</button>
+      {/* Filtres — card premium (recherche · selects custom · accès rapide · statut) */}
+      <div className="q-filters card">
+        {/* Ligne 1 : recherche */}
+        <div className="q-search-wrap">
+          <Search size={18} className="q-search-ic" />
+          <input
+            className="q-search-input"
+            placeholder={t('questions.filters.searchPlaceholder')}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            aria-label={t('questions.filters.searchPlaceholder')}
+          />
+          {searchInput && (
+            <>
+              <span className="q-search-count">{t('questions.filters.results', { count: resultCount })}</span>
+              <button type="button" className="q-search-clear" onClick={() => setSearchInput('')} aria-label={t('questions.reset')}><X size={15} /></button>
+            </>
           )}
         </div>
-        {activePills.length > 0 && (
-          <div className="q-pills">
-            {activePills.map((p) => (
-              <button key={p.k} className="q-pill" onClick={() => setF(p.k, '')}>
-                {p.label}<X size={12} />
+
+        {/* Ligne 2 : selects custom */}
+        <div className="q-filter-selects">
+          <FilterSelect options={themeOptions} value={filters.theme} onChange={(v) => setF('theme', v)} placeholder={t('questions.allThemes')} ariaLabel={t('questions.columns.theme')} clearLabel={t('questions.reset')} />
+          <FilterSelect options={levelOptions} value={filters.level} onChange={(v) => setF('level', v)} placeholder={t('questions.allLevels')} ariaLabel={t('questions.columns.level')} clearLabel={t('questions.reset')} />
+          <FilterSelect options={statusOptions} value={filters.status} onChange={(v) => setF('status', v)} placeholder={t('questions.allStatuses')} ariaLabel={t('questions.columns.status')} clearLabel={t('questions.reset')} />
+          <FilterSelect options={periodOptions} value={period} onChange={(v) => setF('period', v)} placeholder={t('questions.filters.allPeriods')} ariaLabel={t('questions.filters.period')} clearLabel={t('questions.reset')} />
+        </div>
+
+        {/* Ligne 3 : pills d'accès rapide */}
+        <div className="q-quick">
+          <span className="q-quick-label">{t('questions.filters.quickAccess')}</span>
+          <div className="q-quick-pills">
+            {QUICK_PILLS.map((p) => (
+              <button key={p.id} type="button" className={`q-quick-pill ${pillActive(p) ? 'is-active' : ''}`} onClick={() => applyPill(p)}>
+                <span aria-hidden="true">{p.icon}</span> {pillLabel(p)}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Ligne 4 : barre de statut des filtres actifs */}
+        {hasFilters && (
+          <div className="q-filter-status">
+            <span className="q-filter-status-active"><Search size={14} /> {t('questions.filters.activeLabel')} {activeSegments.join(' · ')}</span>
+            <span className="q-filter-status-count">{t('questions.filters.found', { count: resultCount, total: grandTotal })}</span>
+            <button type="button" className="q-filter-status-clear" onClick={resetFilters}><X size={14} /> {t('questions.filters.clearAll')}</button>
           </div>
         )}
       </div>

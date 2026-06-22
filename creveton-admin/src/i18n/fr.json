@@ -434,6 +434,22 @@
       "gameDataSub": "Cette question n’a pas encore été posée en partie.",
       "historyEventsTitle": "Aucun évènement enregistré pour cette question (créée avant l’activation du journal d’audit).",
       "historyDrawerTitle": "Aucun autre événement enregistré. L’historique d’audit détaillé n’est pas encore disponible."
+    },
+    "filters": {
+      "searchPlaceholder": "Rechercher un énoncé, une explication…",
+      "results": "{{count}} résultat(s)",
+      "period": "Période",
+      "allPeriods": "Toute période",
+      "periods": {
+        "today": "Aujourd'hui",
+        "week": "Cette semaine",
+        "month": "Ce mois"
+      },
+      "quickAccess": "Accès rapide :",
+      "quickAll": "Toutes",
+      "activeLabel": "Filtres actifs :",
+      "found": "{{count}} sur {{total}} questions",
+      "clearAll": "Effacer tous les filtres"
     }
   },
   "users": {

@@ -434,6 +434,22 @@
       "gameDataSub": "This question has not been asked in a game yet.",
       "historyEventsTitle": "No event recorded for this question (created before the audit log was enabled).",
       "historyDrawerTitle": "No other event recorded. The detailed audit history is not yet available."
+    },
+    "filters": {
+      "searchPlaceholder": "Search a statement, an explanation…",
+      "results": "{{count}} result(s)",
+      "period": "Period",
+      "allPeriods": "All time",
+      "periods": {
+        "today": "Today",
+        "week": "This week",
+        "month": "This month"
+      },
+      "quickAccess": "Quick access:",
+      "quickAll": "All",
+      "activeLabel": "Active filters:",
+      "found": "{{count}} of {{total}} questions",
+      "clearAll": "Clear all filters"
     }
   },
   "users": {
