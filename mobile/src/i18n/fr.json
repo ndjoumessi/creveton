@@ -229,9 +229,6 @@
     },
     "empty": "Aucun tournoi ouvert.",
     "emptySubtitle": "Reviens bientôt pour de nouveaux tournois",
-    "notify": {
-      "joinSoon": "Inscription bientôt disponible."
-    },
     "error": {
       "title": "Chargement impossible"
     },
@@ -447,6 +444,7 @@
     "score": "Ton score",
     "xpNote": "Ton XP a été créditée à ton profil.",
     "back": "Retour aux tournois",
-    "joinError": "Inscription impossible"
+    "joinError": "Inscription impossible",
+    "player": "Joueur"
   }
 }

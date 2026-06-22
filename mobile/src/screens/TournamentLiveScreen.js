@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
+  ScrollView,
   StyleSheet,
   Pressable,
   Animated,
@@ -27,6 +28,7 @@ import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/
 import { hapticLight } from '../utils/haptics';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
 const toMs = (v) => (v == null ? 0 : typeof v === 'number' ? v : new Date(v).getTime());
 
 export default function TournamentLiveScreen({ navigation, route }) {
@@ -236,10 +238,19 @@ function WaitingView({ t, leaderboard, myId }) {
 
 function EndedView({ t, ended, myScore, myRank, myId, onBack }) {
   const board = ended?.leaderboard || [];
+  const podium = myRank != null && myRank <= 3;
   return (
-    <View style={styles.endedRoot}>
+    <ScrollView
+      style={styles.endedScroll}
+      contentContainerStyle={styles.endedContent}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.endedHero}>
-        <Text style={styles.waitingEmoji}>🎉</Text>
+        {podium ? (
+          <Text style={styles.endedMedal}>{MEDALS[myRank]}</Text>
+        ) : (
+          <Text style={styles.waitingEmoji}>🎉</Text>
+        )}
         <Text style={styles.endedTitle}>{t('tournamentLive.endedTitle')}</Text>
         <View style={styles.endedStats}>
           <View style={styles.endedStat}>
@@ -262,7 +273,7 @@ function EndedView({ t, ended, myScore, myRank, myId, onBack }) {
       <Pressable style={styles.backButton} onPress={onBack}>
         <Text style={styles.backButtonText}>{t('tournamentLive.back')}</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -278,11 +289,14 @@ function MiniLeaderboard({ t, board, myId, limit = 5 }) {
       ) : (
         rows.map((e) => {
           const me = e.user_id === myId;
+          const medal = MEDALS[e.rank];
           return (
             <View key={e.user_id} style={[styles.boardRow, me && styles.boardRowMe]}>
-              <Text style={[styles.boardRank, me && styles.boardTextMe]}>#{e.rank}</Text>
+              <Text style={[styles.boardRank, me && styles.boardTextMe]}>
+                {medal || `#${e.rank}`}
+              </Text>
               <Text style={[styles.boardName, me && styles.boardTextMe]} numberOfLines={1}>
-                {me ? t('tournamentLive.you') : `#${e.rank}`}
+                {me ? t('tournamentLive.you') : `${t('tournamentLive.player')} ${e.rank}`}
               </Text>
               <Text style={[styles.boardScore, me && styles.boardTextMe]}>
                 {e.score} {t('tournamentLive.pts')}
@@ -385,7 +399,9 @@ const styles = StyleSheet.create({
   waitingBoard: { alignSelf: 'stretch', marginTop: spacing.xl },
 
   // Ended
-  endedRoot: { flex: 1, paddingVertical: spacing.lg, gap: spacing.lg },
+  endedScroll: { flex: 1 },
+  endedContent: { paddingVertical: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg },
+  endedMedal: { fontSize: 64 },
   endedHero: { alignItems: 'center', gap: spacing.sm, marginTop: spacing.xl },
   endedTitle: { fontFamily: fonts.titleBold, fontSize: fontSizes.xxl, color: colors.gold500 },
   endedStats: {
@@ -408,7 +424,7 @@ const styles = StyleSheet.create({
     color: colors.green300,
     marginTop: spacing.xs,
   },
-  endedBoard: { flex: 1 },
+  endedBoard: {},
   backButton: {
     backgroundColor: colors.gold500,
     borderRadius: radius.lg,

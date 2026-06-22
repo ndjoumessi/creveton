@@ -229,9 +229,6 @@
     },
     "empty": "No open tournaments.",
     "emptySubtitle": "Come back soon for new tournaments",
-    "notify": {
-      "joinSoon": "Registration coming soon."
-    },
     "error": {
       "title": "Unable to load"
     },
@@ -447,6 +444,7 @@
     "score": "Your score",
     "xpNote": "Your XP has been credited to your profile.",
     "back": "Back to tournaments",
-    "joinError": "Could not join"
+    "joinError": "Could not join",
+    "player": "Player"
   }
 }
