@@ -21,6 +21,8 @@ import healthService from '../services/health.service';
 import leaderboardService from '../services/leaderboard.service';
 import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
+import { parseISO, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { num, dateFr, pct } from '../utils/format';
 import { themeLabels, themeBadgeColors, levelLabels } from '../constants/theme';
 import PageHeader from '../components/PageHeader';
@@ -102,18 +104,21 @@ function aggregateSeries(daily, granularity) {
   }
   const buckets = new Map();
   daily.forEach((d) => {
-    const date = new Date(d.date);
+    // d.date est une date calendaire (AAAA-MM-JJ) déjà agrégée côté serveur :
+    // on la lit comme date locale (parseISO) pour un regroupement stable, sans
+    // décalage dû au fuseau du navigateur.
+    const date = parseISO(d.date);
     let key; let label;
     if (granularity === 'month') {
       key = `${date.getFullYear()}-${date.getMonth()}`;
-      label = dateFr(d.date, 'MMM yyyy');
+      label = format(date, 'MMM yyyy', { locale: fr });
     } else {
       // Semaine : ancre sur le lundi du bucket.
       const day = (date.getDay() + 6) % 7;
       const monday = new Date(date);
       monday.setDate(date.getDate() - day);
-      key = monday.toISOString().slice(0, 10);
-      label = dateFr(monday.toISOString(), 'dd MMM');
+      key = format(monday, 'yyyy-MM-dd');
+      label = format(monday, 'dd MMM', { locale: fr });
     }
     const cur = buckets.get(key) || { label, inscriptions: 0, parties: 0 };
     cur.inscriptions += Number(d.signups) || 0;
