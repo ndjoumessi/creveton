@@ -704,7 +704,7 @@ export default function Dashboard() {
                 {contentHealth.pool_by_theme.map((p) => (
                   <div className="dash-pool-row" key={p.theme}>
                     <span className="dash-pool-name">
-                      <span className="dash-pool-emoji" aria-hidden="true">{(themeBadgeColors[p.theme] && themeBadgeColors[p.theme].emoji) || '•'}</span>
+                      <span className="dash-pool-emoji" aria-hidden="true">{(themeBadgeColors[p.theme] && themeBadgeColors[p.theme].icon) || '•'}</span>
                       {themeLabels[p.theme] || p.theme}
                     </span>
                     <span className="dash-pool-bar">
@@ -742,7 +742,7 @@ export default function Dashboard() {
                 const cd = countdownFr(tour.starts_at);
                 return (
                   <div className="dash-tour-item" key={tour.id}>
-                    <span className="dash-tour-emoji" aria-hidden="true">{(themeBadgeColors[tour.theme] && themeBadgeColors[tour.theme].emoji) || '🏆'}</span>
+                    <span className="dash-tour-emoji" aria-hidden="true">{(themeBadgeColors[tour.theme] && themeBadgeColors[tour.theme].icon) || '🏆'}</span>
                     <div className="dash-tour-main">
                       <button type="button" className="dash-tour-name" onClick={() => navigate(`/tournaments/${tour.id}`)}>{tour.name}</button>
                       <div className="dash-tour-meta">
