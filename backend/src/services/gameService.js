@@ -29,6 +29,8 @@ const sessionModel = require('../models/session.model');
 // ≥ 2 réponses sous 1 s ⇒ triche (« répétées », spec §6).
 const CHEAT_FAST_REPEAT = 2;
 const IDEMPOTENCY_TTL_SEC = 24 * 3600;
+// Blitz : timer global 60 s + petite marge réseau ⇒ au-delà = horloge trafiquée.
+const BLITZ_MAX_MS = 62 * 1000;
 // Mode normal — feedback immédiat (POST /sessions/answer).
 const ANSWER_CHEAT_MIN_MS = 500; // répondre sous 500 ms ⇒ triche
 const LIVE_SESSION_TTL_SEC = 2 * 3600; // durée de vie de l'état live (streak)
@@ -55,11 +57,20 @@ async function submitSession({ userId, mode = 'normal', theme, level, startedAt,
   }
 
   try {
+    // 1 bis. Blitz : la session doit tenir dans le timer global (60 s). Au-delà
+    // de la marge (62 s) entre started_at et maintenant ⇒ triche (CHEAT_DETECTED).
+    if (mode === 'blitz') {
+      const elapsed = Date.now() - new Date(startedAt).getTime();
+      if (elapsed > BLITZ_MAX_MS) {
+        throw new ApiError('CHEAT_DETECTED');
+      }
+    }
+
     // 2. Solutions chargées côté serveur (jamais fournies par le client).
     const solutions = await questionModel.findSolutions(answers.map((a) => a.question_id));
 
     // 3. Calcul de référence (score, XP, streak, review).
-    const result = scoreService.computeSession({ level, answers, solutions });
+    const result = scoreService.computeSession({ level, mode, answers, solutions });
 
     // 4. Anti-triche : trop de réponses < 1 s.
     if (result.suspicious_fast_count >= CHEAT_FAST_REPEAT) {
@@ -138,6 +149,7 @@ async function submitSession({ userId, mode = 'normal', theme, level, startedAt,
       total_questions: result.total_questions,
       xp_earned: result.xp_earned,
       speed_bonus: result.speed_bonus,
+      theme_streak_bonus: result.theme_streak_bonus,
       streak_max: result.streak_max,
       level_before: levels.level_before,
       level_after: levels.level_after,

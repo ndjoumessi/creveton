@@ -280,12 +280,19 @@ async function findManyBrief(ids) {
 async function findSolutions(ids) {
   if (!ids || ids.length === 0) return new Map();
   const { rows } = await db.query(
-    `SELECT id, correct_index, explanation
+    `SELECT id, correct_index, explanation, theme, level
        FROM questions
       WHERE id = ANY($1::uuid[])`,
     [ids]
   );
-  return new Map(rows.map((r) => [r.id, { correct_index: r.correct_index, explanation: r.explanation }]));
+  return new Map(
+    rows.map((r) => [
+      r.id,
+      // theme/level servent au scoring des modes mixtes (blitz/marathon) :
+      // points de base par niveau réel de la question + bonus thème consécutif.
+      { correct_index: r.correct_index, explanation: r.explanation, theme: r.theme, level: r.level },
+    ])
+  );
 }
 
 /**
