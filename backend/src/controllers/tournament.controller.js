@@ -2,8 +2,9 @@
 
 const asyncHandler = require('../utils/asyncHandler');
 const notImplemented = require('../utils/notImplemented');
-const { ok } = require('../utils/response');
+const { ok, created } = require('../utils/response');
 const tournamentModel = require('../models/tournament.model');
+const tournamentService = require('../services/tournamentService');
 const liveTournamentService = require('../services/liveTournamentService');
 
 /**
@@ -35,11 +36,19 @@ const start = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
+/**
+ * POST /tournaments/:id/join — inscription joueur. Gratuit → 201 « confirmed »
+ * (idempotent) ; payant → 403 FEATURE_DISABLED tant que le flag paid est off.
+ */
+const join = asyncHandler(async (req, res) => {
+  const result = await tournamentService.joinTournament(req.params.id, req.user.id);
+  return created(res, result);
+});
+
 module.exports = {
   list,
   start,
+  join,
   // GET /tournaments/:id
   get: notImplemented('GET /tournaments/:id'),
-  // POST /tournaments/:id/join (flag)
-  join: notImplemented('POST /tournaments/:id/join'),
 };

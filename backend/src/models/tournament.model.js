@@ -90,6 +90,21 @@ async function participantsDetailed(id) {
   }));
 }
 
+/**
+ * Inscrit un joueur à un tournoi (idempotent). La contrainte UNIQUE
+ * (tournament_id, user_id) garantit un seul enregistrement : ON CONFLICT DO NOTHING
+ * rend l'opération rejouable sans erreur. La table n'a pas de colonne `status`
+ * (cf. migration 005) — le statut « confirmed » est porté par la couche service.
+ */
+async function addParticipant(tournamentId, userId, executor = db) {
+  await executor.query(
+    `INSERT INTO tournament_participants (tournament_id, user_id)
+     VALUES ($1, $2)
+     ON CONFLICT (tournament_id, user_id) DO NOTHING`,
+    [tournamentId, userId]
+  );
+}
+
 async function countParticipants(id) {
   const { rows } = await db.query(
     'SELECT count(*)::int AS n FROM tournament_participants WHERE tournament_id = $1',
@@ -154,6 +169,7 @@ module.exports = {
   findById,
   findAll,
   participantsDetailed,
+  addParticipant,
   countParticipants,
   setStatus,
   participantUserIds,
