@@ -89,3 +89,8 @@
 .fin-detail > div:first-child { border-top: 0; }
 .fin-detail dt { color: var(--muted); font-size: 13px; }
 .fin-detail dd { margin: 0; font-weight: 600; color: var(--text); text-align: right; word-break: break-word; }
+
+/* Recherche par référence + ligne de total de page. */
+.fin-search { display: inline-flex; align-items: center; gap: 8px; flex: 1 1 240px; min-width: 200px; color: var(--muted); }
+.fin-search .input { flex: 1; }
+.fin-total-row td { font-weight: 700; border-top: 2px solid var(--border); background: var(--bg-mute); padding-top: 10px; padding-bottom: 10px; }

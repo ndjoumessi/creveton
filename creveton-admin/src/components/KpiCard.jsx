@@ -10,7 +10,7 @@ import { num } from '../utils/format';
  * @param tone  green | gold | blue | violet — teinte du carré d'icône & du liseré.
  * @param delta nombre (% vs hier) — vert si ≥ 0, rouge sinon. null = masqué.
  */
-export default function KpiCard({ icon, label, value, tone = 'green', delta = null, spark = [] }) {
+export default function KpiCard({ icon, label, value, tone = 'green', delta = null, deltaLabel = 'vs hier', spark = [] }) {
   const up = delta != null && delta >= 0;
   const numeric = typeof value === 'number';
   const [counted, ref] = useCountUp(numeric ? value : 0, { duration: 800 });
@@ -25,7 +25,7 @@ export default function KpiCard({ icon, label, value, tone = 'green', delta = nu
         {delta != null ? (
           <span className={`kpi-delta ${up ? 'up' : 'down'}`}>
             {up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-            {up ? '+' : ''}{delta}% <span className="muted" style={{ fontWeight: 400 }}>vs hier</span>
+            {up ? '+' : ''}{delta}% <span className="muted" style={{ fontWeight: 400 }}>{deltaLabel}</span>
           </span>
         ) : <span />}
         {spark.length > 1 && <Sparkline values={spark} width={100} height={36} color={up ? '#2a8a4f' : '#e74c3c'} fill />}

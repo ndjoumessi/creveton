@@ -18,9 +18,34 @@ import EmptyState from '../components/EmptyState';
 import { Skeleton } from '../components/Skeleton';
 import { notify } from '../components/Toast';
 
-const MAX_PLAYER_OPTS = [8, 16, 32, 64, 128];
-const FORMAT_QUESTIONS = [10, 20, 32];
-const FORMAT_TIMES = [15, 20, 30, 45];
+const MAX_PLAYER_OPTS = [8, 16, 32, 50, 64, 128];
+const FORMAT_QUESTIONS = [10, 20, 32, 40, 50];
+const FORMAT_TIMES = [15, 20, 25, 30, 45];
+
+// CDC §2.4 — 5 types de tournoi. `disabled: true` → non créable (v1.5).
+// Sert à pré-remplir le formulaire (les valeurs restent éditables).
+const TYPE_DEFAULTS = {
+  free: { entry_fee: 0, max_players: 128, questions: 20, time_per_q_s: 30 },
+  flash: { entry_fee: 100, max_players: 50, questions: 20, time_per_q_s: 30, disabled: true },
+  mini: { entry_fee: 500, max_players: 32, questions: 32, time_per_q_s: 30 },
+  grand: { entry_fee: 2000, max_players: 128, questions: 40, time_per_q_s: 25 },
+  premium: { entry_fee: 5000, max_players: 64, questions: 50, time_per_q_s: 20 },
+};
+const TYPE_ORDER = ['free', 'flash', 'mini', 'grand', 'premium'];
+const TYPE_LABELS = { free: 'Gratuit', flash: 'Flash', mini: 'Mini', grand: 'Grand', premium: 'Premium' };
+
+// Redistribution des gains (CDC §2.4) : 1er 50 % · 2e 25 % · 3e 15 % ·
+// 4e–5e 5 % (Grand uniquement) · commission Creveton 10 %.
+const PRIZE_SPLIT = [0.5, 0.25, 0.15];
+const RANK_ICON = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+
+/** Estimation des gains par rang depuis la cagnotte (null si pool ≤ 0). */
+function estimatePayouts(prizePool, type) {
+  const pool = Number(prizePool) || 0;
+  if (pool <= 0) return null;
+  const split = type === 'grand' ? [...PRIZE_SPLIT, 0.05, 0.05] : PRIZE_SPLIT;
+  return split.map((p, i) => ({ icon: RANK_ICON[i], amount: Math.round(pool * p) }));
+}
 
 /** Décompte « dans 9 h 23 min » si < 48 h, sinon null. */
 function countdownFr(iso) {
@@ -81,7 +106,12 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
         </div>
 
         <div className="tour-card-rewards">
-          {Number(tour.entry_fee) > 0 ? <>💰 {fcfa(tour.prize_pool)}</> : <>🏅 {t('tournaments.card.xpBadges')}</>}
+          {Number(tour.entry_fee) > 0 ? (() => {
+            const payouts = estimatePayouts(tour.prize_pool, tour.type);
+            return payouts
+              ? <span className="tour-payouts">{payouts.slice(0, 3).map((p) => <span className="tour-payout" key={p.icon}>{p.icon} {fcfa(p.amount)}</span>)}</span>
+              : <>💰 {fcfa(tour.prize_pool)}</>;
+          })() : <>🏅 {t('tournaments.card.xpBadges', 'XP & Badges uniquement')}</>}
         </div>
 
         <div className="tour-card-date">
@@ -114,7 +144,7 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
 }
 
 /* ── Modal de création (3 étapes + aperçu live) ── */
-const EMPTY = { name: '', description: '', theme: 'culture', max_players: 32, starts_at: '', questions: 20, time_per_q_s: 30 };
+const EMPTY = { name: '', description: '', type: 'free', theme: 'culture', entry_fee: 0, max_players: 128, starts_at: '', questions: 20, time_per_q_s: 30 };
 function CreateModal({ open, onClose, onCreate, submitting }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
@@ -122,13 +152,28 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
   useEffect(() => { if (open) { setStep(0); setD(EMPTY); } }, [open]);
   const set = (k, v) => setD((p) => ({ ...p, [k]: v }));
 
+  // Changement de type → pré-remplit les valeurs CDC (restent éditables ensuite).
+  const setType = (type) => {
+    const def = TYPE_DEFAULTS[type];
+    setD((p) => ({
+      ...p,
+      type,
+      entry_fee: def.entry_fee,
+      max_players: def.max_players,
+      questions: def.questions,
+      time_per_q_s: def.time_per_q_s,
+    }));
+  };
+
   const nameOk = d.name.trim().length >= 5;
   const dateOk = isFutureDate(d.starts_at);
   const canCreate = nameOk && dateOk;
 
+  // Estimation de cagnotte pour l'aperçu (payant) : entry_fee × joueurs max.
+  const estPool = Number(d.entry_fee) > 0 ? Number(d.entry_fee) * Number(d.max_players || 0) : 0;
   const preview = {
-    name: d.name, theme: d.theme, max_players: d.max_players, registered_players: 0,
-    entry_fee: 0, status: 'scheduled', starts_at: d.starts_at || null,
+    name: d.name, type: d.type, theme: d.theme, max_players: d.max_players, registered_players: 0,
+    entry_fee: d.entry_fee, prize_pool: Math.round(estPool * 0.9), status: 'scheduled', starts_at: d.starts_at || null,
     format: { questions: d.questions, time_per_q_s: d.time_per_q_s },
   };
 
@@ -136,9 +181,9 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
     if (!canCreate) return;
     onCreate({
       name: d.name.trim(),
-      type: 'free',
+      type: d.type,
       theme: d.theme,
-      entry_fee: 0,
+      entry_fee: Number(d.entry_fee) || 0,
       max_players: d.max_players,
       format: { questions: d.questions, time_per_q_s: d.time_per_q_s },
       starts_at: new Date(d.starts_at).toISOString(),
@@ -185,6 +230,23 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
           )}
           {step === 1 && (
             <>
+              <div className="row" style={{ gap: 12 }}>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>{t('tournaments.modal.type', 'Type de tournoi')}</label>
+                  <select className="select" value={d.type} onChange={(e) => setType(e.target.value)}>
+                    {TYPE_ORDER.map((k) => (
+                      <option key={k} value={k} disabled={TYPE_DEFAULTS[k].disabled}>
+                        {t(`tournaments.types.${k}`, TYPE_LABELS[k])}{TYPE_DEFAULTS[k].disabled ? ' (v1.5)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="field-help">{t('tournaments.modal.typeHint', 'Pré-remplit les valeurs CDC (éditables).')}</div>
+                </div>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>{t('tournaments.modal.entryFee', 'Frais d’inscription (FCFA)')}</label>
+                  <input className="input" type="number" min={0} step={100} value={d.entry_fee} onChange={(e) => set('entry_fee', Number(e.target.value))} />
+                </div>
+              </div>
               <div className="field">
                 <label>{t('tournaments.modal.theme')}</label>
                 <select className="select" value={d.theme} onChange={(e) => set('theme', e.target.value)}>
@@ -320,14 +382,11 @@ export default function Tournois() {
         )}
       />
 
-      {/* Bannière tournois payants */}
-      <div className="tour-banner">
-        <Lock size={18} />
-        <div className="tour-banner-body">
-          <div className="tour-banner-title">{t('tournaments.banner.title')}</div>
-          <div className="tour-banner-prog"><span className="tour-banner-prog-bar"><span style={{ width: '45%' }} /></span><span className="tour-banner-prog-lbl">{t('tournaments.banner.progress')}</span></div>
-        </div>
-        <span className="tour-banner-cdc">{t('tournaments.banner.cdc')}</span>
+      {/* Bannière discrète : mode gratuit forcé (flag tournaments.paid.enabled = false). */}
+      <div className="tour-banner tour-banner-info">
+        <Lock size={16} />
+        <span className="tour-banner-title">{t('tournaments.banner.freeMode', 'Mode gratuit — tournois payants désactivés')}</span>
+        <span className="tour-banner-cdc">{t('tournaments.banner.cdc', 'CDC §2.4')}</span>
       </div>
 
       {/* Panneau statistiques */}

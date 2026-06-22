@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
 import Papa from 'papaparse';
 import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from 'recharts';
 import {
-  Download, Wallet, ArrowDownLeft, ArrowUpRight, Clock, Eye, Check, X, Lock,
+  Download, Wallet, ArrowDownLeft, ArrowUpRight, Clock, Eye, Check, X, Lock, Loader2, Search,
 } from 'lucide-react';
 import financesService from '../services/finances.service';
 import { useApiData } from '../hooks/useApiData';
@@ -64,6 +64,8 @@ export default function Finances() {
   const [selectedTx, setSelectedTx] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null); // { tx, kind: 'approve' | 'reject' }
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [search, setSearch] = useState(''); // recherche par référence (filtre client)
   const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
 
   const { data: summary, loading: summaryLoading, refetch: refetchSummary } = useApiData(() => financesService.summary(), []);
@@ -83,13 +85,23 @@ export default function Finances() {
   // Période + filtres sont appliqués côté serveur (status/type/provider/from).
   const rows = useMemo(() => txData?.data || [], [txData]);
 
+  // Recherche par référence (+ utilisateur) appliquée côté client sur la vue chargée.
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((tx) =>
+      (tx.reference || '').toLowerCase().includes(q)
+      || (tx.user_email || '').toLowerCase().includes(q)
+      || (tx.user_name || '').toLowerCase().includes(q));
+  }, [rows, search]);
+
   const kycRows = useMemo(
     () => (kycData?.data || []).filter((tx) => tx.amount > KYC_THRESHOLD),
     [kycData],
   );
 
   const chartData = useMemo(
-    () => (dailyData?.points || []).map((p) => ({ label: dateFr(p.date, 'd MMM'), volume: p.volume })),
+    () => (dailyData?.points || []).map((p) => ({ label: dateFr(p.date, 'd MMM'), deposits: p.deposits, withdrawals: p.withdrawals })),
     [dailyData],
   );
 
@@ -119,6 +131,8 @@ export default function Finances() {
   const dlName = () => `creveton_transactions_${new Date().toISOString().slice(0, 10)}.csv`;
 
   const exportCsv = async () => {
+    if (exporting) return;
+    setExporting(true);
     const params = {
       status: filters.status, type: filters.type, provider: filters.provider,
       from: periodFromISO(filters.period),
@@ -130,7 +144,7 @@ export default function Finances() {
       notify.success(t('finances.notify.exported', { count: rows.length }));
     } catch {
       // Repli client (edge) : CSV depuis la vue chargée si l'endpoint échoue.
-      if (!rows.length) { notify.error(t('finances.notify.nothingToExport')); return; }
+      if (!rows.length) { notify.error(t('finances.notify.nothingToExport')); setExporting(false); return; }
       const csv = Papa.unparse(rows.map((tx) => ({
         id: tx.id, date: tx.created_at, user_email: tx.user_email, type: tx.type,
         amount: tx.amount, currency: tx.currency || 'XAF', provider: tx.provider,
@@ -139,6 +153,8 @@ export default function Finances() {
       // BOM en tête pour qu'Excel lise l'UTF-8.
       triggerDownload(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' }), dlName());
       notify.success(t('finances.notify.exported', { count: rows.length }));
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -223,99 +239,20 @@ export default function Finances() {
         title={t('finances.title')}
         description={t('finances.subtitle')}
         actions={(
-          <button className="btn btn-ghost" onClick={exportCsv} title={t('common.export')}>
-            <Download size={16} /> {t('finances.exportCsv')}
+          <button className="btn btn-ghost" onClick={exportCsv} disabled={exporting} title={t('common.export')}>
+            {exporting ? <Loader2 size={16} className="spin" /> : <Download size={16} />} {t('finances.exportCsv')}
           </button>
         )}
       />
 
-      {/* KPIs */}
-      <div className="grid grid-kpi fin-section">
-        <KpiCard
-          icon={<Wallet size={22} />} tone="green"
-          label={t('finances.kpi.volume')}
-          value={summaryLoading ? '—' : fcfa(s.volume_total?.amount)}
-          spark={(dailyData?.points || []).slice(-7).map((p) => p.volume)}
-        />
-        <KpiCard
-          icon={<ArrowDownLeft size={22} />} tone="blue"
-          label={t('finances.kpi.deposits')}
-          value={summaryLoading ? '—' : fcfa(s.deposits?.amount)}
-        />
-        <KpiCard
-          icon={<ArrowUpRight size={22} />} tone="gold"
-          label={t('finances.kpi.withdrawals')}
-          value={summaryLoading ? '—' : fcfa(s.withdrawals?.amount)}
-        />
-        <KpiCard
-          icon={<Clock size={22} />} tone="violet"
-          label={t('finances.kpi.pending', { amount: fcfa(s.pending?.amount) })}
-          value={summaryLoading ? '—' : (s.pending?.count ?? 0)}
-        />
-      </div>
-
-      {/* Graphique volume journalier (30 j) */}
-      <div className="card card-pad fin-section">
-        <div className="card-title" style={{ marginBottom: 12 }}>{t('finances.chart.title')}</div>
-        <ResponsiveContainer width="100%" height={240}>
-          <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
-            <defs>
-              <linearGradient id="finVol" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#2a8a4f" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#2a8a4f" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#eef0f2" vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} minTickGap={28} />
-            <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
-            <Tooltip
-              contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 12 }}
-              formatter={(v) => [fcfa(v), t('finances.chart.volume')]}
-            />
-            <Area type="monotone" dataKey="volume" stroke="#2a8a4f" strokeWidth={2.5} fill="url(#finVol)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Filtres */}
-      <div className="card card-pad fin-filters fin-section">
-        <select className="select" value={filters.status} onChange={(e) => setF('status', e.target.value)}>
-          <option value="">{t('finances.filters.allStatuses')}</option>
-          {TRANSACTION_STATUS_KEYS.map((k) => <option key={k} value={k}>{t(`finances.types.${k}`, k)}</option>)}
-        </select>
-        <select className="select" value={filters.type} onChange={(e) => setF('type', e.target.value)}>
-          <option value="">{t('finances.filters.allTypes')}</option>
-          {TRANSACTION_TYPE_KEYS.map((k) => <option key={k} value={k}>{t(`finances.types.${k}`)}</option>)}
-        </select>
-        <select className="select" value={filters.provider} onChange={(e) => setF('provider', e.target.value)}>
-          <option value="">{t('finances.filters.allProviders')}</option>
-          {PROVIDER_KEYS.map((k) => <option key={k} value={k}>{t(`finances.providers.${k}`)}</option>)}
-        </select>
-        <select className="select" value={filters.period} onChange={(e) => setF('period', e.target.value)}>
-          <option value="7">{t('finances.filters.period7')}</option>
-          <option value="30">{t('finances.filters.period30')}</option>
-          <option value="90">{t('finances.filters.period90')}</option>
-        </select>
-      </div>
-
-      <DataTable
-        columns={columns}
-        data={rows}
-        loading={txLoading}
-        onRowClick={setSelectedTx}
-        emptyMessage={t('finances.empty.transactions')}
-      />
-
-      {/* Section KYC — retraits en attente de validation */}
-      <div className="card card-pad fin-kyc fin-section">
-        <div className="fin-kyc-head">
-          <Lock size={16} />
-          <span>{t('finances.kyc.title')}</span>
-          <span className="fin-kyc-count">{kycRows.length}</span>
-        </div>
-        {kycRows.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>{t('finances.empty.kyc')}</p>
-        ) : (
+      {/* KYC en haut quand des retraits attendent une validation (attire l'attention). */}
+      {kycRows.length > 0 && (
+        <div className="card card-pad fin-kyc fin-section">
+          <div className="fin-kyc-head">
+            <Lock size={16} />
+            <span>{t('finances.kyc.title')}</span>
+            <span className="fin-kyc-count">{kycRows.length}</span>
+          </div>
           <div className="fin-kyc-list">
             {kycRows.map((tx) => (
               <div className="fin-kyc-item" key={tx.id}>
@@ -338,8 +275,113 @@ export default function Finances() {
               </div>
             ))}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* KPIs */}
+      <div className="grid grid-kpi fin-section">
+        <KpiCard
+          icon={<Wallet size={22} />} tone="green"
+          label={t('finances.kpi.volume')}
+          value={summaryLoading ? '—' : fcfa(s.volume_total?.amount)}
+          delta={summaryLoading ? null : s.volume_total?.delta_pct}
+          deltaLabel={t('finances.kpi.vsPrevMonth', 'vs mois précédent')}
+          spark={(dailyData?.points || []).slice(-7).map((p) => p.volume)}
+        />
+        <KpiCard
+          icon={<ArrowDownLeft size={22} />} tone="blue"
+          label={t('finances.kpi.deposits')}
+          value={summaryLoading ? '—' : fcfa(s.deposits?.amount)}
+          delta={summaryLoading ? null : s.deposits?.delta_pct}
+          deltaLabel={t('finances.kpi.vsPrevMonth', 'vs mois précédent')}
+        />
+        <KpiCard
+          icon={<ArrowUpRight size={22} />} tone="gold"
+          label={t('finances.kpi.withdrawals')}
+          value={summaryLoading ? '—' : fcfa(s.withdrawals?.amount)}
+          delta={summaryLoading ? null : s.withdrawals?.delta_pct}
+          deltaLabel={t('finances.kpi.vsPrevMonth', 'vs mois précédent')}
+        />
+        <KpiCard
+          icon={<Clock size={22} />} tone="violet"
+          label={t('finances.kpi.pending', { amount: fcfa(s.pending?.amount) })}
+          value={summaryLoading ? '—' : (s.pending?.count ?? 0)}
+        />
       </div>
+
+      {/* Graphique volume journalier (30 j) */}
+      <div className="card card-pad fin-section">
+        <div className="card-title" style={{ marginBottom: 12 }}>{t('finances.chart.title')}</div>
+        <ResponsiveContainer width="100%" height={240}>
+          <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
+            <defs>
+              <linearGradient id="finDep" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#2a8a4f" stopOpacity={0.30} />
+                <stop offset="100%" stopColor="#2a8a4f" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="finWd" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#d4a017" stopOpacity={0.28} />
+                <stop offset="100%" stopColor="#d4a017" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#eef0f2" vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} minTickGap={28} />
+            <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={56} tickFormatter={(v) => `${Math.round(v / 1000)}k F`} />
+            <Tooltip
+              contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 12 }}
+              formatter={(v, name) => [fcfa(v), name]}
+            />
+            <Legend wrapperStyle={{ fontSize: 12, paddingTop: 4 }} />
+            <Area name={t('finances.kpi.deposits')} type="monotone" dataKey="deposits" stroke="#2a8a4f" strokeWidth={2.5} fill="url(#finDep)" />
+            <Area name={t('finances.kpi.withdrawals')} type="monotone" dataKey="withdrawals" stroke="#d4a017" strokeWidth={2.5} fill="url(#finWd)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Filtres */}
+      <div className="card card-pad fin-filters fin-section">
+        <div className="fin-search">
+          <Search size={15} />
+          <input
+            className="input"
+            placeholder={t('finances.searchReference', 'Rechercher (référence, utilisateur…)')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <select className="select" value={filters.status} onChange={(e) => setF('status', e.target.value)}>
+          <option value="">{t('finances.filters.allStatuses')}</option>
+          {TRANSACTION_STATUS_KEYS.map((k) => <option key={k} value={k}>{t(`finances.types.${k}`, k)}</option>)}
+        </select>
+        <select className="select" value={filters.type} onChange={(e) => setF('type', e.target.value)}>
+          <option value="">{t('finances.filters.allTypes')}</option>
+          {TRANSACTION_TYPE_KEYS.map((k) => <option key={k} value={k}>{t(`finances.types.${k}`)}</option>)}
+        </select>
+        <select className="select" value={filters.provider} onChange={(e) => setF('provider', e.target.value)}>
+          <option value="">{t('finances.filters.allProviders')}</option>
+          {PROVIDER_KEYS.map((k) => <option key={k} value={k}>{t(`finances.providers.${k}`)}</option>)}
+        </select>
+        <select className="select" value={filters.period} onChange={(e) => setF('period', e.target.value)}>
+          <option value="7">{t('finances.filters.period7')}</option>
+          <option value="30">{t('finances.filters.period30')}</option>
+          <option value="90">{t('finances.filters.period90')}</option>
+        </select>
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={filteredRows}
+        loading={txLoading}
+        onRowClick={setSelectedTx}
+        emptyMessage={t('finances.empty.transactions')}
+        pageFooter={(pageRows) => (
+          <tr className="fin-total-row">
+            <td colSpan={3}>{t('finances.table.pageTotal', 'Total (page)')}</td>
+            <td className="fin-amount">{fcfa(pageRows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}</td>
+            <td colSpan={3} />
+          </tr>
+        )}
+      />
 
       {/* Modal détail transaction */}
       <Modal

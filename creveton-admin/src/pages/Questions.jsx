@@ -1389,8 +1389,8 @@ export default function Questions() {
                   <th>{sortHead(t('questions.columns.theme'), 'theme')}</th>
                   <th>{sortHead(t('questions.columns.level'), 'level')}</th>
                   <th>{sortHead(t('questions.columns.status'), 'status')}</th>
-                  <th>{sortHead(t('questions.columns.successRate'), 'success_rate')}</th>
-                  <th>{sortHead(t('questions.columns.createdAt'), 'created_at')}</th>
+                  <th className="q-col-secondary">{sortHead(t('questions.columns.successRate'), 'success_rate')}</th>
+                  <th className="q-col-secondary">{sortHead(t('questions.columns.createdAt'), 'created_at')}</th>
                   <th className="q-th-actions">{t('questions.columns.actions')}</th>
                 </tr>
               </thead>
@@ -1433,8 +1433,8 @@ export default function Questions() {
                           )}
                         </td>
                         <td><StatusDot status={q.status} /></td>
-                        <td><SuccessBar rate={q.success_rate} /></td>
-                        <td className="muted">{dateFr(q.created_at)}</td>
+                        <td className="q-col-secondary"><SuccessBar rate={q.success_rate} /></td>
+                        <td className="muted q-col-secondary">{dateFr(q.created_at)}</td>
                         <td className="q-td-actions" onClick={(e) => e.stopPropagation()}>
                           <div className="row nowrap" style={{ gap: 2 }}>
                             <button className="icon-action" title={t('questions.actions.view')} onClick={() => openDetail(q)}><Eye size={17} /></button>

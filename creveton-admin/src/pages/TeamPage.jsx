@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
   UserPlus, Eye, ShieldCheck, KeyRound, UserX, UserCheck, Trash2,
-  MoreVertical, Users, Check,
+  MoreVertical, Users, Check, Clock,
 } from 'lucide-react';
 import teamService from '../services/team.service';
 import { useApiData } from '../hooks/useApiData';
@@ -30,6 +30,33 @@ const TABS = ['profil', 'permissions', 'activite'];
 /** Vrai si un membre est actif (statut). */
 function isActive(status) {
   return status === 'active';
+}
+
+const INVITE_TTL_MS = 72 * 3600 * 1000; // 72 h (cf. backend teamService).
+
+// Échéance d'une invitation (created_at + 72 h). Fonctions pures module → l'horloge
+// est lue hors du rendu React (react-hooks/purity).
+function inviteExpiry(createdAt) {
+  if (!createdAt) return null;
+  const ms = new Date(createdAt).getTime() + INVITE_TTL_MS - Date.now();
+  if (ms <= 0) return { expired: true };
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return { expired: false, urgent: ms < 2 * 3600000, label: h >= 1 ? `${h}h ${m}min` : `${m}min` };
+}
+
+// KPIs d'équipe : un membre jamais connecté (last_active_at nul) est considéré
+// comme une invitation en attente.
+function teamKpis(members) {
+  const now = Date.now();
+  const week = 7 * 86400000;
+  let active = 0;
+  let pending = 0;
+  for (const m of members) {
+    if (m.last_active_at && now - new Date(m.last_active_at).getTime() <= week) active += 1;
+    if (!m.last_active_at) pending += 1;
+  }
+  return { total: members.length, active, pending };
 }
 
 /* ─────────────── Badges ─────────────── */
@@ -506,9 +533,9 @@ export default function TeamPage() {
   const [deleteFor, setDeleteFor] = useState(null);
 
   const { data, loading, refetch } = useApiData(() => teamService.list(), []);
-  const { data: statsData, refetch: refetchStats } = useApiData(() => teamService.stats(), []);
+  const { refetch: refetchStats } = useApiData(() => teamService.stats(), []);
   const members = useMemo(() => data?.data || [], [data]);
-  const stats = statsData || {};
+  const kpis = useMemo(() => teamKpis(members), [members]);
 
   const refreshAll = () => { refetch(); refetchStats(); };
 
@@ -557,10 +584,9 @@ export default function TeamPage() {
 
       {/* Bandeau de statistiques (sombre) */}
       <div className="dark-banner">
-        <div className="item team-stat"><div className="v">{stats.total ?? '—'}</div><div className="l">{t('team.stats.total')}</div></div>
-        <div className="item team-stat"><div className="v" style={{ color: 'var(--gold)' }}>{stats.super_admins ?? '—'}</div><div className="l">{t('team.stats.superAdmins')}</div></div>
-        <div className="item team-stat"><div className="v" style={{ color: '#5eca84' }}>{stats.admins ?? '—'}</div><div className="l">{t('team.stats.admins')}</div></div>
-        <div className="item team-stat"><div className="v" style={{ color: '#7fb1ff' }}>{stats.moderators ?? '—'}</div><div className="l">{t('team.stats.moderators')}</div></div>
+        <div className="item team-stat"><div className="v">{kpis.total}</div><div className="l">{t('team.stats.total', 'Total membres')}</div></div>
+        <div className="item team-stat"><div className="v" style={{ color: '#5eca84' }}>{kpis.active}</div><div className="l">{t('team.stats.active7d', 'Actifs (7 j)')}</div></div>
+        <div className="item team-stat"><div className="v" style={{ color: 'var(--gold)' }}>{kpis.pending}</div><div className="l">{t('team.stats.pendingInvites', 'Invitations en attente')}</div></div>
       </div>
 
       {/* Table des membres */}
@@ -598,7 +624,16 @@ export default function TeamPage() {
                     <td><RoleBadge role={m.role} /></td>
                     <td><PermissionPills role={m.role} /></td>
                     <td><StatusDot status={m.status} /></td>
-                    <td><span className="team-muted-cell">{m.last_active_at ? dateTimeFr(m.last_active_at) : '—'}</span></td>
+                    <td>
+                      {m.last_active_at ? (
+                        <span className="team-muted-cell">{dateTimeFr(m.last_active_at)}</span>
+                      ) : (() => {
+                        const exp = inviteExpiry(m.created_at);
+                        if (!exp) return <span className="team-muted-cell">—</span>;
+                        if (exp.expired) return <span className="team-invite-exp expired"><Clock size={12} /> {t('team.invite.expired', 'Invitation expirée')}</span>;
+                        return <span className={`team-invite-exp ${exp.urgent ? 'urgent' : ''}`}><Clock size={12} /> {t('team.invite.expiresIn', { time: exp.label, defaultValue: 'Expire dans {{time}}' })}</span>;
+                      })()}
+                    </td>
                     <td><span className="team-muted-cell">{dateFr(m.created_at)}</span></td>
                     <td>
                       <div className="team-actions" onClick={(e) => e.stopPropagation()}>
