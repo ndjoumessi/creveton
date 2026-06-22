@@ -1,6 +1,6 @@
 import { NavLink, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings, UsersRound, ShieldCheck, Headphones } from 'lucide-react';
 import dashboardService from '../../services/dashboard.service';
 import { useApiData } from '../../hooks/useApiData';
 import Logo from '../Logo';
@@ -24,6 +24,14 @@ const NAV = [
   {
     titleKey: 'nav.userSection',
     items: [{ to: '/users', labelKey: 'nav.users', icon: Users }],
+  },
+  {
+    titleKey: 'nav.teamSection',
+    items: [
+      { to: '/team', labelKey: 'nav.team', icon: UsersRound, end: true },
+      { to: '/team/roles', labelKey: 'nav.roles', icon: ShieldCheck },
+      { to: '/support', labelKey: 'nav.support', icon: Headphones },
+    ],
   },
   {
     titleKey: 'nav.params',

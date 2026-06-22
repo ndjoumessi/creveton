@@ -1,0 +1,125 @@
+/* Styles spécifiques à la page Rôles & Permissions — préfixés .roles-.
+   Cockpit Émeraude : surfaces plates, bordures pleines 1px (jamais de bande
+   latérale colorée), or réservé au CTA primaire et au rôle super_admin. */
+
+/* ── Grille 2×2 ── */
+.roles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+@media (max-width: 880px) { .roles-grid { grid-template-columns: 1fr; } }
+
+/* ── Carte de rôle (surface plate, bordure pleine) ── */
+.roles-card {
+  display: flex; flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* En-tête teinté par tonalité — fond + bordure pleine, pas de stripe. */
+.roles-card-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.roles-tone-gold .roles-card-head { background: rgba(212, 160, 23, 0.08); border-bottom-color: rgba(212, 160, 23, 0.30); }
+.roles-tone-green .roles-card-head { background: rgba(42, 138, 79, 0.08); border-bottom-color: var(--border-green); }
+.roles-tone-blue .roles-card-head { background: rgba(37, 99, 235, 0.07); border-bottom-color: rgba(37, 99, 235, 0.22); }
+.roles-tone-gray .roles-card-head { background: #f6f7f8; border-bottom-color: var(--border); }
+
+.roles-card-icon {
+  width: 46px; height: 46px; flex: none;
+  border-radius: 12px; background: var(--surface);
+  border: 1px solid var(--border);
+  display: grid; place-items: center; font-size: 24px; line-height: 1;
+}
+.roles-card-id { min-width: 0; }
+.roles-card-name {
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 17px; color: var(--ink);
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+}
+.roles-badge-system {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  color: var(--muted); background: #fff; border: 1px solid var(--border);
+  padding: 1px 8px; border-radius: 999px;
+}
+.roles-card-members {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12.5px; color: var(--muted); margin-top: 3px;
+}
+
+/* ── Corps ── */
+.roles-card-body { padding: 16px 18px; flex: 1; }
+.roles-card-desc { font-size: 13.5px; color: var(--text); margin: 0 0 12px; line-height: 1.5; }
+.roles-card-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 10px; }
+
+.roles-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.roles-pill {
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  border: 1px solid transparent; line-height: 1.6; white-space: nowrap;
+}
+.roles-pill-on { color: var(--green700); background: #e3f3ea; border-color: var(--border-green); }
+.roles-pill-off { color: var(--muted); background: #f3f4f6; border-color: var(--border); text-decoration: line-through; }
+
+.roles-super { display: flex; flex-direction: column; gap: 10px; }
+.roles-super-risk {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; color: #92600a; background: var(--cream);
+  border: 1px solid #f1dca6; border-radius: 9px; padding: 8px 11px; margin: 0;
+}
+
+/* ── Pied ── */
+.roles-card-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 18px; border-top: 1px solid var(--border); background: var(--surface-2);
+}
+.roles-locked {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: default;
+}
+
+/* ── Modale matrice ── */
+.roles-modal-grid {
+  display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: start;
+}
+@media (max-width: 640px) { .roles-modal-grid { grid-template-columns: 1fr; } }
+
+.roles-matrix-wrap { overflow-x: auto; }
+.roles-matrix { width: 100%; border-collapse: collapse; }
+.roles-matrix th, .roles-matrix td {
+  padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--border);
+}
+.roles-matrix thead th {
+  font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted);
+}
+.roles-matrix tbody tr:last-child th, .roles-matrix tbody tr:last-child td { border-bottom: none; }
+.roles-matrix-modcol { text-align: left !important; font-weight: 600; font-size: 13px; color: var(--ink); white-space: nowrap; }
+.roles-matrix thead .roles-matrix-modcol { color: var(--muted); }
+.roles-na { color: #cbd5e1; font-weight: 600; }
+
+/* Case à cocher animée (bouton accessible). */
+.roles-check {
+  width: 20px; height: 20px; border-radius: 6px;
+  border: 1.5px solid #cbd5e1; background: #fff; color: #fff;
+  display: inline-grid; place-items: center; cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.roles-check svg { opacity: 0; transform: scale(0.4); transition: opacity var(--t-fast), transform var(--t-fast); }
+.roles-check:hover { border-color: var(--green300); }
+.roles-check.on { background: var(--green500); border-color: var(--green500); }
+.roles-check.on svg { opacity: 1; transform: scale(1); }
+.roles-check:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.30); }
+
+/* ── Panneau résumé ── */
+.roles-summary {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; align-self: stretch;
+}
+.roles-summary h4 {
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink);
+  margin: 0 0 8px;
+}
+.roles-summary ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.roles-summary li { font-size: 12.5px; color: var(--green700); }
+.roles-summary-empty { font-size: 12.5px; color: var(--muted); margin: 0; }

@@ -10,7 +10,11 @@
     "general": "Overview",
     "content": "Content",
     "userSection": "Users",
-    "params": "Settings"
+    "params": "Settings",
+    "teamSection": "Team",
+    "team": "Team members",
+    "roles": "Roles & permissions",
+    "support": "Player support"
   },
   "header": {
     "live": "Live",
@@ -1364,5 +1368,259 @@
     "exportSuccess": "Export downloaded",
     "cacheCleared": "Redis cache cleared",
     "messageSent": "Message sent"
+  },
+  "team": {
+    "title": "Administration team",
+    "subtitle": "Manage your team's access and roles",
+    "invite": "Invite a member",
+    "stats": {
+      "total": "Total members",
+      "superAdmins": "Super Admins",
+      "admins": "Admins",
+      "moderators": "Moderators"
+    },
+    "columns": {
+      "member": "Member",
+      "role": "Role",
+      "permissions": "Permissions",
+      "status": "Status",
+      "lastActivity": "Last activity",
+      "joinedAt": "Joined",
+      "actions": "Actions"
+    },
+    "roles": {
+      "super_admin": "Super Admin",
+      "admin": "Admin",
+      "moderator": "Moderator",
+      "player": "Player"
+    },
+    "statuses": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended"
+    },
+    "morePermissions": "+{{count}} more",
+    "drawer": {
+      "profile": "Profile",
+      "permissions": "Permissions",
+      "activity": "Activity",
+      "invitedBy": "Invited by",
+      "invitedAt": "Invitation date",
+      "inviteCode": "Invitation code",
+      "currentRole": "Current role",
+      "savePermissions": "Save permissions",
+      "notEditable": "super_admin permissions cannot be changed",
+      "roleManaged": "Permissions are defined by the role — editable in Roles & permissions.",
+      "noActivity": "No activity recorded.",
+      "activityFilter": "Filter by type",
+      "allActions": "All actions"
+    },
+    "actions": {
+      "editRole": "Change role",
+      "managePermissions": "Manage permissions",
+      "resetPassword": "Reset password",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "delete": "Remove from account",
+      "view": "View profile"
+    },
+    "events": {
+      "created": "created the question",
+      "updated": "edited the question",
+      "submitted": "submitted the question",
+      "resubmitted": "resubmitted the question",
+      "approved": "approved the question",
+      "rejected": "rejected the question",
+      "archived": "archived the question",
+      "force_sync": "synced the question"
+    },
+    "empty": {
+      "title": "No members",
+      "message": "Invite your first team member."
+    },
+    "notify": {
+      "invited": "Invitation sent ({{password}})",
+      "inviteFailed": "Invitation failed.",
+      "roleChanged": "Role updated.",
+      "roleFailed": "Role change failed.",
+      "removed": "Member removed.",
+      "removeFailed": "Removal failed.",
+      "permissionsSaved": "Permissions saved.",
+      "permissionsFailed": "Save failed."
+    },
+    "confirm": {
+      "deleteTitle": "Remove member",
+      "deleteMessage": "{{name}} will lose console access. Reversible via a new invitation.",
+      "deleteConfirm": "Remove"
+    },
+    "modal": {
+      "title": "Invite a member",
+      "email": "Email address",
+      "name": "Full name",
+      "role": "Role",
+      "message": "Custom message (optional)",
+      "messagePlaceholder": "Hi, I invite you to join the Creveton console…",
+      "preview": "Invitation preview",
+      "permissionsGranted": "Granted permissions",
+      "send": "Send invitation",
+      "cancel": "Cancel",
+      "previewTitle": "📧 Creveton invitation",
+      "previewGreeting": "Hi {{name}},",
+      "previewBody": "You are invited to join the Creveton console as {{role}}.",
+      "previewCta": "Accept invitation",
+      "namePlaceholder": "e.g. Cédric Fotso",
+      "emailPlaceholder": "name@creveton.cm",
+      "roles": {
+        "super_admin_desc": "Full access. Can manage team and settings.",
+        "admin_desc": "Full access except system settings and team.",
+        "moderator_desc": "Can manage content (questions, tournaments)."
+      },
+      "roleHints": {
+        "super_admin": "Not recommended — reserve for the founder",
+        "admin": "Recommended for managers",
+        "moderator": "Ideal for content editors"
+      }
+    }
+  },
+  "roles": {
+    "title": "Roles & Permissions",
+    "subtitle": "Define each role's access in the console",
+    "system": "System",
+    "protected": "Protected",
+    "notEditable": "Not editable — system role",
+    "viewMembers": "View members",
+    "edit": "Edit",
+    "editPermissions": "Edit permissions",
+    "membersCount": "{{count}} member(s)",
+    "allModules": "All modules",
+    "fullAccess": "Full access to all features",
+    "playerDesc": "Limited to the mobile app only",
+    "playerDenied": "Full admin console",
+    "superAdminRisk": "⚠️ Assign this role sparingly",
+    "descriptions": {
+      "super_admin": "Full access to all features.",
+      "admin": "Full access except system settings and team.",
+      "moderator": "Content management: questions, tournaments and read-only dashboard.",
+      "player": "Limited to the mobile app."
+    },
+    "modal": {
+      "title": "Permissions — {{role}}",
+      "save": "Save permissions",
+      "cancel": "Cancel",
+      "can": "This role can:",
+      "cannot": "This role cannot:",
+      "nothing": "No access"
+    },
+    "modules": {
+      "dashboard": "Dashboard",
+      "questions": "Questions",
+      "users": "Users",
+      "tournaments": "Tournaments",
+      "sessions": "Games",
+      "leaderboard": "Leaderboard",
+      "team": "Team",
+      "settings": "Settings",
+      "finances": "Finances"
+    },
+    "actions": {
+      "read": "Read",
+      "create": "Create",
+      "update": "Edit",
+      "delete": "Delete",
+      "admin": "Admin"
+    },
+    "module": "Module",
+    "notify": {
+      "saved": "Role permissions saved.",
+      "failed": "Save failed."
+    }
+  },
+  "support": {
+    "title": "Player support",
+    "subtitle": "Manage reports and assistance requests",
+    "export": "Export",
+    "markAllRead": "Mark all as read",
+    "kpi": {
+      "open": "Open tickets",
+      "pending": "Pending",
+      "resolvedToday": "Resolved today",
+      "avgTime": "Avg. resolution time"
+    },
+    "tabs": {
+      "open": "Open",
+      "inProgress": "In progress",
+      "resolved": "Resolved",
+      "reports": "Question reports"
+    },
+    "priorities": {
+      "urgent": "Urgent",
+      "normal": "Normal",
+      "low": "Low"
+    },
+    "types": {
+      "account": "Account locked",
+      "question": "Incorrect question",
+      "bug": "Bug",
+      "other": "Other"
+    },
+    "statuses": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "resolved": "Resolved"
+    },
+    "actions": {
+      "reply": "Reply",
+      "assign": "Assign",
+      "close": "Close",
+      "resolve": "Resolve",
+      "sendResolve": "Send & Resolve",
+      "send": "Send"
+    },
+    "ticket": {
+      "assignedTo": "Assigned to",
+      "unassigned": "Unassigned",
+      "playedGames": "{{count}} games",
+      "level": "Level {{n}}",
+      "conversation": "Conversation",
+      "replyPlaceholder": "Your reply…",
+      "quickReplies": "Quick replies",
+      "systemAction": "System action"
+    },
+    "reports": {
+      "title": "Reported questions",
+      "reports": "reports",
+      "reportsBadge": "⚠️ {{count}} reports",
+      "fix": "Fix",
+      "ignore": "Ignore",
+      "archiveQuestion": "Archive question",
+      "view": "View question",
+      "columns": {
+        "question": "Question",
+        "reportedBy": "Reported by",
+        "reason": "Reason",
+        "count": "Reports",
+        "date": "Date",
+        "actions": "Actions"
+      }
+    },
+    "quickReplies": {
+      "thanks": "Thank you for your report, we are looking into it.",
+      "resolved": "The issue has been resolved, thank you for your patience.",
+      "investigating": "We are currently investigating your request."
+    },
+    "stats": {
+      "ticketsPerDay": "Tickets per day",
+      "topTypes": "Issue types"
+    },
+    "empty": {
+      "title": "No tickets",
+      "message": "No tickets in this category."
+    },
+    "notify": {
+      "replied": "Reply sent.",
+      "resolved": "Ticket resolved.",
+      "statusChanged": "Status updated.",
+      "reportIgnored": "Report ignored."
+    }
   }
 }

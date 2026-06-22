@@ -10,7 +10,11 @@
     "general": "Vue générale",
     "content": "Contenu",
     "userSection": "Utilisateurs",
-    "params": "Paramètres"
+    "params": "Paramètres",
+    "teamSection": "Équipe",
+    "team": "Membres de l'équipe",
+    "roles": "Rôles & permissions",
+    "support": "Support joueurs"
   },
   "header": {
     "live": "Live",
@@ -1364,5 +1368,259 @@
     "exportSuccess": "Export téléchargé",
     "cacheCleared": "Cache Redis vidé",
     "messageSent": "Message envoyé"
+  },
+  "team": {
+    "title": "Équipe d'administration",
+    "subtitle": "Gérez les accès et les rôles de votre équipe",
+    "invite": "Inviter un membre",
+    "stats": {
+      "total": "Total membres",
+      "superAdmins": "Super Admins",
+      "admins": "Admins",
+      "moderators": "Modérateurs"
+    },
+    "columns": {
+      "member": "Membre",
+      "role": "Rôle",
+      "permissions": "Permissions",
+      "status": "Statut",
+      "lastActivity": "Dernière activité",
+      "joinedAt": "Rejoint le",
+      "actions": "Actions"
+    },
+    "roles": {
+      "super_admin": "Super Admin",
+      "admin": "Admin",
+      "moderator": "Modérateur",
+      "player": "Joueur"
+    },
+    "statuses": {
+      "active": "Actif",
+      "inactive": "Inactif",
+      "suspended": "Suspendu"
+    },
+    "morePermissions": "+{{count}} autres",
+    "drawer": {
+      "profile": "Profil",
+      "permissions": "Permissions",
+      "activity": "Activité",
+      "invitedBy": "Invité par",
+      "invitedAt": "Date d'invitation",
+      "inviteCode": "Code d'invitation",
+      "currentRole": "Rôle actuel",
+      "savePermissions": "Sauvegarder les permissions",
+      "notEditable": "Les permissions super_admin ne sont pas modifiables",
+      "roleManaged": "Permissions définies par le rôle — modifiables dans Rôles & permissions.",
+      "noActivity": "Aucune activité enregistrée.",
+      "activityFilter": "Filtrer par type",
+      "allActions": "Toutes les actions"
+    },
+    "actions": {
+      "editRole": "Modifier le rôle",
+      "managePermissions": "Gérer les permissions",
+      "resetPassword": "Réinitialiser le mot de passe",
+      "suspend": "Suspendre",
+      "reactivate": "Réactiver",
+      "delete": "Supprimer du compte",
+      "view": "Voir la fiche"
+    },
+    "events": {
+      "created": "a créé la question",
+      "updated": "a modifié la question",
+      "submitted": "a soumis la question",
+      "resubmitted": "a resoumis la question",
+      "approved": "a approuvé la question",
+      "rejected": "a rejeté la question",
+      "archived": "a archivé la question",
+      "force_sync": "a synchronisé la question"
+    },
+    "empty": {
+      "title": "Aucun membre",
+      "message": "Invitez votre premier membre d'équipe."
+    },
+    "notify": {
+      "invited": "Invitation envoyée ({{password}})",
+      "inviteFailed": "Invitation impossible.",
+      "roleChanged": "Rôle mis à jour.",
+      "roleFailed": "Changement de rôle impossible.",
+      "removed": "Membre retiré.",
+      "removeFailed": "Suppression impossible.",
+      "permissionsSaved": "Permissions enregistrées.",
+      "permissionsFailed": "Enregistrement impossible."
+    },
+    "confirm": {
+      "deleteTitle": "Retirer le membre",
+      "deleteMessage": "{{name}} perdra l'accès à la console. Action réversible via une nouvelle invitation.",
+      "deleteConfirm": "Retirer"
+    },
+    "modal": {
+      "title": "Inviter un membre",
+      "email": "Adresse email",
+      "name": "Nom complet",
+      "role": "Rôle",
+      "message": "Message personnalisé (optionnel)",
+      "messagePlaceholder": "Bonjour, je vous invite à rejoindre la console Creveton…",
+      "preview": "Aperçu de l'invitation",
+      "permissionsGranted": "Permissions accordées",
+      "send": "Envoyer l'invitation",
+      "cancel": "Annuler",
+      "previewTitle": "📧 Invitation Creveton",
+      "previewGreeting": "Bonjour {{name}},",
+      "previewBody": "Vous êtes invité(e) à rejoindre la console Creveton en tant que {{role}}.",
+      "previewCta": "Accepter l'invitation",
+      "namePlaceholder": "Ex. Cédric Fotso",
+      "emailPlaceholder": "prenom@creveton.cm",
+      "roles": {
+        "super_admin_desc": "Accès total. Peut gérer l'équipe et les paramètres.",
+        "admin_desc": "Accès complet sauf paramètres système et équipe.",
+        "moderator_desc": "Peut gérer le contenu (questions, tournois)."
+      },
+      "roleHints": {
+        "super_admin": "Déconseillé — réserver au fondateur",
+        "admin": "Recommandé pour les gestionnaires",
+        "moderator": "Idéal pour les éditeurs de contenu"
+      }
+    }
+  },
+  "roles": {
+    "title": "Rôles & Permissions",
+    "subtitle": "Définissez les accès de chaque rôle dans la console",
+    "system": "Système",
+    "protected": "Protégé",
+    "notEditable": "Non modifiable — rôle système",
+    "viewMembers": "Voir les membres",
+    "edit": "Modifier",
+    "editPermissions": "Modifier les permissions",
+    "membersCount": "{{count}} membre(s)",
+    "allModules": "Tous les modules",
+    "fullAccess": "Accès total à toutes les fonctionnalités",
+    "playerDesc": "Accès limité à l'application mobile uniquement",
+    "playerDenied": "Console admin complète",
+    "superAdminRisk": "⚠️ Attribuez ce rôle avec parcimonie",
+    "descriptions": {
+      "super_admin": "Accès total à toutes les fonctionnalités.",
+      "admin": "Accès complet sauf paramètres système et équipe.",
+      "moderator": "Gestion du contenu : questions, tournois et tableau de bord en lecture.",
+      "player": "Accès limité à l'application mobile."
+    },
+    "modal": {
+      "title": "Permissions — {{role}}",
+      "save": "Sauvegarder les permissions",
+      "cancel": "Annuler",
+      "can": "Ce rôle peut :",
+      "cannot": "Ce rôle ne peut pas :",
+      "nothing": "Aucun accès"
+    },
+    "modules": {
+      "dashboard": "Dashboard",
+      "questions": "Questions",
+      "users": "Utilisateurs",
+      "tournaments": "Tournois",
+      "sessions": "Parties",
+      "leaderboard": "Classement",
+      "team": "Équipe",
+      "settings": "Paramètres",
+      "finances": "Finances"
+    },
+    "actions": {
+      "read": "Lire",
+      "create": "Créer",
+      "update": "Modifier",
+      "delete": "Supprimer",
+      "admin": "Admin"
+    },
+    "module": "Module",
+    "notify": {
+      "saved": "Permissions du rôle enregistrées.",
+      "failed": "Enregistrement impossible."
+    }
+  },
+  "support": {
+    "title": "Support joueurs",
+    "subtitle": "Gestion des signalements et demandes d'assistance",
+    "export": "Exporter",
+    "markAllRead": "Marquer tout comme lu",
+    "kpi": {
+      "open": "Tickets ouverts",
+      "pending": "En attente",
+      "resolvedToday": "Résolus aujourd'hui",
+      "avgTime": "Temps moyen résolution"
+    },
+    "tabs": {
+      "open": "Ouverts",
+      "inProgress": "En cours",
+      "resolved": "Résolus",
+      "reports": "Signalements questions"
+    },
+    "priorities": {
+      "urgent": "Urgent",
+      "normal": "Normal",
+      "low": "Faible"
+    },
+    "types": {
+      "account": "Compte bloqué",
+      "question": "Question incorrecte",
+      "bug": "Bug",
+      "other": "Autre"
+    },
+    "statuses": {
+      "open": "Ouvert",
+      "in_progress": "En cours",
+      "resolved": "Résolu"
+    },
+    "actions": {
+      "reply": "Répondre",
+      "assign": "Assigner",
+      "close": "Clore",
+      "resolve": "Résoudre",
+      "sendResolve": "Envoyer & Résoudre",
+      "send": "Envoyer"
+    },
+    "ticket": {
+      "assignedTo": "Assigné à",
+      "unassigned": "Non assigné",
+      "playedGames": "{{count}} parties",
+      "level": "Niveau {{n}}",
+      "conversation": "Conversation",
+      "replyPlaceholder": "Votre réponse…",
+      "quickReplies": "Réponses rapides",
+      "systemAction": "Action système"
+    },
+    "reports": {
+      "title": "Questions signalées",
+      "reports": "signalements",
+      "reportsBadge": "⚠️ {{count}} signalements",
+      "fix": "Corriger",
+      "ignore": "Ignorer",
+      "archiveQuestion": "Archiver la question",
+      "view": "Voir la question",
+      "columns": {
+        "question": "Question",
+        "reportedBy": "Signalé par",
+        "reason": "Raison",
+        "count": "Nb signalements",
+        "date": "Date",
+        "actions": "Actions"
+      }
+    },
+    "quickReplies": {
+      "thanks": "Merci pour votre signalement, nous étudions le problème.",
+      "resolved": "Le problème a été résolu, merci de votre patience.",
+      "investigating": "Nous enquêtons actuellement sur votre demande."
+    },
+    "stats": {
+      "ticketsPerDay": "Tickets par jour",
+      "topTypes": "Types de problèmes"
+    },
+    "empty": {
+      "title": "Aucun ticket",
+      "message": "Aucun ticket dans cette catégorie."
+    },
+    "notify": {
+      "replied": "Réponse envoyée.",
+      "resolved": "Ticket résolu.",
+      "statusChanged": "Statut mis à jour.",
+      "reportIgnored": "Signalement ignoré."
+    }
   }
 }

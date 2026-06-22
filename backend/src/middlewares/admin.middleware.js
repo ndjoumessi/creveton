@@ -47,6 +47,9 @@ const PERMISSIONS = {
 
   'settings:read': 'admin',
   'settings:manage': 'super_admin',
+
+  'team:read': 'admin',
+  'team:manage': 'super_admin',
 };
 
 /**
