@@ -299,6 +299,15 @@ function ResultsContent({ result, onReplay, onHome }) {
         </View>
       </View>
 
+      {/* BONUS THÈME (marathon) — points gagnés par séries thématiques */}
+      {result.theme_streak_bonus > 0 ? (
+        <View style={styles.themeBonus}>
+          <Text style={styles.themeBonusText}>
+            {t('results.themeBonus', { bonus: result.theme_streak_bonus })}
+          </Text>
+        </View>
+      ) : null}
+
       {/* MA PROGRESSION — mini-courbe des derniers scores */}
       {history === null ? (
         <View style={styles.progressBlock}>
@@ -468,6 +477,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.gold500,
   },
+
+  themeBonus: {
+    marginTop: spacing.lg,
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.pill,
+    backgroundColor: colors.goldVeil,
+    borderWidth: 1,
+    borderColor: colors.goldVeilBorder,
+  },
+  themeBonusText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.gold400 },
 
   levelUp: {
     alignItems: 'center',

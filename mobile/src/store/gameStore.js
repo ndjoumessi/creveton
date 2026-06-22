@@ -74,6 +74,18 @@ export const useGameStore = create((set, get) => ({
 
   next: () => set((s) => ({ currentIndex: s.currentIndex + 1 })),
 
+  // Modes chronométrés (blitz/marathon) : à l'expiration du timer global, marque
+  // toutes les questions non répondues comme `skipped` pour que la soumission
+  // couvre le set complet (marathon = exactement 20 réponses attendues serveur).
+  fillRemainingSkipped: () => {
+    const { questions, answers } = get();
+    const answered = new Set(answers.map((a) => a.question_id));
+    const extra = questions
+      .filter((q) => !answered.has(q.id))
+      .map((q) => ({ question_id: q.id, selected_index: null, elapsed_ms: 0, skipped: true }));
+    if (extra.length) set({ answers: [...answers, ...extra] });
+  },
+
   isLastQuestion: () => {
     const { currentIndex, questions } = get();
     return currentIndex >= questions.length - 1;

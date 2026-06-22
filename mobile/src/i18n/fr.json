@@ -151,7 +151,27 @@
     },
     "notify": {
       "noQuestions": "Aucune question disponible pour ce thème.",
-      "startFailed": "Impossible de démarrer la partie."
+      "startFailed": "Impossible de démarrer la partie.",
+      "notEnough": "Pas assez de questions en cache pour ce mode."
+    },
+    "chooseMode": "Choisis ton mode",
+    "modes": {
+      "normal": {
+        "name": "Normal",
+        "desc": "10 questions · ton thème & niveau"
+      },
+      "blitz": {
+        "name": "Blitz",
+        "desc": "1 min · tous thèmes · chrono global"
+      },
+      "marathon": {
+        "name": "Marathon",
+        "desc": "3 min · 20 questions · mix"
+      }
+    },
+    "recapTimed": {
+      "blitz": "Blitz · {{minutes}} min · tous thèmes mélangés",
+      "marathon": "Marathon · {{minutes}} min · {{count}} questions · mix"
     }
   },
   "quiz": {
@@ -169,6 +189,11 @@
     "misc": {
       "submitting": "Calcul du score…",
       "wrongAnswer": "✗ Mauvaise réponse."
+    },
+    "timeLeft": "{{time}} restantes",
+    "themeBonus": {
+      "x15": "+50% thème 🔥",
+      "x2": "+100% thème 🔥🔥"
     }
   },
   "results": {
@@ -201,7 +226,8 @@
       "progression": "Ma progression",
       "levelUpTitle": "Niveau supérieur !",
       "difficultyUnlocked": "Difficulté « {{difficulty}} » débloquée"
-    }
+    },
+    "themeBonus": "🎯 Bonus thème : +{{bonus}} pts"
   },
   "tournaments": {
     "title": "Tournois",

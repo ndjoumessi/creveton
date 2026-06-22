@@ -7,7 +7,14 @@ import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { Screen, Title, Body, AppButton, useToast } from '../components';
-import { THEMES, LEVELS, GAME } from '../constants/config';
+import {
+  THEMES,
+  LEVELS,
+  GAME,
+  MODE_DURATION_S,
+  MODE_QUESTION_COUNT,
+  TIMED_MODES,
+} from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
 import { useGameStore } from '../store/gameStore';
 import { questions as questionsApi } from '../services/endpoints';
@@ -17,13 +24,23 @@ import { hapticMedium } from '../utils/haptics';
 
 const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
 
+// Modes proposés. `mixed` = thème/niveau automatiques (tous mélangés) + timer global.
+const GAME_MODES = [
+  { key: 'normal', emoji: '⚡', mixed: false },
+  { key: 'blitz', emoji: '⏱', mixed: true },
+  { key: 'marathon', emoji: '🏃', mixed: true },
+];
+
 export default function GameStartScreen({ navigation, route }) {
   const preset = route.params?.presetTheme;
   const { t } = useTranslation();
   const toast = useToast();
+  const [mode, setMode] = useState('normal');
   const [theme, setTheme] = useState(preset || null);
   const [level, setLevel] = useState('beginner');
   const [loading, setLoading] = useState(false);
+
+  const isMixed = TIMED_MODES.includes(mode);
 
   const drawQuestions = useQuestionsStore((s) => s.drawQuestions);
   const startGame = useGameStore((s) => s.startGame);
@@ -45,6 +62,13 @@ export default function GameStartScreen({ navigation, route }) {
   }, [cardAnims]);
 
   const recap = useMemo(() => {
+    // Modes chronométrés : récap dédié (durée globale + nb questions, mix auto).
+    if (isMixed) {
+      return t(`gameStart.recapTimed.${mode}`, {
+        minutes: Math.round(MODE_DURATION_S[mode] / 60),
+        count: MODE_QUESTION_COUNT[mode],
+      });
+    }
     if (!theme) return null;
     const time = TIME_BY_LEVEL[level] || 30;
     return t('gameStart.recap', {
@@ -53,7 +77,7 @@ export default function GameStartScreen({ navigation, route }) {
       count: GAME.questionsPerSession,
       time,
     });
-  }, [theme, level, t]);
+  }, [isMixed, mode, theme, level, t]);
 
   // Le récap apparaît en glissant vers le bas quand thème + niveau sont choisis.
   const recapAnim = useRef(new Animated.Value(0)).current;
@@ -65,8 +89,9 @@ export default function GameStartScreen({ navigation, route }) {
     }).start();
   }, [recap, recapAnim]);
 
-  // Pulse doré subtil du bouton « Lancer » quand il est actif.
-  const ready = !!theme && !!level;
+  // Pulse doré subtil du bouton « Lancer » quand il est actif. En mode mixte,
+  // pas de thème/niveau à choisir → prêt immédiatement.
+  const ready = isMixed || (!!theme && !!level);
   const pulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     if (!ready) {
@@ -92,25 +117,40 @@ export default function GameStartScreen({ navigation, route }) {
   }, [ready, pulse]);
 
   const onStart = async () => {
-    if (!theme || !level) return;
+    if (!ready) return;
     hapticMedium();
     setLoading(true);
+    // Mode mixte : tous thèmes/niveaux confondus (pas de filtre) ; sinon le choix.
+    const count = isMixed ? MODE_QUESTION_COUNT[mode] : GAME.questionsPerSession;
+    const drawParams = isMixed ? { count } : { theme, level, count };
     try {
-      let qs = await drawQuestions({ theme, level, count: GAME.questionsPerSession });
-      if (!qs || qs.length < GAME.questionsPerSession) {
+      let qs = await drawQuestions(drawParams);
+      if (!qs || qs.length < count) {
         try {
-          const resp = await questionsApi.fetch({ theme, level, count: GAME.questionsPerSession });
+          const resp = await questionsApi.fetch(drawParams);
           if (resp?.data?.length) qs = resp.data;
         } catch {
           /* on garde le cache local */
         }
+      }
+      // Marathon : exactement 20 questions exigées côté serveur.
+      if (mode === 'marathon' && (!qs || qs.length < MODE_QUESTION_COUNT.marathon)) {
+        toast.show({ type: 'error', message: t('gameStart.notify.notEnough') });
+        setLoading(false);
+        return;
       }
       if (!qs || !qs.length) {
         toast.show({ type: 'error', message: t('gameStart.notify.noQuestions') });
         setLoading(false);
         return;
       }
-      startGame({ mode: 'normal', theme, level, questions: qs });
+      if (isMixed) qs = qs.slice(0, count); // borne stricte (marathon = 20)
+      startGame({
+        mode,
+        theme: isMixed ? null : theme,
+        level: isMixed ? null : level,
+        questions: qs,
+      });
       setLoading(false);
       navigation.navigate('Quiz');
     } catch {
@@ -128,6 +168,35 @@ export default function GameStartScreen({ navigation, route }) {
         <Title style={styles.headerTitle}>{t('gameStart.title')}</Title>
       </View>
 
+      {/* Sélecteur de mode */}
+      <Text style={styles.section}>{t('gameStart.chooseMode')}</Text>
+      <View style={styles.modes}>
+        {GAME_MODES.map((m) => {
+          const active = m.key === mode;
+          return (
+            <Pressable
+              key={m.key}
+              onPress={() => setMode(m.key)}
+              style={[styles.modeRow, active && styles.modeRowActive]}
+            >
+              <Text style={styles.modeEmoji}>{m.emoji}</Text>
+              <View style={styles.modeBody}>
+                <Text style={[styles.modeName, active && styles.modeNameActive]}>
+                  {t(`gameStart.modes.${m.key}.name`)}
+                </Text>
+                <Text style={styles.modeDesc} numberOfLines={1}>
+                  {t(`gameStart.modes.${m.key}.desc`)}
+                </Text>
+              </View>
+              {active ? <Text style={styles.modeCheck}>✓</Text> : null}
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* Thème & niveau — masqués en mode mixte (tous thèmes/niveaux auto) */}
+      {!isMixed ? (
+        <>
       <Text style={styles.section}>{t('gameStart.chooseTheme')}</Text>
       <View style={styles.grid}>
         {THEMES.map((th, i) => {
@@ -194,6 +263,8 @@ export default function GameStartScreen({ navigation, route }) {
           );
         })}
       </View>
+        </>
+      ) : null}
 
       {recap ? (
         <Animated.View
@@ -283,6 +354,27 @@ const styles = StyleSheet.create({
   themeEmoji: { fontSize: 32 },
   themeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.white, marginTop: spacing.xs },
   themeMeta: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: 'rgba(255,255,255,0.7)' },
+
+  modes: { gap: spacing.sm },
+  modeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: 60,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.borderInput,
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  modeRowActive: { borderColor: colors.gold500, backgroundColor: colors.cream },
+  modeEmoji: { fontSize: 24 },
+  modeBody: { flex: 1 },
+  modeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.green900 },
+  modeNameActive: { color: colors.green900 },
+  modeDesc: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 1 },
+  modeCheck: { fontFamily: fonts.bodyBold, fontSize: fontSizes.lg, color: colors.gold500 },
 
   levels: { flexDirection: 'row', gap: spacing.sm },
   levelPill: {

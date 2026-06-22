@@ -45,6 +45,12 @@ export const LEVELS = [
   { key: 'expert', label: 'Expert', points: 100 },
 ];
 
+// Modes de jeu chronométrés (timer GLOBAL, pas par question) — tous thèmes/niveaux
+// mélangés. blitz : 60 s. marathon : 180 s + 20 questions + bonus thème serveur.
+export const MODE_DURATION_S = { blitz: 60, marathon: 180 };
+export const MODE_QUESTION_COUNT = { blitz: 20, marathon: 20 };
+export const TIMED_MODES = ['blitz', 'marathon'];
+
 // Paramètres de jeu
 export const GAME = {
   questionsPerSession: 10,
@@ -75,6 +81,9 @@ export default {
   RETRY,
   THEMES,
   LEVELS,
+  MODE_DURATION_S,
+  MODE_QUESTION_COUNT,
+  TIMED_MODES,
   GAME,
   LANGS,
   SEXES,

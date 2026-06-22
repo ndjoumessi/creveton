@@ -26,11 +26,14 @@ import { sessions as sessionsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
+import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
 const ANSWER_DELAY_MS = 1500;
 const TIMEOUT_DELAY_MS = 2000;
+// Modes chronométrés : avance rapide entre questions (le timer global presse).
+const TIMED_ADVANCE_MS = { blitz: 450, marathon: 700 };
 
 export default function QuizScreen({ navigation }) {
   const { t } = useTranslation();
@@ -41,6 +44,7 @@ export default function QuizScreen({ navigation }) {
   const next = useGameStore((s) => s.next);
   const isLastQuestion = useGameStore((s) => s.isLastQuestion);
   const submit = useGameStore((s) => s.submit);
+  const fillRemainingSkipped = useGameStore((s) => s.fillRemainingSkipped);
   const level = useGameStore((s) => s.level);
   const mode = useGameStore((s) => s.mode);
   const sessionId = useGameStore((s) => s.sessionId);
@@ -50,8 +54,14 @@ export default function QuizScreen({ navigation }) {
   const total = questions.length;
   const timeLimit = TIME_BY_LEVEL[level] || 30;
   const feedbackEnabled = mode === 'normal';
+  // Blitz/Marathon : timer GLOBAL (et non par question), set mixte sans feedback
+  // serveur (la correction vient du cache local, mode normal sync).
+  const isTimed = TIMED_MODES.includes(mode);
 
   const [secondsLeft, setSecondsLeft] = useState(timeLimit);
+  const [globalLeftMs, setGlobalLeftMs] = useState(
+    isTimed ? MODE_DURATION_S[mode] * 1000 : 0
+  );
   const [answered, setAnswered] = useState(null); // { selectedIndex, correctIndex, explanation, isCorrect, timedOut }
   const [dotStates, setDotStates] = useState([]);
   const [displayScore, setDisplayScore] = useState(0);
@@ -70,6 +80,9 @@ export default function QuizScreen({ navigation }) {
   const advanceRef = useRef(null);
   const advancedRef = useRef(false);
   const questionStart = useRef(Date.now());
+  const globalIntervalRef = useRef(null);
+  const submittedRef = useRef(false); // garde anti double-soumission (fin Q / expiration)
+  const themeRun = useRef({ theme: null, count: 0 }); // série thématique locale (toast marathon)
 
   // Count-up du score.
   useEffect(() => {
@@ -119,19 +132,31 @@ export default function QuizScreen({ navigation }) {
     return () => sub.remove();
   }, [confirmQuit]);
 
+  // Termine la session : soumet au serveur et bascule vers le résultat.
+  // Idempotent (dernière question OU expiration du timer global). En mode
+  // chronométré, on complète les questions non répondues en `skipped`.
+  const endSession = useCallback(async () => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
+    clearTimers();
+    clearInterval(globalIntervalRef.current);
+    if (isTimed) fillRemainingSkipped();
+    setSubmitting(true);
+    const res = await submit();
+    navigation.replace('Results', { ok: res.ok, error: res.error });
+  }, [clearTimers, isTimed, fillRemainingSkipped, submit, navigation]);
+
   // Avance — idempotent (tap + timeout ne déclenchent qu'une fois).
   const goNext = useCallback(async () => {
     if (advancedRef.current) return;
     advancedRef.current = true;
     clearTimers();
     if (isLastQuestion()) {
-      setSubmitting(true);
-      const res = await submit();
-      navigation.replace('Results', { ok: res.ok, error: res.error });
+      await endSession();
       return;
     }
     next();
-  }, [clearTimers, isLastQuestion, submit, next, navigation]);
+  }, [clearTimers, isLastQuestion, endSession, next]);
 
   // Programme l'auto-next + barre de progression du délai.
   const scheduleAutoNext = useCallback(
@@ -179,6 +204,35 @@ export default function QuizScreen({ navigation }) {
           return c;
         });
         goNext();
+        return;
+      }
+
+      // Blitz/Marathon : timer global, pas d'appel serveur par question. La
+      // correction vient du cache local ; avance rapide. Marathon : toast de
+      // bonus thème (purement visuel — le vrai calcul est serveur).
+      if (isTimed) {
+        const correctIndex = Number.isInteger(question.correct_index) ? question.correct_index : null;
+        const isCorrect =
+          selectedIndex !== null && correctIndex !== null && selectedIndex === correctIndex;
+        if (isCorrect) hapticSuccess();
+        else hapticError();
+        setDotStates((d) => {
+          const c = [...d];
+          c[currentIndex] = isCorrect ? 'correct' : 'wrong';
+          return c;
+        });
+        setAnswered({ selectedIndex, correctIndex, isCorrect, timedOut });
+        if (mode === 'marathon') {
+          const r = themeRun.current;
+          if (r.theme === question.theme) r.count += 1;
+          else {
+            r.theme = question.theme;
+            r.count = 1;
+          }
+          if (isCorrect && r.count >= 5) toast.show({ type: 'success', message: t('quiz.themeBonus.x2') });
+          else if (isCorrect && r.count === 3) toast.show({ type: 'success', message: t('quiz.themeBonus.x15') });
+        }
+        scheduleAutoNext(TIMED_ADVANCE_MS[mode] || 600);
         return;
       }
 
@@ -243,6 +297,8 @@ export default function QuizScreen({ navigation }) {
       clearTimers,
       answerCurrent,
       feedbackEnabled,
+      isTimed,
+      mode,
       question,
       sessionId,
       setSessionId,
@@ -252,6 +308,7 @@ export default function QuizScreen({ navigation }) {
       revealExplain,
       scheduleAutoNext,
       toast,
+      t,
     ]
   );
 
@@ -270,31 +327,34 @@ export default function QuizScreen({ navigation }) {
   useLayoutEffect(() => {
     advancedRef.current = false;
     setAnswered(null);
-    setSecondsLeft(timeLimit);
-    const start = Date.now();
-    questionStart.current = start;
-    const deadline = start + timeLimit * 1000;
+    questionStart.current = Date.now();
     explainY.setValue(40);
     explainOpacity.setValue(0);
     autoNextAnim.setValue(0);
 
-    timerAnim.setValue(1);
-    Animated.timing(timerAnim, {
-      toValue: 0,
-      duration: timeLimit * 1000,
-      easing: Easing.linear,
-      useNativeDriver: false,
-    }).start();
+    // Modes chronométrés : aucun timer par question (cercle remplacé par le timer
+    // global) → on réinitialise seulement l'état de la question.
+    if (!isTimed) {
+      setSecondsLeft(timeLimit);
+      const deadline = questionStart.current + timeLimit * 1000;
+      timerAnim.setValue(1);
+      Animated.timing(timerAnim, {
+        toValue: 0,
+        duration: timeLimit * 1000,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      }).start();
 
-    const tick = () => {
-      const remaining = Math.max(0, deadline - Date.now());
-      setSecondsLeft(Math.ceil(remaining / 1000));
-      if (remaining <= 0) {
-        clearInterval(intervalRef.current);
-        handleAnswer({ selectedIndex: null, timedOut: true });
-      }
-    };
-    intervalRef.current = setInterval(tick, 250);
+      const tick = () => {
+        const remaining = Math.max(0, deadline - Date.now());
+        setSecondsLeft(Math.ceil(remaining / 1000));
+        if (remaining <= 0) {
+          clearInterval(intervalRef.current);
+          handleAnswer({ selectedIndex: null, timedOut: true });
+        }
+      };
+      intervalRef.current = setInterval(tick, 250);
+    }
 
     return () => {
       clearInterval(intervalRef.current);
@@ -303,7 +363,26 @@ export default function QuizScreen({ navigation }) {
       timerAnim.stopAnimation();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, timeLimit]);
+  }, [currentIndex, timeLimit, isTimed]);
+
+  // Timer GLOBAL (blitz/marathon) : une seule deadline pour toute la session.
+  // À l'expiration → soumission auto (questions restantes en `skipped`).
+  useEffect(() => {
+    if (!isTimed) return undefined;
+    const deadline = Date.now() + MODE_DURATION_S[mode] * 1000;
+    setGlobalLeftMs(MODE_DURATION_S[mode] * 1000);
+    const id = setInterval(() => {
+      const left = deadline - Date.now();
+      setGlobalLeftMs(Math.max(0, left));
+      if (left <= 0) {
+        clearInterval(id);
+        endSession();
+      }
+    }, 250);
+    globalIntervalRef.current = id;
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTimed, mode]);
 
   // Bounce du badge de série.
   useEffect(() => {
@@ -330,11 +409,15 @@ export default function QuizScreen({ navigation }) {
         <Text style={styles.score}>⚡ {displayScore} {t('quiz.pts')}</Text>
       </View>
 
-      {/* Timer circulaire centré. Pas de `key` : la valeur (progress/seconds) est
-          pilotée par le parent et réinitialisée à chaque question — remonter le
-          composant ne ferait qu'afficher une frame périmée (faux « reset »). */}
+      {/* Timer : global (blitz/marathon) ou circulaire par question (normal).
+          Pas de `key` sur le cercle : la valeur est pilotée par le parent et
+          réinitialisée à chaque question (un remount afficherait une frame périmée). */}
       <View style={styles.timerWrap}>
-        <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
+        {isTimed ? (
+          <GlobalTimer mode={mode} leftMs={globalLeftMs} totalMs={MODE_DURATION_S[mode] * 1000} t={t} />
+        ) : (
+          <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
+        )}
       </View>
 
       {/* Progress dots */}
@@ -385,8 +468,9 @@ export default function QuizScreen({ navigation }) {
         <Pressable style={styles.tapToSkip} onPress={goNext} />
       ) : null}
 
-      {/* Explication + barre auto-next */}
-      {answered && answered.correctIndex !== null ? (
+      {/* Explication + barre auto-next — uniquement hors modes chronométrés
+          (en blitz/marathon, on reste minimal pour ne pas perdre de temps). */}
+      {!isTimed && answered && answered.correctIndex !== null ? (
         <Animated.View
           pointerEvents="none"
           style={[styles.explain, { opacity: explainOpacity, transform: [{ translateY: explainY }] }]}
@@ -404,6 +488,59 @@ export default function QuizScreen({ navigation }) {
         </Animated.View>
       ) : null}
     </SafeAreaView>
+  );
+}
+
+// Timer global des modes chronométrés. Blitz : grand compteur rouge. Marathon :
+// barre horizontale or + « M:SS restantes ». Pulse dans les 10 dernières secondes.
+function GlobalTimer({ mode, leftMs, totalMs, t }) {
+  const seconds = Math.ceil(leftMs / 1000);
+  const urgent = seconds <= 10;
+  const label = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!urgent) {
+      pulse.setValue(1);
+      return undefined;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1.08, duration: 400, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 400, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => {
+      loop.stop();
+      pulse.setValue(1);
+    };
+  }, [urgent, pulse]);
+
+  if (mode === 'blitz') {
+    return (
+      <Animated.View style={[styles.blitzWrap, { transform: [{ scale: pulse }] }]}>
+        <Text style={styles.blitzCounter}>{label}</Text>
+      </Animated.View>
+    );
+  }
+
+  const frac = Math.max(0, Math.min(1, totalMs ? leftMs / totalMs : 0));
+  return (
+    <Animated.View style={[styles.marathonWrap, { transform: [{ scale: pulse }] }]}>
+      <View style={styles.marathonTrack}>
+        <View
+          style={[
+            styles.marathonFill,
+            { width: `${frac * 100}%` },
+            urgent && styles.marathonFillUrgent,
+          ]}
+        />
+      </View>
+      <Text style={[styles.marathonLabel, urgent && styles.marathonLabelUrgent]}>
+        {t('quiz.timeLeft', { time: label })}
+      </Text>
+    </Animated.View>
   );
 }
 
@@ -483,8 +620,29 @@ const styles = StyleSheet.create({
   counter: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkMuted },
   score: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.gold500 },
 
-  timerWrap: { alignItems: 'center', marginTop: spacing.xs },
+  timerWrap: { alignItems: 'center', marginTop: spacing.xs, minHeight: 80, justifyContent: 'center' },
   dots: { marginTop: spacing.md },
+
+  // Timer global — Blitz (compteur) / Marathon (barre).
+  blitzWrap: { alignItems: 'center', justifyContent: 'center' },
+  blitzCounter: {
+    fontFamily: fonts.titleBlack,
+    fontSize: 44,
+    lineHeight: 52,
+    color: colors.red400,
+  },
+  marathonWrap: { width: '100%', alignItems: 'center', gap: spacing.xs },
+  marathonTrack: {
+    width: '100%',
+    height: 10,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    overflow: 'hidden',
+  },
+  marathonFill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.gold500 },
+  marathonFillUrgent: { backgroundColor: colors.red400 },
+  marathonLabel: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.gold500 },
+  marathonLabelUrgent: { color: colors.red400 },
 
   streak: {
     position: 'absolute',
