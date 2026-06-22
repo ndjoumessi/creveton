@@ -472,7 +472,12 @@
   align-self: start;
   position: sticky;
   top: 0;
+  /* Aperçu strictement visuel : ne capte jamais le focus ni les clics. */
+  pointer-events: none;
+  user-select: none;
 }
+.q-create-form { min-width: 0; }
+.q-grow { resize: none; overflow: hidden; min-height: 96px; }
 .q-preview-cap {
   font-family: 'Space Grotesk';
   font-size: 11px;
@@ -488,25 +493,36 @@
   color: var(--green900);
 }
 
-/* Ligne d'options dans le formulaire (input + radio bonne réponse) */
-.q-opt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.q-opt-pick {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 12.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
+/* Ligne d'options dans le formulaire (badge lettre + input + radio bonne réponse) */
+.q-opt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 4px; border-radius: 10px; transition: background var(--t-fast); }
+.q-opt-row.is-correct { background: #f0fdf4; }
+.q-opt-letter { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 8px; background: #f3f4f6; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); }
+.q-opt-row.is-correct .q-opt-letter { background: var(--green500); color: #fff; }
+.q-opt-radio {
+  display: inline-flex; align-items: center; gap: 6px; flex: none; cursor: pointer;
+  padding: 7px 11px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 12.5px; font-weight: 600; color: var(--muted); white-space: nowrap;
   transition: all var(--t-fast);
 }
-.q-opt-pick.on { background: var(--green500); border-color: var(--green500); color: #fff; }
+.q-opt-radio:hover { border-color: var(--green300); color: var(--green700); }
+.q-opt-row.is-correct .q-opt-radio { border-color: var(--green500); color: var(--green700); background: #fff; }
+.q-opt-radio input { accent-color: var(--green500); width: 15px; height: 15px; }
 .q-opt-text { flex: 1; }
+.q-opt-label { font-weight: 400; color: var(--muted); font-size: 12px; }
+
+/* Niveau : pills de sélection (step Métadonnées) */
+.q-level-pills { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.q-level-choice {
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13px;
+  padding: 8px 16px; border-radius: var(--radius-pill); cursor: pointer; transition: all var(--t-fast);
+}
+.q-level-choice:hover { border-color: var(--green300); }
+.q-level-choice.is-active { background: var(--green900); border-color: var(--green900); color: #fff; }
+
+/* Barre timer figée dans l'aperçu mobile du modal */
+.mp-timer { height: 4px; border-radius: 999px; background: rgba(255,255,255,0.15); overflow: hidden; margin: 10px 0; }
+.mp-timer > span { display: block; height: 100%; background: var(--gold); border-radius: 999px; }
 
 /* Tags input dans le formulaire */
 .q-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }

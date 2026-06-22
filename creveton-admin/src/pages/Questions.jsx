@@ -303,7 +303,6 @@ function draftFromQuestion(q) {
 }
 
 function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
-  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [textFr, setTextFr] = useState('');
   const [opts, setOpts] = useState(['', '', '', '']);
@@ -313,6 +312,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const [level, setLevel] = useState('beginner');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState([]);
+  const taRef = useRef(null);
 
   const reset = () => {
     setStep(0); setTextFr(''); setOpts(['', '', '', '']); setCorrect(0);
@@ -322,26 +322,18 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   // Hydrate le formulaire à l'ouverture (vierge, ou pré-rempli pour « Dupliquer »).
   useEffect(() => {
     if (!open) return;
-    const d = draftFromQuestion(prefill);
-    setStep(0);
-    setTextFr(d.textFr);
-    setOpts(d.opts);
-    setCorrect(d.correct);
-    setExplanation(d.explanation);
-    setTheme(d.theme);
-    setLevel(d.level);
-    setTagInput('');
-    setTags(d.tags);
+    const dft = draftFromQuestion(prefill);
+    setStep(0); setTextFr(dft.textFr); setOpts(dft.opts); setCorrect(dft.correct);
+    setExplanation(dft.explanation); setTheme(dft.theme); setLevel(dft.level); setTagInput(''); setTags(dft.tags);
   }, [open, prefill]);
 
-  const close = () => { reset(); onClose(); };
+  // Auto-resize du textarea énoncé.
+  const autoGrow = (el) => { if (!el) return; el.style.height = 'auto'; el.style.height = `${Math.min(el.scrollHeight, 320)}px`; };
+  useEffect(() => { if (step === 0) autoGrow(taRef.current); }, [textFr, step, open]);
 
+  const close = () => { reset(); onClose(); };
   const setOpt = (i, v) => setOpts((o) => o.map((x, idx) => (idx === i ? v : x)));
-  const addTag = () => {
-    const t = tagInput.trim();
-    if (t && !tags.includes(t)) setTags((p) => [...p, t]);
-    setTagInput('');
-  };
+  const addTag = () => { const tg = tagInput.trim(); if (tg && !tags.includes(tg)) setTags((p) => [...p, tg]); setTagInput(''); };
 
   // --- Validation temps réel ---
   const trimmed = textFr.trim();
@@ -350,8 +342,10 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const optsOk = Boolean(opts[0].trim() && opts[1].trim());
   const correctOk = Boolean(opts[correct]?.trim());
   const canCreate = textOk && !textOver && optsOk && correctOk;
+  const nextDisabled = (step === 0 && !(textOk && !textOver)) || (step === 1 && !(optsOk && correctOk));
 
-  const step1Ok = trimmed.length >= 3 && !textOver;
+  const STEP_LABELS = ['Contenu', 'Options', 'Métadonnées'];
+  const THEME_EMOJI = { geographie: '🌍', culture: '📚', histoire: '🏛️', industrie: '🏭', sport: '⚽', science: '🔬' };
 
   const submit = () => {
     if (!canCreate) return;
@@ -366,37 +360,32 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
     }, reset);
   };
 
-  const next = () => setStep((s) => Math.min(2, s + 1));
-  const prev = () => setStep((s) => Math.max(0, s - 1));
-
   const footer = (
     <>
-      <button className="btn btn-ghost-soft" onClick={close}>{t('questions.modal.cancel')}</button>
+      <button className="btn btn-ghost-soft" onClick={close}>Annuler</button>
       <div style={{ flex: 1 }} />
-      {step > 0 && <button className="btn" onClick={prev}><ChevronLeft size={15} /> {t('questions.modal.previous')}</button>}
+      {step > 0 && <button className="btn" onClick={() => setStep((s) => Math.max(0, s - 1))}><ChevronLeft size={15} /> Précédent</button>}
       {step < 2 && (
-        <button className="btn btn-primary" onClick={next} disabled={step === 0 && !step1Ok}>
-          {t('questions.modal.next')} <ChevronRight size={15} />
+        <button className="btn btn-primary" onClick={() => setStep((s) => Math.min(2, s + 1))} disabled={nextDisabled}>
+          Suivant <ChevronRight size={15} />
         </button>
       )}
       {step === 2 && (
         <button className="btn btn-success" onClick={submit} disabled={!canCreate || submitting}>
-          <Plus size={15} /> {t('questions.modal.save')}
+          <Plus size={15} /> Enregistrer
         </button>
       )}
     </>
   );
 
-  const title = prefill ? t('questions.modal.edit') : t('questions.modal.create');
-
   return (
-    <Modal open={open} onClose={close} title={title} footer={footer} width={820}>
+    <Modal open={open} onClose={close} title={prefill ? 'Modifier la question' : 'Nouvelle question'} footer={footer} width={860}>
       <div className="steps">
         {STEP_META.map((s, i) => (
           <div key={s.key} style={{ display: 'contents' }}>
             <span className={`step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
               <span className="num">{i < step ? <Check size={13} /> : i + 1}</span>
-              {t(`questions.modal.${s.key}`)}
+              {STEP_LABELS[i]}
             </span>
             {i < STEP_META.length - 1 && <span className="step-sep" />}
           </div>
@@ -404,53 +393,32 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
       </div>
 
       <div className="q-create-grid">
-        <div>
+        <div className="q-create-form">
           {step === 0 && (
-            <div className="field" style={{ marginBottom: 0 }}>
-              <label>{t('questions.modal.statement')}</label>
-              <textarea
-                className="textarea"
-                placeholder={t('questions.placeholder.statement')}
-                value={textFr}
-                onChange={(e) => setTextFr(e.target.value)}
-              />
-              <div className={`char-count ${textOver ? 'over' : ''}`}>{textFr.length} / {MAX_TEXT}</div>
-              <div className={`valid-hint ${textOk && !textOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
-                {textOk && !textOver
-                  ? <><Check size={13} /> {t('questions.validation.statementOk')}</>
-                  : <><AlertCircle size={13} /> {textOver ? t('questions.validation.statementTooLong', { max: MAX_TEXT }) : t('questions.validation.statementTooShort')}</>}
-              </div>
-            </div>
-          )}
-
-          {step === 1 && (
             <>
               <div className="field">
-                <label>{t('questions.modal.options')}</label>
-                {opts.map((v, i) => (
-                  <div className="q-opt-row" key={LETTERS[i]}>
-                    <input
-                      className="input"
-                      placeholder={t('questions.placeholder.option', { letter: LETTERS[i] })}
-                      value={v}
-                      onChange={(e) => setOpt(i, e.target.value)}
-                    />
-                    <button type="button" className={`q-opt-pick ${correct === i ? 'on' : ''}`} onClick={() => setCorrect(i)}>
-                      <Check size={13} /> {t('questions.modal.goodAnswer')}
-                    </button>
-                  </div>
-                ))}
-                <div className={`valid-hint ${optsOk && correctOk ? 'ok' : 'ko'}`}>
-                  {optsOk && correctOk
-                    ? <><Check size={13} /> {t('questions.validation.optionsOk')}</>
-                    : <><AlertCircle size={13} /> {!optsOk ? t('questions.validation.optionsMin') : t('questions.validation.correctRequired')}</>}
+                <label>Énoncé (FR)</label>
+                <textarea
+                  ref={taRef}
+                  className="textarea q-grow"
+                  rows={4}
+                  placeholder="Quelle est la capitale… ?"
+                  value={textFr}
+                  onChange={(e) => { setTextFr(e.target.value); autoGrow(e.target); }}
+                />
+                <div className={`char-count ${textOver ? 'over' : ''}`}>{textFr.length} / {MAX_TEXT}</div>
+                <div className={`valid-hint ${textOk && !textOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
+                  {textOk && !textOver
+                    ? <><Check size={13} /> Énoncé valide</>
+                    : <><AlertCircle size={13} /> {textOver ? `Énoncé trop long (max ${MAX_TEXT})` : 'Énoncé trop court (10 caractères min.)'}</>}
                 </div>
               </div>
               <div className="field" style={{ marginBottom: 0 }}>
-                <label>{t('questions.modal.explanation')}</label>
+                <label>Explication <span className="q-opt-label">(optionnelle)</span></label>
                 <textarea
                   className="textarea"
-                  placeholder={t('questions.placeholder.explanation')}
+                  rows={3}
+                  placeholder="Explication affichée après la réponse…"
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
                 />
@@ -458,27 +426,48 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
             </>
           )}
 
+          {step === 1 && (
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Options — choisissez la bonne réponse</label>
+              {opts.map((v, i) => (
+                <div className={`q-opt-row ${correct === i ? 'is-correct' : ''}`} key={LETTERS[i]}>
+                  <span className="q-opt-letter">{LETTERS[i]}</span>
+                  <input className="input" placeholder={`Option ${LETTERS[i]}`} value={v} onChange={(e) => setOpt(i, e.target.value)} />
+                  <label className="q-opt-radio" title="Marquer comme bonne réponse">
+                    <input type="radio" name="q-correct-option" checked={correct === i} onChange={() => setCorrect(i)} />
+                    <span>Bonne</span>
+                  </label>
+                </div>
+              ))}
+              <div className={`valid-hint ${optsOk && correctOk ? 'ok' : 'ko'}`}>
+                {optsOk && correctOk
+                  ? <><Check size={13} /> Réponses valides</>
+                  : <><AlertCircle size={13} /> {!optsOk ? 'Renseignez au moins 2 options' : 'La bonne réponse doit avoir un texte'}</>}
+              </div>
+            </div>
+          )}
+
           {step === 2 && (
             <>
-              <div className="row" style={{ gap: 12, alignItems: 'flex-start' }}>
-                <div className="field" style={{ flex: 1 }}>
-                  <label>{t('questions.modal.theme')}</label>
-                  <select className="select" value={theme} onChange={(e) => setTheme(e.target.value)}>
-                    {THEME_KEYS.map((k) => <option key={k} value={k}>{t(`questions.themes.${k}`, themeLabels[k])}</option>)}
-                  </select>
-                </div>
-                <div className="field" style={{ flex: 1 }}>
-                  <label>{t('questions.modal.level')}</label>
-                  <select className="select" value={level} onChange={(e) => setLevel(e.target.value)}>
-                    {LEVEL_KEYS.map((k) => <option key={k} value={k}>{t(`questions.levels.${k}`, levelLabels[k])}</option>)}
-                  </select>
-                </div>
+              <div className="field">
+                <label>Thème</label>
+                <select className="select" value={theme} onChange={(e) => setTheme(e.target.value)}>
+                  {THEME_KEYS.map((k) => <option key={k} value={k}>{`${THEME_EMOJI[k] || ''} ${themeLabels[k]}`}</option>)}
+                </select>
               </div>
               <div className="field">
-                <label>{t('questions.modal.tags')}</label>
+                <label>Niveau</label>
+                <div className="q-level-pills">
+                  {LEVEL_KEYS.map((k) => (
+                    <button type="button" key={k} className={`q-level-choice ${level === k ? 'is-active' : ''}`} onClick={() => setLevel(k)}>{levelLabels[k]}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="field" style={{ marginBottom: 0 }}>
+                <label>Tags <span className="q-opt-label">(Entrée pour ajouter)</span></label>
                 <input
                   className="input"
-                  placeholder={t('questions.placeholder.tags')}
+                  placeholder="Ex. capitale"
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
@@ -489,9 +478,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                     {tags.map((tag) => (
                       <span className="q-tag" key={tag}>
                         {tag}
-                        <button type="button" onClick={() => setTags((p) => p.filter((x) => x !== tag))} aria-label={t('questions.a11y.removeTag', { tag })}>
-                          <X size={12} />
-                        </button>
+                        <button type="button" onClick={() => setTags((p) => p.filter((x) => x !== tag))} aria-label={`Retirer ${tag}`}><X size={12} /></button>
                       </span>
                     ))}
                   </div>
@@ -499,22 +486,23 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
               </div>
               <div className={`valid-hint ${canCreate ? 'ok' : 'ko'}`}>
                 {canCreate
-                  ? <><Check size={13} /> {t('questions.validation.readyToSave')}</>
-                  : <><AlertCircle size={13} /> {t('questions.validation.completeToSave')}</>}
+                  ? <><Check size={13} /> Prêt à enregistrer</>
+                  : <><AlertCircle size={13} /> Complétez l’énoncé et les réponses</>}
               </div>
             </>
           )}
         </div>
 
-        {/* Aperçu live façon application mobile (fond vert) */}
-        <aside className="q-preview">
-          <div className="q-preview-cap">{t('questions.misc.mobilePreview')}</div>
+        {/* Aperçu mobile — NON interactif (pointer-events: none en CSS) */}
+        <aside className="q-preview" aria-hidden="true">
+          <div className="q-preview-cap">Aperçu mobile</div>
           <div className="mobile-preview">
             <div className="row wrap" style={{ gap: 6 }}>
               <ThemeBadge theme={theme} />
               <LevelBadge level={level} />
             </div>
-            <div className="mp-q">{trimmed || t('questions.placeholder.statementPreview')}</div>
+            <div className="mp-timer"><span style={{ width: '60%' }} /></div>
+            <div className="mp-q">{trimmed || 'Votre énoncé apparaîtra ici…'}</div>
             {opts.map((o, i) => (
               <div className={`mp-opt ${i === correct && o.trim() ? 'correct' : ''}`} key={LETTERS[i]}>
                 <span className="mp-letter">{LETTERS[i]}</span>
