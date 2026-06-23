@@ -18,21 +18,9 @@ jobs:
     environment: staging
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Deploy to Railway
+        uses: bervProject/railway-deploy@main
         with:
-          node-version: 20
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy backend to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE || 'creveton' }}
-        run: |
-          if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "::error::Secret RAILWAY_TOKEN manquant."
-            exit 1
-          fi
-          cd backend
-          railway up --service "$RAILWAY_SERVICE" --ci
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: ${{ vars.RAILWAY_SERVICE || 'creveton' }}
