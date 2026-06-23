@@ -62,10 +62,11 @@ régénérer avec `/impeccable document`.
 - **Score** : `src/services/scoreService.js` (module pur, testable) — `computeSession`,
   `basePoints(level)`, `speedBonus(base, elapsedMs)`. Base : beginner 50 / intermediate 75 /
   expert 100 ; bonus vitesse +50 % si `elapsed_ms ≤ 5000`.
-- **Anti-triche** : `/sessions/submit` ≥ 3 réponses < 1 s → `CHEAT_DETECTED` ;
-  `/sessions/answer` (feedback immédiat, mode `normal` only) une réponse < 300 ms →
-  `CHEAT_DETECTED`. La bonne réponse n'est révélée qu'après soumission. (Seuils
-  assouplis depuis 2/500 ms pour limiter les faux positifs sur les joueurs rapides.)
+- **Anti-triche** : `/sessions/submit` ≥ 3 réponses < 500 ms (`scoreService.CHEAT_MIN_MS`)
+  → `CHEAT_DETECTED`, **sauf en `blitz`/`marathon`** (cadence rapide voulue ; garde-fou =
+  timer global 62 s) ; `/sessions/answer` (feedback immédiat, mode `normal` only) une
+  réponse < 150 ms → `CHEAT_DETECTED`. La bonne réponse n'est révélée qu'après soumission.
+  (Seuils assouplis depuis 2 répétitions / 1 s / 500 ms pour limiter les faux positifs.)
 
 ## Frontend (`creveton-admin/`) — conventions
 

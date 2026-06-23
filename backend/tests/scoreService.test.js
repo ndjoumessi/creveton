@@ -72,12 +72,12 @@ describe('scoreService.computeSession', () => {
     expect(res.unlocked_difficulty).toBeNull();
   });
 
-  test('détecte les réponses suspectes (< 1 s)', () => {
+  test('détecte les réponses suspectes (< 500 ms)', () => {
     const solutions = solutionsFrom({ q1: { correct_index: 0 } });
     const res = scoreService.computeSession({
       level: 'beginner',
       solutions,
-      answers: [{ question_id: 'q1', selected_index: 0, elapsed_ms: 500, skipped: false }],
+      answers: [{ question_id: 'q1', selected_index: 0, elapsed_ms: 400, skipped: false }],
     });
     expect(res.suspicious_fast_count).toBe(1);
   });

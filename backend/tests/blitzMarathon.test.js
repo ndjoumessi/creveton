@@ -94,6 +94,32 @@ t('POST /sessions/submit mode=blitz → score calculé (base par question)', asy
   expect(r.body.theme_streak_bonus).toBe(0); // thèmes tous différents
 });
 
+// ── Blitz : réponses très rapides répétées → PAS de triche (exempté) ─────────
+// La cadence rapide est voulue en blitz ; le seul garde-fou est le timer global.
+t('POST /sessions/submit mode=blitz avec réponses < 500 ms → pas de CHEAT_DETECTED', async () => {
+  const user = await H.createUser({ role: 'player', total_xp: 0, level: 1 });
+  const token = H.tokenFor(user);
+  const questions = await Promise.all(
+    Array.from({ length: 5 }, () => H.createApprovedQuestion({ level: 'beginner', theme: 'culture' }))
+  );
+
+  const r = await submit(token, {
+    mode: 'blitz',
+    theme: null,
+    level: null,
+    started_at: new Date(Date.now() - 5000).toISOString(), // dans le timer (60 s)
+    answers: questions.map((q) => ({
+      question_id: q.id,
+      selected_index: q.correct_index,
+      elapsed_ms: 200, // < 500 ms, répété — flaggerait en mode normal, pas en blitz
+      skipped: false,
+    })),
+  });
+
+  expect(r.status).toBe(200);
+  expect(r.body.correct_count).toBe(5);
+});
+
 // ── Blitz : session trop longue (> 62 s) → triche ────────────────────────────
 t('POST /sessions/submit mode=blitz > 62 s → 422 CHEAT_DETECTED', async () => {
   const user = await H.createUser({ role: 'player', total_xp: 0, level: 1 });

@@ -125,8 +125,8 @@ describe('gameService.submitSession', () => {
         ...baseArgs,
         answers: [
           { question_id: 'q1', selected_index: 0, elapsed_ms: 400, skipped: false },
-          { question_id: 'q2', selected_index: 0, elapsed_ms: 700, skipped: false },
-          { question_id: 'q3', selected_index: 0, elapsed_ms: 600, skipped: false },
+          { question_id: 'q2', selected_index: 0, elapsed_ms: 300, skipped: false },
+          { question_id: 'q3', selected_index: 0, elapsed_ms: 450, skipped: false },
         ],
       })
     ).rejects.toMatchObject({ code: 'CHEAT_DETECTED', httpStatus: 422 });
@@ -134,7 +134,7 @@ describe('gameService.submitSession', () => {
     expect(redis.del).toHaveBeenCalledWith('session:idem:u1:' + new Date(baseArgs.startedAt).getTime());
   });
 
-  test('2 réponses < 1 s ne sont pas de la triche (seuil assoupli à 3)', async () => {
+  test('2 réponses < 500 ms ne sont pas de la triche (seuil assoupli à 3)', async () => {
     wireHappyPath();
     questionModel.findSolutions.mockResolvedValue(
       new Map([
@@ -145,7 +145,7 @@ describe('gameService.submitSession', () => {
     const res = await gameService.submitSession({
       ...baseArgs,
       answers: [
-        { question_id: 'q1', selected_index: 0, elapsed_ms: 500, skipped: false },
+        { question_id: 'q1', selected_index: 0, elapsed_ms: 450, skipped: false },
         { question_id: 'q2', selected_index: 0, elapsed_ms: 400, skipped: false },
       ],
     });

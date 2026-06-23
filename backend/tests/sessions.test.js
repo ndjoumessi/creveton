@@ -103,8 +103,8 @@ t('anti-triche : ≥3 réponses < 1 s → 422 CHEAT_DETECTED, rien persisté', a
     started_at: '2026-06-21T12:00:00Z',
     answers: [
       { question_id: questions[0].id, selected_index: 0, elapsed_ms: 300, skipped: false },
-      { question_id: questions[1].id, selected_index: 1, elapsed_ms: 700, skipped: false },
-      { question_id: questions[2].id, selected_index: 0, elapsed_ms: 600, skipped: false },
+      { question_id: questions[1].id, selected_index: 1, elapsed_ms: 400, skipped: false },
+      { question_id: questions[2].id, selected_index: 0, elapsed_ms: 450, skipped: false },
     ],
   };
   const r = await submit(token, body);

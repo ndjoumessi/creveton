@@ -84,9 +84,9 @@ t('bonne réponse lente → pas de bonus de vitesse', async () => {
   expect(r.body.speed_bonus).toBe(0);
 });
 
-t('anti-triche : réponse < 200 ms → 422 CHEAT_DETECTED', async () => {
+t('anti-triche : réponse < 150 ms → 422 CHEAT_DETECTED', async () => {
   const { token, questions } = await setup(1);
-  const r = await answer(token, { question_id: questions[0].id, selected_index: 1, elapsed_ms: 150 });
+  const r = await answer(token, { question_id: questions[0].id, selected_index: 1, elapsed_ms: 100 });
   expect(r.status).toBe(422);
   expect(r.body.error.code).toBe('CHEAT_DETECTED');
 });

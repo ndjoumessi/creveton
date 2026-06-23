@@ -20,20 +20,21 @@ const sessionModel = require('../models/session.model');
  *   1. idempotence (un même envoi ne crédite qu'une fois)
  *   2. chargement des solutions (correct_index) côté serveur
  *   3. calcul score/XP/streak via scoreService (formule de référence)
- *   4. anti-triche (réponses < 1 s répétées → CHEAT_DETECTED)
+ *   4. anti-triche (réponses très rapides répétées → CHEAT_DETECTED ; hors blitz/marathon)
  *   5. persistance partie + crédit XP/niveau (transaction)
  *   6. mise à jour des classements (Redis)
  *   7. réponse avec review[] (révélation des bonnes réponses autorisée ici)
  */
 
-// ≥ 3 réponses sous 1 s ⇒ triche (« répétées »). Seuil assoupli (était 2) pour
-// réduire les faux positifs sur les joueurs légitimement rapides.
+// ≥ 3 réponses sous la fenêtre « rapide » (scoreService.CHEAT_MIN_MS = 500 ms)
+// ⇒ triche (« répétées »). Seuils assouplis (3 au lieu de 2 ; fenêtre 500 ms au
+// lieu de 1 s) pour réduire les faux positifs sur les joueurs légitimement rapides.
 const CHEAT_FAST_REPEAT = 3;
 const IDEMPOTENCY_TTL_SEC = 24 * 3600;
 // Blitz : timer global 60 s + petite marge réseau ⇒ au-delà = horloge trafiquée.
 const BLITZ_MAX_MS = 62 * 1000;
 // Mode normal — feedback immédiat (POST /sessions/answer).
-const ANSWER_CHEAT_MIN_MS = 200; // répondre sous 300 ms ⇒ triche (assoupli, était 500)
+const ANSWER_CHEAT_MIN_MS = 150; // répondre sous 150 ms ⇒ triche (assoupli, était 500)
 const LIVE_SESSION_TTL_SEC = 2 * 3600; // durée de vie de l'état live (streak)
 
 /** Niveau joueur (1–5) à partir de l'XP cumulée (seuils CDC §4.1). */
@@ -73,8 +74,11 @@ async function submitSession({ userId, mode = 'normal', theme, level, startedAt,
     // 3. Calcul de référence (score, XP, streak, review).
     const result = scoreService.computeSession({ level, mode, answers, solutions });
 
-    // 4. Anti-triche : trop de réponses < 1 s.
-    if (result.suspicious_fast_count >= CHEAT_FAST_REPEAT) {
+    // 4. Anti-triche : trop de réponses très rapides répétées. EXEMPTÉ en
+    //    blitz/marathon : ces modes n'utilisent pas /sessions/answer (pas de
+    //    session_id) et la cadence rapide y est VOULUE — le garde-fou y est le
+    //    timer global (62 s, vérifié plus haut), pas la vitesse par réponse.
+    if (mode !== 'blitz' && mode !== 'marathon' && result.suspicious_fast_count >= CHEAT_FAST_REPEAT) {
       throw new ApiError('CHEAT_DETECTED');
     }
 
@@ -190,7 +194,7 @@ async function answerSingle({ userId, sessionId = null, questionId, selectedInde
     });
   }
 
-  // 2. Anti-triche : une réponse réelle sous 500 ms est impossible humainement.
+  // 2. Anti-triche : une réponse réelle sous 150 ms est impossible humainement.
   //    (Un skip/timeout `selected_index = null` n'est pas une « réponse ».)
   if (selectedIndex !== null && elapsedMs < ANSWER_CHEAT_MIN_MS) {
     throw new ApiError('CHEAT_DETECTED');

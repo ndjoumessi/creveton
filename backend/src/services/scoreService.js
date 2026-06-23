@@ -9,7 +9,8 @@
  *  - streak : ×1,5 dès 3 bonnes réponses consécutives, ×2 dès 5
  *  - XP de session : score × multiplicateur_niveau × multiplicateur_streak (max)
  *  - déverrouillage difficulté supérieure si réussite ≥ 70 %
- *  - anti-triche : réponses répétées < 1 s ⇒ CHEAT_DETECTED (géré en amont)
+ *  - anti-triche : réponses répétées < 500 ms ⇒ CHEAT_DETECTED (géré en amont,
+ *    et exempté en blitz/marathon où la cadence rapide est voulue)
  *
  * Module pur (sans I/O) pour être facilement testable.
  */
@@ -20,7 +21,7 @@ const SPEED_BONUS_THRESHOLD_MS = 5000;
 const SPEED_BONUS_RATE = 0.5;
 const UNLOCK_THRESHOLD = 0.7;
 const NEXT_DIFFICULTY = { beginner: 'intermediate', intermediate: 'expert', expert: null };
-const CHEAT_MIN_MS = 1000;
+const CHEAT_MIN_MS = 500; // fenêtre « réponse suspecte » (assouplie depuis 1000 ms)
 
 function streakMultiplier(streak) {
   if (streak >= 5) return 2;
