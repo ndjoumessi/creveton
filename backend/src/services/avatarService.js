@@ -23,7 +23,6 @@ async function uploadAvatar({ buffer, mimetype, userId }) {
       public_id: `user_${userId}`,
       folder: FOLDER,
 
-      transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }],
     }
   );
   return result.secure_url;
