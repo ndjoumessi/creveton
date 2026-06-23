@@ -7,6 +7,7 @@ jest.mock('cloudinary', () => ({
     config: jest.fn(),
     uploader: {
       upload: jest.fn(),
+      unsigned_upload: jest.fn(),
       destroy: jest.fn().mockResolvedValue({ result: 'ok' }),
     },
   },
@@ -30,7 +31,9 @@ afterAll(async () => {
 beforeEach(async () => {
   if (ready) await H.resetState();
   cloudinary.uploader.upload.mockReset();
-  cloudinary.uploader.upload.mockResolvedValue({ secure_url: CLOUD_URL });
+  cloudinary.uploader.unsigned_upload.mockReset();
+  cloudinary.uploader.unsigned_upload.mockResolvedValue({ secure_url: CLOUD_URL });
+  
 });
 
 const t = (name, fn) =>
@@ -57,9 +60,9 @@ t('POST /users/me/avatar avec image valide → 200 + avatar_url Cloudinary', asy
 
   expect(r.status).toBe(200);
   expect(r.body.avatar_url).toMatch(/^https:\/\/res\.cloudinary\.com\//);
-  expect(cloudinary.uploader.upload).toHaveBeenCalledTimes(1);
+  expect(cloudinary.uploader.unsigned_upload).toHaveBeenCalledTimes(1);
   // Transformation 200×200 demandée à Cloudinary.
-  const opts = cloudinary.uploader.upload.mock.calls[0][1];
+  const opts = cloudinary.uploader.unsigned_upload.mock.calls[0][2];
   expect(opts.transformation[0]).toMatchObject({ width: 200, height: 200, crop: 'fill' });
 
   // L'URL est bien persistée en base (visible via GET /users/me).
@@ -76,7 +79,7 @@ t('POST /users/me/avatar sans fichier → 400', async () => {
 
   expect(r.status).toBe(400);
   expect(r.body.error.code).toBe('VALIDATION_ERROR');
-  expect(cloudinary.uploader.upload).not.toHaveBeenCalled();
+  expect(cloudinary.uploader.unsigned_upload).not.toHaveBeenCalled();
 });
 
 // ── Fichier non-image → 400 (rejet multer fileFilter) ────────────────────────
@@ -91,5 +94,5 @@ t('POST /users/me/avatar avec fichier non-image → 400', async () => {
 
   expect(r.status).toBe(400);
   expect(r.body.error.code).toBe('VALIDATION_ERROR');
-  expect(cloudinary.uploader.upload).not.toHaveBeenCalled();
+  expect(cloudinary.uploader.unsigned_upload).not.toHaveBeenCalled();
 });
