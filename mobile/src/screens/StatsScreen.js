@@ -16,7 +16,6 @@ import { useTranslation } from 'react-i18next';
 import { Screen, Avatar, AppButton, Body, Skeleton } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
-import { profileStreak } from '../services/stats.service';
 import { THEMES } from '../constants/config';
 import {
   colors,
@@ -46,10 +45,22 @@ const CHART_H = 140;
 
 function rateColor(pct) {
   if (pct === null || pct === undefined) return colors.green900;
-  if (pct > 70) return colors.green500;
-  if (pct >= 50) return colors.gold500;
-  return colors.red400;
+  if (pct >= 70) return colors.green500; // vert
+  if (pct >= 40) return colors.gold500; // ambre (≈ orange)
+  return colors.red400; // rouge
 }
+
+// Accent (bordure gauche historique) par mode de jeu.
+const MODE_ACCENT = { normal: colors.green500, blitz: colors.red400, marathon: colors.gold500 };
+// Emoji thème (réutilisé pour la méta d'une partie normale).
+const THEME_EMOJI = {
+  culture: '🎭',
+  geographie: '🗺️',
+  histoire: '📜',
+  industrie: '🏭',
+  sport: '⚽',
+  science: '🔬',
+};
 
 // ── Courbe d'évolution du score (SVG, ligne + aire + points) ───────────────
 function ScoreChart({ data }) {
@@ -138,17 +149,26 @@ function ScoreChart({ data }) {
             key={`p${i}`}
             cx={p.x}
             cy={p.y}
-            r={4}
-            fill={colors.white}
+            r={i === n - 1 ? 5 : 4}
+            fill={i === n - 1 ? colors.green500 : colors.white}
             stroke={colors.green500}
             strokeWidth={2}
           />
         ))}
+        {/* Valeur au-dessus du dernier point */}
+        <SvgText
+          x={points[n - 1].x}
+          y={points[n - 1].y - 9}
+          fontSize={11}
+          fontWeight="bold"
+          fill={colors.green700}
+          textAnchor={n === 1 ? 'middle' : 'end'}
+        >
+          {fmt(values[n - 1])}
+        </SvgText>
       </Svg>
       <View style={styles.chartAxis}>
-        <Text style={styles.chartAxisLabel}>
-          {n > 1 ? t('stats.misc.chartAxisAgo', { n: n - 1 }) : ''}
-        </Text>
+        <Text style={styles.chartAxisLabel}>{n > 1 ? `J-${n - 1}` : ''}</Text>
         <Text style={styles.chartAxisLabel}>
           {n === 1 ? t('stats.misc.chartAxisPlayMore') : t('stats.misc.chartAxisLast')}
         </Text>
@@ -235,7 +255,6 @@ export default function StatsScreen({ navigation }) {
 
   const progress = levelProgress(user?.total_xp ?? 0);
   const level = progress.level;
-  const streak = profileStreak(user?.stats);
   const loadingStats = histLoading && history === null;
 
   return (
@@ -248,7 +267,7 @@ export default function StatsScreen({ navigation }) {
             <Text style={styles.headerName} numberOfLines={1}>
               {user?.name || t('profile.misc.defaultName')}
             </Text>
-            <Body color={colors.textOnDarkMuted}>{t('stats.misc.headerLevel', { level })}</Body>
+            <Body color={colors.gold400}>{t('stats.misc.headerLevel', { level })}</Body>
           </View>
         </View>
         <View style={styles.xpRow}>
@@ -262,16 +281,19 @@ export default function StatsScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Tabs */}
+      {/* Tabs — pills (actif : or / texte vert) */}
       <View style={styles.tabs}>
         {TABS.map((tabItem) => {
           const active = tabItem.key === tab;
           return (
-            <Pressable key={tabItem.key} onPress={() => setTab(tabItem.key)} style={styles.tab}>
+            <Pressable
+              key={tabItem.key}
+              onPress={() => setTab(tabItem.key)}
+              style={[styles.tab, active && styles.tabActive]}
+            >
               <Text style={[styles.tabText, active && styles.tabTextActive]}>
                 {tabItem.emoji} {t(tabItem.labelKey)}
               </Text>
-              <View style={[styles.tabUnderline, active && styles.tabUnderlineActive]} />
             </Pressable>
           );
         })}
@@ -283,7 +305,6 @@ export default function StatsScreen({ navigation }) {
             stats={stats}
             history={history}
             loading={loadingStats}
-            streak={streak}
             onPlay={() => navigation.navigate('Play')}
           />
         ) : (
@@ -302,7 +323,7 @@ export default function StatsScreen({ navigation }) {
 }
 
 // ── Onglet Mes stats ───────────────────────────────────────────────────────
-function StatsTab({ stats, history, loading, streak, onPlay }) {
+function StatsTab({ stats, history, loading, onPlay }) {
   const { t } = useTranslation();
   if (loading) {
     return (
@@ -351,12 +372,16 @@ function StatsTab({ stats, history, loading, streak, onPlay }) {
     {
       icon: '🔥',
       bg: colors.errorBg,
-      value: streak.max ?? '—',
+      // Streak max DÉRIVÉ de l'historique (streak_max persisté par partie), pas
+      // du profil (souvent vide). 🔥 en préfixe seulement si > 0.
+      value: stats.maxStreak > 0 ? `🔥 ${fmt(stats.maxStreak)}` : stats.maxStreak === 0 ? '0' : '—',
       label: t('stats.kpi.maxStreak'),
     },
   ];
 
   const recent = (history || []).slice(0, 10);
+  // Parties en mode mixte (blitz/marathon) : thème null → ligne « Mix » dédiée.
+  const mixGames = (history || []).filter((g) => g.mode === 'blitz' || g.mode === 'marathon').length;
 
   return (
     <>
@@ -386,24 +411,37 @@ function StatsTab({ stats, history, loading, streak, onPlay }) {
           const entry = stats.byTheme?.[theme.key];
           const games = entry?.games ?? 0;
           const rate = entry?.rate ?? null;
+          const played = games > 0;
           const accent = themeAccent[theme.key] || colors.green500;
           return (
             <View key={theme.key} style={[styles.themeRow, i === 0 && styles.themeRowFirst]}>
               <View style={styles.themeHead}>
-                <Text style={styles.themeLabel}>
+                <Text style={[styles.themeLabel, !played && styles.themeLabelMuted]}>
                   {theme.emoji} {theme.label}
                 </Text>
                 <Text style={styles.themeMeta}>
-                  {games > 0 ? t('stats.misc.themeGames', { games }) : t('stats.misc.themeNotPlayed')}
+                  {played ? t('stats.misc.themeGames', { games }) : t('stats.misc.themeNotPlayed')}
                 </Text>
               </View>
-              <View style={styles.themeBarRow}>
-                <ThemeBar accent={accent} pct={rate} />
-                <Text style={styles.themePct}>{rate === null ? '—' : `${rate}%`}</Text>
-              </View>
+              {/* Pas encore joué → pas de barre vide, juste l'état grisé. */}
+              {played ? (
+                <View style={styles.themeBarRow}>
+                  <ThemeBar accent={accent} pct={rate} />
+                  <Text style={styles.themePct}>{rate === null ? '—' : `${rate}%`}</Text>
+                </View>
+              ) : null}
             </View>
           );
         })}
+        {/* Blitz/Marathon : pas de thème unique → ligne « Mix » dédiée. */}
+        {mixGames > 0 ? (
+          <View style={styles.themeRow}>
+            <View style={styles.themeHead}>
+              <Text style={styles.themeLabel}>🎲 Mix</Text>
+              <Text style={styles.themeMeta}>{t('stats.misc.mix', { games: mixGames })}</Text>
+            </View>
+          </View>
+        ) : null}
       </View>
 
       {/* Historique */}
@@ -419,32 +457,48 @@ function StatsTab({ stats, history, loading, streak, onPlay }) {
 
 function HistoryRow({ game }) {
   const { t } = useTranslation();
-  const total = Number(game.total_questions) || 0;
+  // L'historique (toView) expose `question_count` ; on tolère `total_questions`.
+  const total = Number(game.question_count ?? game.total_questions) || 0;
   const correct = Number(game.correct_count) || 0;
+  const score = Number(game.score) || 0;
   const rate = total > 0 ? Math.round((correct / total) * 100) : null;
-  const accent = themeAccent[game.theme] || colors.green500;
+  // Partie avortée / échouée : 0 pt ET 0 bonne réponse → grisée + « Incomplet ».
+  const incomplete = score === 0 && correct === 0;
+
+  // BUG : thème/niveau null en blitz/marathon → libellé du mode à la place.
+  const meta =
+    game.mode === 'blitz'
+      ? { emoji: '⚡', label: t('gameStart.modes.blitz.name') }
+      : game.mode === 'marathon'
+        ? { emoji: '🏃', label: t('gameStart.modes.marathon.name') }
+        : {
+            emoji: THEME_EMOJI[game.theme] || themeEmoji(game.theme),
+            label: `${themeLabel(game.theme)} · ${levelLabel(game.level)}`,
+          };
+
+  const accent = MODE_ACCENT[game.mode] || colors.green500;
 
   let badge = null;
   if (rate !== null) {
     if (rate >= 70) badge = { icon: '✓', color: colors.green500, bg: colors.successBg };
-    else if (rate >= 50) badge = { icon: '○', color: colors.gold500, bg: colors.goldVeil };
+    else if (rate >= 40) badge = { icon: '○', color: colors.gold500, bg: colors.goldVeil };
     else badge = { icon: '✕', color: colors.red400, bg: colors.errorBg };
   }
 
   return (
-    <View style={styles.histCard}>
-      <View style={[styles.histBand, { backgroundColor: accent }]} />
+    <View style={[styles.histCard, incomplete && styles.histCardIncomplete]}>
+      <View style={[styles.histBand, { backgroundColor: incomplete ? colors.border : accent }]} />
       <View style={styles.histBody}>
         <View style={styles.histTop}>
-          <Text style={styles.histEmoji}>{themeEmoji(game.theme)}</Text>
+          <Text style={styles.histEmoji}>{meta.emoji}</Text>
           <Text style={styles.histTitle} numberOfLines={1}>
-            {themeLabel(game.theme)} · {levelLabel(game.level)}
+            {meta.label}
           </Text>
           <Text style={styles.histAgo}>{timeAgo(game.played_at)}</Text>
         </View>
         <View style={styles.histBottom}>
-          <Text style={styles.histScore}>{fmt(game.score)} {t('common.pts')}</Text>
-          {rate !== null ? (
+          <Text style={styles.histScore}>{fmt(score)} {t('common.pts')}</Text>
+          {rate !== null && !incomplete ? (
             <Text style={styles.histCorrect}>✓ {correct}/{total}</Text>
           ) : null}
           {game.xp_earned ? (
@@ -452,7 +506,11 @@ function HistoryRow({ game }) {
           ) : null}
         </View>
       </View>
-      {badge ? (
+      {incomplete ? (
+        <View style={styles.histIncompleteBadge}>
+          <Text style={styles.histIncompleteText}>{t('stats.misc.incomplete')}</Text>
+        </View>
+      ) : badge ? (
         <View style={[styles.histBadge, { backgroundColor: badge.bg }]}>
           <Text style={[styles.histBadgeText, { color: badge.color }]}>{badge.icon}</Text>
         </View>
@@ -614,18 +672,29 @@ const styles = StyleSheet.create({
     color: colors.textOnDarkMuted,
   },
 
-  // Tabs
-  tabs: { flexDirection: 'row', backgroundColor: colors.green900 },
-  tab: { flex: 1, alignItems: 'center' },
+  // Tabs — pills sur le header sombre.
+  tabs: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    backgroundColor: colors.green900,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  tab: {
+    flex: 1,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  tabActive: { backgroundColor: colors.gold500 },
   tabText: {
     fontFamily: fonts.titleSemiBold,
     fontSize: fontSizes.md,
-    color: colors.textOnDarkMuted,
-    paddingBottom: spacing.sm,
+    color: 'rgba(255,255,255,0.6)',
   },
-  tabTextActive: { color: colors.cream },
-  tabUnderline: { height: 3, width: '60%', backgroundColor: 'transparent', borderRadius: 2 },
-  tabUnderlineActive: { backgroundColor: colors.gold400 },
+  tabTextActive: { fontFamily: fonts.titleBold, color: colors.green900 },
 
   body: { padding: spacing.lg },
 
@@ -645,7 +714,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    ...shadow.soft,
+    ...shadow.card,
   },
   kpiIcon: {
     width: 44,
@@ -657,8 +726,8 @@ const styles = StyleSheet.create({
   kpiIconText: { fontSize: 24 },
   kpiValue: {
     fontFamily: fonts.titleExtraBold,
-    fontSize: fontSizes.xxl,
-    color: colors.green900,
+    fontSize: 32,
+    color: colors.green700,
     marginTop: spacing.md,
   },
   kpiLabel: {
@@ -706,6 +775,7 @@ const styles = StyleSheet.create({
   themeRowFirst: { borderTopWidth: 0, marginTop: 0, paddingTop: 0 },
   themeHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   themeLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textBody },
+  themeLabelMuted: { color: colors.textFaint },
   themeMeta: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted },
   themeBarRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   barTrack: {
@@ -734,6 +804,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...shadow.soft,
   },
+  histCardIncomplete: { backgroundColor: '#f3f4f6', opacity: 0.85 },
   histBand: { width: 4 },
   histBody: { flex: 1, padding: spacing.md, gap: spacing.xs },
   histTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -759,6 +830,15 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   histBadgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.base },
+  histIncompleteBadge: {
+    alignSelf: 'center',
+    backgroundColor: colors.border,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    marginRight: spacing.md,
+  },
+  histIncompleteText: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textMuted },
 
   // Ma position
   myRankCard: {

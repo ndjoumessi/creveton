@@ -352,6 +352,8 @@
       "scoreEvolution": "Évolution du score",
       "themeGames": "{{games}} partie(s)",
       "themeNotPlayed": "Pas encore joué",
+      "mix": "Mix · {{games}} partie(s)",
+      "incomplete": "Incomplet",
       "outOfPlayers": "sur {{totalPlayers}} joueurs",
       "globalRank": "Classement global",
       "mePill": "Vous"

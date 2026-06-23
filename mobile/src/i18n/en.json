@@ -352,6 +352,8 @@
       "scoreEvolution": "Score evolution",
       "themeGames": "{{games}} game(s)",
       "themeNotPlayed": "Not played yet",
+      "mix": "Mix · {{games}} game(s)",
+      "incomplete": "Incomplete",
       "outOfPlayers": "out of {{totalPlayers}} players",
       "globalRank": "Global ranking",
       "mePill": "You"
