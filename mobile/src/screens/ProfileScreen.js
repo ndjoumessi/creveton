@@ -329,6 +329,9 @@ export default function ProfileScreen() {
       loadHistory(),
       loadLeaderboard({ currentUserId: useAuthStore.getState().user?.id }),
     ]);
+    // refreshProfile() a pu changer user.avatar_url → on bust le cache pour
+    // forcer <Image> à recharger la photo fraîche.
+    setAvatarBust(Date.now());
     setRefreshing(false);
   }, [refreshProfile, loadWallet, loadHistory, loadLeaderboard]);
 

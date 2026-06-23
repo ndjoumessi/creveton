@@ -3,7 +3,9 @@
 import { LEVELS, THEMES, SOCKET_URL } from '../constants/config';
 import i18n from '../i18n';
 
-// URL absolue de la photo de profil (avatar_url est relatif : /uploads/avatars/…).
+// URL absolue de la photo de profil. Depuis le passage à Cloudinary, avatar_url
+// est déjà une URL HTTPS absolue (rendue telle quelle) ; on ne préfixe SOCKET_URL
+// que pour un éventuel chemin relatif hérité (/uploads/avatars/…).
 // Renvoie null si aucune photo → l'avatar retombe sur les initiales.
 export function avatarUri(user) {
   const path = user?.avatar_url;
