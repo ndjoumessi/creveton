@@ -84,16 +84,16 @@ t('bonne réponse lente → pas de bonus de vitesse', async () => {
   expect(r.body.speed_bonus).toBe(0);
 });
 
-t('anti-triche : réponse < 300 ms → 422 CHEAT_DETECTED', async () => {
+t('anti-triche : réponse < 200 ms → 422 CHEAT_DETECTED', async () => {
   const { token, questions } = await setup(1);
-  const r = await answer(token, { question_id: questions[0].id, selected_index: 1, elapsed_ms: 200 });
+  const r = await answer(token, { question_id: questions[0].id, selected_index: 1, elapsed_ms: 150 });
   expect(r.status).toBe(422);
   expect(r.body.error.code).toBe('CHEAT_DETECTED');
 });
 
 t('skip (selected_index null) rapide → pas de triche, correct=false, streak 0', async () => {
   const { token, questions } = await setup(1);
-  const r = await answer(token, { question_id: questions[0].id, selected_index: null, elapsed_ms: 200 });
+  const r = await answer(token, { question_id: questions[0].id, selected_index: null, elapsed_ms: 150 });
   expect(r.status).toBe(200);
   expect(r.body.correct).toBe(false);
   expect(r.body.points_earned).toBe(0);
