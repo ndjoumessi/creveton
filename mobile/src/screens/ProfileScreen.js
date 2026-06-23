@@ -294,15 +294,23 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  // Charge les données AU FOCUS de l'onglet (une fois par focus, pas à chaque
-  // render). L'id est lu via getState pour ne PAS dépendre de `user` : sinon
-  // chaque setUser/updateUser (avatar, édition, langue) re-déclencherait le
-  // fetch → re-render → boucle de rechargement.
+  // Charge les données AU FOCUS de l'onglet. L'id est lu via getState pour ne PAS
+  // dépendre de `user` (sinon chaque updateUser — avatar/édition/langue —
+  // re-déclencherait le fetch → re-render → boucle). Le ref garantit UN SEUL
+  // fetch par focus même si le callback est ré-invoqué pendant le focus ; il est
+  // remis à zéro à la perte de focus → on rafraîchit bien au retour sur l'onglet.
+  const fetchedRef = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      loadWallet();
-      loadHistory();
-      loadLeaderboard({ currentUserId: useAuthStore.getState().user?.id });
+      if (!fetchedRef.current) {
+        fetchedRef.current = true;
+        loadWallet();
+        loadHistory();
+        loadLeaderboard({ currentUserId: useAuthStore.getState().user?.id });
+      }
+      return () => {
+        fetchedRef.current = false;
+      };
     }, [loadWallet, loadHistory, loadLeaderboard]),
   );
 

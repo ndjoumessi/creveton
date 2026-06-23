@@ -3,6 +3,8 @@
 // (à parser avec parseApiError).
 
 import api from './api';
+import { getAccessToken } from './storage';
+import { API_URL } from '../constants/config';
 
 // --- Auth (API §4) -------------------------------------------------------
 export const auth = {
@@ -75,12 +77,33 @@ export const users = {
   transactions: (params) =>
     api.get('/users/me/transactions', { params }).then((r) => r.data),
   // Téléverse une photo de profil (multipart, champ « avatar ») → { avatar_url }.
-  uploadAvatar: (formData) =>
-    api
-      .post('/users/me/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then((r) => r.data),
+  //
+  // On passe par `fetch` (et NON axios) : l'instance axios force un
+  // Content-Type par défaut ; le surcharger en 'multipart/form-data' sans
+  // boundary casse le parsing serveur (multer → « Boundary not found » → 500).
+  // En ne fixant AUCUN Content-Type, React Native génère lui-même l'en-tête
+  // multipart avec le bon boundary. On reforme une erreur compatible
+  // parseApiError (error.response.data.error).
+  uploadAvatar: async (formData) => {
+    const token = await getAccessToken();
+    const res = await fetch(`${API_URL}/users/me/avatar`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: formData,
+    });
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {
+      /* réponse non-JSON */
+    }
+    if (!res.ok) {
+      const e = new Error(data?.error?.message || `HTTP ${res.status}`);
+      e.response = { status: res.status, data };
+      throw e;
+    }
+    return data;
+  },
 };
 
 // --- Wallet (API §11, flag) ---------------------------------------------
