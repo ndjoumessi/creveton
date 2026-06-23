@@ -113,6 +113,22 @@ export const useGameStore = create((set, get) => ({
       if (__DEV__) {
         console.log('[sessions/submit] response:', JSON.stringify(result, null, 2));
       }
+      // Enrichit review[] avec le TEXTE des questions/options jouées : le serveur
+      // ne renvoie que les index (correct_index/your_index). Les questions jouées
+      // sont déjà en mémoire (tirées du cache local) avec leur texte + options →
+      // source idéale (exactement ce qui a été affiché, sans relire SQLite). Une
+      // question absente reste sans options (l'écran n'affichera que l'explication).
+      const qById = new Map(get().questions.map((q) => [q.id, q]));
+      const enriched = Array.isArray(result.review)
+        ? {
+            ...result,
+            review: result.review.map((item) => {
+              const q = qById.get(item.question_id);
+              return q ? { ...item, question_text: q.text, options: q.options || [] } : item;
+            }),
+          }
+        : result;
+
       // Temps moyen par réponse — calculé localement (les `answers` portent
       // toujours `elapsed_ms`, contrairement au review[] de l'API qui peut l'omettre).
       // On ne le recalcule pas si l'API le fournit déjà.
@@ -120,9 +136,9 @@ export const useGameStore = create((set, get) => ({
       const avgMs = timed.length
         ? Math.round(timed.reduce((s, a) => s + a.elapsed_ms, 0) / timed.length)
         : null;
-      const merged = (typeof result.avg_time_ms === 'number' || avgMs == null)
-        ? result
-        : { ...result, avg_time_ms: avgMs };
+      const merged = (typeof enriched.avg_time_ms === 'number' || avgMs == null)
+        ? enriched
+        : { ...enriched, avg_time_ms: avgMs };
       set({ result: merged, submitting: false });
       return { ok: true, result: merged };
     } catch (e) {

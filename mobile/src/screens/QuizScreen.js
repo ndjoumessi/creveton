@@ -20,6 +20,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 import { LoadingScreen, ProgressDots, CircularTimer, useToast } from '../components';
 import { useGameStore } from '../store/gameStore';
 import { sessions as sessionsApi } from '../services/endpoints';
@@ -28,8 +29,14 @@ import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
 
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 const LETTERS = ['A', 'B', 'C', 'D'];
 const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
+// Timer global circulaire (montre) — distinct par mode.
+const GT_SIZE = 80;
+const GT_STROKE = { blitz: 4, marathon: 3 };
+const GT_TRACK = { blitz: 'rgba(255,255,255,0.08)', marathon: 'rgba(255,255,255,0.06)' };
 const ANSWER_DELAY_MS = 1500;
 const TIMEOUT_DELAY_MS = 2000;
 // Modes mixtes (blitz/marathon) : feedback neutre puis avance après 800 ms.
@@ -503,14 +510,30 @@ export default function QuizScreen({ navigation }) {
   );
 }
 
-// Timer global des modes chronométrés. Blitz : grand compteur rouge. Marathon :
-// barre horizontale or + « M:SS restantes ». Pulse dans les 10 dernières secondes.
+// Timer global des modes chronométrés — cercle SVG « montre » qui se vide, M:SS
+// au centre, libellé du mode dessous. Blitz : anneau rouge. Marathon : anneau or.
+// Pulse dans les 10 dernières secondes (chiffres en rouge).
 function GlobalTimer({ mode, leftMs, totalMs, t }) {
-  const seconds = Math.ceil(leftMs / 1000);
+  const seconds = Math.max(0, Math.ceil(leftMs / 1000));
   const urgent = seconds <= 10;
   const label = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   const pulse = useRef(new Animated.Value(1)).current;
+  const progress = useRef(new Animated.Value(1)).current; // 1 plein → 0 vide
 
+  // Vidage régulier de l'anneau sur toute la durée (démarré une fois au montage).
+  useEffect(() => {
+    progress.setValue(1);
+    const anim = Animated.timing(progress, {
+      toValue: 0,
+      duration: totalMs,
+      easing: Easing.linear,
+      useNativeDriver: false, // strokeDashoffset n'est pas pilotable en natif
+    });
+    anim.start();
+    return () => anim.stop();
+  }, [progress, totalMs]);
+
+  // Pulsation sous les 10 s.
   useEffect(() => {
     if (!urgent) {
       pulse.setValue(1);
@@ -529,29 +552,45 @@ function GlobalTimer({ mode, leftMs, totalMs, t }) {
     };
   }, [urgent, pulse]);
 
-  if (mode === 'blitz') {
-    return (
-      <Animated.View style={[styles.blitzPill, { transform: [{ scale: pulse }] }]}>
-        <Text style={[styles.blitzCounter, urgent && styles.blitzCounterUrgent]}>{label}</Text>
-      </Animated.View>
-    );
-  }
+  const sw = GT_STROKE[mode] || 4;
+  const r = (GT_SIZE - sw) / 2;
+  const circumference = 2 * Math.PI * r;
+  const dashoffset = progress.interpolate({ inputRange: [0, 1], outputRange: [circumference, 0] });
+  const arcColor = mode === 'blitz' ? colors.red400 : colors.gold500;
+  const labelColor = mode === 'blitz' ? colors.gold500 : colors.gold400;
+  const labelText =
+    mode === 'blitz' ? `⚡ ${t('gameStart.modes.blitz.name')}` : `🏃 ${t('gameStart.modes.marathon.name')}`;
 
-  const frac = Math.max(0, Math.min(1, totalMs ? leftMs / totalMs : 0));
   return (
-    <Animated.View style={[styles.marathonWrap, { transform: [{ scale: pulse }] }]}>
-      <View style={styles.marathonTrack}>
-        <View
-          style={[
-            styles.marathonFill,
-            { width: `${frac * 100}%` },
-            urgent && styles.marathonFillUrgent,
-          ]}
-        />
+    <Animated.View style={[styles.gtWrap, { transform: [{ scale: pulse }] }]}>
+      <View style={styles.gtCircle}>
+        <Svg width={GT_SIZE} height={GT_SIZE}>
+          <Circle
+            cx={GT_SIZE / 2}
+            cy={GT_SIZE / 2}
+            r={r}
+            stroke={GT_TRACK[mode] || GT_TRACK.blitz}
+            strokeWidth={sw}
+            fill="none"
+          />
+          <AnimatedCircle
+            cx={GT_SIZE / 2}
+            cy={GT_SIZE / 2}
+            r={r}
+            stroke={arcColor}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashoffset}
+            transform={`rotate(-90 ${GT_SIZE / 2} ${GT_SIZE / 2})`}
+          />
+        </Svg>
+        <View style={styles.gtCenter} pointerEvents="none">
+          <Text style={[styles.gtValue, urgent && styles.gtValueUrgent]}>{label}</Text>
+        </View>
       </View>
-      <Text style={[styles.marathonLabel, urgent && styles.marathonLabelUrgent]}>
-        {t('quiz.timeLeft', { time: label })}
-      </Text>
+      <Text style={[styles.gtLabel, { color: labelColor }]}>{labelText}</Text>
     </Animated.View>
   );
 }
@@ -691,39 +730,16 @@ const styles = StyleSheet.create({
   score: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.lg, color: colors.gold500 },
   headerSpacer: { width: 36 }, // équilibre le bouton ✕ → badge « Q x/N » centré
 
-  timerWrap: { alignItems: 'center', marginTop: spacing.md, minHeight: 76, justifyContent: 'center' },
+  timerWrap: { alignItems: 'center', marginTop: spacing.md, minHeight: 104, justifyContent: 'center' },
   dots: { marginTop: spacing.md },
 
-  // B. Timer global — Blitz (compteur dans une pill) / Marathon (barre).
-  blitzPill: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  blitzCounter: {
-    fontFamily: fonts.titleBlack,
-    fontSize: 52,
-    lineHeight: 58,
-    color: colors.cream,
-  },
-  blitzCounterUrgent: { color: colors.red400 },
-  marathonWrap: { width: '100%', alignItems: 'center', gap: spacing.xs },
-  marathonTrack: {
-    width: '100%',
-    height: 10,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    overflow: 'hidden',
-  },
-  marathonFill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.gold500 },
-  marathonFillUrgent: { backgroundColor: colors.red400 },
-  marathonLabel: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.gold500 },
-  marathonLabelUrgent: { color: colors.red400 },
+  // B. Timer global circulaire (montre) — anneau par mode + M:SS + libellé.
+  gtWrap: { alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
+  gtCircle: { width: GT_SIZE, height: GT_SIZE, alignItems: 'center', justifyContent: 'center' },
+  gtCenter: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  gtValue: { fontFamily: fonts.titleBlack, fontSize: 28, color: colors.white },
+  gtValueUrgent: { color: colors.red400 },
+  gtLabel: { fontFamily: fonts.titleBold, fontSize: 10 },
 
   streak: {
     position: 'absolute',

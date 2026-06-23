@@ -4,7 +4,19 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Text, Animated, Easing, StyleSheet, Share, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  Animated,
+  Easing,
+  StyleSheet,
+  Share,
+  ActivityIndicator,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+} from 'react-native';
 import {
   Screen,
   Heading,
@@ -24,6 +36,26 @@ import { users } from '../services/endpoints';
 import { TIMED_MODES } from '../constants/config';
 import { hapticSuccess } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
+
+// Android : LayoutAnimation nécessite ce flag (no-op sous Fabric / iOS).
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+// Expand/collapse des cartes du récap — easeInEaseOut 150 ms.
+const EXPAND_ANIM = {
+  duration: 150,
+  create: { type: 'easeInEaseOut', property: 'opacity' },
+  update: { type: 'easeInEaseOut' },
+  delete: { type: 'easeInEaseOut', property: 'opacity' },
+};
+
+// Texte d'une option par son index (review[] enrichi côté store). null si absent.
+function optionText(options, idx) {
+  if (!Array.isArray(options) || idx == null) return null;
+  const byIndex = options.find((o) => o && o.index === idx);
+  return (byIndex || options[idx])?.text ?? null;
+}
 
 export default function ResultsScreen({ route, navigation }) {
   const { t } = useTranslation();
@@ -141,6 +173,13 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
   const modeBadge = mode === 'blitz' ? `⚡ ${t('gameStart.modes.blitz.name')}`
     : mode === 'marathon' ? `🏃 ${t('gameStart.modes.marathon.name')}`
       : null;
+
+  // Cartes du récap expandables au tap (une carte = une question).
+  const [openRows, setOpenRows] = useState({});
+  const toggleRow = (i) => {
+    LayoutAnimation.configureNext(EXPAND_ANIM);
+    setOpenRows((m) => ({ ...m, [i]: !m[i] }));
+  };
 
   // Reveal séquentiel des cartes du récap (stagger 80 ms) : slide-up + fondu.
   const rowAnims = useRef(review.map(() => new Animated.Value(0))).current;
@@ -348,12 +387,15 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
           review.map((item, i) => {
             const good = item.is_correct;
             const anim = rowAnims[i] || new Animated.Value(1);
+            const open = !!openRows[i];
+            const title = item.question_text || t('results.misc.questionN', { n: i + 1 });
+            const correctText = optionText(item.options, item.correct_index);
+            const yourText = optionText(item.options, item.your_index);
             return (
               <Animated.View
                 key={item.question_id || i}
                 style={[
-                  styles.recapRow,
-                  i < review.length - 1 && styles.recapRowDivider,
+                  styles.recapCardRow,
                   good ? styles.rowGood : styles.rowBad,
                   {
                     opacity: anim,
@@ -361,24 +403,44 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
                   },
                 ]}
               >
-                <View style={[styles.pastille, good ? styles.pastilleGood : styles.pastilleBad]}>
-                  <Text style={styles.pastilleText}>{good ? '✓' : '✗'}</Text>
-                </View>
-                <View style={styles.recapBody}>
-                  <Body style={styles.recapTitle} numberOfLines={1}>
-                    {t('results.misc.questionN', { n: i + 1 })}
-                  </Body>
-                  {item.explanation ? (
-                    <Body muted style={styles.recapExpl} numberOfLines={2}>
-                      {item.explanation}
+                {/* En-tête tappable */}
+                <Pressable style={styles.recapRow} onPress={() => toggleRow(i)}>
+                  <View style={[styles.pastille, good ? styles.pastilleGood : styles.pastilleBad]}>
+                    <Text style={styles.pastilleText}>{good ? '✓' : '✗'}</Text>
+                  </View>
+                  <View style={styles.recapBody}>
+                    <Body style={styles.recapTitle} numberOfLines={open ? undefined : 1}>
+                      {title}
                     </Body>
-                  ) : null}
-                </View>
-                <Text
-                  style={[styles.recapTag, good ? styles.tagGood : styles.tagBad]}
-                >
-                  {good ? t('results.correct_label') : t('results.wrong_label')}
-                </Text>
+                  </View>
+                  <Text style={[styles.recapTag, good ? styles.tagGood : styles.tagBad]}>
+                    {good ? t('results.correct_label') : t('results.wrong_label')}
+                  </Text>
+                  <Text style={styles.chevron}>{open ? '⌄' : '›'}</Text>
+                </Pressable>
+
+                {/* Détail déplié */}
+                {open ? (
+                  <View style={styles.detail}>
+                    {correctText ? (
+                      <View style={styles.ansGood}>
+                        <Text style={styles.ansGoodText}>
+                          ✓ {t('results.misc.correctAnswer')} : {correctText}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {!good && yourText ? (
+                      <View style={styles.ansBad}>
+                        <Text style={styles.ansBadText}>
+                          ✗ {t('results.misc.yourAnswer')} : {yourText}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {item.explanation ? (
+                      <Text style={styles.detailExpl}>💡 {item.explanation}</Text>
+                    ) : null}
+                  </View>
+                ) : null}
               </Animated.View>
             );
           })
@@ -539,16 +601,18 @@ const styles = StyleSheet.create({
 
   sectionTitle: { marginBottom: spacing.sm },
   recapCard: { gap: 0 },
+  recapCardRow: {
+    borderRadius: radius.md,
+    marginBottom: spacing.xs,
+    overflow: 'hidden',
+  },
   recapRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    marginBottom: spacing.xs,
   },
-  recapRowDivider: {},
   rowGood: { backgroundColor: colors.successBgSoft },
   rowBad: { backgroundColor: colors.errorBg },
   pastille: {
@@ -565,16 +629,29 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.md,
     color: colors.white,
   },
-  recapBody: { flex: 1, gap: spacing.xxs },
+  recapBody: { flex: 1 },
   recapTitle: {
     fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.md,
     color: colors.textDark,
   },
-  recapExpl: { fontSize: fontSizes.xs },
   recapTag: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs },
   tagGood: { color: colors.successText },
   tagBad: { color: colors.errorText },
+  chevron: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textMuted },
+
+  // Détail déplié d'une carte du récap.
+  detail: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
+  ansGood: { backgroundColor: '#e8f5ed', borderRadius: radius.sm, padding: spacing.sm },
+  ansGoodText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.green500 },
+  ansBad: { backgroundColor: '#fdecea', borderRadius: radius.sm, padding: spacing.sm },
+  ansBadText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.red400 },
+  detailExpl: {
+    fontFamily: fonts.bodyRegular,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    fontStyle: 'italic',
+  },
 
   xpBlock: { marginTop: spacing.xl },
   xpLabel: { fontFamily: fonts.bodySemiBold, marginBottom: spacing.sm },

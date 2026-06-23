@@ -223,6 +223,8 @@
     "misc": {
       "heroSubtitle": "{{correct}}/{{total}} correct answers · {{pct}}%",
       "questionN": "Question {{n}}",
+      "correctAnswer": "Correct answer",
+      "yourAnswer": "Your answer",
       "progression": "My progress",
       "levelUpTitle": "Level up!",
       "difficultyUnlocked": "Difficulty “{{difficulty}}” unlocked"

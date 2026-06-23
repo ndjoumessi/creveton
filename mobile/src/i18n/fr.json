@@ -223,6 +223,8 @@
     "misc": {
       "heroSubtitle": "{{correct}}/{{total}} bonnes réponses · {{pct}}%",
       "questionN": "Question {{n}}",
+      "correctAnswer": "Bonne réponse",
+      "yourAnswer": "Ta réponse",
       "progression": "Ma progression",
       "levelUpTitle": "Niveau supérieur !",
       "difficultyUnlocked": "Difficulté « {{difficulty}} » débloquée"
