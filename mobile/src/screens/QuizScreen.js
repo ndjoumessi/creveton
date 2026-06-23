@@ -26,7 +26,7 @@ import { sessions as sessionsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
-import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
+import { MODE_DURATION_S, TIMED_MODES, LEVELS, GAME } from '../constants/config';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
@@ -214,8 +214,16 @@ export default function QuizScreen({ navigation }) {
         const correctIndex = Number.isInteger(question.correct_index) ? question.correct_index : null;
         const isCorrect =
           selectedIndex !== null && correctIndex !== null && selectedIndex === correctIndex;
-        if (isCorrect) hapticSuccess();
-        else hapticError();
+        if (isCorrect) {
+          hapticSuccess();
+          // Score INDICATIF (le serveur recalcule tout à la soumission) : base du
+          // niveau réel de la question + bonus vitesse, pour que le compteur ⚡
+          // vive pendant la partie (sinon figé à 0 en blitz/marathon).
+          const lvl = LEVELS.find((l) => l.key === question.level);
+          const base = lvl ? lvl.points : 50;
+          const bonus = elapsed <= GAME.speedBonusThresholdMs ? Math.round(base * 0.5) : 0;
+          bumpScore(base + bonus);
+        } else hapticError();
         setDotStates((d) => {
           const c = [...d];
           c[currentIndex] = isCorrect ? 'correct' : 'wrong';
