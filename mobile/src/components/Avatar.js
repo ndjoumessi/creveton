@@ -1,7 +1,7 @@
 // Avatar — initiales sur pastille. Couleur dérivée d'un hash du nom (palette
 // verte) ; variante « gold » pour l'utilisateur courant (identité forte).
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { colors, fonts } from '../constants/theme';
 
@@ -35,11 +35,19 @@ function hashColor(name = '') {
 export default function Avatar({ name = '', size = 48, gold = false, uri = null, style }) {
   const dims = { width: size, height: size, borderRadius: size / 2 };
 
-  // Photo de profil si disponible, sinon pastille d'initiales.
-  if (uri) {
+  // Si le chargement de la photo échoue (URL cassée, 404, hors-ligne), on
+  // bascule sur les initiales. Réinitialisé quand `uri` change (nouvel upload).
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    setFailed(false);
+  }, [uri]);
+
+  // Photo de profil si disponible (et chargeable), sinon pastille d'initiales.
+  if (uri && !failed) {
     return (
       <Image
         source={{ uri }}
+        onError={() => setFailed(true)}
         style={[styles.avatar, dims, { backgroundColor: colors.cardOnDark }, style]}
       />
     );
