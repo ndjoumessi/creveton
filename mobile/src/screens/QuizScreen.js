@@ -413,8 +413,9 @@ export default function QuizScreen({ navigation }) {
           </Text>
         </View>
         {isTimed ? (
-          // Mode mixte : score serveur-only → indicateur « — pts » jusqu'au résultat.
-          <Text style={styles.scorePending}>— {t('quiz.pts')}</Text>
+          // Mode mixte : score serveur-only → on masque le slot (cale-droite pour
+          // garder le badge « Q x/N » centré, comme le bouton ✕ à gauche).
+          <View style={styles.headerSpacer} />
         ) : (
           <Text style={styles.score}>⚡ {displayScore} {t('quiz.pts')}</Text>
         )}
@@ -688,7 +689,7 @@ const styles = StyleSheet.create({
   },
   qBadgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.white },
   score: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.lg, color: colors.gold500 },
-  scorePending: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.lg, color: colors.textOnDarkMuted },
+  headerSpacer: { width: 36 }, // équilibre le bouton ✕ → badge « Q x/N » centré
 
   timerWrap: { alignItems: 'center', marginTop: spacing.md, minHeight: 76, justifyContent: 'center' },
   dots: { marginTop: spacing.md },
