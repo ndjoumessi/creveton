@@ -61,7 +61,7 @@ t('POST /users/me/avatar avec image valide → 200 + avatar_url Cloudinary', asy
   expect(r.status).toBe(200);
   expect(r.body.avatar_url).toMatch(/^https:\/\/res\.cloudinary\.com\//);
   expect(cloudinary.uploader.unsigned_upload).toHaveBeenCalledTimes(1);
-  const opts = cloudinary.uploader.unsigned_upload.mock.calls[0][2];
+
 
   // L'URL est bien persistée en base (visible via GET /users/me).
   const me = await request(app).get('/api/v1/users/me').set('Authorization', `Bearer ${token}`);
