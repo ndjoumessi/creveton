@@ -54,3 +54,4 @@ module.exports = {
   CURRENCY,
   PHONE_REGEX,
 };
+
