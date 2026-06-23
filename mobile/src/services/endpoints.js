@@ -98,6 +98,11 @@ export const users = {
       /* réponse non-JSON */
     }
     if (!res.ok) {
+      // Log de diagnostic (dev) : remonte le code/message EXACT du backend
+      // (ex. colonne avatar_url absente, échec d'écriture disque, etc.).
+      if (__DEV__) {
+        console.log('[avatar upload] failed', res.status, JSON.stringify(data));
+      }
       const e = new Error(data?.error?.message || `HTTP ${res.status}`);
       e.response = { status: res.status, data };
       throw e;

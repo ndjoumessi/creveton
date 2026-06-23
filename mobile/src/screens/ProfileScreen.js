@@ -294,23 +294,20 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  // Charge les données AU FOCUS de l'onglet. L'id est lu via getState pour ne PAS
-  // dépendre de `user` (sinon chaque updateUser — avatar/édition/langue —
-  // re-déclencherait le fetch → re-render → boucle). Le ref garantit UN SEUL
-  // fetch par focus même si le callback est ré-invoqué pendant le focus ; il est
-  // remis à zéro à la perte de focus → on rafraîchit bien au retour sur l'onglet.
-  const fetchedRef = useRef(false);
+  // Garde « une seule fois par montage ». Sur Android, l'ouverture du clavier
+  // (resize/pan de la fenêtre) peut faire vaciller l'état de focus de l'écran et
+  // ré-invoquer useFocusEffect en rafale → rechargement en boucle. Ce ref n'est
+  // JAMAIS remis à zéro : le chargement n'a lieu qu'au premier focus. (Le
+  // pull-to-refresh garde les stats à jour ; softwareKeyboardLayoutMode:"pan"
+  // supprime par ailleurs le resize de fenêtre — cf. app.json.)
+  const initializedRef = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      if (!fetchedRef.current) {
-        fetchedRef.current = true;
-        loadWallet();
-        loadHistory();
-        loadLeaderboard({ currentUserId: useAuthStore.getState().user?.id });
-      }
-      return () => {
-        fetchedRef.current = false;
-      };
+      if (initializedRef.current) return;
+      initializedRef.current = true;
+      loadWallet();
+      loadHistory();
+      loadLeaderboard({ currentUserId: useAuthStore.getState().user?.id });
     }, [loadWallet, loadHistory, loadLeaderboard]),
   );
 
