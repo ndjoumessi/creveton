@@ -25,12 +25,11 @@ import { useGameStore } from '../store/gameStore';
 import { sessions as sessionsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
-import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
-import { MODE_DURATION_S, TIMED_MODES, GAME } from '../constants/config';
+import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
-const BASE_POINTS = { beginner: 50, intermediate: 75, expert: 100 };
 const ANSWER_DELAY_MS = 1500;
 const TIMEOUT_DELAY_MS = 2000;
 // Modes mixtes (blitz/marathon) : feedback neutre puis avance après 800 ms.
@@ -178,13 +177,13 @@ export default function QuizScreen({ navigation }) {
     Animated.parallel([
       Animated.timing(explainY, {
         toValue: 0,
-        duration: motion.enter,
+        duration: 200,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(explainOpacity, {
         toValue: 1,
-        duration: motion.enter,
+        duration: 200,
         useNativeDriver: true,
       }),
     ]).start();
@@ -210,17 +209,12 @@ export default function QuizScreen({ navigation }) {
 
       // Blitz/Marathon : timer global, pas d'appel /sessions/answer par question.
       // Feedback NEUTRE (le correct_index est server-only en mode mixte → on ne
-      // révèle ni vert ni rouge) + score INDICATIF. Le vrai score et la justesse
-      // viennent du review[] de /sessions/submit (ResultsScreen).
+      // révèle ni vert ni rouge) et AUCUN score local (on ne connaît pas la
+      // justesse côté client → le compteur monterait même sur les erreurs). Le
+      // score réel n'apparaît qu'au résultat, via review[]/score de
+      // /sessions/submit (ResultsScreen). En partie, le ⚡ affiche « — pts ».
       if (isTimed) {
         hapticLight();
-        // Score indicatif : base du niveau réel de la question + bonus vitesse.
-        // Compté pour toute réponse réelle (un timeout/skip ne rapporte rien).
-        if (selectedIndex !== null) {
-          const base = BASE_POINTS[question.level] ?? 50;
-          const bonus = elapsed <= GAME.speedBonusThresholdMs ? Math.round(base * 0.5) : 0;
-          bumpScore(base + bonus);
-        }
         // Pastille « répondue » (or, ni correct ni faux — cf. ProgressDots).
         setDotStates((d) => {
           const c = [...d];
@@ -408,13 +402,22 @@ export default function QuizScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-      {/* Header */}
-      <View style={styles.topBar}>
-        <Pressable onPress={confirmQuit} hitSlop={10} style={styles.quit}>
+      {/* Header — bandeau vert, coins bas arrondis */}
+      <View style={styles.header}>
+        <Pressable onPress={confirmQuit} hitSlop={10} style={styles.quitBtn}>
           <Text style={styles.quitText}>✕</Text>
         </Pressable>
-        <Text style={styles.counter}>{t('quiz.question', { current: currentIndex + 1, total })}</Text>
-        <Text style={styles.score}>⚡ {displayScore} {t('quiz.pts')}</Text>
+        <View style={styles.qBadge}>
+          <Text style={styles.qBadgeText}>
+            {t('quiz.question', { current: currentIndex + 1, total })}
+          </Text>
+        </View>
+        {isTimed ? (
+          // Mode mixte : score serveur-only → indicateur « — pts » jusqu'au résultat.
+          <Text style={styles.scorePending}>— {t('quiz.pts')}</Text>
+        ) : (
+          <Text style={styles.score}>⚡ {displayScore} {t('quiz.pts')}</Text>
+        )}
       </View>
 
       {/* Timer : global (blitz/marathon) ou circulaire par question (normal).
@@ -443,7 +446,7 @@ export default function QuizScreen({ navigation }) {
       {/* Question */}
       <View style={styles.card}>
         <Text style={styles.question}>{question.text}</Text>
-        <View style={styles.underline} />
+        <View style={styles.goldBar} />
       </View>
 
       {/* Options A–D */}
@@ -527,8 +530,8 @@ function GlobalTimer({ mode, leftMs, totalMs, t }) {
 
   if (mode === 'blitz') {
     return (
-      <Animated.View style={[styles.blitzWrap, { transform: [{ scale: pulse }] }]}>
-        <Text style={styles.blitzCounter}>{label}</Text>
+      <Animated.View style={[styles.blitzPill, { transform: [{ scale: pulse }] }]}>
+        <Text style={[styles.blitzCounter, urgent && styles.blitzCounterUrgent]}>{label}</Text>
       </Animated.View>
     );
   }
@@ -570,11 +573,12 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
   let showGoodLabel = false;
 
   if (neutral) {
-    // Mode mixte : pas de vert/rouge. Option choisie en or, les autres grisées.
+    // Mode mixte : pas de vert/rouge. Option choisie en or (badge blanc/or),
+    // les autres grisées (opacité réduite).
     if (isSelected) {
       container = styles.optNeutral;
-      badge = styles.badgeNeutral;
-      badgeText = styles.badgeTextOnColor;
+      badge = styles.badgeOnGold;
+      badgeText = styles.badgeTextGold;
       label = styles.optTextNeutral;
     } else {
       container = styles.optDimmed;
@@ -629,28 +633,62 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.green900, paddingHorizontal: spacing.lg },
-  topBar: {
+
+  // A. Header — bandeau vert plein largeur, coins bas arrondis.
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
+    marginHorizontal: -spacing.lg, // plein largeur (le root est paddé)
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.green900,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderOnDark,
   },
-  quit: { width: 32 },
-  quitText: { fontSize: fontSizes.lg, color: colors.textOnDarkMuted },
-  counter: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkMuted },
-  score: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.gold500 },
+  quitBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  quitText: { fontSize: fontSizes.base, color: colors.white },
+  qBadge: {
+    backgroundColor: colors.green700,
+    borderRadius: radius.pill,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+  },
+  qBadgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.white },
+  score: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.lg, color: colors.gold500 },
+  scorePending: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.lg, color: colors.textOnDarkMuted },
 
-  timerWrap: { alignItems: 'center', marginTop: spacing.xs, minHeight: 80, justifyContent: 'center' },
+  timerWrap: { alignItems: 'center', marginTop: spacing.md, minHeight: 76, justifyContent: 'center' },
   dots: { marginTop: spacing.md },
 
-  // Timer global — Blitz (compteur) / Marathon (barre).
-  blitzWrap: { alignItems: 'center', justifyContent: 'center' },
+  // B. Timer global — Blitz (compteur dans une pill) / Marathon (barre).
+  blitzPill: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
   blitzCounter: {
     fontFamily: fonts.titleBlack,
-    fontSize: 44,
-    lineHeight: 52,
-    color: colors.red400,
+    fontSize: 52,
+    lineHeight: 58,
+    color: colors.cream,
   },
+  blitzCounterUrgent: { color: colors.red400 },
   marathonWrap: { width: '100%', alignItems: 'center', gap: spacing.xs },
   marathonTrack: {
     width: '100%',
@@ -677,58 +715,75 @@ const styles = StyleSheet.create({
   },
   streakText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.green900 },
 
-  card: { backgroundColor: colors.white, borderRadius: radius.xl, padding: 20, marginTop: spacing.lg },
+  // D. Carte question — surface flottante, barre or sous le texte.
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: 20,
+    marginTop: spacing.lg,
+    shadowColor: colors.green900,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
   question: { fontFamily: fonts.titleSemiBold, fontSize: 17, lineHeight: 26, color: colors.green900 },
-  underline: { width: 32, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.md },
+  goldBar: { width: 40, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.sm },
 
+  // E. Boutons réponse.
   options: { marginTop: spacing.lg, gap: spacing.sm },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    minHeight: 58,
-    borderRadius: radius.lg,
+    minHeight: 56,
+    borderRadius: radius.base, // 14
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1.5,
   },
   optDefault: { backgroundColor: colors.white, borderColor: colors.border },
   optSelected: { backgroundColor: colors.successBgSoft, borderColor: colors.green500 },
-  optCorrect: { backgroundColor: colors.successBg, borderWidth: 3, borderColor: colors.green500 },
-  optWrong: { backgroundColor: colors.errorBg, borderWidth: 3, borderColor: colors.red400 },
-  // Mode mixte (blitz/marathon) : feedback neutre.
+  optCorrect: { backgroundColor: colors.successBg, borderColor: colors.green500 },
+  optWrong: { backgroundColor: colors.errorBg, borderColor: colors.red400 },
+  // Mode mixte (blitz/marathon) : feedback neutre (or / grisé).
   optNeutral: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
   optDimmed: { backgroundColor: colors.white, borderColor: colors.border, opacity: 0.4 },
+
   badge: { width: 32, height: 32, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  badgeDefault: { backgroundColor: '#f3f4f6' },
+  badgeDefault: { backgroundColor: colors.green900 },
   badgeCorrect: { backgroundColor: colors.green500 },
   badgeWrong: { backgroundColor: colors.red400 },
-  badgeNeutral: { backgroundColor: colors.green900 },
-  badgeText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.md },
-  badgeTextDefault: { color: '#374151' },
+  badgeOnGold: { backgroundColor: colors.white },
+  badgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md },
+  badgeTextDefault: { color: colors.white },
   badgeTextOnColor: { color: colors.white },
+  badgeTextGold: { color: colors.gold500 },
   optBody: { flex: 1 },
   optText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md },
-  optTextDefault: { color: '#374151' },
+  optTextDefault: { color: colors.textBody },
   optTextCorrect: { color: colors.successText, fontFamily: fonts.bodySemiBold },
   optTextWrong: { color: colors.red600 },
   optTextNeutral: { color: colors.white, fontFamily: fonts.bodySemiBold },
   goodLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.successText, marginBottom: 2 },
 
   skip: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: 'auto' },
-  skipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: 'rgba(253,246,233,0.4)' },
+  skipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkFaint },
 
   tapToSkip: { ...StyleSheet.absoluteFillObject },
 
+  // F. Explication (mode normal) — fond crème, liseré or à gauche.
   explain: {
     marginTop: 'auto',
     marginBottom: spacing.md,
     backgroundColor: colors.cream,
     borderRadius: radius.lg,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.gold500,
     padding: spacing.lg,
     zIndex: 6,
   },
-  explainText: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.md, color: colors.textDark, lineHeight: 21 },
+  explainText: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.sm, color: colors.textDark, lineHeight: 20 },
   autoTrack: {
     height: 4,
     borderRadius: 2,
