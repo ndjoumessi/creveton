@@ -1,4 +1,4 @@
-// AppButton — variant (primary/secondary/ghost/danger) × size (sm/md/lg).
+// AppButton — variant (primary/secondary/ghost/danger/dark/outlineGold) × size (sm/md/lg).
 // Feedback tactile < 120ms (scale spring au press), état loading (spinner inline).
 // L'or est réservé au variant primary (CTA).
 
@@ -132,5 +132,19 @@ const VARIANTS = {
       borderColor: colors.red400,
     },
     text: { color: colors.red400 },
+  },
+  // Fond vert profond, libellé or — CTA « Rejouer » sur écran résultat sombre.
+  dark: {
+    container: { backgroundColor: colors.green900 },
+    text: { color: colors.gold500 },
+  },
+  // Contour or sur fond transparent — action secondaire sur écran sombre.
+  outlineGold: {
+    container: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: colors.gold500,
+    },
+    text: { color: colors.gold500 },
   },
 };

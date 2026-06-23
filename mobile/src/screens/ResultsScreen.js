@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Text, Animated, Easing, StyleSheet, Share } from 'react-native';
+import { View, Text, Animated, Easing, StyleSheet, Share, ActivityIndicator } from 'react-native';
 import {
   Screen,
   Heading,
@@ -35,6 +35,11 @@ export default function ResultsScreen({ route, navigation }) {
   const resultRef = useRef(storeResult);
   if (storeResult && !replaying) resultRef.current = storeResult;
   const result = resultRef.current;
+  // Mode figé de la même façon (replay/startGame le réinitialise).
+  const storeMode = useGameStore((s) => s.mode);
+  const modeRef = useRef(storeMode);
+  if (!replaying) modeRef.current = storeMode;
+  const isMixed = TIMED_MODES.includes(modeRef.current);
   const reset = useGameStore((s) => s.reset);
   const startGame = useGameStore((s) => s.startGame);
   const drawForMode = useQuestionsStore((s) => s.drawForMode);
@@ -77,6 +82,15 @@ export default function ResultsScreen({ route, navigation }) {
 
   const valid = ok !== false && !!result;
 
+  // Suspense « Calcul en cours… » (blitz/marathon) : 800 ms avant la révélation
+  // séquentielle. Le submit est déjà résolu — c'est un temps de mise en scène.
+  const [intro, setIntro] = useState(valid && isMixed);
+  useEffect(() => {
+    if (!intro) return undefined;
+    const id = setTimeout(() => setIntro(false), 800);
+    return () => clearTimeout(id);
+  }, [intro]);
+
   // Rafraîchit le profil (XP / niveau) une seule fois après une partie réussie.
   useEffect(() => {
     if (valid) refreshProfile();
@@ -95,15 +109,54 @@ export default function ResultsScreen({ route, navigation }) {
     );
   }
 
-  return <ResultsContent result={result} onReplay={replay} onHome={goHome} replaying={replaying} />;
+  if (intro) {
+    return (
+      <Screen dark>
+        <View style={styles.calcWrap}>
+          <ActivityIndicator size="large" color={colors.gold500} />
+          <Text style={styles.calcText}>{t('quiz.misc.submitting')}</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <ResultsContent
+      result={result}
+      isMixed={isMixed}
+      mode={modeRef.current}
+      onReplay={replay}
+      onHome={goHome}
+      replaying={replaying}
+    />
+  );
 }
 
-function ResultsContent({ result, onReplay, onHome, replaying }) {
+function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) {
   const { t } = useTranslation();
   const total = result.total_questions || 0;
   const correct = result.correct_count || 0;
   const pct = total ? Math.round((correct / total) * 100) : 0;
   const review = Array.isArray(result.review) ? result.review : [];
+  const modeBadge = mode === 'blitz' ? `⚡ ${t('gameStart.modes.blitz.name')}`
+    : mode === 'marathon' ? `🏃 ${t('gameStart.modes.marathon.name')}`
+      : null;
+
+  // Reveal séquentiel des cartes du récap (stagger 80 ms) : slide-up + fondu.
+  const rowAnims = useRef(review.map(() => new Animated.Value(0))).current;
+  useEffect(() => {
+    Animated.stagger(
+      80,
+      rowAnims.map((a) =>
+        Animated.timing(a, {
+          toValue: 1,
+          duration: 260,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        })
+      )
+    ).start();
+  }, [rowAnims]);
 
   const heroEmoji = pct > 70 ? '🏆' : pct >= 50 ? '🥈' : '🎯';
   const celebrate = pct > 70;
@@ -272,6 +325,11 @@ function ResultsContent({ result, onReplay, onHome, replaying }) {
         <Label color={colors.textOnDarkMuted}>
           {t('results.misc.heroSubtitle', { correct, total, pct })}
         </Label>
+        {modeBadge ? (
+          <View style={styles.modeBadge}>
+            <Text style={styles.modeBadgeText}>{modeBadge}</Text>
+          </View>
+        ) : null}
       </View>
 
       {/* STATS */}
@@ -289,20 +347,25 @@ function ResultsContent({ result, onReplay, onHome, replaying }) {
         {review.length ? (
           review.map((item, i) => {
             const good = item.is_correct;
+            const anim = rowAnims[i] || new Animated.Value(1);
             return (
-              <View
+              <Animated.View
                 key={item.question_id || i}
                 style={[
                   styles.recapRow,
                   i < review.length - 1 && styles.recapRowDivider,
                   good ? styles.rowGood : styles.rowBad,
+                  {
+                    opacity: anim,
+                    transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+                  },
                 ]}
               >
                 <View style={[styles.pastille, good ? styles.pastilleGood : styles.pastilleBad]}>
                   <Text style={styles.pastilleText}>{good ? '✓' : '✗'}</Text>
                 </View>
                 <View style={styles.recapBody}>
-                  <Body style={styles.recapTitle} numberOfLines={2}>
+                  <Body style={styles.recapTitle} numberOfLines={1}>
                     {t('results.misc.questionN', { n: i + 1 })}
                   </Body>
                   {item.explanation ? (
@@ -316,7 +379,7 @@ function ResultsContent({ result, onReplay, onHome, replaying }) {
                 >
                   {good ? t('results.correct_label') : t('results.wrong_label')}
                 </Text>
-              </View>
+              </Animated.View>
             );
           })
         ) : (
@@ -380,21 +443,30 @@ function ResultsContent({ result, onReplay, onHome, replaying }) {
 
       {/* ACTIONS */}
       <View style={styles.actions}>
-        <AppButton title={t('results.share')} variant="ghost" onPress={onShare} fullWidth />
-        <AppButton
-          title={t('results.replay')}
-          variant="secondary"
-          onPress={onReplay}
-          loading={replaying}
-          fullWidth
-        />
-        <AppButton
-          title={t('results.home')}
-          variant="primary"
-          onPress={onHome}
-          fullWidth
-          style={styles.homeBtn}
-        />
+        {isMixed ? (
+          <>
+            <AppButton
+              title={t('results.replay')}
+              variant="dark"
+              onPress={onReplay}
+              loading={replaying}
+              fullWidth
+            />
+            <AppButton title={t('results.home')} variant="outlineGold" onPress={onHome} fullWidth />
+          </>
+        ) : (
+          <>
+            <AppButton title={t('results.share')} variant="ghost" onPress={onShare} fullWidth />
+            <AppButton
+              title={t('results.replay')}
+              variant="secondary"
+              onPress={onReplay}
+              loading={replaying}
+              fullWidth
+            />
+            <AppButton title={t('results.home')} variant="primary" onPress={onHome} fullWidth />
+          </>
+        )}
       </View>
     </Screen>
   );
@@ -546,5 +618,18 @@ const styles = StyleSheet.create({
   levelUpText: { textAlign: 'center' },
 
   actions: { marginTop: spacing.xxl, gap: spacing.md, zIndex: 2 },
-  homeBtn: {},
+
+  // Badge mode (blitz/marathon) sous le score.
+  modeBadge: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.green700,
+    borderRadius: radius.pill,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+  },
+  modeBadgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.sm, color: colors.white },
+
+  // Écran « Calcul en cours… » (suspense 800 ms, blitz/marathon).
+  calcWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
+  calcText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textOnDarkMuted },
 });

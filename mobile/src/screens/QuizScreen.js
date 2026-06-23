@@ -558,12 +558,28 @@ function GlobalTimer({ mode, leftMs, totalMs, t }) {
 function OptionRow({ letter, text, optionIndex, answered, onPress }) {
   const { t } = useTranslation();
   const scale = useRef(new Animated.Value(1)).current;
+  const checkScale = useRef(new Animated.Value(0)).current;
 
   const neutral = !!(answered && answered.neutral);
   const isSelected = answered && answered.selectedIndex === optionIndex;
   const isCorrectOpt = answered && answered.correctIndex === optionIndex;
   const revealing =
     !neutral && answered && answered.correctIndex !== null && answered.correctIndex !== undefined;
+
+  // Mode mixte : ✓ qui « pop » sur le badge de l'option choisie (confirmation
+  // visuelle du tap — pas de vert/rouge, la justesse reste serveur-only).
+  const showCheck = !!(neutral && isSelected);
+  useEffect(() => {
+    if (!showCheck) {
+      checkScale.setValue(0);
+      return undefined;
+    }
+    Animated.sequence([
+      Animated.timing(checkScale, { toValue: 1.2, duration: 120, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(checkScale, { toValue: 1, duration: 80, useNativeDriver: true }),
+    ]).start();
+    return undefined;
+  }, [showCheck, checkScale]);
 
   let container = styles.optDefault;
   let badge = styles.badgeDefault;
@@ -620,7 +636,13 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
         style={[styles.option, container]}
       >
         <View style={[styles.badge, badge]}>
-          <Text style={[styles.badgeText, badgeText]}>{glyph}</Text>
+          {showCheck ? (
+            <Animated.Text style={[styles.badgeText, badgeText, { transform: [{ scale: checkScale }] }]}>
+              ✓
+            </Animated.Text>
+          ) : (
+            <Text style={[styles.badgeText, badgeText]}>{glyph}</Text>
+          )}
         </View>
         <View style={styles.optBody}>
           {showGoodLabel ? <Text style={styles.goodLabel}>{t('quiz.goodAnswer')}</Text> : null}
