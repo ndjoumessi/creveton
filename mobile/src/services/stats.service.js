@@ -40,13 +40,20 @@ export function computeStats(history) {
   if (!history || history.length === 0) return { ...EMPTY_STATS };
 
   const totalGames = history.length;
-  const avgScore = Math.round(
-    history.reduce((s, g) => s + num(g.score), 0) / totalGames
-  );
 
-  const totalCorrect = history.reduce((s, g) => s + num(g.correct_count), 0);
+  // Sessions « complètes » : on exclut les parties avortées (0 pt ET 0 bonne
+  // réponse) du score moyen ET du taux de réussite — elles fausseraient ces
+  // moyennes — mais elles restent comptées dans le total de parties.
+  const isIncomplete = (g) => num(g.score) === 0 && num(g.correct_count) === 0;
+  const complete = history.filter((g) => !isIncomplete(g));
+
+  const avgScore = complete.length
+    ? Math.round(complete.reduce((s, g) => s + num(g.score), 0) / complete.length)
+    : 0;
+
+  const totalCorrect = complete.reduce((s, g) => s + num(g.correct_count), 0);
   // L'historique expose `question_count` (toView) ; on tolère aussi `total_questions`.
-  const totalQuestions = history.reduce((s, g) => s + num(g.question_count ?? g.total_questions), 0);
+  const totalQuestions = complete.reduce((s, g) => s + num(g.question_count ?? g.total_questions), 0);
   const successRate =
     totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
@@ -63,7 +70,9 @@ export function computeStats(history) {
     }
     byTheme[key].games += 1;
     byTheme[key].correct += num(g.correct_count);
-    byTheme[key].total += num(g.total_questions);
+    // BUG : l'historique expose `question_count` (pas `total_questions`) → sans
+    // ce fallback, `total` restait 0 et le taux par thème affichait « — ».
+    byTheme[key].total += num(g.question_count ?? g.total_questions);
     byTheme[key].score += num(g.score);
   });
   Object.values(byTheme).forEach((t) => {

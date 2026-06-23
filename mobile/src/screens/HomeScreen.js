@@ -329,7 +329,7 @@ export default function HomeScreen({ navigation }) {
                 <StatCard
                   icon="🔥"
                   iconBg={ICON_BG.streak}
-                  value={streakMax != null ? streakMax : '—'}
+                  value={streakMax > 0 ? `🔥 ${fmtNum(streakMax)}` : streakMax != null ? String(streakMax) : '—'}
                   label={t('home.myStats.maxStreak')}
                 />
               </>

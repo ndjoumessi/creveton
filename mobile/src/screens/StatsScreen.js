@@ -24,7 +24,6 @@ import {
   radius,
   spacing,
   shadow,
-  themeAccent,
   motion,
 } from '../constants/theme';
 import { themeEmoji, themeLabel, levelLabel, timeAgo, levelProgress } from '../utils/format';
@@ -177,12 +176,12 @@ function ScoreChart({ data }) {
   );
 }
 
-// ── Barre de performance par thème (animée au mount) ───────────────────────
-function ThemeBar({ accent, pct }) {
+// ── Barre de performance par thème (green500, animée au mount) ─────────────
+function ThemeBar({ pct }) {
   const fill = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(fill, {
-      toValue: pct === null ? 0 : pct / 100,
+      toValue: pct == null ? 0 : pct / 100,
       duration: 800,
       useNativeDriver: false,
     }).start();
@@ -190,7 +189,7 @@ function ThemeBar({ accent, pct }) {
   const width = fill.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
   return (
     <View style={styles.barTrack}>
-      <Animated.View style={[styles.barFill, { width, backgroundColor: accent }]} />
+      <Animated.View style={[styles.barFill, { width }]} />
     </View>
   );
 }
@@ -412,24 +411,20 @@ function StatsTab({ stats, history, loading, onPlay }) {
           const games = entry?.games ?? 0;
           const rate = entry?.rate ?? null;
           const played = games > 0;
-          const accent = themeAccent[theme.key] || colors.green500;
+          // Méta compacte « N parties · X% » sur une ligne.
+          const meta = played
+            ? `${t('stats.misc.themeGames', { games })}${rate !== null ? ` · ${rate}%` : ''}`
+            : t('stats.misc.themeNotPlayed');
           return (
             <View key={theme.key} style={[styles.themeRow, i === 0 && styles.themeRowFirst]}>
               <View style={styles.themeHead}>
                 <Text style={[styles.themeLabel, !played && styles.themeLabelMuted]}>
                   {theme.emoji} {theme.label}
                 </Text>
-                <Text style={styles.themeMeta}>
-                  {played ? t('stats.misc.themeGames', { games }) : t('stats.misc.themeNotPlayed')}
-                </Text>
+                <Text style={styles.themeMeta}>{meta}</Text>
               </View>
               {/* Pas encore joué → pas de barre vide, juste l'état grisé. */}
-              {played ? (
-                <View style={styles.themeBarRow}>
-                  <ThemeBar accent={accent} pct={rate} />
-                  <Text style={styles.themePct}>{rate === null ? '—' : `${rate}%`}</Text>
-                </View>
-              ) : null}
+              {played ? <ThemeBar pct={rate} /> : null}
             </View>
           );
         })}
@@ -776,23 +771,14 @@ const styles = StyleSheet.create({
   themeHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   themeLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textBody },
   themeLabelMuted: { color: colors.textFaint },
-  themeMeta: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted },
-  themeBarRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  themeMeta: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
   barTrack: {
-    flex: 1,
-    height: 10,
-    borderRadius: radius.pill,
-    backgroundColor: '#f3f4f6',
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#e8e8e8',
     overflow: 'hidden',
   },
-  barFill: { height: '100%', borderRadius: radius.pill },
-  themePct: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.base,
-    color: colors.green900,
-    width: 44,
-    textAlign: 'right',
-  },
+  barFill: { height: '100%', borderRadius: 3, backgroundColor: colors.green500 },
 
   // Historique
   histList: { gap: spacing.sm },
