@@ -2,6 +2,7 @@
 
 const multer = require('multer');
 const env = require('./env');
+const ApiError = require('../utils/ApiError');
 
 /**
  * Upload mémoire pour l'import de questions (CSV/Excel) — spec §12.
@@ -26,24 +27,21 @@ const upload = multer({
 });
 
 /**
- * Upload mémoire pour l'avatar de profil. Le client envoie une image déjà
- * recadrée et redimensionnée (≤256px) ; le serveur ne fait que valider puis
- * écrire. Pas de dépendance image (sharp non installé) : on garde le buffer.
- * Limite stricte 2 Mo + filtre mime image (jpeg/png/webp).
+ * Upload mémoire pour l'avatar de profil. Le buffer est ensuite poussé vers
+ * Cloudinary (recadrage 200×200 côté service). Limite 5 Mo + filtre image/*.
+ * Le rejet utilise une ApiError → le middleware d'erreurs renvoie un 400 propre
+ * (un Error nu finirait en 500).
  */
-const AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp'];
-
 const avatarUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 2 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter(req, file, cb) {
-    if (AVATAR_MIME.includes(file.mimetype)) {
+    if (file.mimetype && file.mimetype.startsWith('image/')) {
       return cb(null, true);
     }
-    return cb(new Error('Format d’image non supporté (JPEG/PNG/WebP attendu).'));
+    return cb(new ApiError('VALIDATION_ERROR', { message: 'Seules les images sont acceptées.' }));
   },
 });
 
 module.exports = upload;
 module.exports.avatarUpload = avatarUpload;
-module.exports.AVATAR_MIME = AVATAR_MIME;
