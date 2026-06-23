@@ -17,12 +17,15 @@ const publicId = (userId) => `${FOLDER}/user_${userId}`;
 async function uploadAvatar({ buffer, mimetype, userId }) {
   const b64 = Buffer.from(buffer).toString('base64');
   const dataUri = `data:${mimetype};base64,${b64}`;
-  const result = await cloudinary.uploader.upload(dataUri, {
-    public_id: `user_${userId}`,
-    folder: FOLDER,
-    overwrite: true,
-    transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }],
-  });
+  const result = await cloudinary.uploader.unsigned_upload(dataUri, 
+    process.env.CLOUDINARY_UPLOAD_PRESET || 'creveton_avatar',
+    {
+      public_id: `user_${userId}`,
+      folder: FOLDER,
+      overwrite: true,
+      transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }],
+    }
+  );
   return result.secure_url;
 }
 
