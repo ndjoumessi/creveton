@@ -122,6 +122,15 @@ export const useAuthStore = create((set, get) => ({
     set({ user });
   },
 
+  // Fusion partielle dans le user courant (sans refetch) — utilisé après un PATCH
+  // /users/me ou un upload d'avatar pour refléter le changement localement.
+  updateUser: (partial) => {
+    if (!partial) return;
+    const merged = { ...get().user, ...partial };
+    setStoredUser(merged);
+    set({ user: merged });
+  },
+
   // Applique une réponse de session (tokens + user).
   _applySession: async (data) => {
     await setTokens({

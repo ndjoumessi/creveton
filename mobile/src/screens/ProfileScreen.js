@@ -15,7 +15,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Screen, Avatar, AppButton, AppInput, useToast } from '../components';
@@ -117,7 +119,7 @@ export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
-  const setUser = useAuthStore((s) => s.setUser);
+  const updateUser = useAuthStore((s) => s.updateUser);
 
   const stats = useStatsStore((s) => s.stats);
   const myRank = useStatsStore((s) => s.myRank);
@@ -163,16 +165,15 @@ export default function ProfileScreen() {
 
   const saveEdit = useCallback(async () => {
     setSaving(true);
+    // Champs non vides uniquement (pas d'undefined → pas d'écrasement au merge).
+    const patch = { sexe, lang };
+    if (nom.trim()) patch.name = nom.trim();
+    if (ville.trim()) patch.ville = ville.trim();
+    if (Number(age)) patch.age = Number(age);
     try {
-      const updated = await users.update({
-        name: nom.trim() || undefined,
-        ville: ville.trim() || undefined,
-        age: Number(age) || undefined,
-        sexe,
-        lang,
-      });
-      if (updated) setUser(updated);
-      else await refreshProfile?.();
+      const updated = await users.update(patch);
+      // Merge LOCAL sans refetch → pas de rechargement du profil à la fermeture.
+      updateUser(updated || patch);
       setEditOpen(false);
       toast.show({ type: 'success', message: t('profile.notify.updated') });
     } catch (e) {
@@ -180,7 +181,7 @@ export default function ProfileScreen() {
     } finally {
       setSaving(false);
     }
-  }, [nom, ville, age, sexe, lang, setUser, refreshProfile, toast, t]);
+  }, [nom, ville, age, sexe, lang, updateUser, toast, t]);
 
   // ── Photo de profil : sélection + upload ──────────────────────────────────
   const uploadAvatar = useCallback(
@@ -190,7 +191,7 @@ export default function ProfileScreen() {
         const form = new FormData();
         form.append('avatar', { uri, type: 'image/jpeg', name: 'avatar.jpg' });
         const data = await users.uploadAvatar(form);
-        if (data?.avatar_url) setUser({ ...user, avatar_url: data.avatar_url });
+        if (data?.avatar_url) updateUser({ avatar_url: data.avatar_url });
         toast.show({ type: 'success', message: t('profile.avatar.updated') });
       } catch (e) {
         toast.show({ type: 'error', message: parseApiError(e).message });
@@ -198,14 +199,18 @@ export default function ProfileScreen() {
         setUploadingAvatar(false);
       }
     },
-    [user, setUser, toast, t],
+    [updateUser, toast, t],
   );
 
   const pickAvatar = useCallback(
     async (source) => {
       setAvatarSheet(false);
       try {
-        const opts = { allowsEditing: true, aspect: [1, 1], quality: 0.7 };
+        // PAS de cropper natif : `allowsEditing` + `aspect` ouvre l'éditeur Android
+        // « REDIMENSIONNER » qui ne valide pas le crop (bug). On recadre/redimensionne
+        // nous-mêmes ensuite — le backend stocke l'image telle quelle (limite 2 Mo,
+        // pas de redimensionnement serveur), d'où l'intérêt de produire un petit 200×200.
+        const opts = { allowsEditing: false, quality: 1 };
         let res;
         if (source === 'camera') {
           const perm = await ImagePicker.requestCameraPermissionsAsync();
@@ -224,7 +229,28 @@ export default function ProfileScreen() {
         }
         if (res.canceled) return;
         const asset = res.assets?.[0];
-        if (asset?.uri) await uploadAvatar(asset.uri);
+        if (!asset?.uri) return;
+
+        // Recadrage carré centré (si dimensions connues) puis 200×200, JPEG q0.7
+        // → petit fichier garanti < 2 Mo, pas de déformation.
+        const actions = [];
+        if (asset.width && asset.height) {
+          const side = Math.min(asset.width, asset.height);
+          actions.push({
+            crop: {
+              originX: Math.floor((asset.width - side) / 2),
+              originY: Math.floor((asset.height - side) / 2),
+              width: side,
+              height: side,
+            },
+          });
+        }
+        actions.push({ resize: { width: 200, height: 200 } });
+        const out = await ImageManipulator.manipulateAsync(asset.uri, actions, {
+          compress: 0.7,
+          format: ImageManipulator.SaveFormat.JPEG,
+        });
+        await uploadAvatar(out.uri);
       } catch (e) {
         toast.show({ type: 'error', message: parseApiError(e).message });
       }
@@ -239,16 +265,14 @@ export default function ProfileScreen() {
       await setLanguage(next);
       setLang(next);
       toast.show({ type: 'success', message: t('profile.notify.languageChanged') });
-      if (!user) return;
       try {
         const updated = await users.update({ lang: next });
-        if (updated) setUser(updated);
-        else await refreshProfile?.();
+        updateUser(updated || { lang: next }); // merge local, pas de refetch
       } catch (e) {
         toast.show({ type: 'error', message: parseApiError(e).message });
       }
     },
-    [i18n.language, user, setUser, refreshProfile, toast, t],
+    [i18n.language, updateUser, toast, t],
   );
 
   const copyReferral = useCallback(async () => {
@@ -270,25 +294,29 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    loadWallet();
-  }, [loadWallet]);
+  // Charge les données AU FOCUS de l'onglet (une fois par focus, pas à chaque
+  // render). L'id est lu via getState pour ne PAS dépendre de `user` : sinon
+  // chaque setUser/updateUser (avatar, édition, langue) re-déclencherait le
+  // fetch → re-render → boucle de rechargement.
+  useFocusEffect(
+    useCallback(() => {
+      loadWallet();
+      loadHistory();
+      loadLeaderboard({ currentUserId: useAuthStore.getState().user?.id });
+    }, [loadWallet, loadHistory, loadLeaderboard]),
+  );
 
-  useEffect(() => {
-    loadHistory();
-    loadLeaderboard({ currentUserId: user?.id });
-  }, [loadHistory, loadLeaderboard, user?.id]);
-
+  // Pull-to-refresh (action explicite) : on rafraîchit aussi le profil serveur.
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([
       refreshProfile?.(),
       loadWallet(),
       loadHistory(),
-      loadLeaderboard({ currentUserId: user?.id }),
+      loadLeaderboard({ currentUserId: useAuthStore.getState().user?.id }),
     ]);
     setRefreshing(false);
-  }, [refreshProfile, loadWallet, loadHistory, loadLeaderboard, user?.id]);
+  }, [refreshProfile, loadWallet, loadHistory, loadLeaderboard]);
 
   const totalXp = user?.total_xp ?? 0;
   const progress = levelProgress(totalXp);
