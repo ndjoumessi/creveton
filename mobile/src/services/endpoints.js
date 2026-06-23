@@ -74,6 +74,13 @@ export const users = {
     api.get('/users/me/history', { params }).then((r) => r.data),
   transactions: (params) =>
     api.get('/users/me/transactions', { params }).then((r) => r.data),
+  // Téléverse une photo de profil (multipart, champ « avatar ») → { avatar_url }.
+  uploadAvatar: (formData) =>
+    api
+      .post('/users/me/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data),
 };
 
 // --- Wallet (API §11, flag) ---------------------------------------------

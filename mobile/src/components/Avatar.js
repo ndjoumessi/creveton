@@ -2,7 +2,7 @@
 // verte) ; variante « gold » pour l'utilisateur courant (identité forte).
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { colors, fonts } from '../constants/theme';
 
 const PALETTE = [
@@ -32,17 +32,23 @@ function hashColor(name = '') {
   return PALETTE[h % PALETTE.length];
 }
 
-export default function Avatar({ name = '', size = 48, gold = false, style }) {
+export default function Avatar({ name = '', size = 48, gold = false, uri = null, style }) {
+  const dims = { width: size, height: size, borderRadius: size / 2 };
+
+  // Photo de profil si disponible, sinon pastille d'initiales.
+  if (uri) {
+    return (
+      <Image
+        source={{ uri }}
+        style={[styles.avatar, dims, { backgroundColor: colors.cardOnDark }, style]}
+      />
+    );
+  }
+
   const bg = gold ? colors.gold400 : hashColor(name);
   const fg = gold ? colors.green900 : colors.cream;
   return (
-    <View
-      style={[
-        styles.avatar,
-        { width: size, height: size, borderRadius: size / 2, backgroundColor: bg },
-        style,
-      ]}
-    >
+    <View style={[styles.avatar, dims, { backgroundColor: bg }, style]}>
       <Text style={[styles.text, { color: fg, fontSize: size * 0.38 }]}>
         {initialsOf(name)}
       </Text>

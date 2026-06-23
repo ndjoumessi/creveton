@@ -1,31 +1,36 @@
-// ProfileScreen — onglet « Profile ». Infos perso, progression, wallet (flag),
-// badges, déconnexion (API §10/§11).
+// ProfileScreen — onglet « Profile ». Photo de profil (upload), header,
+// rangée de stats, réglages sectionnés (compte / préférences / sécurité),
+// badges, wallet (flag), déconnexion (API §10/§11).
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { View, StyleSheet, Pressable, Text, Animated, Modal, Share } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Text,
+  Animated,
+  Modal,
+  Switch,
+  Share,
+  ActivityIndicator,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Avatar, AppCard, AppButton, AppInput, Body, useToast } from '../components';
+import * as ImagePicker from 'expo-image-picker';
+import * as Clipboard from 'expo-clipboard';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Screen, Avatar, AppButton, AppInput, useToast } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
 import { wallet, users } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { setLanguage } from '../i18n';
-import { LANGS, SEXES } from '../constants/config';
-import {
-  colors,
-  fonts,
-  fontSizes,
-  radius,
-  spacing,
-  motion,
-} from '../constants/theme';
-import { formatFcfa, levelProgress } from '../utils/format';
+import { SEXES } from '../constants/config';
+import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
+import { formatFcfa, levelProgress, avatarUri } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
-const LANG_LABEL = (key) =>
-  LANGS.find((l) => l.key === key)?.label || (key === 'en' ? 'English' : 'Français');
+const NOTIF_PREF_KEY = 'crv.notif_enabled';
 
-// Sélecteur de langue (deux pilules) — drapeau + libellé (propre nom, non traduit).
 const LANG_PILLS = [
   { key: 'fr', flag: '🇫🇷', label: 'Français' },
   { key: 'en', flag: '🇬🇧', label: 'English' },
@@ -45,44 +50,64 @@ function deriveBadges(level, t) {
   }));
 }
 
-function XpBar({ pct }) {
+function XpBar({ pct, height = 4 }) {
   const fill = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.timing(fill, {
-      toValue: pct,
-      duration: motion.enter,
-      useNativeDriver: false,
-    }).start();
+    Animated.timing(fill, { toValue: pct, duration: motion.enter, useNativeDriver: false }).start();
   }, [fill, pct]);
   const width = fill.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
   return (
-    <View style={styles.xpTrack}>
-      <Animated.View style={[styles.xpFill, { width }]} />
+    <View style={[styles.xpTrack, { height, borderRadius: height / 2 }]}>
+      <Animated.View style={[styles.xpFill, { width, borderRadius: height / 2 }]} />
     </View>
   );
 }
 
-function InfoRow({ emoji, label, value, first }) {
-  return (
-    <View style={[styles.infoRow, first && styles.infoRowFirst]}>
-      <Text style={styles.infoEmoji}>{emoji}</Text>
-      <View style={styles.infoMid}>
-        <Text style={styles.infoLabel}>{label}</Text>
-        <Body style={styles.infoValue} numberOfLines={1}>
-          {value || '—'}
-        </Body>
-      </View>
-    </View>
-  );
-}
-
-/** Une stat compacte de la rangée du header (valeur Outfit 700 + libellé). */
-function ProfStat({ value, label }) {
+/** Stat compacte de la rangée du header. */
+function ProfStat({ value, label, divider }) {
   return (
     <View style={styles.profStat}>
+      {divider ? <View style={styles.profDivider} /> : null}
       <Text style={styles.profStatValue}>{value}</Text>
       <Text style={styles.profStatLabel}>{label}</Text>
     </View>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionLabel}>{title}</Text>
+      <View style={styles.sectionCard}>{children}</View>
+    </View>
+  );
+}
+
+/** Ligne de réglage : pastille icône + libellé + (valeur | droite) + chevron. */
+function SettingRow({ icon, iconBg, label, value, valueMuted, right, onPress, isLast }) {
+  const content = (
+    <View style={[styles.row, !isLast && styles.rowDivider]}>
+      <View style={[styles.rowIcon, { backgroundColor: iconBg || colors.cream }]}>
+        <Text style={styles.rowIconText}>{icon}</Text>
+      </View>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <View style={styles.rowRight}>
+        {right != null ? (
+          right
+        ) : value != null ? (
+          <Text style={[styles.rowValue, valueMuted && styles.rowValueMuted]} numberOfLines={1}>
+            {value || '—'}
+          </Text>
+        ) : null}
+        {onPress && right == null ? <Text style={styles.rowChevron}>›</Text> : null}
+      </View>
+    </View>
+  );
+  if (!onPress) return content;
+  return (
+    <Pressable onPress={onPress} android_ripple={{ color: colors.divider }}>
+      {content}
+    </Pressable>
   );
 }
 
@@ -94,25 +119,41 @@ export default function ProfileScreen() {
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const setUser = useAuthStore((s) => s.setUser);
 
-  // Stats joueur (parties, taux, streak, rang) pour la rangée sous le header.
   const stats = useStatsStore((s) => s.stats);
   const myRank = useStatsStore((s) => s.myRank);
   const loadHistory = useStatsStore((s) => s.loadHistory);
   const loadLeaderboard = useStatsStore((s) => s.loadLeaderboard);
 
-  // walletState: 'loading' | 'disabled' | { balance, currency }
   const [walletState, setWalletState] = useState('loading');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Photo de profil
+  const [avatarSheet, setAvatarSheet] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const photoUri = avatarUri(user);
+
+  // Préférence locale de notifications (persistée AsyncStorage).
+  const [notifEnabled, setNotifEnabled] = useState(true);
+  useEffect(() => {
+    AsyncStorage.getItem(NOTIF_PREF_KEY).then((v) => setNotifEnabled(v !== 'false'));
+  }, []);
+  const toggleNotif = useCallback((val) => {
+    setNotifEnabled(val);
+    AsyncStorage.setItem(NOTIF_PREF_KEY, val ? 'true' : 'false');
+  }, []);
 
   // Édition du profil (bottom sheet)
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [nom, setNom] = useState('');
   const [ville, setVille] = useState('');
   const [age, setAge] = useState('');
   const [sexe, setSexe] = useState('N');
   const [lang, setLang] = useState('fr');
 
   const openEdit = useCallback(() => {
+    hapticLight();
+    setNom(user?.name || '');
     setVille(user?.ville || '');
     setAge(user?.age != null ? String(user.age) : '');
     setSexe(user?.sexe || 'N');
@@ -124,6 +165,7 @@ export default function ProfileScreen() {
     setSaving(true);
     try {
       const updated = await users.update({
+        name: nom.trim() || undefined,
         ville: ville.trim() || undefined,
         age: Number(age) || undefined,
         sexe,
@@ -138,17 +180,64 @@ export default function ProfileScreen() {
     } finally {
       setSaving(false);
     }
-  }, [ville, age, sexe, lang, setUser, refreshProfile, toast, t]);
+  }, [nom, ville, age, sexe, lang, setUser, refreshProfile, toast, t]);
 
-  // Bascule de langue : applique instantanément (i18n + AsyncStorage) puis,
-  // si connecté, persiste le choix côté backend (PATCH /users/me { lang }).
+  // ── Photo de profil : sélection + upload ──────────────────────────────────
+  const uploadAvatar = useCallback(
+    async (uri) => {
+      setUploadingAvatar(true);
+      try {
+        const form = new FormData();
+        form.append('avatar', { uri, type: 'image/jpeg', name: 'avatar.jpg' });
+        const data = await users.uploadAvatar(form);
+        if (data?.avatar_url) setUser({ ...user, avatar_url: data.avatar_url });
+        toast.show({ type: 'success', message: t('profile.avatar.updated') });
+      } catch (e) {
+        toast.show({ type: 'error', message: parseApiError(e).message });
+      } finally {
+        setUploadingAvatar(false);
+      }
+    },
+    [user, setUser, toast, t],
+  );
+
+  const pickAvatar = useCallback(
+    async (source) => {
+      setAvatarSheet(false);
+      try {
+        const opts = { allowsEditing: true, aspect: [1, 1], quality: 0.7 };
+        let res;
+        if (source === 'camera') {
+          const perm = await ImagePicker.requestCameraPermissionsAsync();
+          if (!perm.granted) {
+            toast.show({ type: 'error', message: t('profile.avatar.permission') });
+            return;
+          }
+          res = await ImagePicker.launchCameraAsync(opts);
+        } else {
+          const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (!perm.granted) {
+            toast.show({ type: 'error', message: t('profile.avatar.permission') });
+            return;
+          }
+          res = await ImagePicker.launchImageLibraryAsync(opts);
+        }
+        if (res.canceled) return;
+        const asset = res.assets?.[0];
+        if (asset?.uri) await uploadAvatar(asset.uri);
+      } catch (e) {
+        toast.show({ type: 'error', message: parseApiError(e).message });
+      }
+    },
+    [uploadAvatar, toast, t],
+  );
+
   const changeLanguage = useCallback(
     async (next) => {
       if (next === i18n.language) return;
       hapticLight();
       await setLanguage(next);
       setLang(next);
-      // Toast résolu dans la nouvelle langue (i18n.language a déjà basculé).
       toast.show({ type: 'success', message: t('profile.notify.languageChanged') });
       if (!user) return;
       try {
@@ -162,12 +251,21 @@ export default function ProfileScreen() {
     [i18n.language, user, setUser, refreshProfile, toast, t],
   );
 
+  const copyReferral = useCallback(async () => {
+    const code = user?.referral_code;
+    if (!code) {
+      Share.share({ message: t('profile.inviteMessage', { code: 'CREV' }) });
+      return;
+    }
+    await Clipboard.setStringAsync(code);
+    toast.show({ type: 'success', message: t('profile.referral.copied') });
+  }, [user, toast, t]);
+
   const loadWallet = useCallback(async () => {
     try {
       const res = await wallet.get();
       setWalletState({ balance: res.balance, currency: res.currency });
     } catch {
-      // FEATURE_DISABLED ou indisponible → même rendu désactivé.
       setWalletState('disabled');
     }
   }, []);
@@ -176,7 +274,6 @@ export default function ProfileScreen() {
     loadWallet();
   }, [loadWallet]);
 
-  // Stats + rang global pour la rangée de stats du header.
   useEffect(() => {
     loadHistory();
     loadLeaderboard({ currentUserId: user?.id });
@@ -195,106 +292,134 @@ export default function ProfileScreen() {
 
   const totalXp = user?.total_xp ?? 0;
   const progress = levelProgress(totalXp);
-  // Niveau effectif dérivé de l'XP (cohérent même si user.level est périmé).
   const level = progress.level;
-  const remaining = progress.remaining;
   const badges = deriveBadges(level, t);
 
   return (
     <Screen dark={false} scroll padded={false} refreshing={refreshing} onRefresh={onRefresh}>
-      {/* Header sombre */}
+      {/* A. Header */}
       <View style={styles.header}>
         <Pressable
-          style={styles.editBtn}
-          hitSlop={10}
+          style={styles.avatarWrap}
           onPress={() => {
             hapticLight();
-            openEdit();
+            setAvatarSheet(true);
           }}
+          disabled={uploadingAvatar}
         >
-          <Text style={styles.editIcon}>✏️</Text>
+          <Avatar name={user?.name || ''} size={88} gold uri={photoUri} style={styles.avatarBorder} />
+          {uploadingAvatar ? (
+            <View style={styles.avatarOverlay}>
+              <ActivityIndicator color={colors.gold400} />
+            </View>
+          ) : null}
+          <View style={styles.cameraBadge}>
+            <Text style={styles.cameraBadgeIcon}>📷</Text>
+          </View>
         </Pressable>
-        <Avatar name={user?.name || ''} size={80} gold />
+
         <Text style={styles.headerName} numberOfLines={1}>
           {user?.name || t('profile.misc.defaultName')}
         </Text>
         <Text style={styles.headerLevel}>
-          {t('profile.misc.levelXp', { level, xp: totalXp.toLocaleString('fr-FR'), defaultValue: 'Niveau {{level}} · {{xp}} XP' })}
+          {t('profile.misc.levelXp', {
+            level,
+            xp: totalXp.toLocaleString('fr-FR'),
+            defaultValue: 'Niveau {{level}} · {{xp}} XP',
+          })}
         </Text>
-        {/* Barre de progression XP dans le header (or sur fond vert foncé). */}
-        <View style={styles.headerXpTrack}>
-          <View style={[styles.headerXpFill, { width: `${Math.round(progress.pct * 100)}%` }]} />
-        </View>
-
-        {/* Rangée de stats compacte (4 chiffres). */}
-        <View style={styles.statsRow}>
-          <ProfStat value={String(stats.totalGames || 0)} label={t('profile.stats.games', 'Parties')} />
-          <ProfStat value={stats.totalGames > 0 ? `${stats.successRate}%` : '—'} label={t('profile.stats.successRate', 'Taux réussite')} />
-          <ProfStat value={stats.totalGames > 0 ? `${stats.maxStreak}` : '—'} label={t('profile.stats.streak', 'Streak max')} />
-          <ProfStat value={myRank?.rank ? `#${myRank.rank}` : '—'} label={t('profile.stats.rank', 'Rang global')} />
+        <View style={styles.headerXpWrap}>
+          <XpBar pct={progress.pct} />
         </View>
       </View>
 
+      {/* B. Rangée de stats (green700) */}
+      <View style={styles.statsRow}>
+        <ProfStat value={String(stats.totalGames || 0)} label={t('profile.stats.games', 'Parties')} />
+        <ProfStat
+          divider
+          value={stats.totalGames > 0 ? `${stats.successRate}%` : '—'}
+          label={t('profile.stats.successRate', 'Taux')}
+        />
+        <ProfStat
+          divider
+          value={stats.totalGames > 0 ? `${stats.maxStreak}` : '—'}
+          label={t('profile.stats.streak', 'Streak')}
+        />
+        <ProfStat
+          divider
+          value={myRank?.rank ? `#${myRank.rank}` : '—'}
+          label={t('profile.stats.rank', 'Rang')}
+        />
+      </View>
+
       <View style={styles.body}>
-        {/* Infos */}
-        <AppCard
-          tone="light"
-          padding="md"
-          elevation="card"
-          radius={radius.xl}
-          style={styles.infoCard}
-        >
-          <InfoRow emoji="📧" label={t('profile.fields.email')} value={user?.email} first />
-          <InfoRow emoji="📱" label={t('profile.fields.phone')} value={user?.phone} />
-          <InfoRow emoji="📍" label={t('profile.fields.city')} value={user?.ville} />
-          <InfoRow emoji="🌐" label={t('profile.fields.language')} value={LANG_LABEL(user?.lang)} />
-        </AppCard>
+        {/* C. MON COMPTE */}
+        <Section title={t('profile.sections.account')}>
+          <SettingRow icon="👤" iconBg="#e8f5ed" label={t('profile.fields.name')} value={user?.name} onPress={openEdit} />
+          <SettingRow icon="📧" iconBg="#dbeafe" label={t('profile.fields.email')} value={user?.email} valueMuted />
+          <SettingRow icon="📱" iconBg="#fef9c3" label={t('profile.fields.phone')} value={user?.phone} valueMuted />
+          <SettingRow icon="📍" iconBg="#fee2e2" label={t('profile.fields.city')} value={user?.ville} onPress={openEdit} isLast />
+        </Section>
 
-        {/* Progression */}
-        <AppCard tone="light" padding="md" elevation="soft" radius={radius.xl} style={styles.card}>
-          <Text style={styles.cardTitle}>{t('profile.myLevel')}</Text>
-          <View style={styles.progressHead}>
-            <Text style={styles.progressLevel}>{t('profile.misc.level', { level })}</Text>
-            <Text style={styles.progressXp}>
-              {progress.current.toLocaleString('fr-FR')} /{' '}
-              {progress.needed.toLocaleString('fr-FR')} {t('common.xp')}
-            </Text>
-          </View>
-          <XpBar pct={progress.pct} />
-          <Body muted style={styles.progressHint}>
-            {progress.isMax
-              ? t('profile.maxLevel')
-              : t('profile.xpToNext', { xp: remaining.toLocaleString('fr-FR') })}
-          </Body>
-        </AppCard>
-
-        {/* Wallet */}
-        {walletState === 'disabled' ? (
-          <AppCard tone="cream" padding="md" elevation="soft" radius={radius.xl} style={styles.card}>
-            <Text style={styles.cardTitle}>💰 {t('profile.wallet.title')}</Text>
-            <Body color={colors.textMuted} style={styles.walletHint}>
-              {t('profile.wallet.unavailable')}
-            </Body>
-          </AppCard>
-        ) : walletState === 'loading' ? null : (
-          <AppCard tone="light" padding="md" elevation="soft" radius={radius.xl} style={styles.card}>
-            <Text style={styles.cardTitle}>💰 {t('profile.wallet.label')}</Text>
-            <Text style={styles.walletBalance}>{formatFcfa(walletState.balance)}</Text>
-            <View style={styles.walletBtn}>
-              <AppButton
-                variant="secondary"
-                size="sm"
-                title={t('profile.wallet.topUp')}
-                onPress={() =>
-                  toast.show({ type: 'info', message: t('profile.wallet.topUpSoon') })
-                }
+        {/* C. PRÉFÉRENCES */}
+        <Section title={t('profile.sections.preferences')}>
+          <SettingRow
+            icon="🌐"
+            iconBg="#e8f5ed"
+            label={t('profile.fields.language')}
+            right={
+              <View style={styles.langPills}>
+                {LANG_PILLS.map((l) => {
+                  const active = i18n.language === l.key;
+                  return (
+                    <Pressable
+                      key={l.key}
+                      onPress={() => changeLanguage(l.key)}
+                      style={[styles.langPill, active && styles.langPillActive]}
+                    >
+                      <Text style={[styles.langPillText, active && styles.langPillTextActive]}>
+                        {l.key.toUpperCase()}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            }
+          />
+          <SettingRow
+            icon="🔔"
+            iconBg="#fef9c3"
+            label={t('profile.rows.notifications')}
+            right={
+              <Switch
+                value={notifEnabled}
+                onValueChange={toggleNotif}
+                trackColor={{ false: '#d1d5db', true: colors.green500 }}
+                thumbColor={colors.white}
               />
-            </View>
-          </AppCard>
-        )}
+            }
+          />
+          <SettingRow
+            icon="🎁"
+            iconBg="#f3e8ff"
+            label={t('profile.referral.label')}
+            isLast
+            right={
+              <View style={styles.referralRight}>
+                <Text style={styles.referralCode} numberOfLines={1}>
+                  {user?.referral_code || 'CREV'}
+                </Text>
+                <Pressable onPress={copyReferral} style={styles.copyBtn} hitSlop={6}>
+                  <Text style={styles.copyBtnText}>{t('profile.referral.copy')}</Text>
+                </Pressable>
+              </View>
+            }
+          />
+        </Section>
 
-        {/* Badges */}
-        <Text style={styles.sectionTitle}>{t('profile.badges.title')}</Text>
+        {/* D. Badges */}
+        <Text style={styles.sectionLabel}>{t('profile.badges.title')}</Text>
         <View style={styles.badgeGrid}>
           {badges.map((b) => (
             <Pressable
@@ -318,42 +443,42 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        {/* Langue */}
-        <Text style={styles.sectionTitle}>{t('profile.editModal.language')}</Text>
-        <View style={styles.langRow}>
-          {LANG_PILLS.map((l) => {
-            const active = i18n.language === l.key;
-            return (
-              <Pressable
-                key={l.key}
-                onPress={() => changeLanguage(l.key)}
-                style={[styles.langPill, active && styles.langPillActive]}
-              >
-                <Text style={styles.langFlag}>{l.flag}</Text>
-                <Text style={[styles.langPillText, active && styles.langPillTextActive]}>
-                  {l.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {/* E. Wallet (compact) */}
+        {walletState === 'disabled' ? (
+          <View style={styles.walletLocked}>
+            <Text style={styles.walletLockIcon}>🔒</Text>
+            <View style={styles.walletLockBody}>
+              <Text style={styles.walletLockTitle}>{t('profile.wallet.title')}</Text>
+              <Text style={styles.walletLockText}>{t('profile.wallet.unavailable')}</Text>
+            </View>
+          </View>
+        ) : walletState === 'loading' ? null : (
+          <View style={styles.walletCard}>
+            <View>
+              <Text style={styles.walletLabel}>💰 {t('profile.wallet.label')}</Text>
+              <Text style={styles.walletBalance}>{formatFcfa(walletState.balance)}</Text>
+            </View>
+            <AppButton
+              variant="secondary"
+              size="sm"
+              fullWidth={false}
+              title={t('profile.wallet.topUp')}
+              onPress={() => toast.show({ type: 'info', message: t('profile.wallet.topUpSoon') })}
+            />
+          </View>
+        )}
 
-        {/* Inviter un ami */}
-        <AppButton
-          variant="ghost"
-          title={`${t('profile.invite')} 🎁`}
-          fullWidth
-          style={styles.invite}
-          onPress={() =>
-            Share.share({
-              message: t('profile.inviteMessage', {
-                code: user?.referral_code || 'CREV',
-              }),
-            })
-          }
-        />
+        {/* C. SÉCURITÉ */}
+        <Section title={t('profile.sections.security')}>
+          <SettingRow
+            icon="🔑"
+            iconBg="#dbeafe"
+            label={t('profile.rows.changePassword')}
+            onPress={() => toast.show({ type: 'info', message: t('profile.changePasswordSoon') })}
+            isLast
+          />
+        </Section>
 
-        {/* Déconnexion */}
         <AppButton
           variant="danger"
           title={t('profile.logout')}
@@ -363,18 +488,37 @@ export default function ProfileScreen() {
         />
       </View>
 
+      {/* Action sheet — photo de profil */}
+      <Modal visible={avatarSheet} transparent animationType="slide" onRequestClose={() => setAvatarSheet(false)}>
+        <Pressable style={styles.sheetBackdrop} onPress={() => setAvatarSheet(false)} />
+        <View style={styles.sheet}>
+          <View style={styles.sheetHandle} />
+          <Text style={styles.sheetTitle}>{t('profile.avatar.sheetTitle')}</Text>
+          <Pressable style={styles.actionRow} onPress={() => pickAvatar('camera')}>
+            <Text style={styles.actionText}>{t('profile.avatar.camera')}</Text>
+          </Pressable>
+          <Pressable style={styles.actionRow} onPress={() => pickAvatar('gallery')}>
+            <Text style={styles.actionText}>{t('profile.avatar.gallery')}</Text>
+          </Pressable>
+          <Pressable style={[styles.actionRow, styles.actionCancel]} onPress={() => setAvatarSheet(false)}>
+            <Text style={styles.actionCancelText}>{t('profile.avatar.cancel')}</Text>
+          </Pressable>
+        </View>
+      </Modal>
+
       {/* Bottom sheet — édition du profil */}
-      <Modal
-        visible={editOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setEditOpen(false)}
-      >
+      <Modal visible={editOpen} transparent animationType="slide" onRequestClose={() => setEditOpen(false)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setEditOpen(false)} />
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>{t('profile.editModal.title')}</Text>
 
+          <AppInput
+            label={t('profile.editModal.name')}
+            value={nom}
+            onChangeText={setNom}
+            placeholder={t('profile.misc.defaultName')}
+          />
           <AppInput
             label={t('profile.editModal.city')}
             value={ville}
@@ -394,11 +538,7 @@ export default function ProfileScreen() {
             {SEXES.map((s) => {
               const sel = s.key === sexe;
               return (
-                <Pressable
-                  key={s.key}
-                  onPress={() => setSexe(s.key)}
-                  style={[styles.pill, sel && styles.pillActive]}
-                >
+                <Pressable key={s.key} onPress={() => setSexe(s.key)} style={[styles.pill, sel && styles.pillActive]}>
                   <Text style={[styles.pillText, sel && styles.pillTextActive]}>
                     {t(`profile.misc.gender.${s.key}`)}
                   </Text>
@@ -407,43 +547,9 @@ export default function ProfileScreen() {
             })}
           </View>
 
-          <Text style={styles.fieldLabel}>{t('profile.editModal.language')}</Text>
-          <View style={styles.pillRow}>
-            {LANGS.map((l) => {
-              const sel = l.key === lang;
-              return (
-                <Pressable
-                  key={l.key}
-                  onPress={() => {
-                    setLang(l.key);
-                    // Applique instantanément l'UI ; le PATCH backend suit à l'enregistrement.
-                    setLanguage(l.key);
-                  }}
-                  style={[styles.pill, sel && styles.pillActive]}
-                >
-                  <Text style={[styles.pillText, sel && styles.pillTextActive]}>
-                    {l.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
           <View style={styles.sheetActions}>
-            <AppButton
-              variant="primary"
-              title={t('profile.editModal.save')}
-              fullWidth
-              loading={saving}
-              onPress={saveEdit}
-            />
-            <AppButton
-              variant="ghost"
-              title={t('profile.editModal.cancel')}
-              fullWidth
-              style={styles.sheetCancel}
-              onPress={() => setEditOpen(false)}
-            />
+            <AppButton variant="primary" title={t('profile.editModal.save')} fullWidth loading={saving} onPress={saveEdit} />
+            <AppButton variant="ghost" title={t('profile.editModal.cancel')} fullWidth onPress={() => setEditOpen(false)} />
           </View>
         </View>
       </Modal>
@@ -452,137 +558,133 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  // A. Header
   header: {
     backgroundColor: colors.green900,
     paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
-  editBtn: {
-    position: 'absolute',
-    top: spacing.lg,
-    right: spacing.lg,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.cardOnDark,
-    borderWidth: 1,
-    borderColor: colors.borderOnDark,
+  avatarWrap: { width: 88, height: 88, marginBottom: spacing.xs },
+  avatarBorder: { borderWidth: 3, borderColor: colors.gold500, ...shadow.gold },
+  avatarOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 44,
+    backgroundColor: 'rgba(11,46,26,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  editIcon: { fontSize: 18 },
-  headerName: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl,
-    color: colors.cream,
-    marginTop: spacing.xs,
+  cameraBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  headerLevel: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.md,
-    color: colors.gold400,
-    marginTop: 2,
-  },
-  headerXpTrack: {
-    width: '100%',
-    height: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.cardOnDark,
-    overflow: 'hidden',
-    marginTop: spacing.xs,
-  },
-  headerXpFill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.gold400 },
+  cameraBadgeIcon: { fontSize: 14 },
+  headerName: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.white, marginTop: spacing.xs },
+  headerLevel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.gold400 },
+  headerXpWrap: { width: '100%', paddingHorizontal: spacing.xl, marginTop: spacing.md },
+  xpTrack: { width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', overflow: 'hidden' },
+  xpFill: { height: '100%', backgroundColor: colors.gold400 },
+
+  // B. Stats row
   statsRow: {
     flexDirection: 'row',
-    width: '100%',
     backgroundColor: colors.green700,
-    borderRadius: radius.lg,
     paddingVertical: spacing.md,
-    marginTop: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginTop: -spacing.md,
+    borderRadius: radius.lg,
+    ...shadow.card,
   },
   profStat: { flex: 1, alignItems: 'center', gap: 2 },
-  profStatValue: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.cream },
-  profStatLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textOnDarkMuted, textAlign: 'center', paddingHorizontal: 2 },
+  profDivider: {
+    position: 'absolute',
+    left: 0,
+    top: '15%',
+    height: '70%',
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  profStatValue: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.white },
+  profStatLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: 'rgba(255,255,255,0.6)' },
 
   body: { padding: spacing.lg },
 
-  infoCard: { marginTop: -spacing.xl },
-  card: { marginTop: spacing.lg },
+  // Sections
+  section: { marginBottom: spacing.lg },
+  sectionLabel: {
+    fontFamily: fonts.titleBold,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  sectionCard: {
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    ...shadow.soft,
+  },
 
-  // Infos
-  infoRow: {
+  // F. Rows
+  row: {
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingTop: spacing.md,
-    marginTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
+    paddingVertical: spacing.sm,
   },
-  infoRowFirst: { borderTopWidth: 0, marginTop: 0, paddingTop: 0 },
-  infoEmoji: { fontSize: 20 },
-  infoMid: { flex: 1 },
-  infoLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
-    marginBottom: 1,
-  },
-  infoValue: { fontFamily: fonts.bodySemiBold, color: colors.textDark },
+  rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
+  rowIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  rowIconText: { fontSize: 18 },
+  rowLabel: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.textDark },
+  rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, maxWidth: '55%' },
+  rowValue: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
+  rowValueMuted: { color: colors.textMuted },
+  rowChevron: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textFaint },
 
-  // Cards
-  cardTitle: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.lg,
-    color: colors.green900,
-    marginBottom: spacing.md,
-  },
-  progressHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  progressLevel: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.md,
-    color: colors.textDark,
-  },
-  progressXp: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.sm,
-    color: colors.textMuted,
-  },
-  xpTrack: {
-    height: 10,
+  // Langue (pills inline)
+  langPills: { flexDirection: 'row', gap: spacing.xs },
+  langPill: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
     borderRadius: radius.pill,
-    backgroundColor: colors.border,
-    overflow: 'hidden',
+    backgroundColor: colors.cream,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  xpFill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.gold400 },
-  progressHint: { marginTop: spacing.sm },
+  langPillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
+  langPillText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs, color: colors.textBody },
+  langPillTextActive: { color: colors.white },
 
-  // Wallet
-  walletHint: { marginTop: -spacing.xs },
-  walletBalance: {
-    fontFamily: fonts.titleExtraBold,
-    fontSize: fontSizes.xxl,
-    color: colors.green900,
+  // Code parrainage
+  referralRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
+  referralCode: { fontFamily: fonts.titleBold, fontSize: fontSizes.sm, color: colors.green900, flexShrink: 1 },
+  copyBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    backgroundColor: colors.goldVeil,
+    borderWidth: 1,
+    borderColor: colors.goldVeilBorder,
   },
-  walletBtn: { marginTop: spacing.md, alignSelf: 'flex-start' },
+  copyBtnText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs, color: colors.gold500 },
 
-  // Badges
-  sectionTitle: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.lg,
-    color: colors.green900,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  // D. Badges
+  badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.lg },
   badge: {
     width: '47.5%',
     flexGrow: 1,
@@ -595,40 +697,43 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   badgeUnlocked: { backgroundColor: colors.goldVeil, borderColor: colors.goldVeilBorder },
-  badgeLocked: { backgroundColor: colors.surface, borderColor: colors.border },
+  badgeLocked: { backgroundColor: colors.surface, borderColor: colors.border, opacity: 0.4 },
   badgeEmoji: { fontSize: 22 },
-  badgeEmojiLocked: { opacity: 0.6 },
+  badgeEmojiLocked: { opacity: 0.8 },
   badgeLabel: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, flexShrink: 1 },
   badgeLabelUnlocked: { color: colors.gold500 },
   badgeLabelLocked: { color: colors.textFaint },
 
-  // Sélecteur de langue
-  langRow: { flexDirection: 'row', gap: spacing.md },
-  langPill: {
-    flex: 1,
+  // E. Wallet
+  walletLocked: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.md,
+    gap: spacing.md,
+    backgroundColor: '#f3f4f6',
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderInput,
-    backgroundColor: colors.surface,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
   },
-  langPillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
-  langFlag: { fontSize: 18 },
-  langPillText: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
-    color: colors.textBody,
+  walletLockIcon: { fontSize: 22, opacity: 0.6 },
+  walletLockBody: { flex: 1 },
+  walletLockTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.textMuted },
+  walletLockText: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 1 },
+  walletCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    ...shadow.soft,
   },
-  langPillTextActive: { color: colors.white },
+  walletLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
+  walletBalance: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.xl, color: colors.green900, marginTop: 2 },
 
-  invite: { marginTop: spacing.xl },
-  logout: { marginTop: spacing.md },
+  logout: { marginTop: spacing.sm },
 
-  // Bottom sheet
+  // Bottom sheets
   sheetBackdrop: { flex: 1, backgroundColor: colors.overlay },
   sheet: {
     backgroundColor: colors.white,
@@ -646,18 +751,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginBottom: spacing.sm,
   },
-  sheetTitle: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.lg,
-    color: colors.green900,
-    marginBottom: spacing.sm,
+  sheetTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.green900, marginBottom: spacing.sm },
+
+  // Action sheet (photo)
+  actionRow: {
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.cream,
+    alignItems: 'center',
   },
-  fieldLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.sm,
-    color: colors.textBody,
-    marginTop: spacing.xs,
-  },
+  actionText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.base, color: colors.green900 },
+  actionCancel: { backgroundColor: 'transparent' },
+  actionCancelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textMuted },
+
+  // Edit sheet fields
+  fieldLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody, marginTop: spacing.xs },
   pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   pill: {
     paddingVertical: spacing.sm,
@@ -668,12 +776,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   pillActive: { backgroundColor: colors.green500, borderColor: colors.green500 },
-  pillText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.sm,
-    color: colors.textBody,
-  },
+  pillText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
   pillTextActive: { color: colors.white },
   sheetActions: { marginTop: spacing.lg, gap: spacing.sm },
-  sheetCancel: { marginTop: 0 },
 });

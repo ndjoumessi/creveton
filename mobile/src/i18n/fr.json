@@ -382,11 +382,35 @@
       "champion": "Champion",
       "lockedByLevel": "Atteins le niveau {{min}} pour débloquer"
     },
+    "sections": {
+      "account": "MON COMPTE",
+      "preferences": "PRÉFÉRENCES",
+      "security": "SÉCURITÉ"
+    },
+    "rows": {
+      "notifications": "Notifications",
+      "changePassword": "Changer le mot de passe"
+    },
+    "referral": {
+      "label": "Code parrainage",
+      "copy": "Copier",
+      "copied": "Code copié !"
+    },
+    "avatar": {
+      "sheetTitle": "Photo de profil",
+      "camera": "📷 Prendre une photo",
+      "gallery": "🖼️ Choisir depuis la galerie",
+      "cancel": "Annuler",
+      "updated": "Photo de profil mise à jour",
+      "permission": "Autorisation refusée — active l'accès dans les réglages."
+    },
+    "changePasswordSoon": "Bientôt disponible",
     "invite": "Inviter un ami",
     "inviteMessage": "Rejoins-moi sur Creveton ! Code : {{code}} 🇨🇲",
     "logout": "Se déconnecter",
     "editModal": {
       "title": "Modifier le profil",
+      "name": "Nom",
       "city": "Ville",
       "age": "Âge",
       "gender": "Sexe",
@@ -402,6 +426,7 @@
       "5": "Champion"
     },
     "fields": {
+      "name": "Nom",
       "email": "Email",
       "phone": "Téléphone",
       "city": "Ville",

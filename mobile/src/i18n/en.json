@@ -382,11 +382,35 @@
       "champion": "Champion",
       "lockedByLevel": "Reach level {{min}} to unlock"
     },
+    "sections": {
+      "account": "MY ACCOUNT",
+      "preferences": "PREFERENCES",
+      "security": "SECURITY"
+    },
+    "rows": {
+      "notifications": "Notifications",
+      "changePassword": "Change password"
+    },
+    "referral": {
+      "label": "Referral code",
+      "copy": "Copy",
+      "copied": "Code copied!"
+    },
+    "avatar": {
+      "sheetTitle": "Profile photo",
+      "camera": "📷 Take a photo",
+      "gallery": "🖼️ Choose from gallery",
+      "cancel": "Cancel",
+      "updated": "Profile photo updated",
+      "permission": "Permission denied — enable access in settings."
+    },
+    "changePasswordSoon": "Coming soon",
     "invite": "Invite a friend",
     "inviteMessage": "Join me on Creveton! Code: {{code}} 🇨🇲",
     "logout": "Sign out",
     "editModal": {
       "title": "Edit profile",
+      "name": "Name",
       "city": "City",
       "age": "Age",
       "gender": "Gender",
@@ -402,6 +426,7 @@
       "5": "Champion"
     },
     "fields": {
+      "name": "Name",
       "email": "Email",
       "phone": "Phone",
       "city": "City",

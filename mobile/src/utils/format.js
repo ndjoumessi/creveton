@@ -1,7 +1,15 @@
 // Helpers de formatage (FCFA, dates, niveaux, etc.)
 
-import { LEVELS, THEMES } from '../constants/config';
+import { LEVELS, THEMES, SOCKET_URL } from '../constants/config';
 import i18n from '../i18n';
+
+// URL absolue de la photo de profil (avatar_url est relatif : /uploads/avatars/…).
+// Renvoie null si aucune photo → l'avatar retombe sur les initiales.
+export function avatarUri(user) {
+  const path = user?.avatar_url;
+  if (!path) return null;
+  return /^https?:\/\//.test(path) ? path : `${SOCKET_URL}${path}`;
+}
 
 // Montants en FCFA — entiers, pas de sous-unité (API §1)
 export function formatFcfa(amount) {

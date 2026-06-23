@@ -48,6 +48,13 @@
           "color": "#0b2e1a",
           "sounds": []
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Creveton accède à vos photos pour choisir une photo de profil.",
+          "cameraPermission": "Creveton accède à l'appareil photo pour prendre une photo de profil."
+        }
       ]
     ],
     "extra": {
