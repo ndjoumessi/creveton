@@ -17,7 +17,6 @@ import {
 } from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
 import { useGameStore } from '../store/gameStore';
-import { questions as questionsApi } from '../services/endpoints';
 import { themeGradients, colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
 import { themeLabel, levelLabel } from '../utils/format';
 import { hapticMedium } from '../utils/haptics';
@@ -42,7 +41,7 @@ export default function GameStartScreen({ navigation, route }) {
 
   const isMixed = TIMED_MODES.includes(mode);
 
-  const drawQuestions = useQuestionsStore((s) => s.drawQuestions);
+  const drawForMode = useQuestionsStore((s) => s.drawForMode);
   const startGame = useGameStore((s) => s.startGame);
 
   // Animation d'entrée : chaque carte de thème glisse vers le haut + apparaît,
@@ -120,31 +119,14 @@ export default function GameStartScreen({ navigation, route }) {
     if (!ready) return;
     hapticMedium();
     setLoading(true);
-    // Mode mixte : tous thèmes/niveaux confondus (pas de filtre) ; sinon le choix.
-    const count = isMixed ? MODE_QUESTION_COUNT[mode] : GAME.questionsPerSession;
-    const drawParams = isMixed ? { count } : { theme, level, count };
     try {
-      let qs = await drawQuestions(drawParams);
-      if (!qs || qs.length < count) {
-        try {
-          const resp = await questionsApi.fetch(drawParams);
-          if (resp?.data?.length) qs = resp.data;
-        } catch {
-          /* on garde le cache local */
-        }
-      }
-      // Marathon : exactement 20 questions exigées côté serveur.
-      if (mode === 'marathon' && (!qs || qs.length < MODE_QUESTION_COUNT.marathon)) {
-        toast.show({ type: 'error', message: t('gameStart.notify.notEnough') });
+      const { questions: qs, error } = await drawForMode({ mode, theme, level });
+      if (error) {
+        const key = error === 'notEnough' ? 'gameStart.notify.notEnough' : 'gameStart.notify.noQuestions';
+        toast.show({ type: 'error', message: t(key) });
         setLoading(false);
         return;
       }
-      if (!qs || !qs.length) {
-        toast.show({ type: 'error', message: t('gameStart.notify.noQuestions') });
-        setLoading(false);
-        return;
-      }
-      if (isMixed) qs = qs.slice(0, count); // borne stricte (marathon = 20)
       startGame({
         mode,
         theme: isMixed ? null : theme,

@@ -18,25 +18,61 @@ import {
   MiniLineChart,
 } from '../components';
 import { useGameStore } from '../store/gameStore';
+import { useQuestionsStore } from '../store/questionsStore';
 import { useAuthStore } from '../store/authStore';
 import { users } from '../services/endpoints';
+import { TIMED_MODES } from '../constants/config';
 import { hapticSuccess } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
 
 export default function ResultsScreen({ route, navigation }) {
   const { t } = useTranslation();
   const { ok, error } = route.params || {};
-  const result = useGameStore((s) => s.result);
+  const [replaying, setReplaying] = useState(false);
+  // On fige le résultat affiché : « Rejouer » réinitialise le store (startGame)
+  // avant de naviguer ; sans ça, l'écran clignoterait en erreur le temps du replace.
+  const storeResult = useGameStore((s) => s.result);
+  const resultRef = useRef(storeResult);
+  if (storeResult && !replaying) resultRef.current = storeResult;
+  const result = resultRef.current;
   const reset = useGameStore((s) => s.reset);
+  const startGame = useGameStore((s) => s.startGame);
+  const drawForMode = useQuestionsStore((s) => s.drawForMode);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
 
   const goHome = () => {
     reset();
     navigation.navigate('Tabs', { screen: 'Home' });
   };
-  const replay = () => {
-    reset();
-    navigation.navigate('Tabs', { screen: 'Play' });
+
+  // « Rejouer » = relancer immédiatement une partie avec les MÊMES réglages
+  // (mode/theme/level de la partie précédente), en tirant de NOUVELLES questions
+  // — même flux que l'écran « Jouer ». Repli sur l'écran de sélection si le
+  // tirage échoue. On lit les réglages AVANT que startGame ne réinitialise le store.
+  const replay = async () => {
+    const { mode, theme, level } = useGameStore.getState();
+    setReplaying(true);
+    try {
+      const { questions, error: drawError } = await drawForMode({ mode, theme, level });
+      if (drawError || !questions) {
+        setReplaying(false);
+        reset();
+        navigation.navigate('Tabs', { screen: 'Play' });
+        return;
+      }
+      const isMixed = TIMED_MODES.includes(mode);
+      startGame({
+        mode,
+        theme: isMixed ? null : theme,
+        level: isMixed ? null : level,
+        questions,
+      });
+      navigation.replace('Quiz');
+    } catch {
+      setReplaying(false);
+      reset();
+      navigation.navigate('Tabs', { screen: 'Play' });
+    }
   };
 
   const valid = ok !== false && !!result;
@@ -59,10 +95,10 @@ export default function ResultsScreen({ route, navigation }) {
     );
   }
 
-  return <ResultsContent result={result} onReplay={replay} onHome={goHome} />;
+  return <ResultsContent result={result} onReplay={replay} onHome={goHome} replaying={replaying} />;
 }
 
-function ResultsContent({ result, onReplay, onHome }) {
+function ResultsContent({ result, onReplay, onHome, replaying }) {
   const { t } = useTranslation();
   const total = result.total_questions || 0;
   const correct = result.correct_count || 0;
@@ -345,7 +381,13 @@ function ResultsContent({ result, onReplay, onHome }) {
       {/* ACTIONS */}
       <View style={styles.actions}>
         <AppButton title={t('results.share')} variant="ghost" onPress={onShare} fullWidth />
-        <AppButton title={t('results.replay')} variant="secondary" onPress={onReplay} fullWidth />
+        <AppButton
+          title={t('results.replay')}
+          variant="secondary"
+          onPress={onReplay}
+          loading={replaying}
+          fullWidth
+        />
         <AppButton
           title={t('results.home')}
           variant="primary"

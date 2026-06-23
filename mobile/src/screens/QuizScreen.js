@@ -26,14 +26,15 @@ import { sessions as sessionsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
-import { MODE_DURATION_S, TIMED_MODES, LEVELS, GAME } from '../constants/config';
+import { MODE_DURATION_S, TIMED_MODES, GAME } from '../constants/config';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
+const BASE_POINTS = { beginner: 50, intermediate: 75, expert: 100 };
 const ANSWER_DELAY_MS = 1500;
 const TIMEOUT_DELAY_MS = 2000;
-// Modes chronométrés : avance rapide entre questions (le timer global presse).
-const TIMED_ADVANCE_MS = { blitz: 450, marathon: 700 };
+// Modes mixtes (blitz/marathon) : feedback neutre puis avance après 800 ms.
+const MIXED_ADVANCE_MS = 800;
 
 export default function QuizScreen({ navigation }) {
   const { t } = useTranslation();
@@ -207,40 +208,39 @@ export default function QuizScreen({ navigation }) {
         return;
       }
 
-      // Blitz/Marathon : timer global, pas d'appel serveur par question. La
-      // correction vient du cache local ; avance rapide. Marathon : toast de
-      // bonus thème (purement visuel — le vrai calcul est serveur).
+      // Blitz/Marathon : timer global, pas d'appel /sessions/answer par question.
+      // Feedback NEUTRE (le correct_index est server-only en mode mixte → on ne
+      // révèle ni vert ni rouge) + score INDICATIF. Le vrai score et la justesse
+      // viennent du review[] de /sessions/submit (ResultsScreen).
       if (isTimed) {
-        const correctIndex = Number.isInteger(question.correct_index) ? question.correct_index : null;
-        const isCorrect =
-          selectedIndex !== null && correctIndex !== null && selectedIndex === correctIndex;
-        if (isCorrect) {
-          hapticSuccess();
-          // Score INDICATIF (le serveur recalcule tout à la soumission) : base du
-          // niveau réel de la question + bonus vitesse, pour que le compteur ⚡
-          // vive pendant la partie (sinon figé à 0 en blitz/marathon).
-          const lvl = LEVELS.find((l) => l.key === question.level);
-          const base = lvl ? lvl.points : 50;
+        hapticLight();
+        // Score indicatif : base du niveau réel de la question + bonus vitesse.
+        // Compté pour toute réponse réelle (un timeout/skip ne rapporte rien).
+        if (selectedIndex !== null) {
+          const base = BASE_POINTS[question.level] ?? 50;
           const bonus = elapsed <= GAME.speedBonusThresholdMs ? Math.round(base * 0.5) : 0;
           bumpScore(base + bonus);
-        } else hapticError();
+        }
+        // Pastille « répondue » (or, ni correct ni faux — cf. ProgressDots).
         setDotStates((d) => {
           const c = [...d];
-          c[currentIndex] = isCorrect ? 'correct' : 'wrong';
+          c[currentIndex] = selectedIndex === null ? 'wrong' : 'answered';
           return c;
         });
-        setAnswered({ selectedIndex, correctIndex, isCorrect, timedOut });
-        if (mode === 'marathon') {
+        setAnswered({ selectedIndex, neutral: true, timedOut });
+        // Marathon : toast indicatif de série thématique — basé sur la SÉQUENCE
+        // présentée (comme le serveur), pas sur la justesse (inconnue côté client).
+        if (mode === 'marathon' && selectedIndex !== null) {
           const r = themeRun.current;
           if (r.theme === question.theme) r.count += 1;
           else {
             r.theme = question.theme;
             r.count = 1;
           }
-          if (isCorrect && r.count >= 5) toast.show({ type: 'success', message: t('quiz.themeBonus.x2') });
-          else if (isCorrect && r.count === 3) toast.show({ type: 'success', message: t('quiz.themeBonus.x15') });
+          if (r.count >= 5) toast.show({ type: 'success', message: t('quiz.themeBonus.x2') });
+          else if (r.count === 3) toast.show({ type: 'success', message: t('quiz.themeBonus.x15') });
         }
-        scheduleAutoNext(TIMED_ADVANCE_MS[mode] || 600);
+        scheduleAutoNext(MIXED_ADVANCE_MS);
         return;
       }
 
@@ -556,9 +556,11 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
   const { t } = useTranslation();
   const scale = useRef(new Animated.Value(1)).current;
 
+  const neutral = !!(answered && answered.neutral);
   const isSelected = answered && answered.selectedIndex === optionIndex;
   const isCorrectOpt = answered && answered.correctIndex === optionIndex;
-  const revealing = answered && answered.correctIndex !== null;
+  const revealing =
+    !neutral && answered && answered.correctIndex !== null && answered.correctIndex !== undefined;
 
   let container = styles.optDefault;
   let badge = styles.badgeDefault;
@@ -567,7 +569,17 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
   let glyph = letter;
   let showGoodLabel = false;
 
-  if (revealing) {
+  if (neutral) {
+    // Mode mixte : pas de vert/rouge. Option choisie en or, les autres grisées.
+    if (isSelected) {
+      container = styles.optNeutral;
+      badge = styles.badgeNeutral;
+      badgeText = styles.badgeTextOnColor;
+      label = styles.optTextNeutral;
+    } else {
+      container = styles.optDimmed;
+    }
+  } else if (revealing) {
     if (isCorrectOpt) {
       container = styles.optCorrect;
       badge = styles.badgeCorrect;
@@ -684,10 +696,14 @@ const styles = StyleSheet.create({
   optSelected: { backgroundColor: colors.successBgSoft, borderColor: colors.green500 },
   optCorrect: { backgroundColor: colors.successBg, borderWidth: 3, borderColor: colors.green500 },
   optWrong: { backgroundColor: colors.errorBg, borderWidth: 3, borderColor: colors.red400 },
+  // Mode mixte (blitz/marathon) : feedback neutre.
+  optNeutral: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
+  optDimmed: { backgroundColor: colors.white, borderColor: colors.border, opacity: 0.4 },
   badge: { width: 32, height: 32, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   badgeDefault: { backgroundColor: '#f3f4f6' },
   badgeCorrect: { backgroundColor: colors.green500 },
   badgeWrong: { backgroundColor: colors.red400 },
+  badgeNeutral: { backgroundColor: colors.green900 },
   badgeText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.md },
   badgeTextDefault: { color: '#374151' },
   badgeTextOnColor: { color: colors.white },
@@ -696,6 +712,7 @@ const styles = StyleSheet.create({
   optTextDefault: { color: '#374151' },
   optTextCorrect: { color: colors.successText, fontFamily: fonts.bodySemiBold },
   optTextWrong: { color: colors.red600 },
+  optTextNeutral: { color: colors.white, fontFamily: fonts.bodySemiBold },
   goodLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.successText, marginBottom: 2 },
 
   skip: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: 'auto' },
