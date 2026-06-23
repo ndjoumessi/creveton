@@ -29,10 +29,10 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE || 'creveton' }}
-        working-directory: backend
         run: |
           if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "::error::Secret RAILWAY_TOKEN manquant (environnement staging)."
+            echo "::error::Secret RAILWAY_TOKEN manquant."
             exit 1
           fi
+          cd backend
           railway up --service "$RAILWAY_SERVICE" --ci
