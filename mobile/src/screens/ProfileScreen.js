@@ -129,10 +129,18 @@ export default function ProfileScreen() {
   const [walletState, setWalletState] = useState('loading');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Photo de profil
+  // Photo de profil. `avatarUri` renvoie déjà l'URL TELLE QUELLE si elle est
+  // absolue (Cloudinary https://…) ; on ne préfixe SOCKET_URL que pour un chemin
+  // relatif. `avatarBust` force `<Image>` à recharger après un upload : sans ça,
+  // RN garde en cache l'ancienne image (ou un échec) si l'URL ne change pas.
   const [avatarSheet, setAvatarSheet] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const photoUri = avatarUri(user);
+  const [avatarBust, setAvatarBust] = useState(0);
+  const baseAvatar = avatarUri(user);
+  const photoUri =
+    baseAvatar && avatarBust
+      ? `${baseAvatar}${baseAvatar.includes('?') ? '&' : '?'}cb=${avatarBust}`
+      : baseAvatar;
 
   // Préférence locale de notifications (persistée AsyncStorage).
   const [notifEnabled, setNotifEnabled] = useState(true);
@@ -192,6 +200,7 @@ export default function ProfileScreen() {
         form.append('avatar', { uri, type: 'image/jpeg', name: 'avatar.jpg' });
         const data = await users.uploadAvatar(form);
         if (data?.avatar_url) updateUser({ avatar_url: data.avatar_url });
+        setAvatarBust(Date.now()); // force le rechargement de l'<Image>
         toast.show({ type: 'success', message: t('profile.avatar.updated') });
       } catch (e) {
         toast.show({ type: 'error', message: parseApiError(e).message });
