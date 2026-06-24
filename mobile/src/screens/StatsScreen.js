@@ -38,6 +38,21 @@ const TABS = [
 const PODIUM_MEDALS = ['🥇', '🥈', '🥉'];
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
 
+// Médailles classement : or (1) · argent (2) · bronze (3). En dessous : texte neutre.
+const SILVER = '#C0C0C0';
+const BRONZE = '#CD7F32';
+function rankColor(rank, c) {
+  if (rank === 1) return c.gold500;
+  if (rank === 2) return SILVER;
+  if (rank === 3) return BRONZE;
+  return c.textDark;
+}
+// Nom tronqué à 14 caractères max (ellipsis) pour les cartes podium.
+function truncName(name, max = 14) {
+  const s = String(name || '');
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+}
+
 // Géométrie de la courbe d'évolution (pleine largeur - paddings écran + carte).
 const WIN_W = Dimensions.get('window').width;
 const CHART_W = WIN_W - spacing.lg * 2 - spacing.md * 2;
@@ -571,16 +586,29 @@ function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay })
     <>
       {/* Ma position */}
       <View style={styles.myRankCard}>
-        <Text style={styles.myRankLabel}>{t('stats.myPosition')}</Text>
+        <Text style={styles.myRankLabel}>{t('stats.leaderboard.myPosition')}</Text>
         {myRank ? (
           <>
-            <Text style={styles.myRankValue}>{t('common.rank', { n: fmt(myRank.rank) })}</Text>
+            <Text style={[styles.myRankValue, { color: rankColor(myRank.rank, colors) }]}>
+              {t('common.rank', { n: fmt(myRank.rank) })}
+            </Text>
             {totalPlayers ? (
-              <Text style={styles.myRankSub}>{t('stats.misc.outOfPlayers', { totalPlayers: fmt(totalPlayers) })}</Text>
+              <Text style={styles.myRankSub}>{t('stats.leaderboard.outOf', { count: fmt(totalPlayers) })}</Text>
             ) : (
               <Text style={styles.myRankSub}>{t('stats.misc.globalRank')}</Text>
             )}
-            <Text style={styles.myRankScore}>{fmt(myRank.score)} {t('common.pts')}</Text>
+            <Text style={styles.myRankScore}>{fmt(myRank.score)} {t('stats.leaderboard.pts')}</Text>
+            {/* Message motivant contextuel selon le rang */}
+            {(() => {
+              const r = myRank.rank;
+              const msg =
+                r === 1
+                  ? { text: t('stats.leaderboard.rank1'), color: colors.gold500 }
+                  : r <= 10
+                    ? { text: t('stats.leaderboard.rankTop10'), color: colors.green300 }
+                    : { text: t('stats.leaderboard.rankOther'), color: colors.textMuted };
+              return <Text style={[styles.myRankMsg, { color: msg.color }]}>{msg.text}</Text>;
+            })()}
           </>
         ) : (
           <Text style={styles.myRankEmpty}>{t('stats.empty.rankNoPosition')}</Text>
@@ -592,16 +620,24 @@ function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay })
         {podiumOrder.map((p, idx) => {
           if (!p) return <View key={idx} style={styles.podiumCol} />;
           const isFirst = idx === 1;
-          const medalIdx = isFirst ? 0 : idx === 0 ? 1 : 2;
+          // Rang réel (les lignes data portent `rank`) → médaille + bordure colorée.
+          const rank = p.rank || (isFirst ? 1 : idx === 0 ? 2 : 3);
+          const borderColor = rank === 1 ? colors.gold400 : rank === 2 ? SILVER : BRONZE;
           return (
             <View
               key={p.user_id || idx}
-              style={[styles.podiumCol, isFirst ? styles.podiumFirst : styles.podiumSide]}
+              style={[
+                styles.podiumCol,
+                isFirst ? styles.podiumFirst : styles.podiumSide,
+                { borderColor },
+              ]}
             >
-              <Text style={styles.podiumMedal}>{PODIUM_MEDALS[medalIdx]}</Text>
-              <Avatar name={p.name || ''} size={isFirst ? 56 : 44} gold={isFirst} />
+              <Text style={styles.podiumMedal}>{PODIUM_MEDALS[rank - 1] || PODIUM_MEDALS[2]}</Text>
+              {/* avatar_url absent de la réponse leaderboard aujourd'hui → repli initiales
+                  (Avatar gère uri→initiales). Prêt si le backend ajoute la photo. */}
+              <Avatar name={p.name || ''} size={isFirst ? 56 : 44} gold={isFirst} uri={p.avatar_url || null} />
               <Text style={styles.podiumName} numberOfLines={1}>
-                {p.name}
+                {truncName(p.name)}
               </Text>
               {p.ville ? (
                 <Text style={styles.podiumVille} numberOfLines={1}>
@@ -611,6 +647,7 @@ function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay })
               <Text style={[styles.podiumScore, isFirst && styles.podiumScoreFirst]}>
                 {fmt(p.score)}
               </Text>
+              <Text style={styles.podiumPts}>{t('stats.leaderboard.pts')}</Text>
             </View>
           );
         })}
@@ -627,7 +664,7 @@ function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay })
                 style={[styles.rankRow, i === 0 && styles.rankRowFirst, isMe && styles.rankRowMe]}
               >
                 <Text style={styles.rankNum}>{r.rank}</Text>
-                <Avatar name={r.name || ''} size={36} />
+                <Avatar name={r.name || ''} size={36} uri={r.avatar_url || null} />
                 <View style={styles.rankMid}>
                   <View style={styles.rankNameRow}>
                     <Text style={styles.rankName} numberOfLines={1}>
@@ -696,13 +733,15 @@ const makeStyles = (colors) => StyleSheet.create({
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
   },
   tabActive: { backgroundColor: colors.gold500 },
   tabText: {
     fontFamily: fonts.titleSemiBold,
     fontSize: fontSizes.md,
-    color: 'rgba(255,255,255,0.6)',
+    // Inactif sur en-tête vert profond : blanc à 88 % → nettement lisible (le
+    // 60 % précédent était trop discret). Actif = vert sur or (contraste fort).
+    color: 'rgba(255,255,255,0.88)',
   },
   tabTextActive: { fontFamily: fonts.titleBold, color: colors.green900 },
 
@@ -865,6 +904,12 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.gold500,
     marginTop: spacing.sm,
   },
+  myRankMsg: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: fontSizes.sm,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+  },
   myRankEmpty: {
     fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.md,
@@ -882,8 +927,8 @@ const makeStyles = (colors) => StyleSheet.create({
     marginTop: spacing.lg,
   },
   podiumCol: { flex: 1, alignItems: 'center', borderRadius: radius.lg, padding: spacing.md, gap: 2 },
-  podiumFirst: { backgroundColor: colors.goldVeil, borderWidth: 2, borderColor: colors.gold500 },
-  podiumSide: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  podiumFirst: { backgroundColor: colors.goldVeil, borderWidth: 2, padding: spacing.xl },
+  podiumSide: { backgroundColor: colors.surface, borderWidth: 1 },
   podiumMedal: { fontSize: 22, marginBottom: 2 },
   podiumName: {
     fontFamily: fonts.titleBold,
@@ -900,6 +945,7 @@ const makeStyles = (colors) => StyleSheet.create({
     marginTop: 2,
   },
   podiumScoreFirst: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.xl, color: colors.gold500 },
+  podiumPts: { fontFamily: fonts.bodyMedium, fontSize: 10, color: colors.textMuted, marginTop: -2 },
 
   // Liste de rangs
   rankRow: {

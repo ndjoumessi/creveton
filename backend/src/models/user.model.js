@@ -336,7 +336,7 @@ async function referralCount(code) {
 async function findManyByIds(ids) {
   if (!ids || ids.length === 0) return [];
   const { rows } = await db.query(
-    `SELECT id, name, level, ville, push_token FROM users WHERE id = ANY($1::uuid[])`,
+    `SELECT id, name, level, ville, avatar_url, push_token FROM users WHERE id = ANY($1::uuid[])`,
     [ids]
   );
   const byId = new Map(rows.map((r) => [r.id, r]));

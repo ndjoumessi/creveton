@@ -100,6 +100,7 @@ async function getLeaderboard({ scope = 'global', theme = null, limit = 20, curs
       level: p.level ?? null,
       score: entry.score,
       ville: p.ville ?? null,
+      avatar_url: p.avatar_url ?? null,
     };
   });
 

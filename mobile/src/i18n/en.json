@@ -332,6 +332,14 @@
     "performanceByTheme": "Performance by theme",
     "history": "History of the last 10 games",
     "myPosition": "My position",
+    "leaderboard": {
+      "myPosition": "My position",
+      "outOf": "out of {{count}} player(s)",
+      "pts": "pts",
+      "rank1": "🏆 Leaderboard champion!",
+      "rankTop10": "Top 10 — excellent!",
+      "rankOther": "Keep it up!"
+    },
     "trend": {
       "up": "↑ +{{n}} this week",
       "down": "↓ {{n}} this week",

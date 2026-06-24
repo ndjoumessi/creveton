@@ -46,7 +46,7 @@ describe('leaderboardService.getLeaderboard', () => {
     redis.zrevrank.mockResolvedValue(141); // moi 142e
     redis.zscore.mockResolvedValue('8450');
     userModel.findManyByIds.mockResolvedValue([
-      { id: 'userA', name: 'Junior K.', level: 5, ville: 'Douala' },
+      { id: 'userA', name: 'Junior K.', level: 5, ville: 'Douala', avatar_url: 'https://cdn/x.jpg' },
       { id: 'userB', name: 'Awa M.', level: 4, ville: 'Yaoundé' },
     ]);
     userModel.findById.mockResolvedValue({ level: 3 });
@@ -59,8 +59,8 @@ describe('leaderboardService.getLeaderboard', () => {
     });
 
     expect(res.data).toEqual([
-      { rank: 1, user_id: 'userA', name: 'Junior K.', level: 5, score: 41200, ville: 'Douala' },
-      { rank: 2, user_id: 'userB', name: 'Awa M.', level: 4, score: 38900, ville: 'Yaoundé' },
+      { rank: 1, user_id: 'userA', name: 'Junior K.', level: 5, score: 41200, ville: 'Douala', avatar_url: 'https://cdn/x.jpg' },
+      { rank: 2, user_id: 'userB', name: 'Awa M.', level: 4, score: 38900, ville: 'Yaoundé', avatar_url: null },
     ]);
     expect(res.me).toEqual({ rank: 142, score: 8450, level: 3 });
     expect(res.page).toEqual({ limit: 2, next_cursor: '2', has_more: true });
