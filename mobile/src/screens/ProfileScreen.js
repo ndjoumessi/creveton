@@ -14,6 +14,8 @@ import {
   Share,
   ActivityIndicator,
   ScrollView,
+  BackHandler,
+  useWindowDimensions,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
@@ -31,6 +33,8 @@ import { SEXES } from '../constants/config';
 import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
 import { formatFcfa, levelProgress, avatarUri } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const NOTIF_PREF_KEY = 'crv.notif_enabled';
 
@@ -153,7 +157,11 @@ export default function ProfileScreen() {
     AsyncStorage.setItem(NOTIF_PREF_KEY, val ? 'true' : 'false');
   }, []);
 
-  // Édition du profil (bottom sheet)
+  // Édition du profil — overlay in-screen (PAS un <Modal> RN). Sur Android, le
+  // <Modal> vit dans une fenêtre séparée qui rejoue son animation « slide » quand
+  // le clavier redimensionne la fenêtre (adjustResize) → effet « la modale se
+  // ré-ouvre en boucle », surtout sous Expo Go où softwareKeyboardLayoutMode:"pan"
+  // est ignoré. Un overlay dans la même fenêtre + ScrollView supprime le souci.
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nom, setNom] = useState('');
@@ -161,6 +169,8 @@ export default function ProfileScreen() {
   const [age, setAge] = useState('');
   const [sexe, setSexe] = useState('N');
   const [lang, setLang] = useState('fr');
+  const { height: windowHeight } = useWindowDimensions();
+  const editAnim = useRef(new Animated.Value(0)).current;
 
   const openEdit = useCallback(() => {
     hapticLight();
@@ -170,7 +180,28 @@ export default function ProfileScreen() {
     setSexe(user?.sexe || 'N');
     setLang(user?.lang || 'fr');
     setEditOpen(true);
-  }, [user]);
+    editAnim.setValue(0);
+    Animated.timing(editAnim, { toValue: 1, duration: motion.enter, useNativeDriver: true }).start();
+  }, [user, editAnim]);
+
+  // Ferme avec l'animation de sortie, puis démonte l'overlay.
+  const closeEdit = useCallback(() => {
+    Animated.timing(editAnim, { toValue: 0, duration: motion.base, useNativeDriver: true }).start(
+      ({ finished }) => {
+        if (finished) setEditOpen(false);
+      },
+    );
+  }, [editAnim]);
+
+  // Bouton retour Android = fermer l'overlay (équivalent onRequestClose du Modal).
+  useEffect(() => {
+    if (!editOpen) return undefined;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      closeEdit();
+      return true;
+    });
+    return () => sub.remove();
+  }, [editOpen, closeEdit]);
 
   const saveEdit = useCallback(async () => {
     setSaving(true);
@@ -183,14 +214,14 @@ export default function ProfileScreen() {
       const updated = await users.update(patch);
       // Merge LOCAL sans refetch → pas de rechargement du profil à la fermeture.
       updateUser(updated || patch);
-      setEditOpen(false);
+      closeEdit();
       toast.show({ type: 'success', message: t('profile.notify.updated') });
     } catch (e) {
       toast.show({ type: 'error', message: parseApiError(e).message });
     } finally {
       setSaving(false);
     }
-  }, [nom, ville, age, sexe, lang, updateUser, toast, t]);
+  }, [nom, ville, age, sexe, lang, updateUser, toast, t, closeEdit]);
 
   // ── Photo de profil : sélection + upload ──────────────────────────────────
   const uploadAvatar = useCallback(
@@ -341,8 +372,11 @@ export default function ProfileScreen() {
   const level = progress.level;
   const badges = deriveBadges(level, t);
 
+  const editTranslateY = editAnim.interpolate({ inputRange: [0, 1], outputRange: [windowHeight, 0] });
+
   return (
-    <Screen dark={false} scroll padded={false} refreshing={refreshing} onRefresh={onRefresh}>
+    <View style={styles.flexRoot}>
+      <Screen dark={false} scroll padded={false} refreshing={refreshing} onRefresh={onRefresh}>
       {/* A. Header */}
       <View style={styles.header}>
         <Pressable
@@ -552,74 +586,80 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Bottom sheet — édition du profil.
-          ScrollView (pas de KeyboardAvoidingView) + softwareKeyboardLayoutMode:"pan"
-          → le clavier ne redimensionne pas la fenêtre, donc pas de re-render en
-          boucle ; on fait défiler le contenu sous le clavier à la place. */}
-      <Modal visible={editOpen} transparent animationType="slide" onRequestClose={() => setEditOpen(false)}>
-        <Pressable style={styles.sheetBackdrop} onPress={() => setEditOpen(false)} />
-        <View style={[styles.sheet, styles.sheetEdit]}>
-          <View style={styles.sheetHandle} />
-          <View style={styles.sheetTitleRow}>
-            <Text style={styles.sheetTitle}>{t('profile.editModal.title')}</Text>
-            <Pressable
-              onPress={() => setEditOpen(false)}
-              hitSlop={10}
-              style={styles.sheetClose}
-              accessibilityRole="button"
-              accessibilityLabel={t('profile.editModal.cancel')}
+      </Screen>
+
+      {/* Overlay d'édition — même fenêtre que l'écran (pas un <Modal> RN).
+          ScrollView (pas de KeyboardAvoidingView) → le contenu défile sous le
+          clavier sans rejouer d'animation de fenêtre. Cf. note sur openEdit. */}
+      {editOpen ? (
+        <View style={styles.editOverlay} pointerEvents="box-none">
+          <AnimatedPressable
+            style={[StyleSheet.absoluteFill, styles.sheetBackdrop, { opacity: editAnim }]}
+            onPress={closeEdit}
+          />
+          <Animated.View style={[styles.sheet, styles.sheetEdit, { transform: [{ translateY: editTranslateY }] }]}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetTitleRow}>
+              <Text style={styles.sheetTitle}>{t('profile.editModal.title')}</Text>
+              <Pressable
+                onPress={closeEdit}
+                hitSlop={10}
+                style={styles.sheetClose}
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.editModal.cancel')}
+              >
+                <Text style={styles.sheetCloseText}>✕</Text>
+              </Pressable>
+            </View>
+
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.sheetScrollContent}
+              showsVerticalScrollIndicator={false}
             >
-              <Text style={styles.sheetCloseText}>✕</Text>
-            </Pressable>
-          </View>
+              <AppInput
+                label={t('profile.editModal.name')}
+                value={nom}
+                onChangeText={setNom}
+                placeholder={t('profile.misc.defaultName')}
+              />
+              <AppInput
+                label={t('profile.editModal.city')}
+                value={ville}
+                onChangeText={setVille}
+                placeholder={t('profile.placeholder.city')}
+              />
+              <AppInput
+                label={t('profile.editModal.age')}
+                value={age}
+                onChangeText={setAge}
+                keyboardType="number-pad"
+                placeholder={t('profile.placeholder.age')}
+              />
 
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.sheetScrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <AppInput
-              label={t('profile.editModal.name')}
-              value={nom}
-              onChangeText={setNom}
-              placeholder={t('profile.misc.defaultName')}
-            />
-            <AppInput
-              label={t('profile.editModal.city')}
-              value={ville}
-              onChangeText={setVille}
-              placeholder={t('profile.placeholder.city')}
-            />
-            <AppInput
-              label={t('profile.editModal.age')}
-              value={age}
-              onChangeText={setAge}
-              keyboardType="number-pad"
-              placeholder={t('profile.placeholder.age')}
-            />
+              <Text style={styles.fieldLabel}>{t('profile.editModal.gender')}</Text>
+              <View style={styles.pillRow}>
+                {SEXES.map((s) => {
+                  const sel = s.key === sexe;
+                  return (
+                    <Pressable key={s.key} onPress={() => setSexe(s.key)} style={[styles.pill, sel && styles.pillActive]}>
+                      <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                        {t(`profile.misc.gender.${s.key}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
 
-            <Text style={styles.fieldLabel}>{t('profile.editModal.gender')}</Text>
-            <View style={styles.pillRow}>
-              {SEXES.map((s) => {
-                const sel = s.key === sexe;
-                return (
-                  <Pressable key={s.key} onPress={() => setSexe(s.key)} style={[styles.pill, sel && styles.pillActive]}>
-                    <Text style={[styles.pillText, sel && styles.pillTextActive]}>
-                      {t(`profile.misc.gender.${s.key}`)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <View style={styles.sheetActions}>
-              <AppButton variant="primary" title={t('profile.editModal.save')} fullWidth loading={saving} onPress={saveEdit} />
-              <AppButton variant="ghost" title={t('profile.editModal.cancel')} fullWidth onPress={() => setEditOpen(false)} />
-            </View>
-          </ScrollView>
+              <View style={styles.sheetActions}>
+                <AppButton variant="primary" title={t('profile.editModal.save')} fullWidth loading={saving} onPress={saveEdit} />
+                <AppButton variant="ghost" title={t('profile.editModal.cancel')} fullWidth onPress={closeEdit} />
+              </View>
+            </ScrollView>
+          </Animated.View>
         </View>
-      </Modal>
-    </Screen>
+      ) : null}
+    </View>
   );
 }
 
@@ -800,6 +840,9 @@ const styles = StyleSheet.create({
   logout: { marginTop: spacing.sm },
 
   // Bottom sheets
+  flexRoot: { flex: 1 },
+  // Overlay d'édition : couvre l'écran, ancre la feuille en bas.
+  editOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end' },
   sheetBackdrop: { flex: 1, backgroundColor: colors.overlay },
   sheet: {
     backgroundColor: colors.white,
