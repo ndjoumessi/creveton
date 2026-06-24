@@ -558,7 +558,7 @@ function DrawerBody({ user, tab, setTab, onMessage, onSuspend, onReset }) {
     <>
       <div className="u-drawer-head">
         <div className="u-dh-top">
-          <Avatar name={user.name} size="lg" />
+          <Avatar name={user.name} src={detail?.avatar_url ?? user.avatar_url} size="lg" />
           <div className="u-dh-id">
             <div className="u-dh-name">{user.name}</div>
             <div className="u-dh-badges"><RoleBadge role={user.role} /><StatusDot status={user.status} /></div>
@@ -746,7 +746,7 @@ export default function Utilisateurs() {
         const u = row.original;
         return (
           <div className="u-cell-player">
-            <Avatar name={u.name} size="sm" />
+            <Avatar name={u.name} src={u.avatar_url} size="sm" />
             <div className="u-id">
               <span className="u-id-line">
                 <span className="cell-strong u-id-name">{u.name}</span>

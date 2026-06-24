@@ -12,7 +12,7 @@ const db = require('../config/database');
 // Colonnes sérialisées vers le client (objet User abrégé §15) — jamais le hash.
 const PUBLIC_COLUMNS = `
   id, name, email, phone, phone_verified, ville, age, sexe, lang, timezone,
-  total_xp, level, role, wallet_balance, referral_code,
+  total_xp, level, role, wallet_balance, referral_code, avatar_url,
   created_at, last_active_at
 `;
 
