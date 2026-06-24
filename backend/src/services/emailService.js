@@ -41,6 +41,30 @@ function getClient() {
   return client;
 }
 
+/**
+ * Échappe une valeur destinée à du HTML (texte OU attribut). Les noms d'invité,
+ * d'invitant et de parrain sont saisis par l'utilisateur : sans échappement, un
+ * lien ou une balise injecté(e) passerait dans l'email (phishing / HTML injection).
+ */
+function esc(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * URL sûre pour un attribut href : on n'autorise que http(s) (sinon `#`), puis on
+ * échappe pour empêcher toute évasion d'attribut. Les URLs sont construites côté
+ * serveur (base + token/encodeURIComponent), mais on durcit par défense en profondeur.
+ */
+function safeUrl(url) {
+  const s = String(url ?? '');
+  return /^https?:\/\//i.test(s) ? esc(s) : '#';
+}
+
 /** Libellé bilingue du rôle pour l'email d'invitation. */
 function roleLabel(role, lang) {
   const map = {
@@ -55,11 +79,14 @@ function roleLabel(role, lang) {
  * @param {{ preheader, headingHtml, bodyHtml, ctaLabel, ctaUrl, footerHtml }} parts
  */
 function layout({ preheader, bodyHtml, ctaLabel, ctaUrl, footerHtml }) {
+  // URL validée (http/https sinon « # ») et échappée — réutilisée dans l'attribut
+  // href ET dans l'affichage texte, pour ne jamais montrer un schéma douteux.
+  const safeCtaUrl = safeUrl(ctaUrl);
   return `<!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background-color:${COLORS.cream};">
-  <span style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader || ''}</span>
+  <span style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader || '')}</span>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.cream};padding:24px 0;">
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid ${COLORS.border};">
@@ -73,10 +100,10 @@ function layout({ preheader, bodyHtml, ctaLabel, ctaUrl, footerHtml }) {
             ${bodyHtml}
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 8px;">
               <tr><td style="border-radius:8px;background-color:${COLORS.gold};">
-                <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:14px 28px;font-family:${FONT};font-size:15px;font-weight:700;color:${COLORS.green900};text-decoration:none;border-radius:8px;">${ctaLabel}</a>
+                <a href="${safeCtaUrl}" target="_blank" style="display:inline-block;padding:14px 28px;font-family:${FONT};font-size:15px;font-weight:700;color:${COLORS.green900};text-decoration:none;border-radius:8px;">${esc(ctaLabel)}</a>
               </td></tr>
             </table>
-            <p style="font-family:${FONT};font-size:12px;color:${COLORS.muted};margin:16px 0 0;word-break:break-all;">${ctaUrl}</p>
+            <p style="font-family:${FONT};font-size:12px;color:${COLORS.muted};margin:16px 0 0;word-break:break-all;">${safeCtaUrl}</p>
           </td>
         </tr>
         <tr>
@@ -124,9 +151,13 @@ async function send({ to, subject, html }) {
  */
 async function sendTeamInvitation({ to, inviteeName, inviterName, role, inviteUrl, lang = 'fr' }) {
   const isFr = lang !== 'en';
-  const rl = roleLabel(role, isFr ? 'fr' : 'en');
-  const inviter = inviterName || 'Creveton';
-  const hello = inviteeName ? `${isFr ? 'Bonjour' : 'Hi'} ${inviteeName},` : `${isFr ? 'Bonjour,' : 'Hello,'}`;
+  // Valeurs brutes (sujet en texte simple, preheader échappé par layout) vs
+  // échappées (injectées telles quelles dans le corps HTML).
+  const roleName = roleLabel(role, isFr ? 'fr' : 'en');
+  const rlEsc = esc(roleName);
+  const inviterEsc = esc(inviterName || 'Creveton');
+  const inviteeEsc = esc(inviteeName || '');
+  const hello = inviteeName ? `${isFr ? 'Bonjour' : 'Hi'} ${inviteeEsc},` : `${isFr ? 'Bonjour,' : 'Hello,'}`;
 
   const subject = isFr
     ? "Vous êtes invité(e) à rejoindre l'équipe Creveton"
@@ -134,10 +165,10 @@ async function sendTeamInvitation({ to, inviteeName, inviterName, role, inviteUr
 
   const bodyHtml = isFr
     ? `<p style="margin:0 0 12px;">${hello}</p>
-       <p style="margin:0 0 12px;"><strong>${inviter}</strong> vous invite à rejoindre l'équipe Creveton en tant que <strong style="color:${COLORS.green900};">${rl}</strong>.</p>
+       <p style="margin:0 0 12px;"><strong>${inviterEsc}</strong> vous invite à rejoindre l'équipe Creveton en tant que <strong style="color:${COLORS.green900};">${rlEsc}</strong>.</p>
        <p style="margin:0;">Cliquez sur le bouton ci-dessous pour activer votre compte et définir votre mot de passe.</p>`
     : `<p style="margin:0 0 12px;">${hello}</p>
-       <p style="margin:0 0 12px;"><strong>${inviter}</strong> invites you to join the Creveton team as <strong style="color:${COLORS.green900};">${rl}</strong>.</p>
+       <p style="margin:0 0 12px;"><strong>${inviterEsc}</strong> invites you to join the Creveton team as <strong style="color:${COLORS.green900};">${rlEsc}</strong>.</p>
        <p style="margin:0;">Click the button below to activate your account and set your password.</p>`;
 
   const footerHtml = isFr
@@ -145,7 +176,7 @@ async function sendTeamInvitation({ to, inviteeName, inviterName, role, inviteUr
     : 'Creveton · This link expires in 72h';
 
   const html = layout({
-    preheader: isFr ? `Rejoignez l'équipe Creveton (${rl})` : `Join the Creveton team (${rl})`,
+    preheader: isFr ? `Rejoignez l'équipe Creveton (${roleName})` : `Join the Creveton team (${roleName})`,
     bodyHtml,
     ctaLabel: isFr ? 'Activer mon compte' : 'Activate my account',
     ctaUrl: inviteUrl,
@@ -162,27 +193,30 @@ async function sendTeamInvitation({ to, inviteeName, inviterName, role, inviteUr
  */
 async function sendPlayerReferral({ to, referrerName, referralCode, lang = 'fr' }) {
   const isFr = lang !== 'en';
-  const referrer = referrerName || (isFr ? 'Un ami' : 'A friend');
+  // Brut pour le sujet (texte) + le preheader (layout l'échappe) ; échappé pour le corps HTML.
+  const referrerRaw = referrerName || (isFr ? 'Un ami' : 'A friend');
+  const referrerEsc = esc(referrerRaw);
+  const referralCodeEsc = esc(referralCode);
   const referralUrl = `${env.email.appDeepLinkUrl}?ref=${encodeURIComponent(referralCode)}`;
 
   const subject = isFr
-    ? `${referrer} t'invite à jouer sur Creveton 🎯`
-    : `${referrer} invites you to play on Creveton 🎯`;
+    ? `${referrerRaw} t'invite à jouer sur Creveton 🎯`
+    : `${referrerRaw} invites you to play on Creveton 🎯`;
 
   const bodyHtml = isFr
-    ? `<p style="margin:0 0 12px;">Ton ami <strong>${referrer}</strong> t'invite à tester tes connaissances sur <strong style="color:${COLORS.green900};">Creveton</strong> 🎯</p>
+    ? `<p style="margin:0 0 12px;">Ton ami <strong>${referrerEsc}</strong> t'invite à tester tes connaissances sur <strong style="color:${COLORS.green900};">Creveton</strong> 🎯</p>
        <p style="margin:0 0 12px;">Quiz, tournois, classements : affronte le Cameroun entier et grimpe les niveaux !</p>
-       <p style="margin:0;">Ton code de parrainage : <strong style="color:${COLORS.gold};letter-spacing:1px;">${referralCode}</strong></p>`
-    : `<p style="margin:0 0 12px;">Your friend <strong>${referrer}</strong> invites you to test your knowledge on <strong style="color:${COLORS.green900};">Creveton</strong> 🎯</p>
+       <p style="margin:0;">Ton code de parrainage : <strong style="color:${COLORS.gold};letter-spacing:1px;">${referralCodeEsc}</strong></p>`
+    : `<p style="margin:0 0 12px;">Your friend <strong>${referrerEsc}</strong> invites you to test your knowledge on <strong style="color:${COLORS.green900};">Creveton</strong> 🎯</p>
        <p style="margin:0 0 12px;">Quizzes, tournaments, leaderboards: take on all of Cameroon and level up!</p>
-       <p style="margin:0;">Your referral code: <strong style="color:${COLORS.gold};letter-spacing:1px;">${referralCode}</strong></p>`;
+       <p style="margin:0;">Your referral code: <strong style="color:${COLORS.gold};letter-spacing:1px;">${referralCodeEsc}</strong></p>`;
 
   const footerHtml = isFr
     ? 'Creveton · Bonus de bienvenue : un boost d\'XP à ta première partie ⚡'
     : 'Creveton · Welcome bonus: an XP boost on your first game ⚡';
 
   const html = layout({
-    preheader: isFr ? `${referrer} t'invite à jouer 🎯` : `${referrer} invites you to play 🎯`,
+    preheader: isFr ? `${referrerRaw} t'invite à jouer 🎯` : `${referrerRaw} invites you to play 🎯`,
     bodyHtml,
     ctaLabel: isFr ? 'Rejoindre Creveton' : 'Join Creveton',
     ctaUrl: referralUrl,
