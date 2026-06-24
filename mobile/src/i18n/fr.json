@@ -397,7 +397,8 @@
     },
     "rows": {
       "notifications": "Notifications",
-      "changePassword": "Changer le mot de passe"
+      "changePassword": "Changer le mot de passe",
+      "appearance": "Apparence"
     },
     "referral": {
       "label": "Code parrainage",

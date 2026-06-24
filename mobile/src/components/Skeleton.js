@@ -4,8 +4,11 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import { radius as R } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 export default function Skeleton({ width = '100%', height = 16, radius = R.sm, dark = false, style }) {
+  const { isDark } = useTheme();
+  const onDark = dark || isDark;
   const pulse = useRef(new Animated.Value(0.4)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -22,7 +25,7 @@ export default function Skeleton({ width = '100%', height = 16, radius = R.sm, d
     <Animated.View
       style={[
         styles.base,
-        dark ? styles.dark : styles.light,
+        onDark ? styles.dark : styles.light,
         { width, height, borderRadius: radius, opacity: pulse },
         style,
       ]}

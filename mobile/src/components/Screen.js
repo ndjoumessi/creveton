@@ -10,7 +10,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 export default function Screen({
   children,
@@ -23,6 +24,7 @@ export default function Screen({
   style,
   contentStyle,
 }) {
+  const { colors, isDark } = useTheme();
   const bg = dark ? colors.green900 : colors.cream;
   const Content = scroll ? ScrollView : View;
   const contentProps = scroll
@@ -43,7 +45,7 @@ export default function Screen({
 
   return (
     <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: bg }, style]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={dark || isDark ? 'light-content' : 'dark-content'} />
       <Content {...contentProps}>{children}</Content>
     </SafeAreaView>
   );

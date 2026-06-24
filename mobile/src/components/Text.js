@@ -1,12 +1,45 @@
 // Composants texte typés à la charte.
 // Outfit → Title/Heading (titres, scores). Space Grotesk → Body/Label (corps).
-// Couleurs par défaut contrastées (≥ 4.5:1 sur fond clair).
+// Couleurs par défaut contrastées (≥ 4.5:1), réactives au mode sombre via useTheme.
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text as RNText, StyleSheet } from 'react-native';
-import { colors, fonts, fontSizes } from '../constants/theme';
+import { fonts, fontSizes } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
+
+function makeStyles(colors) {
+  return StyleSheet.create({
+    title: {
+      fontFamily: fonts.titleBold,
+      fontSize: fontSizes.xxl,
+      color: colors.textDark,
+    },
+    heading: {
+      fontFamily: fonts.titleSemiBold,
+      fontSize: fontSizes.lg,
+      color: colors.textDark,
+    },
+    body: {
+      fontFamily: fonts.bodyRegular,
+      fontSize: fontSizes.base,
+      color: colors.textBody,
+    },
+    label: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: fontSizes.sm,
+      color: colors.textMuted,
+    },
+    muted: { color: colors.textMuted },
+  });
+}
+
+function useTextStyles() {
+  const { colors } = useTheme();
+  return useMemo(() => makeStyles(colors), [colors]);
+}
 
 export function Title({ style, children, color, ...props }) {
+  const styles = useTextStyles();
   return (
     <RNText style={[styles.title, color && { color }, style]} {...props}>
       {children}
@@ -15,6 +48,7 @@ export function Title({ style, children, color, ...props }) {
 }
 
 export function Heading({ style, children, color, ...props }) {
+  const styles = useTextStyles();
   return (
     <RNText style={[styles.heading, color && { color }, style]} {...props}>
       {children}
@@ -23,6 +57,7 @@ export function Heading({ style, children, color, ...props }) {
 }
 
 export function Body({ style, children, color, muted, ...props }) {
+  const styles = useTextStyles();
   return (
     <RNText
       style={[styles.body, muted && styles.muted, color && { color }, style]}
@@ -34,35 +69,12 @@ export function Body({ style, children, color, muted, ...props }) {
 }
 
 export function Label({ style, children, color, ...props }) {
+  const styles = useTextStyles();
   return (
     <RNText style={[styles.label, color && { color }, style]} {...props}>
       {children}
     </RNText>
   );
 }
-
-const styles = StyleSheet.create({
-  title: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xxl,
-    color: colors.textDark,
-  },
-  heading: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.lg,
-    color: colors.textDark,
-  },
-  body: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.base,
-    color: colors.textBody,
-  },
-  label: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.sm,
-    color: colors.textMuted,
-  },
-  muted: { color: colors.textMuted },
-});
 
 export default { Title, Heading, Body, Label };

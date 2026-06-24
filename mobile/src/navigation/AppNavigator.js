@@ -7,31 +7,37 @@ import MainStack from './MainStack';
 import { navigationRef } from './navigationRef';
 import { LoadingScreen } from '../components';
 import { useAuthStore } from '../store/authStore';
-import { colors } from '../constants/theme';
+import { useThemeStore } from '../store/themeStore';
+import { colors, darkColors } from '../constants/theme';
 
-// Thème de navigation aligné sur la charte (fond crème).
+// Thème de navigation aligné sur la charte, réactif au mode sombre.
 // IMPORTANT : on part de DefaultTheme pour hériter de sa clé `fonts`
 // (regular/medium/bold/heavy). React Navigation v7 et les en-têtes
 // native-stack lisent `theme.fonts.regular` ; un thème sans `fonts`
 // provoque « Cannot read property 'regular' of undefined ».
-const navTheme = {
-  ...DefaultTheme,
-  dark: false,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: colors.gold500,
-    background: colors.cream,
-    card: colors.green900,
-    text: colors.textDark,
-    border: colors.border,
-    notification: colors.red400,
-  },
-};
+function buildNavTheme(isDark) {
+  const c = isDark ? darkColors : colors;
+  return {
+    ...DefaultTheme,
+    dark: isDark,
+    colors: {
+      ...DefaultTheme.colors,
+      primary: colors.gold500,
+      background: isDark ? darkColors.background : colors.cream,
+      card: isDark ? darkColors.backgroundSecondary : colors.green900,
+      text: c.textDark,
+      border: c.border,
+      notification: colors.red400,
+    },
+  };
+}
 
 export default function AppNavigator() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
   const bootstrap = useAuthStore((s) => s.bootstrap);
+  const isDark = useThemeStore((s) => s.isDark);
+  const navTheme = buildNavTheme(isDark);
 
   useEffect(() => {
     bootstrap();

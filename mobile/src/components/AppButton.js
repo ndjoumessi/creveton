@@ -2,7 +2,7 @@
 // Feedback tactile < 120ms (scale spring au press), état loading (spinner inline).
 // L'or est réservé au variant primary (CTA).
 
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import {
   Animated,
   Pressable,
@@ -11,7 +11,8 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { hapticLight } from '../utils/haptics';
 
 const SIZES = {
@@ -35,6 +36,8 @@ export default function AppButton({
   textStyle,
 }) {
   const scale = useRef(new Animated.Value(1)).current;
+  const { colors, isDark } = useTheme();
+  const VARIANTS = useMemo(() => makeVariants(colors, isDark), [colors, isDark]);
   const isDisabled = disabled || loading;
   const v = VARIANTS[variant] || VARIANTS.primary;
   const s = SIZES[size] || SIZES.md;
@@ -108,22 +111,24 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.45 },
 });
 
-const VARIANTS = {
+// En sombre, `ghost` (contour vert) passe au vert clair (green300) pour rester
+// lisible sur surface sombre ; `secondary` garde un libellé clair stable.
+const makeVariants = (colors, isDark) => ({
   primary: {
     container: { backgroundColor: colors.gold500 },
     text: { color: colors.green900 },
   },
   secondary: {
     container: { backgroundColor: colors.green500 },
-    text: { color: colors.cream },
+    text: { color: colors.textOnDark },
   },
   ghost: {
     container: {
       backgroundColor: 'transparent',
       borderWidth: 1.5,
-      borderColor: colors.green700,
+      borderColor: isDark ? colors.green300 : colors.green700,
     },
-    text: { color: colors.green700 },
+    text: { color: isDark ? colors.green300 : colors.green700 },
   },
   danger: {
     container: {
@@ -147,4 +152,4 @@ const VARIANTS = {
     },
     text: { color: colors.gold500 },
   },
-};
+});

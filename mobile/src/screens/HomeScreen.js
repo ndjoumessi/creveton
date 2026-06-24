@@ -1,7 +1,7 @@
 // HomeScreen — tableau de bord : « Jouer », tournois ouverts, podium, stats
 // réelles (dérivées de l'historique des parties) et dernières parties.
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,7 @@ import {
   spacing,
   shadow,
 } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import {
   formatDateTime,
   themeLabel,
@@ -72,14 +73,16 @@ function medalFor(rank) {
 const fmtNum = (n) => Number(n || 0).toLocaleString('fr-FR');
 
 // Couleur du taux de réussite : vert > 70 %, or 50–70 %, rouge < 50 %.
-function rateColor(pct) {
-  if (pct === null || pct === undefined) return colors.green900;
+function rateColor(pct, colors) {
+  if (pct === null || pct === undefined) return colors.textDark;
   if (pct > 70) return colors.green500;
   if (pct >= 50) return colors.gold500;
   return colors.red400;
 }
 
 function StatCard({ icon, iconBg, value, valueColor, label, sub }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.statCard}>
       <View style={[styles.statIcon, { backgroundColor: iconBg }]}>
@@ -101,6 +104,8 @@ function StatCard({ icon, iconBg, value, valueColor, label, sub }) {
 }
 
 function StatCardSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.statCard}>
       <Skeleton width={44} height={44} radius={radius.md} />
@@ -111,6 +116,8 @@ function StatCardSkeleton() {
 }
 
 function LastGameRow({ game }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const total = Number(game.total_questions) || 0;
   const rate = total > 0 ? Math.round((Number(game.correct_count) || 0) / total * 100) : null;
   const tone = rate === null ? null : rate >= 70 ? 'good' : rate < 50 ? 'bad' : null;
@@ -138,6 +145,8 @@ function LastGameRow({ game }) {
 }
 
 function StatusPill({ tournament, t }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const full =
     tournament.max_players &&
     tournament.registered_players >= tournament.max_players;
@@ -163,6 +172,8 @@ function StatusPill({ tournament, t }) {
 
 export default function HomeScreen({ navigation }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const loadLeaderboard = useLeaderboardStore((s) => s.load);
@@ -336,7 +347,7 @@ export default function HomeScreen({ navigation }) {
                   icon="📈"
                   iconBg={ICON_BG.rate}
                   value={stats.totalGames > 0 ? `${stats.successRate}%` : '—'}
-                  valueColor={stats.totalGames > 0 ? rateColor(stats.successRate) : colors.green900}
+                  valueColor={stats.totalGames > 0 ? rateColor(stats.successRate, colors) : colors.textDark}
                   label={t('home.myStats.successRate')}
                 />
                 <StatCard
@@ -505,7 +516,7 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.green900 },
   scroll: { backgroundColor: colors.cream },
 
@@ -525,7 +536,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.xl,
-    color: colors.white,
+    color: colors.textOnDark,
   },
   heroSubtitle: {
     fontFamily: fonts.bodyMedium,

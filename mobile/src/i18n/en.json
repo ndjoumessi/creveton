@@ -397,7 +397,8 @@
     },
     "rows": {
       "notifications": "Notifications",
-      "changePassword": "Change password"
+      "changePassword": "Change password",
+      "appearance": "Appearance"
     },
     "referral": {
       "label": "Referral code",

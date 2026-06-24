@@ -2,7 +2,7 @@
 // parties (GET /users/me/history) : KPI, courbe d'évolution du score, performance
 // par thème, historique. Onglet « Classement » : ma position, podium, liste (API §7/§10).
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -26,6 +26,7 @@ import {
   shadow,
   motion,
 } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { themeEmoji, themeLabel, levelLabel, timeAgo, levelProgress, avatarUri } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
@@ -42,11 +43,11 @@ const WIN_W = Dimensions.get('window').width;
 const CHART_W = WIN_W - spacing.lg * 2 - spacing.md * 2;
 const CHART_H = 140;
 
-function rateColor(pct) {
-  if (pct === null || pct === undefined) return colors.green900;
-  if (pct >= 70) return colors.green500; // vert
-  if (pct >= 40) return colors.gold500; // ambre (≈ orange)
-  return colors.red400; // rouge
+function rateColor(pct, c = colors) {
+  if (pct === null || pct === undefined) return c.textDark;
+  if (pct >= 70) return c.green500; // vert
+  if (pct >= 40) return c.gold500; // ambre (≈ orange)
+  return c.red400; // rouge
 }
 
 // Accent (bordure gauche historique) par mode de jeu.
@@ -64,6 +65,8 @@ const THEME_EMOJI = {
 // ── Courbe d'évolution du score (SVG, ligne + aire + points) ───────────────
 function ScoreChart({ data }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   if (!data || data.length === 0) {
     return (
       <View style={styles.chartEmpty}>
@@ -178,6 +181,8 @@ function ScoreChart({ data }) {
 
 // ── Barre de performance par thème (green500, animée au mount) ─────────────
 function ThemeBar({ pct }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const fill = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(fill, {
@@ -196,6 +201,8 @@ function ThemeBar({ pct }) {
 
 // ── Barre d'XP du header ───────────────────────────────────────────────────
 function XpBar({ pct }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const fill = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(fill, {
@@ -214,6 +221,8 @@ function XpBar({ pct }) {
 
 export default function StatsScreen({ navigation }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
 
@@ -324,6 +333,8 @@ export default function StatsScreen({ navigation }) {
 // ── Onglet Mes stats ───────────────────────────────────────────────────────
 function StatsTab({ stats, history, loading, onPlay }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   if (loading) {
     return (
       <View style={styles.kpiGrid}>
@@ -365,7 +376,7 @@ function StatsTab({ stats, history, loading, onPlay }) {
       icon: '📈',
       bg: '#dbeafe',
       value: `${stats.successRate}%`,
-      color: rateColor(stats.successRate),
+      color: rateColor(stats.successRate, colors),
       label: t('stats.kpi.successRate'),
     },
     {
@@ -452,6 +463,8 @@ function StatsTab({ stats, history, loading, onPlay }) {
 
 function HistoryRow({ game }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   // L'historique (toView) expose `question_count` ; on tolère `total_questions`.
   const total = Number(game.question_count ?? game.total_questions) || 0;
   const correct = Number(game.correct_count) || 0;
@@ -517,6 +530,8 @@ function HistoryRow({ game }) {
 // ── Onglet Classement ──────────────────────────────────────────────────────
 function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   if (loading && data.length === 0) {
     return (
       <View style={styles.card}>
@@ -636,7 +651,7 @@ function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay })
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   // Header
   header: {
     backgroundColor: colors.green900,
@@ -649,7 +664,7 @@ const styles = StyleSheet.create({
   headerName: {
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.xl,
-    color: colors.cream,
+    color: colors.textOnDark,
     marginBottom: 2,
   },
   xpRow: { marginTop: spacing.lg, gap: spacing.xs },

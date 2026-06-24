@@ -2,7 +2,7 @@
 // rangée de stats, réglages sectionnés (compte / préférences / sécurité),
 // badges, wallet (flag), déconnexion (API §10/§11).
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -31,7 +31,8 @@ import { wallet, users } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { setLanguage } from '../i18n';
 import { SEXES } from '../constants/config';
-import { colors, fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { formatFcfa, levelProgress, avatarUri } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
@@ -59,6 +60,8 @@ function deriveBadges(level, t) {
 }
 
 function XpBar({ pct, height = 4 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const fill = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(fill, { toValue: pct, duration: motion.enter, useNativeDriver: false }).start();
@@ -73,6 +76,8 @@ function XpBar({ pct, height = 4 }) {
 
 /** Stat compacte de la rangée du header. */
 function ProfStat({ value, label, divider }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.profStat}>
       {divider ? <View style={styles.profDivider} /> : null}
@@ -83,6 +88,8 @@ function ProfStat({ value, label, divider }) {
 }
 
 function Section({ title, children }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>{title}</Text>
@@ -93,6 +100,8 @@ function Section({ title, children }) {
 
 /** Ligne de réglage : pastille icône + libellé + (valeur | droite) + chevron. */
 function SettingRow({ icon, iconBg, label, value, valueMuted, right, onPress, isLast }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const content = (
     <View style={[styles.row, !isLast && styles.rowDivider]}>
       <View style={[styles.rowIcon, { backgroundColor: iconBg || colors.cream }]}>
@@ -121,6 +130,8 @@ function SettingRow({ icon, iconBg, label, value, valueMuted, right, onPress, is
 
 export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
+  const { colors, isDark, toggleTheme } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const toast = useToast();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -470,6 +481,23 @@ export default function ProfileScreen() {
             }
           />
           <SettingRow
+            icon={isDark ? '🌙' : '☀️'}
+            iconBg="#e0e7ff"
+            label={t('profile.rows.appearance')}
+            right={
+              <View style={styles.themeToggle}>
+                <Text style={styles.themeToggleIcon}>☀️</Text>
+                <Switch
+                  value={isDark}
+                  onValueChange={toggleTheme}
+                  trackColor={{ false: colors.borderInput, true: colors.green700 }}
+                  thumbColor={isDark ? colors.gold500 : '#ffffff'}
+                />
+                <Text style={styles.themeToggleIcon}>🌙</Text>
+              </View>
+            }
+          />
+          <SettingRow
             icon="🔔"
             iconBg="#fef9c3"
             label={t('profile.rows.notifications')}
@@ -477,8 +505,8 @@ export default function ProfileScreen() {
               <Switch
                 value={notifEnabled}
                 onValueChange={toggleNotif}
-                trackColor={{ false: '#d1d5db', true: colors.green500 }}
-                thumbColor={colors.white}
+                trackColor={{ false: colors.borderInput, true: colors.green500 }}
+                thumbColor="#ffffff"
               />
             }
           />
@@ -691,7 +719,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   // A. Header
   header: {
     backgroundColor: colors.green900,
@@ -726,7 +754,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   cameraBadgeIcon: { fontSize: 14 },
-  headerName: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.white, marginTop: spacing.xs },
+  headerName: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.textOnDark, marginTop: spacing.xs },
   headerLevel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.gold400 },
   headerXpWrap: { width: '100%', paddingHorizontal: spacing.xl, marginTop: spacing.md },
   xpTrack: { width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', overflow: 'hidden' },
@@ -751,7 +779,7 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
-  profStatValue: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.white },
+  profStatValue: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textOnDark },
   profStatLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: 'rgba(255,255,255,0.6)' },
 
   body: { padding: spacing.lg },
@@ -802,7 +830,9 @@ const styles = StyleSheet.create({
   },
   langPillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
   langPillText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs, color: colors.textBody },
-  langPillTextActive: { color: colors.white },
+  langPillTextActive: { color: colors.textOnDark },
+  themeToggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  themeToggleIcon: { fontSize: 13 },
 
   // Code parrainage
   referralRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },

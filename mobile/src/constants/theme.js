@@ -60,6 +60,50 @@ export const colors = {
   goldVeilBorder: 'rgba(212, 160, 23, 0.45)',
 };
 
+// ════════════════════════════════════════════════════════════════════════
+// Palette SOMBRE — mêmes CLÉS que `colors` (sinon styles → undefined).
+// On part de `...colors` puis on inverse la sémantique des surfaces/textes :
+//   blanc → surface sombre, cream → fond quasi-noir, textes clairs, etc.
+// L'or et le vert profond restent (fonctionnent en sombre). Les clés
+// `background*` servent au thème de navigation (NavigationContainer).
+// ════════════════════════════════════════════════════════════════════════
+export const darkColors = {
+  ...colors,
+
+  // Fonds (clés dédiées navigation + surfaces élevées)
+  background: '#0a0f0d', // quasi-noir teinté vert (page)
+  backgroundSecondary: '#111a14', // cartes
+  backgroundTertiary: '#1a2b1f', // surfaces élevées
+  cardOnDark: '#1a2b1f',
+
+  // Inversions de surface (ce qui était clair devient sombre)
+  white: '#1a2b1f', // « cartes » blanches → surface sombre
+  cream: '#0a0f0d', // fond de page
+  surface: '#1a2b1f',
+  surfaceCream: '#111a14',
+
+  // Textes : clairs sur sombre (mêmes clés que la palette claire)
+  textDark: '#f0faf4', // blanc cassé verdâtre
+  textBody: '#c5dccf',
+  textMuted: '#9dbfaa',
+  textFaint: '#6b8f78',
+
+  // Bordures & séparateurs
+  border: '#2a3d30',
+  borderInput: '#2a3d30',
+  divider: 'rgba(240, 250, 244, 0.08)',
+
+  // États (fonds sombres)
+  successBg: '#0d2318',
+  errorBg: '#2d1515',
+
+  // Voile sombre plus opaque
+  overlay: 'rgba(0, 0, 0, 0.72)',
+};
+
+// Alias clair (symétrie avec darkColors) — `colors` reste la source.
+export const lightColors = colors;
+
 // Dégradés par thème (fond de cartes thème — fonds, jamais texte).
 export const themeGradients = {
   geographie: ['#1e3a5f', '#2d5a8e'], // bleu

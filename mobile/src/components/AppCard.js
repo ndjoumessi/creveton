@@ -1,9 +1,10 @@
 // AppCard — surface arrondie. tone: light | dark | cream. padding: none|sm|md|lg.
 // elevation: soft | card | floating. Optionnellement pressable (feedback scale).
 
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { Animated, Pressable, StyleSheet } from 'react-native';
-import { colors, radius, spacing, shadow } from '../constants/theme';
+import { radius, spacing, shadow } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 const PADS = {
   none: 0,
@@ -22,6 +23,8 @@ export default function AppCard({
   style,
 }) {
   const scale = useRef(new Animated.Value(1)).current;
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const toneStyle =
     tone === 'dark' ? styles.dark : tone === 'cream' ? styles.cream : styles.light;
   const pad = PADS[padding] ?? PADS.md;
@@ -57,13 +60,14 @@ export default function AppCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: { overflow: 'hidden' },
-  light: { backgroundColor: colors.white },
-  cream: { backgroundColor: colors.cream },
-  dark: {
-    backgroundColor: colors.cardOnDark,
-    borderWidth: 1,
-    borderColor: colors.borderOnDark,
-  },
-});
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    card: { overflow: 'hidden' },
+    light: { backgroundColor: colors.white },
+    cream: { backgroundColor: colors.cream },
+    dark: {
+      backgroundColor: colors.cardOnDark,
+      borderWidth: 1,
+      borderColor: colors.borderOnDark,
+    },
+  });
