@@ -13,6 +13,7 @@ import {
   Switch,
   Share,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
@@ -551,51 +552,71 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Bottom sheet — édition du profil */}
+      {/* Bottom sheet — édition du profil.
+          ScrollView (pas de KeyboardAvoidingView) + softwareKeyboardLayoutMode:"pan"
+          → le clavier ne redimensionne pas la fenêtre, donc pas de re-render en
+          boucle ; on fait défiler le contenu sous le clavier à la place. */}
       <Modal visible={editOpen} transparent animationType="slide" onRequestClose={() => setEditOpen(false)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setEditOpen(false)} />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, styles.sheetEdit]}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>{t('profile.editModal.title')}</Text>
-
-          <AppInput
-            label={t('profile.editModal.name')}
-            value={nom}
-            onChangeText={setNom}
-            placeholder={t('profile.misc.defaultName')}
-          />
-          <AppInput
-            label={t('profile.editModal.city')}
-            value={ville}
-            onChangeText={setVille}
-            placeholder={t('profile.placeholder.city')}
-          />
-          <AppInput
-            label={t('profile.editModal.age')}
-            value={age}
-            onChangeText={setAge}
-            keyboardType="number-pad"
-            placeholder={t('profile.placeholder.age')}
-          />
-
-          <Text style={styles.fieldLabel}>{t('profile.editModal.gender')}</Text>
-          <View style={styles.pillRow}>
-            {SEXES.map((s) => {
-              const sel = s.key === sexe;
-              return (
-                <Pressable key={s.key} onPress={() => setSexe(s.key)} style={[styles.pill, sel && styles.pillActive]}>
-                  <Text style={[styles.pillText, sel && styles.pillTextActive]}>
-                    {t(`profile.misc.gender.${s.key}`)}
-                  </Text>
-                </Pressable>
-              );
-            })}
+          <View style={styles.sheetTitleRow}>
+            <Text style={styles.sheetTitle}>{t('profile.editModal.title')}</Text>
+            <Pressable
+              onPress={() => setEditOpen(false)}
+              hitSlop={10}
+              style={styles.sheetClose}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.editModal.cancel')}
+            >
+              <Text style={styles.sheetCloseText}>✕</Text>
+            </Pressable>
           </View>
 
-          <View style={styles.sheetActions}>
-            <AppButton variant="primary" title={t('profile.editModal.save')} fullWidth loading={saving} onPress={saveEdit} />
-            <AppButton variant="ghost" title={t('profile.editModal.cancel')} fullWidth onPress={() => setEditOpen(false)} />
-          </View>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.sheetScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <AppInput
+              label={t('profile.editModal.name')}
+              value={nom}
+              onChangeText={setNom}
+              placeholder={t('profile.misc.defaultName')}
+            />
+            <AppInput
+              label={t('profile.editModal.city')}
+              value={ville}
+              onChangeText={setVille}
+              placeholder={t('profile.placeholder.city')}
+            />
+            <AppInput
+              label={t('profile.editModal.age')}
+              value={age}
+              onChangeText={setAge}
+              keyboardType="number-pad"
+              placeholder={t('profile.placeholder.age')}
+            />
+
+            <Text style={styles.fieldLabel}>{t('profile.editModal.gender')}</Text>
+            <View style={styles.pillRow}>
+              {SEXES.map((s) => {
+                const sel = s.key === sexe;
+                return (
+                  <Pressable key={s.key} onPress={() => setSexe(s.key)} style={[styles.pill, sel && styles.pillActive]}>
+                    <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                      {t(`profile.misc.gender.${s.key}`)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={styles.sheetActions}>
+              <AppButton variant="primary" title={t('profile.editModal.save')} fullWidth loading={saving} onPress={saveEdit} />
+              <AppButton variant="ghost" title={t('profile.editModal.cancel')} fullWidth onPress={() => setEditOpen(false)} />
+            </View>
+          </ScrollView>
         </View>
       </Modal>
     </Screen>
@@ -796,7 +817,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.green900, marginBottom: spacing.sm },
+  sheetTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.green900 },
+  // Sheet d'édition : borné en hauteur pour que le ScrollView défile sous le clavier.
+  sheetEdit: { maxHeight: '88%' },
+  sheetTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  sheetClose: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+  },
+  sheetCloseText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg, color: colors.textMuted },
+  sheetScrollContent: { paddingBottom: 40 },
 
   // Action sheet (photo)
   actionRow: {
@@ -820,8 +858,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  pillActive: { backgroundColor: colors.green500, borderColor: colors.green500 },
+  // Pill sélectionné = or (état actif autorisé) + texte green900 pour le contraste
+  // (blanc sur or échouerait le ratio ≥ 4.5:1 de la charte).
+  pillActive: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
   pillText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
-  pillTextActive: { color: colors.white },
+  pillTextActive: { color: colors.green900, fontFamily: fonts.bodySemiBold },
   sheetActions: { marginTop: spacing.lg, gap: spacing.sm },
 });

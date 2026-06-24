@@ -26,7 +26,7 @@ import {
   shadow,
   motion,
 } from '../constants/theme';
-import { themeEmoji, themeLabel, levelLabel, timeAgo, levelProgress } from '../utils/format';
+import { themeEmoji, themeLabel, levelLabel, timeAgo, levelProgress, avatarUri } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
 const TABS = [
@@ -261,7 +261,7 @@ export default function StatsScreen({ navigation }) {
       {/* Header sombre */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
-          <Avatar name={user?.name || ''} size={72} gold />
+          <Avatar name={user?.name || ''} size={72} gold uri={avatarUri(user)} />
           <View style={styles.headerInfo}>
             <Text style={styles.headerName} numberOfLines={1}>
               {user?.name || t('profile.misc.defaultName')}

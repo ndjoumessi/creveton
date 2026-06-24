@@ -46,6 +46,7 @@ import {
   levelLabel,
   timeAgo,
   themeEmoji,
+  avatarUri,
 } from '../utils/format';
 
 // Pastels des tuiles d'icônes de stats (décoratif, non sémantique).
@@ -246,7 +247,7 @@ export default function HomeScreen({ navigation }) {
               hitSlop={6}
               accessibilityLabel={t('home.a11y.openProfile')}
             >
-              <Avatar name={user?.name || firstName} size={48} gold />
+              <Avatar name={user?.name || firstName} size={48} gold uri={avatarUri(user)} />
             </Pressable>
           </View>
         </View>
