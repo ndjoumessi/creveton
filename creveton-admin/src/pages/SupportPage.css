@@ -428,3 +428,35 @@
   .sup-card,
   .sup-chip { transition: none; }
 }
+
+/* Accès rapide — bouton outline gold vers la Console (police héritée = charte). */
+.sup-quickaccess {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.sup-quickaccess-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+.sup-console-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--gold500);
+  background: transparent;
+  color: var(--gold500);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--t-fast);
+}
+.sup-console-link:hover {
+  background: var(--gold500);
+  color: var(--green900);
+}

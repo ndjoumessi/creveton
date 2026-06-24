@@ -1588,6 +1588,10 @@
   "support": {
     "title": "Support joueurs",
     "subtitle": "Gestion des signalements et demandes d'assistance",
+    "console": {
+      "title": "Accès rapide",
+      "open": "Ouvrir la Console →"
+    },
     "export": "Exporter",
     "markAllRead": "Marquer tout comme lu",
     "kpi": {

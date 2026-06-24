@@ -1588,6 +1588,10 @@
   "support": {
     "title": "Player support",
     "subtitle": "Manage reports and assistance requests",
+    "console": {
+      "title": "Quick access",
+      "open": "Open the Console →"
+    },
     "export": "Export",
     "markAllRead": "Mark all as read",
     "kpi": {

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send,
+  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send, ExternalLink,
 } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis,
@@ -242,6 +242,20 @@ export default function SupportPage() {
           </>
         )}
       />
+
+      {/* Accès rapide — lien Console, visible pour TOUS les rôles (aucune garde). */}
+      <div className="sup-quickaccess">
+        <span className="sup-quickaccess-label">{t('support.console.title')}</span>
+        <a
+          className="sup-console-link"
+          href="https://creveton-admin-staging.up.railway.app/dashboard"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <ExternalLink size={16} />
+          {t('support.console.open')}
+        </a>
+      </div>
 
       {/* Bande KPI sombre. */}
       <div className="dark-banner">
