@@ -111,6 +111,12 @@ export default function ChallengesScreen({ navigation }) {
   };
 
   const list = tab === 'received' ? received : tab === 'sent' ? sent : completed;
+  // Défis « actifs » = reçus + envoyés en attente (données de démo, cf. bannière).
+  const activeCount = received.length + sent.length;
+  const openSheet = () => {
+    hapticLight();
+    setSheetOpen(true);
+  };
   const renderItem = ({ item }) => {
     if (tab === 'received') return <ReceivedCard t={t} item={item} onAccept={acceptChallenge} onDecline={declineChallenge} />;
     if (tab === 'sent') return <SentCard t={t} item={item} onCancel={cancelSent} />;
@@ -122,17 +128,17 @@ export default function ChallengesScreen({ navigation }) {
       {/* En-tête sombre */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Title color={colors.cream}>⚔️ {t('challengesHub.title')}</Title>
-          <Pressable
-            style={styles.newBtn}
-            onPress={() => {
-              hapticLight();
-              setSheetOpen(true);
-            }}
-            hitSlop={8}
-          >
-            <Text style={styles.newBtnText}>+ {t('challengesHub.new')}</Text>
-          </Pressable>
+          <View style={styles.headerTitleWrap}>
+            <Title color={colors.cream}>⚔️ {t('challengesHub.title')}</Title>
+            <Body style={styles.subtitle}>{t('challengesHub.subtitle')}</Body>
+          </View>
+          {activeCount > 0 ? (
+            <View style={styles.countPill}>
+              <Text style={styles.countPillText}>
+                {t('challengesHub.activeCount', { count: activeCount })}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.tabs}>
@@ -164,10 +170,21 @@ export default function ChallengesScreen({ navigation }) {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={<EmptyChallenges t={t} tab={tab} />}
+          ListEmptyComponent={<EmptyChallenges t={t} onLaunch={openSheet} />}
           renderItem={renderItem}
         />
       </View>
+
+      {/* FAB — nouveau défi (ouvre le bottom sheet) */}
+      <Pressable
+        style={styles.fab}
+        onPress={openSheet}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={t('challengesHub.launchCta')}
+      >
+        <Text style={styles.fabIcon}>+</Text>
+      </Pressable>
 
       {/* Bottom sheet — Nouveau challenge */}
       <Modal visible={sheetOpen} transparent animationType="slide" onRequestClose={() => setSheetOpen(false)}>
@@ -256,7 +273,7 @@ function OpponentRow({ t, name, xp, theme, questions, right }) {
 
 function ReceivedCard({ t, item, onAccept, onDecline }) {
   return (
-    <AppCard tone="light" padding="md" radius={radius.lg} style={styles.card}>
+    <AppCard tone="light" padding="md" radius={radius.lg} style={[styles.card, styles.cardReceived]}>
       <OpponentRow t={t} name={item.name} xp={item.xp} theme={item.theme} questions={item.questions} />
       <Body muted style={styles.cardSub}>
         {t('challengesHub.card.sentAgo', { ago: item.sentAgo })}
@@ -271,7 +288,7 @@ function ReceivedCard({ t, item, onAccept, onDecline }) {
 
 function SentCard({ t, item, onCancel }) {
   return (
-    <AppCard tone="light" padding="md" radius={radius.lg} style={styles.card}>
+    <AppCard tone="light" padding="md" radius={radius.lg} style={[styles.card, styles.cardSent]}>
       <OpponentRow t={t} name={item.name} xp={item.xp} theme={item.theme} questions={item.questions} />
       <View style={styles.sentFooter}>
         <Text style={styles.sentScore}>{t('challengesHub.card.myScore', { score: item.myScore })}</Text>
@@ -288,7 +305,7 @@ function SentCard({ t, item, onCancel }) {
 function CompletedCard({ t, item }) {
   const win = item.outcome === 'win';
   return (
-    <AppCard tone="light" padding="md" radius={radius.lg} style={styles.card}>
+    <AppCard tone="light" padding="md" radius={radius.lg} style={[styles.card, styles.cardCompleted]}>
       <View style={styles.completedRow}>
         <Text style={styles.completedEmoji}>{win ? '🏆' : '💔'}</Text>
         <View style={styles.cardMid}>
@@ -305,28 +322,38 @@ function CompletedCard({ t, item }) {
   );
 }
 
-function EmptyChallenges({ t, tab }) {
+function EmptyChallenges({ t, onLaunch }) {
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyEmoji}>⚔️</Text>
+      <Heading style={styles.emptyTitle}>{t('challengesHub.empty.title')}</Heading>
       <Body muted style={styles.emptyText}>
-        {t(`challengesHub.empty.${tab}`)}
+        {t('challengesHub.empty.sub')}
       </Body>
+      <AppButton
+        variant="primary"
+        title={t('challengesHub.launchCta')}
+        onPress={onLaunch}
+        fullWidth={false}
+        style={styles.emptyBtn}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.md },
-  headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  newBtn: {
-    backgroundColor: colors.gold500,
+  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.lg, gap: spacing.md },
+  headerTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
+  headerTitleWrap: { flex: 1, gap: 2 },
+  subtitle: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.gold400 },
+  countPill: {
+    backgroundColor: colors.green700,
     borderRadius: radius.pill,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
-    ...shadow.gold,
+    marginTop: spacing.xs,
   },
-  newBtnText: { fontFamily: fonts.titleBold, fontSize: fontSizes.sm, color: colors.green900 },
+  countPillText: { fontFamily: fonts.titleBold, fontSize: fontSizes.xs, color: colors.cream },
 
   tabs: { flexDirection: 'row', gap: spacing.xl },
   tab: { alignItems: 'center', paddingBottom: spacing.xs },
@@ -335,7 +362,21 @@ const styles = StyleSheet.create({
   tabUnderline: { height: 3, width: '100%', marginTop: spacing.xs, borderRadius: radius.pill, backgroundColor: 'transparent' },
   tabUnderlineActive: { backgroundColor: colors.gold500 },
 
-  body: { flex: 1, backgroundColor: colors.cream },
+  body: { flex: 1, backgroundColor: colors.cream, borderTopLeftRadius: 28, borderTopRightRadius: 28 },
+  fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.gold500,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
+    ...shadow.gold,
+  },
+  fabIcon: { fontFamily: fonts.titleBold, fontSize: 30, color: colors.white, marginTop: -2 },
   demoBanner: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
@@ -350,6 +391,9 @@ const styles = StyleSheet.create({
   listContent: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
 
   card: { ...shadow.card },
+  cardReceived: { borderLeftWidth: 4, borderLeftColor: colors.gold500 },
+  cardSent: { borderLeftWidth: 4, borderLeftColor: colors.green500 },
+  cardCompleted: { borderLeftWidth: 4, borderLeftColor: '#9ca3af' },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   cardMid: { flex: 1, gap: 2 },
   cardName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.textDark },
@@ -374,9 +418,11 @@ const styles = StyleSheet.create({
   completedVs: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
   completedScores: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },
 
-  empty: { alignItems: 'center', paddingTop: spacing.xxxl, gap: spacing.sm },
-  emptyEmoji: { fontSize: 48, opacity: 0.85 },
+  empty: { alignItems: 'center', paddingTop: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.sm },
+  emptyEmoji: { fontSize: 64, opacity: 0.9 },
+  emptyTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.green700 },
   emptyText: { textAlign: 'center' },
+  emptyBtn: { marginTop: spacing.md },
 
   // Bottom sheet
   sheetBackdrop: { flex: 1, backgroundColor: colors.overlay },

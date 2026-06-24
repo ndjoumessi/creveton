@@ -506,7 +506,10 @@
     "player": "Joueur"
   },
   "challengesHub": {
-    "title": "Challenges",
+    "title": "Défis",
+    "subtitle": "Affronte tes amis",
+    "activeCount": "{{count}} actif(s)",
+    "launchCta": "Lancer un défi",
     "new": "Nouveau",
     "demoBanner": "Données de démonstration — liste à brancher",
     "tabs": {
@@ -534,6 +537,8 @@
       "xp": "+{{xp}} XP"
     },
     "empty": {
+      "title": "Aucun défi en cours",
+      "sub": "Lance un défi à un ami pour commencer !",
       "received": "Aucun challenge reçu.",
       "sent": "Aucun challenge envoyé.",
       "completed": "Aucun duel terminé."

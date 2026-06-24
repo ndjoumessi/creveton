@@ -507,6 +507,9 @@
   },
   "challengesHub": {
     "title": "Challenges",
+    "subtitle": "Challenge your friends",
+    "activeCount": "{{count}} active",
+    "launchCta": "Start a challenge",
     "new": "New",
     "demoBanner": "Demo data — list endpoint pending",
     "tabs": {
@@ -534,6 +537,8 @@
       "xp": "+{{xp}} XP"
     },
     "empty": {
+      "title": "No active challenge",
+      "sub": "Challenge a friend to get started!",
       "received": "No challenges received.",
       "sent": "No challenges sent.",
       "completed": "No finished duels."
