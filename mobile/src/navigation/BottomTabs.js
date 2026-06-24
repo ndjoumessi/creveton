@@ -14,7 +14,7 @@ import ChallengesScreen from '../screens/ChallengesScreen';
 import StatsScreen from '../screens/StatsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { tournaments as tournamentsApi } from '../services/endpoints';
-import { fonts, fontSizes, shadow, spacing } from '../constants/theme';
+import { fonts, shadow, spacing } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 const Tab = createBottomTabNavigator();
@@ -118,14 +118,16 @@ export default function BottomTabs() {
 const makeStyles = (colors) => StyleSheet.create({
   tabBar: {
     backgroundColor: colors.white,
-    borderTopWidth: 0,
+    // Fin liseré haut : sépare le contenu de la nav (themed clair/sombre).
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
     paddingTop: spacing.sm,
     ...shadow.tabBar,
   },
   tabItem: { paddingTop: spacing.xs },
   item: { alignItems: 'center', justifyContent: 'center', width: 64, gap: 2 },
-  icon: { fontSize: 20 },
-  label: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs },
+  icon: { fontSize: 24 },
+  label: { fontFamily: fonts.bodyMedium, fontSize: 11 },
   dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'transparent', marginTop: 1 },
   dotActive: { backgroundColor: colors.gold500 },
   badge: {

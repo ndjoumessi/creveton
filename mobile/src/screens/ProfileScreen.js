@@ -74,14 +74,14 @@ function XpBar({ pct, height = 4 }) {
   );
 }
 
-/** Stat compacte de la rangée du header. */
-function ProfStat({ value, label, divider }) {
+/** Stat compacte de la rangée du header. `valueColor` met en valeur (rang/taux). */
+function ProfStat({ value, label, divider, valueColor }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.profStat}>
       {divider ? <View style={styles.profDivider} /> : null}
-      <Text style={styles.profStatValue}>{value}</Text>
+      <Text style={[styles.profStatValue, valueColor && { color: valueColor }]}>{value}</Text>
       <Text style={styles.profStatLabel}>{label}</Text>
     </View>
   );
@@ -385,6 +385,16 @@ export default function ProfileScreen() {
   const level = progress.level;
   const badges = deriveBadges(level, t);
 
+  // Mises en valeur de la rangée de stats : rang #1 en or, taux <50 % rouge /
+  // >70 % vert, + liseré haut coloré selon le rang (top 1 or, top 10 vert).
+  const rank = myRank?.rank;
+  const rate = stats.totalGames > 0 ? stats.successRate : null;
+  const rankValueColor = rank === 1 ? colors.gold500 : undefined;
+  const rateValueColor =
+    rate == null ? undefined : rate < 50 ? colors.red400 : rate > 70 ? colors.green300 : undefined;
+  const stripBorderColor =
+    rank === 1 ? colors.gold400 : rank && rank <= 10 ? colors.green300 : 'transparent';
+
   const editTranslateY = editAnim.interpolate({ inputRange: [0, 1], outputRange: [windowHeight, 0] });
 
   return (
@@ -400,7 +410,7 @@ export default function ProfileScreen() {
           }}
           disabled={uploadingAvatar}
         >
-          <Avatar name={user?.name || ''} size={88} gold uri={photoUri} style={styles.avatarBorder} />
+          <Avatar name={user?.name || ''} size={110} gold uri={photoUri} style={styles.avatarBorder} />
           {uploadingAvatar ? (
             <View style={styles.avatarOverlay}>
               <ActivityIndicator color={colors.gold400} />
@@ -415,23 +425,20 @@ export default function ProfileScreen() {
           {user?.name || t('profile.misc.defaultName')}
         </Text>
         <Text style={styles.headerLevel}>
-          {t('profile.misc.levelXp', {
-            level,
-            xp: totalXp.toLocaleString('fr-FR'),
-            defaultValue: 'Niveau {{level}} · {{xp}} XP',
-          })}
+          {`${t('profile.misc.level', { level })} — ${t(`profile.levelNames.${level}`)}`}
         </Text>
         <View style={styles.headerXpWrap}>
           <XpBar pct={progress.pct} />
         </View>
       </View>
 
-      {/* B. Rangée de stats (green700) */}
-      <View style={styles.statsRow}>
+      {/* B. Rangée de stats (green700) — liseré haut coloré selon le rang */}
+      <View style={[styles.statsRow, { borderTopWidth: 3, borderTopColor: stripBorderColor }]}>
         <ProfStat value={String(stats.totalGames || 0)} label={t('profile.stats.games', 'Parties')} />
         <ProfStat
           divider
-          value={stats.totalGames > 0 ? `${stats.successRate}%` : '—'}
+          value={rate != null ? `${rate}%` : '—'}
+          valueColor={rateValueColor}
           label={t('profile.stats.successRate', 'Taux')}
         />
         <ProfStat
@@ -441,7 +448,8 @@ export default function ProfileScreen() {
         />
         <ProfStat
           divider
-          value={myRank?.rank ? `#${myRank.rank}` : '—'}
+          value={rank ? `#${rank}` : '—'}
+          valueColor={rankValueColor}
           label={t('profile.stats.rank', 'Rang')}
         />
       </View>
@@ -733,11 +741,11 @@ const makeStyles = (colors) => StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
-  avatarWrap: { width: 88, height: 88, marginBottom: spacing.xs },
-  avatarBorder: { borderWidth: 3, borderColor: colors.gold500, ...shadow.gold },
+  avatarWrap: { width: 110, height: 110, marginBottom: spacing.xs },
+  avatarBorder: { borderWidth: 3, borderColor: colors.gold400, ...shadow.gold },
   avatarOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 44,
+    borderRadius: 55,
     backgroundColor: 'rgba(11,46,26,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -756,8 +764,8 @@ const makeStyles = (colors) => StyleSheet.create({
     borderColor: colors.border,
   },
   cameraBadgeIcon: { fontSize: 14 },
-  headerName: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.textOnDark, marginTop: spacing.xs },
-  headerLevel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.gold400 },
+  headerName: { fontFamily: fonts.titleExtraBold, fontSize: 24, color: colors.textOnDark, marginTop: spacing.xs },
+  headerLevel: { fontFamily: fonts.bodySemiBold, fontSize: 14, color: colors.gold400 },
   headerXpWrap: { width: '100%', paddingHorizontal: spacing.xl, marginTop: spacing.md },
   xpTrack: { width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', overflow: 'hidden' },
   xpFill: { height: '100%', backgroundColor: colors.gold400 },
