@@ -1257,6 +1257,7 @@
     "password": "Mot de passe",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
+    "rememberMe": "Se souvenir de moi",
     "submit": "Se connecter",
     "loading": "Connexion...",
     "error": "Email ou mot de passe incorrect",

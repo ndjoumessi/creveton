@@ -1257,6 +1257,7 @@
     "password": "Password",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
+    "rememberMe": "Remember me",
     "submit": "Sign in",
     "loading": "Signing in...",
     "error": "Incorrect email or password",

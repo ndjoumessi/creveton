@@ -17,8 +17,15 @@ export default function Login() {
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [submitting, setSubmitting] = useState(false);
+  // « Se souvenir de moi » : on ne mémorise QUE l'email (jamais le mot de passe).
+  // Pré-remplissage via defaultValues (équivalent react-hook-form du useEffect/setEmail).
+  const rememberedEmail = localStorage.getItem('remembered_email') || '';
+  const [rememberMe, setRememberMe] = useState(!!rememberedEmail);
   const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: { email: USE_MOCKS ? 'admin@creveton.cm' : '', password: '' },
+    defaultValues: {
+      email: USE_MOCKS ? 'admin@creveton.cm' : rememberedEmail,
+      password: '',
+    },
   });
 
   // Déjà connecté en admin → on file vers la console (après tous les hooks).
@@ -35,6 +42,9 @@ export default function Login() {
         useAuthStore.getState().logout();
         return;
       }
+      // Connexion admin réussie → on persiste (ou efface) l'email mémorisé.
+      if (rememberMe) localStorage.setItem('remembered_email', email);
+      else localStorage.removeItem('remembered_email');
       notify.success(t('login.notify.success'));
       navigate('/dashboard', { replace: true });
     } catch (err) {
@@ -71,6 +81,18 @@ export default function Login() {
             <PasswordInput {...register('password', { required: t('login.validation.passwordRequired') })} />
             {errors.password && <span className="field-error">{errors.password.message}</span>}
           </div>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0 4px', cursor: 'pointer', userSelect: 'none' }}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              style={{ width: 16, height: 16, accentColor: 'var(--gold500)', cursor: 'pointer' }}
+            />
+            <span style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 14, color: '#6b7280' }}>
+              {t('login.rememberMe')}
+            </span>
+          </label>
 
           <button className="btn btn-gold btn-block" type="submit" disabled={submitting} style={{ marginTop: 6, padding: '11px 16px' }}>
             {submitting ? <Loader2 size={17} className="spin" /> : <LogIn size={17} />}
