@@ -558,7 +558,9 @@
       "opponent": "Opponent",
       "searchPlaceholder": "Search a friend…",
       "searchSoon": "Friend search coming soon — random opponent for now.",
-      "launch": "Start the challenge"
+      "randomOpponent": "🎲 Random opponent",
+      "friendSoon": "👤 Invite a friend (soon)",
+      "launch": "🎯 Start the challenge"
     },
     "notify": {
       "declined": "Challenge declined",

@@ -26,7 +26,6 @@ import {
   Body,
   AppCard,
   AppButton,
-  AppInput,
   Avatar,
   ThemeBadge,
   useToast,
@@ -58,8 +57,8 @@ const MOCK_COMPLETED = [
 const TABS = ['received', 'sent', 'completed'];
 
 export default function ChallengesScreen({ navigation }) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, isDark), [colors, isDark]);
   const { t } = useTranslation();
   const toast = useToast();
   const startGame = useGameStore((s) => s.startGame);
@@ -71,9 +70,11 @@ export default function ChallengesScreen({ navigation }) {
 
   // Bottom sheet « Nouveau »
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [theme, setTheme] = useState(THEMES[0].key);
-  const [level, setLevel] = useState(LEVELS[1].key);
-  const [search, setSearch] = useState('');
+  const [theme, setTheme] = useState(null); // aucun thème pré-sélectionné → Start désactivé à l'ouverture
+  const [level, setLevel] = useState(LEVELS[0].key); // 'beginner' par défaut
+  // Sélecteur d'adversaire (visuel) : 'random' branché ; 'friend' désactivé tant que
+  // GET /users/search n'existe pas. Dans tous les cas, create part en opponent_id null.
+  const [opponent, setOpponent] = useState('random');
   const [launching, setLaunching] = useState(false);
 
   const declineChallenge = (item) => {
@@ -194,52 +195,86 @@ export default function ChallengesScreen({ navigation }) {
         <Pressable style={styles.sheetBackdrop} onPress={() => setSheetOpen(false)} />
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
-          <Heading style={styles.sheetTitle}>{t('challengesHub.sheet.title')}</Heading>
+          <Text style={styles.sheetTitle}>{t('challengesHub.sheet.title')}</Text>
 
+          {/* Thème — 2 rangées de 3 tuiles (lisibilité petits écrans) */}
           <Text style={styles.fieldLabel}>{t('challengesHub.sheet.theme')}</Text>
-          <View style={styles.chips}>
+          <View style={styles.themeGrid}>
             {THEMES.map((th) => {
               const active = th.key === theme;
               return (
-                <Pressable key={th.key} onPress={() => setTheme(th.key)} style={[styles.chip, active && styles.chipActive]}>
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                    {th.emoji} {th.label}
+                <Pressable
+                  key={th.key}
+                  onPress={() => {
+                    hapticLight();
+                    setTheme(th.key);
+                  }}
+                  style={[styles.themeChip, active && styles.themeChipActive]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Text style={styles.themeChipEmoji}>{th.emoji}</Text>
+                  <Text style={[styles.themeChipText, active && styles.themeChipTextActive]} numberOfLines={1}>
+                    {th.label}
                   </Text>
                 </Pressable>
               );
             })}
           </View>
 
+          {/* Difficulté — 3 pills pleine largeur (même motif que GameStartScreen) */}
           <Text style={styles.fieldLabel}>{t('challengesHub.sheet.level')}</Text>
-          <View style={styles.chips}>
+          <View style={styles.levels}>
             {LEVELS.map((l) => {
               const active = l.key === level;
               return (
-                <Pressable key={l.key} onPress={() => setLevel(l.key)} style={[styles.chip, active && styles.chipActive]}>
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{l.label}</Text>
+                <Pressable
+                  key={l.key}
+                  onPress={() => {
+                    hapticLight();
+                    setLevel(l.key);
+                  }}
+                  style={[styles.levelPill, active && styles.levelPillActive]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Text style={[styles.levelText, active && styles.levelTextActive]}>
+                    {t(`gameStart.levels.${l.key}`, l.label)}
+                  </Text>
                 </Pressable>
               );
             })}
           </View>
 
+          {/* Adversaire — aléatoire branché ; recherche d'ami à venir (désactivée) */}
           <Text style={styles.fieldLabel}>{t('challengesHub.sheet.opponent')}</Text>
-          <AppInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder={t('challengesHub.sheet.searchPlaceholder')}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {/* TODO: brancher GET /users/search?q=… ; pour l'instant, recherche placeholder. */}
-          <Body muted style={styles.searchNote}>
-            {t('challengesHub.sheet.searchSoon')}
-          </Body>
+          <View style={styles.oppRow}>
+            <Pressable
+              onPress={() => {
+                hapticLight();
+                setOpponent('random');
+              }}
+              style={[styles.oppChip, opponent === 'random' && styles.oppChipActive]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: opponent === 'random' }}
+            >
+              <Text style={[styles.oppChipText, opponent === 'random' && styles.oppChipTextActive]} numberOfLines={1}>
+                {t('challengesHub.sheet.randomOpponent')}
+              </Text>
+            </Pressable>
+            <View style={[styles.oppChip, styles.oppChipDisabled]} accessibilityState={{ disabled: true }}>
+              <Text style={styles.oppChipText} numberOfLines={1}>
+                {t('challengesHub.sheet.friendSoon')}
+              </Text>
+            </View>
+          </View>
 
           <AppButton
             variant="primary"
             title={t('challengesHub.sheet.launch')}
             fullWidth
             loading={launching}
+            disabled={!theme}
             style={styles.launchBtn}
             onPress={launch}
           />
@@ -354,7 +389,7 @@ function EmptyChallenges({ t, onLaunch }) {
   );
 }
 
-const makeStyles = (colors) => StyleSheet.create({
+const makeStyles = (colors, isDark) => StyleSheet.create({
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.lg, gap: spacing.md },
   headerTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
   headerTitleWrap: { flex: 1, gap: 2 },
@@ -437,31 +472,81 @@ const makeStyles = (colors) => StyleSheet.create({
   emptyText: { textAlign: 'center' },
   emptyBtn: { marginTop: spacing.md },
 
-  // Bottom sheet
+  // Bottom sheet « Nouveau challenge »
   sheetBackdrop: { flex: 1, backgroundColor: colors.overlay },
   sheet: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceCream,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
-  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: radius.pill, backgroundColor: colors.border, marginBottom: spacing.sm },
-  sheetTitle: { color: colors.textDark, marginBottom: spacing.xs },
-  fieldLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody, marginTop: spacing.sm },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
-    paddingHorizontal: spacing.md,
+  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.sm },
+  sheetTitle: { fontFamily: fonts.titleBold, fontSize: 20, color: colors.textDark, marginBottom: spacing.xs },
+  fieldLabel: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    color: isDark ? colors.green300 : colors.textMuted,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+
+  // Thème — grille 2×3
+  themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  themeChip: {
+    flexBasis: '30%',
+    flexGrow: 1,
+    minWidth: 96,
     paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: 'center',
+    gap: 2,
   },
-  chipActive: { borderColor: colors.green900, backgroundColor: colors.green900 },
-  chipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
-  chipTextActive: { color: colors.textOnDark },
-  searchNote: { fontSize: fontSizes.xs, marginTop: -spacing.xs },
+  themeChipActive: { backgroundColor: colors.green900, borderColor: colors.gold400, borderWidth: 2 },
+  themeChipEmoji: { fontSize: 20 },
+  themeChipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textDark },
+  themeChipTextActive: { color: colors.textOnDark },
+
+  // Difficulté — 3 pills pleine largeur
+  levels: { flexDirection: 'row', gap: spacing.sm },
+  levelPill: {
+    flex: 1,
+    height: 46,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  levelPillActive: { backgroundColor: colors.green900, borderColor: colors.gold400, borderWidth: 2 },
+  levelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textDark },
+  levelTextActive: { color: colors.textOnDark },
+
+  // Adversaire — random (branché) + ami (à venir, désactivé)
+  oppRow: { flexDirection: 'row', gap: spacing.sm },
+  oppChip: {
+    flex: 1,
+    minHeight: 46,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  oppChipActive: { borderColor: colors.gold400, borderWidth: 2 },
+  oppChipDisabled: { opacity: 0.5 },
+  oppChipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textDark },
+  oppChipTextActive: { color: colors.textDark },
+
   launchBtn: { marginTop: spacing.lg },
 });

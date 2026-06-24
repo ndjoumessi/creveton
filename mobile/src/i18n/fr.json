@@ -558,7 +558,9 @@
       "opponent": "Adversaire",
       "searchPlaceholder": "Rechercher un ami…",
       "searchSoon": "Recherche d’amis bientôt disponible — adversaire aléatoire pour l’instant.",
-      "launch": "Lancer le challenge"
+      "randomOpponent": "🎲 Adversaire aléatoire",
+      "friendSoon": "👤 Inviter un ami (bientôt)",
+      "launch": "🎯 Lancer le défi"
     },
     "notify": {
       "declined": "Challenge refusé",
