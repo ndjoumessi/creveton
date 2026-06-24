@@ -464,7 +464,9 @@ export default function ProfileScreen() {
             right={
               <View style={styles.langPills}>
                 {LANG_PILLS.map((l) => {
-                  const active = i18n.language === l.key;
+                  // startsWith (et non ===) : robuste si i18n.language est un code
+                  // régional ('en-US', 'fr-FR') alors que l.key est 'en'/'fr'.
+                  const active = (i18n.language || '').startsWith(l.key);
                   return (
                     <Pressable
                       key={l.key}
