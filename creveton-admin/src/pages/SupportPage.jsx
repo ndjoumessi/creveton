@@ -226,6 +226,10 @@ export default function SupportPage() {
     { value: kpi?.avg_resolution_min, label: t('support.kpi.avgTime'), suffix: ' min' },
   ];
 
+  // Console = même origine que la page courante (évite d'exposer/coder en dur
+  // une URL d'environnement : staging pointait vers staging, prod vers prod).
+  const consoleUrl = `${window.location.origin}/dashboard`;
+
   return (
     <>
       <PageHeader
@@ -248,7 +252,7 @@ export default function SupportPage() {
         <span className="sup-quickaccess-label">{t('support.console.title')}</span>
         <a
           className="sup-console-link"
-          href="https://creveton-admin-staging.up.railway.app/dashboard"
+          href={consoleUrl}
           target="_blank"
           rel="noopener noreferrer"
         >
