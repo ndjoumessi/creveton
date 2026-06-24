@@ -790,7 +790,7 @@ const makeStyles = (colors) => StyleSheet.create({
   barTrack: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#e8e8e8',
+    backgroundColor: colors.border,
     overflow: 'hidden',
   },
   barFill: { height: '100%', borderRadius: 3, backgroundColor: colors.green500 },
@@ -896,7 +896,7 @@ const makeStyles = (colors) => StyleSheet.create({
   podiumScore: {
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.base,
-    color: colors.green900,
+    color: colors.textDark,
     marginTop: 2,
   },
   podiumScoreFirst: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.xl, color: colors.gold500 },
@@ -941,7 +941,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   mePillText: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.green900 },
   rankVille: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted },
-  rankScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.green900 },
+  rankScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.textDark },
 
   // États vides
   empty: { alignItems: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg },
@@ -949,7 +949,7 @@ const makeStyles = (colors) => StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.xl,
-    color: colors.green900,
+    color: colors.textDark,
     marginBottom: spacing.sm,
   },
   emptyText: { textAlign: 'center', lineHeight: 20 },

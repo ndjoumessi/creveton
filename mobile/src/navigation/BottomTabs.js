@@ -2,7 +2,7 @@
 // Fond blanc, ombre haute douce. Onglet actif : icône + label or, point or
 // sous l'icône. Inactif : gris (#9ca3af). Hauteur 80 + safe area bas.
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Text, View, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,7 +14,8 @@ import ChallengesScreen from '../screens/ChallengesScreen';
 import StatsScreen from '../screens/StatsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { tournaments as tournamentsApi } from '../services/endpoints';
-import { colors, fonts, fontSizes, shadow, spacing } from '../constants/theme';
+import { fonts, fontSizes, shadow, spacing } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 const Tab = createBottomTabNavigator();
 
@@ -30,6 +31,8 @@ const LABEL_KEYS = {
 
 function TabItem({ routeName, focused }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const lift = useRef(new Animated.Value(focused ? 1 : 0)).current;
   useEffect(() => {
     Animated.spring(lift, {
@@ -58,6 +61,8 @@ function TabItem({ routeName, focused }) {
 
 export default function BottomTabs() {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   // Badge rouge sur « Tournois » s'il existe un tournoi ouvert/en cours.
   const [activeTournaments, setActiveTournaments] = useState(0);
   useEffect(() => {
@@ -108,7 +113,7 @@ export default function BottomTabs() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   tabBar: {
     backgroundColor: colors.white,
     borderTopWidth: 0,
@@ -123,7 +128,7 @@ const styles = StyleSheet.create({
   dotActive: { backgroundColor: colors.gold500 },
   badge: {
     backgroundColor: colors.red400,
-    color: colors.white,
+    color: '#ffffff', // texte sur pastille rouge → blanc stable (jamais flippé en sombre)
     fontFamily: fonts.bodyBold,
     fontSize: 10,
   },

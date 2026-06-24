@@ -116,11 +116,19 @@ function StatCardSkeleton() {
 }
 
 function LastGameRow({ game }) {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const total = Number(game.total_questions) || 0;
+  const total = Number(game.question_count ?? game.total_questions) || 0;
   const rate = total > 0 ? Math.round((Number(game.correct_count) || 0) / total * 100) : null;
   const tone = rate === null ? null : rate >= 70 ? 'good' : rate < 50 ? 'bad' : null;
+  // Blitz/marathon : thème null (mix auto) → repli sur le nom + l'emoji du mode.
+  const emoji = game.theme
+    ? themeEmoji(game.theme)
+    : PLAY_MODES.find((m) => m.key === game.mode)?.emoji || '🎯';
+  const label = game.theme
+    ? themeLabel(game.theme)
+    : t(`gameStart.modes.${game.mode}.name`, game.mode || '—');
   return (
     <View
       style={[
@@ -129,10 +137,10 @@ function LastGameRow({ game }) {
         tone === 'bad' && styles.lastRowBad,
       ]}
     >
-      <Text style={styles.lastEmoji}>{themeEmoji(game.theme)}</Text>
+      <Text style={styles.lastEmoji}>{emoji}</Text>
       <View style={styles.lastMid}>
         <Text style={styles.lastTitle} numberOfLines={1}>
-          {themeLabel(game.theme)} · {levelLabel(game.level)}
+          {game.level ? `${label} · ${levelLabel(game.level)}` : label}
         </Text>
         <Text style={styles.lastSub} numberOfLines={1}>
           {timeAgo(game.played_at)}
@@ -172,8 +180,11 @@ function StatusPill({ tournament, t }) {
 
 export default function HomeScreen({ navigation }) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  // En-têtes de section : vert clair (green300) en sombre — lisibles sur la page
+  // sombre ; vert profond (green900) en clair, inchangé.
+  const sectionColor = isDark ? colors.green300 : colors.green900;
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const loadLeaderboard = useLeaderboardStore((s) => s.load);
@@ -267,7 +278,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.body}>
           {/* Choisir un mode — cartes horizontales → GameStart pré-réglé */}
           <View style={styles.sectionHeaderTight}>
-            <Heading color={colors.green900}>{t('home.chooseMode')}</Heading>
+            <Heading color={sectionColor}>{t('home.chooseMode')}</Heading>
           </View>
           <ScrollView
             horizontal
@@ -285,7 +296,7 @@ export default function HomeScreen({ navigation }) {
                 <View style={[styles.modeIcon, { backgroundColor: m.bg }]}>
                   <Text style={styles.modeIconText}>{m.emoji}</Text>
                 </View>
-                <Text style={[styles.modeName, { color: m.color }]}>
+                <Text style={styles.modeName}>
                   {t(`gameStart.modes.${m.key}.name`)}
                 </Text>
                 <Text style={styles.modeDesc} numberOfLines={2}>
@@ -320,7 +331,7 @@ export default function HomeScreen({ navigation }) {
 
           {/* Mes stats rapides */}
           <View style={styles.sectionHeaderTight}>
-            <Heading color={colors.green900}>{t('home.myStats.title')}</Heading>
+            <Heading color={sectionColor}>{t('home.myStats.title')}</Heading>
           </View>
 
           <View style={styles.statsGrid}>
@@ -364,7 +375,7 @@ export default function HomeScreen({ navigation }) {
           {recent.length > 0 ? (
             <>
               <View style={styles.sectionHeader}>
-                <Heading color={colors.green900}>{t('home.misc.lastGames')}</Heading>
+                <Heading color={sectionColor}>{t('home.misc.lastGames')}</Heading>
                 <Pressable onPress={() => navigation.navigate('Stats')} hitSlop={6}>
                   <Body style={styles.seeAll}>{t('home.misc.seeAll')}</Body>
                 </Pressable>
@@ -379,7 +390,7 @@ export default function HomeScreen({ navigation }) {
 
           {/* Tournois */}
           <View style={styles.sectionHeader}>
-            <Heading color={colors.green900}>{t('home.tournaments.title')}</Heading>
+            <Heading color={sectionColor}>{t('home.tournaments.title')}</Heading>
             <Pressable
               onPress={() => navigation.navigate('Tournaments')}
               hitSlop={6}
@@ -445,7 +456,7 @@ export default function HomeScreen({ navigation }) {
 
           {/* Classement */}
           <View style={styles.sectionHeaderTight}>
-            <Heading color={colors.green900}>{t('home.leaderboard.title')}</Heading>
+            <Heading color={sectionColor}>{t('home.leaderboard.title')}</Heading>
           </View>
 
           {lbLoading ? (
@@ -479,7 +490,7 @@ export default function HomeScreen({ navigation }) {
                       />
                     </View>
                     <Body
-                      color={colors.green900}
+                      color={colors.textDark}
                       numberOfLines={1}
                       style={styles.podiumName}
                     >
@@ -489,6 +500,7 @@ export default function HomeScreen({ navigation }) {
                       style={[
                         styles.podiumScore,
                         isFirst && styles.podiumScoreFirst,
+                        isDark && !isFirst && { color: colors.green300 },
                       ]}
                     >
                       {fmtNum(row.score)}
@@ -585,6 +597,7 @@ const makeStyles = (colors) => StyleSheet.create({
   modeName: {
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.base,
+    color: colors.textDark,
     marginTop: spacing.md,
   },
   modeDesc: {

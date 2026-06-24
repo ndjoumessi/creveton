@@ -71,24 +71,25 @@ export const colors = {
 export const darkColors = {
   ...colors,
 
-  // Fonds (clés dédiées navigation + surfaces élevées)
-  background: '#0a0f0d', // quasi-noir teinté vert (page)
-  backgroundSecondary: '#111a14', // cartes
-  backgroundTertiary: '#1a2b1f', // surfaces élevées
-  cardOnDark: '#1a2b1f',
+  // Fonds — rampe verte tintée (pas de noir pur) : page < carte < secondaire < élevé.
+  background: '#0d1f14', // page (vert très sombre, = cream sombre)
+  backgroundSecondary: '#162a1e', // en-têtes / barre d'onglets (= niveau carte)
+  backgroundTertiary: '#1e3328', // surfaces élevées
+  cardOnDark: '#162a1e',
 
   // Inversions de surface (ce qui était clair devient sombre)
-  white: '#1a2b1f', // « cartes » blanches → surface sombre
-  cream: '#0a0f0d', // fond de page
-  surface: '#1a2b1f',
-  surfaceCream: '#111a14',
-  surfaceElevated: '#22382a', // plus claire que les cartes (#1a2b1f) → tuiles « mode »
+  white: '#162a1e', // « cartes » blanches → surface sombre (niveau 1)
+  cream: '#0d1f14', // fond de page (niveau 0)
+  surface: '#162a1e',
+  surfaceCream: '#1e3328', // surface secondaire tintée (niveau 2)
+  surfaceElevated: '#22382a', // plus claire que les cartes (#162a1e) → tuiles « mode » (niveau 3)
 
   // Textes : clairs sur sombre (mêmes clés que la palette claire)
-  textDark: '#f0faf4', // blanc cassé verdâtre
-  textBody: '#c5dccf',
-  textMuted: '#9dbfaa',
-  textFaint: '#6b8f78',
+  textDark: '#f0faf4', // primaire — blanc cassé verdâtre (~15:1 sur la page)
+  textBody: '#e8f5ed', // paragraphes — légèrement plus chaud que textDark
+  textMuted: '#9dbfaa', // secondaire / labels (~8:1)
+  textFaint: '#6a9070', // contenu très dé-emphasé uniquement (~4.6:1)
+  textOnDark: '#ffffff', // texte sur en-têtes vert profond → blanc pur
 
   // Bordures & séparateurs
   border: '#2a3d30',

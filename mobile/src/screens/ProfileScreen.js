@@ -836,7 +836,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
   // Code parrainage
   referralRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
-  referralCode: { fontFamily: fonts.titleBold, fontSize: fontSizes.sm, color: colors.green900, flexShrink: 1 },
+  referralCode: { fontFamily: fonts.titleBold, fontSize: fontSizes.sm, color: colors.textDark, flexShrink: 1 },
   copyBtn: {
     paddingVertical: 4,
     paddingHorizontal: 12,
@@ -873,7 +873,8 @@ const makeStyles = (colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.surfaceCream,
+    opacity: 0.5,
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.lg,
@@ -893,7 +894,7 @@ const makeStyles = (colors) => StyleSheet.create({
     ...shadow.soft,
   },
   walletLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
-  walletBalance: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.xl, color: colors.green900, marginTop: 2 },
+  walletBalance: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.xl, color: colors.textDark, marginTop: 2 },
 
   logout: { marginTop: spacing.sm },
 
@@ -918,7 +919,7 @@ const makeStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.border,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { fontFamily: fonts.titleBold, fontSize: 20, color: colors.green900 },
+  sheetTitle: { fontFamily: fonts.titleBold, fontSize: 20, color: colors.textDark },
   // Sheet d'édition (overlay) — ancré en bas, coins arrondis, ombre vers le haut.
   // Borné à 88% pour que le ScrollView défile sous le clavier.
   editSheet: {
@@ -961,7 +962,7 @@ const makeStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.cream,
     alignItems: 'center',
   },
-  actionText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.base, color: colors.green900 },
+  actionText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.base, color: colors.textDark },
   actionCancel: { backgroundColor: 'transparent' },
   actionCancelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textMuted },
 
@@ -982,7 +983,7 @@ const makeStyles = (colors) => StyleSheet.create({
     padding: 14,
     fontFamily: fonts.bodyRegular,
     fontSize: 15,
-    color: colors.green900,
+    color: colors.textDark,
     backgroundColor: colors.white,
   },
   inputFocused: { borderColor: colors.gold500 },

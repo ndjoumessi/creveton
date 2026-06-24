@@ -36,8 +36,14 @@ export default function GameStartScreen({ navigation, route }) {
   // Mode pré-sélectionné depuis l'accueil (cartes « Choisir un mode »).
   const presetMode = route.params?.presetMode;
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  // En sombre, les en-têtes de section passent au vert clair (green300) — lisible
+  // sur fond sombre. En clair, on garde textDark (green300 serait illisible sur crème).
+  const sectionStyle = isDark ? [styles.section, { color: colors.green300 }] : styles.section;
+  // Indice « choisis un thème » : doré (attire l'œil) en sombre ; en clair, l'or
+  // sur crème serait illisible → on garde le muté lisible. L'icône ℹ️ reste dans les 2.
+  const hintStyle = isDark ? [styles.hint, { color: colors.gold400 }] : styles.hint;
   const toast = useToast();
   const [mode, setMode] = useState(
     GAME_MODES.some((m) => m.key === presetMode) ? presetMode : 'normal'
@@ -158,7 +164,7 @@ export default function GameStartScreen({ navigation, route }) {
       </View>
 
       {/* Sélecteur de mode */}
-      <Text style={styles.section}>{t('gameStart.chooseMode')}</Text>
+      <Text style={sectionStyle}>{t('gameStart.chooseMode')}</Text>
       <View style={styles.modes}>
         {GAME_MODES.map((m) => {
           const active = m.key === mode;
@@ -186,7 +192,7 @@ export default function GameStartScreen({ navigation, route }) {
       {/* Thème & niveau — masqués en mode mixte (tous thèmes/niveaux auto) */}
       {!isMixed ? (
         <>
-      <Text style={styles.section}>{t('gameStart.chooseTheme')}</Text>
+      <Text style={sectionStyle}>{t('gameStart.chooseTheme')}</Text>
       <View style={styles.grid}>
         {THEMES.map((th, i) => {
           const active = th.key === theme;
@@ -235,7 +241,7 @@ export default function GameStartScreen({ navigation, route }) {
         })}
       </View>
 
-      <Text style={styles.section}>{t('gameStart.chooseLevel')}</Text>
+      <Text style={sectionStyle}>{t('gameStart.chooseLevel')}</Text>
       <View style={styles.levels}>
         {LEVELS.map((l) => {
           const active = l.key === level;
@@ -275,8 +281,8 @@ export default function GameStartScreen({ navigation, route }) {
           <Body style={styles.recapText}>{recap}</Body>
         </Animated.View>
       ) : (
-        <Body muted style={styles.hint}>
-          {t('gameStart.misc.hint')}
+        <Body style={hintStyle}>
+          ℹ️  {t('gameStart.misc.hint')}
         </Body>
       )}
 
@@ -371,13 +377,13 @@ const makeStyles = (colors) => StyleSheet.create({
     height: 46,
     borderRadius: radius.md,
     borderWidth: 1.5,
-    borderColor: colors.borderInput,
-    backgroundColor: colors.white,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  levelPillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
-  levelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
+  levelPillActive: { backgroundColor: colors.green900, borderColor: colors.gold400 },
+  levelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textDark },
   levelTextActive: { color: colors.textOnDark },
 
   recap: {
@@ -389,7 +395,12 @@ const makeStyles = (colors) => StyleSheet.create({
     borderColor: colors.gold500,
   },
   recapText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center' },
-  hint: { marginTop: spacing.lg, textAlign: 'center' },
+  hint: {
+    marginTop: spacing.lg,
+    textAlign: 'center',
+    color: colors.textMuted,
+    fontFamily: fonts.bodyMedium,
+  },
 
   cta: { marginTop: spacing.xl },
   challenge: { marginTop: spacing.md },
