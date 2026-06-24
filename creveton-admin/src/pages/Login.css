@@ -1,0 +1,114 @@
+/* Login — split 40/60 : panneau marque (green900) + panneau formulaire (blanc).
+   Police de corps héritée (Space Grotesk, charte) ; Outfit sur les titres. */
+
+.login-split {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 40% 60%;
+}
+
+/* ─────────── Panneau gauche (marque) ─────────── */
+.login-aside {
+  background: var(--green900);
+  color: #fff;
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.login-aside-top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+.login-brand {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.5px;
+  color: #fff;
+}
+.login-tagline {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.login-aside-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.login-quote {
+  margin: 0;
+  font-style: italic;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.login-version {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ─────────── Panneau droit (formulaire) ─────────── */
+.login-main {
+  background: #fff;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.login-form {
+  width: min(400px, 100%);
+}
+.login-welcome {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--green900);
+}
+.login-subtitle {
+  margin: 6px 0 24px;
+  font-size: 14px;
+  color: #6b7280;
+}
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  cursor: pointer;
+  user-select: none;
+}
+.login-remember input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold500);
+  cursor: pointer;
+}
+.login-remember span {
+  font-size: 14px;
+  color: #6b7280;
+}
+.login-error {
+  margin: 12px 0 0;
+  color: var(--red);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.login-demo {
+  margin: 14px 0 0;
+  font-size: 12px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+/* ─────────── Responsive (< 768px) : panneau gauche masqué ─────────── */
+@media (max-width: 768px) {
+  .login-split {
+    grid-template-columns: 1fr;
+  }
+  .login-aside {
+    display: none;
+  }
+}

@@ -1251,8 +1251,10 @@
   },
   "login": {
     "title": "Creveton",
-    "subtitle": "Console d'administration",
-    "welcome": "Bienvenue",
+    "subtitle": "Connectez-vous pour accéder au tableau de bord",
+    "welcome": "Bienvenue sur Cockpit Émeraude",
+    "leftTagline": "La plateforme quiz",
+    "leftQuote": "Engagez votre communauté.",
     "email": "Adresse email",
     "password": "Mot de passe",
     "showPassword": "Afficher le mot de passe",

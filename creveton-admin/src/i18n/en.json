@@ -1251,8 +1251,10 @@
   },
   "login": {
     "title": "Creveton",
-    "subtitle": "Admin console",
-    "welcome": "Welcome",
+    "subtitle": "Sign in to access the dashboard",
+    "welcome": "Welcome to the Emerald Cockpit",
+    "leftTagline": "The quiz platform",
+    "leftQuote": "Engage your community.",
     "email": "Email address",
     "password": "Password",
     "showPassword": "Show password",

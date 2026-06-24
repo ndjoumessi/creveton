@@ -8,6 +8,7 @@ import { notify } from '../components/Toast';
 import PasswordInput from '../components/PasswordInput';
 import Logo from '../components/Logo';
 import { USE_MOCKS } from '../services/api';
+import './Login.css';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -17,6 +18,8 @@ export default function Login() {
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [submitting, setSubmitting] = useState(false);
+  // Erreur inline (sous le bouton) plutôt qu'un toast.
+  const [error, setError] = useState(null);
   // « Se souvenir de moi » : on ne mémorise QUE l'email (jamais le mot de passe).
   // Pré-remplissage via defaultValues (équivalent react-hook-form du useEffect/setEmail).
   const rememberedEmail = localStorage.getItem('remembered_email') || '';
@@ -35,11 +38,12 @@ export default function Login() {
 
   const onSubmit = async ({ email, password }) => {
     setSubmitting(true);
+    setError(null);
     try {
       await login(email, password);
       if (!isAdmin()) {
-        notify.error(t('login.notify.adminsOnly'));
         useAuthStore.getState().logout();
+        setError(t('login.notify.adminsOnly'));
         return;
       }
       // Connexion admin réussie → on persiste (ou efface) l'email mémorisé.
@@ -49,22 +53,33 @@ export default function Login() {
       navigate('/dashboard', { replace: true });
     } catch (err) {
       const code = err?.response?.data?.error?.code;
-      notify.error(code === 'AUTH_INVALID_CREDENTIALS' ? t('login.notify.invalidCredentials') : t('login.notify.failed'));
+      setError(code === 'AUTH_INVALID_CREDENTIALS' ? t('login.notify.invalidCredentials') : t('login.notify.failed'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--green900)', padding: 24 }}>
-      <div style={{ width: 'min(420px, 94vw)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ display: 'inline-flex', marginBottom: 14 }}><Logo size={64} /></div>
-          <h1 style={{ fontFamily: 'Outfit', fontWeight: 700, color: '#fff', fontSize: 24, margin: 0 }}>{t('login.title')}</h1>
-          <p style={{ fontFamily: '"Space Grotesk", sans-serif', color: '#9ca3af', marginTop: 6, fontSize: 14 }}>{t('login.subtitle')}</p>
+    <div className="login-split">
+      {/* Panneau marque (masqué < 768px) */}
+      <aside className="login-aside">
+        <div className="login-aside-top">
+          <Logo size={56} />
+          <span className="login-brand">{t('login.title')}</span>
+          <p className="login-tagline">{t('login.leftTagline')}</p>
         </div>
+        <div className="login-aside-bottom">
+          <p className="login-quote">{t('login.leftQuote')}</p>
+          <span className="login-version">v1.0</span>
+        </div>
+      </aside>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="card" style={{ padding: 26 }}>
+      {/* Panneau formulaire */}
+      <main className="login-main">
+        <form onSubmit={handleSubmit(onSubmit)} className="login-form">
+          <h1 className="login-welcome">{t('login.welcome')}</h1>
+          <p className="login-subtitle">{t('login.subtitle')}</p>
+
           <div className="field">
             <label>{t('login.email')}</label>
             <input
@@ -82,30 +97,25 @@ export default function Login() {
             {errors.password && <span className="field-error">{errors.password.message}</span>}
           </div>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0 4px', cursor: 'pointer', userSelect: 'none' }}>
+          <label className="login-remember">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              style={{ width: 16, height: 16, accentColor: 'var(--gold500)', cursor: 'pointer' }}
             />
-            <span style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 14, color: '#6b7280' }}>
-              {t('login.rememberMe')}
-            </span>
+            <span>{t('login.rememberMe')}</span>
           </label>
 
-          <button className="btn btn-gold btn-block" type="submit" disabled={submitting} style={{ marginTop: 6, padding: '11px 16px' }}>
+          <button className="btn btn-gold btn-block" type="submit" disabled={submitting} style={{ padding: '11px 16px' }}>
             {submitting ? <Loader2 size={17} className="spin" /> : <LogIn size={17} />}
             {submitting ? t('login.loading') : t('login.submit')}
           </button>
 
-          {USE_MOCKS && (
-            <p className="muted" style={{ fontSize: 12, textAlign: 'center', marginTop: 14, marginBottom: 0 }}>
-              {t('login.misc.demoBanner')}
-            </p>
-          )}
+          {error && <p className="login-error" role="alert">{error}</p>}
+
+          {USE_MOCKS && <p className="login-demo">{t('login.misc.demoBanner')}</p>}
         </form>
-      </div>
+      </main>
     </div>
   );
 }
