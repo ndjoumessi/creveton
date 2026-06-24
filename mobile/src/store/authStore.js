@@ -107,12 +107,10 @@ export const useAuthStore = create((set, get) => ({
   refreshProfile: async () => {
     try {
       const data = await usersApi.me();
-      console.log('[refreshProfile] user.avatar_url:', data?.user?.avatar_url ?? data?.avatar_url); // TEMP debug
       const user = data.user || data;
       await setStoredUser(user);
       if (user?.lang) await setLanguage(user.lang);
       set({ user });
-      console.log('[refreshProfile] avatar_url set:', user?.avatar_url); // TEMP debug
       return user;
     } catch {
       return null;

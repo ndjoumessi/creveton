@@ -141,7 +141,6 @@ export default function ProfileScreen() {
     baseAvatar && avatarBust
       ? `${baseAvatar}${baseAvatar.includes('?') ? '&' : '?'}cb=${avatarBust}`
       : baseAvatar;
-  console.log('[photoUri] baseAvatar:', baseAvatar, 'avatarBust:', avatarBust); // TEMP debug
 
   // Préférence locale de notifications (persistée AsyncStorage).
   const [notifEnabled, setNotifEnabled] = useState(true);
@@ -330,11 +329,9 @@ export default function ProfileScreen() {
       loadHistory(),
       loadLeaderboard({ currentUserId: useAuthStore.getState().user?.id }),
     ]);
-    console.log('[onRefresh] user.avatar_url after refresh:', useAuthStore.getState().user?.avatar_url); // TEMP debug
     // refreshProfile() a pu changer user.avatar_url → on bust le cache pour
     // forcer <Image> à recharger la photo fraîche.
     setAvatarBust(Date.now());
-    console.log('[onRefresh] photoUri will be:', avatarUri(useAuthStore.getState().user) + '?cb=' + Date.now()); // TEMP debug
     setRefreshing(false);
   }, [refreshProfile, loadWallet, loadHistory, loadLeaderboard]);
 
