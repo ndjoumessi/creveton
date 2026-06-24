@@ -801,6 +801,9 @@
       "startDate": "Start date",
       "startTime": "Start time",
       "typeLabel": "Type",
+      "type": "Tournament type",
+      "typeHint": "Pre-fills CDC values (editable).",
+      "entryFee": "Entry fee (FCFA)",
       "freeType": "Free (XP & badges)",
       "paidType": "Paid 🔒 (soon)",
       "preview": "Preview",
@@ -918,7 +921,8 @@
     "banner": {
       "title": "Paid tournaments — awaiting license",
       "progress": "License acquisition: in progress",
-      "cdc": "CDC §6"
+      "cdc": "CDC §6",
+      "freeMode": "Free mode — paid tournaments disabled"
     },
     "statsPanel": {
       "total": "Total tournaments",
@@ -1690,11 +1694,16 @@
     "subtitle": "Transactions, withdrawals and KYC validation",
     "demoBanner": "Demo data — finance endpoints pending on the backend.",
     "exportCsv": "Export CSV",
+    "searchReference": "Search (reference, user…)",
+    "table": {
+      "pageTotal": "Total (page)"
+    },
     "kpi": {
       "volume": "Total volume",
       "deposits": "Deposits",
       "withdrawals": "Withdrawals",
-      "pending": "Pending · {{amount}}"
+      "pending": "Pending · {{amount}}",
+      "vsPrevMonth": "vs previous month"
     },
     "chart": {
       "title": "Transaction volume (30 days)",

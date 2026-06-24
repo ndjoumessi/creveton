@@ -801,6 +801,9 @@
       "startDate": "Date de début",
       "startTime": "Heure de début",
       "typeLabel": "Type",
+      "type": "Type de tournoi",
+      "typeHint": "Pré-remplit les valeurs CDC (éditables).",
+      "entryFee": "Frais d’inscription (FCFA)",
       "freeType": "Gratuit (XP & badges)",
       "paidType": "Payant 🔒 (bientôt)",
       "preview": "Aperçu",
@@ -918,7 +921,8 @@
     "banner": {
       "title": "Tournois payants — en attente de licence",
       "progress": "Obtention licence : en cours",
-      "cdc": "CDC §6"
+      "cdc": "CDC §6",
+      "freeMode": "Mode gratuit — tournois payants désactivés"
     },
     "statsPanel": {
       "total": "Total tournois",
@@ -1690,11 +1694,16 @@
     "subtitle": "Transactions, retraits et validation KYC",
     "demoBanner": "Données de démonstration — endpoints finances à brancher côté backend.",
     "exportCsv": "Exporter CSV",
+    "searchReference": "Rechercher (référence, utilisateur…)",
+    "table": {
+      "pageTotal": "Total (page)"
+    },
     "kpi": {
       "volume": "Volume total",
       "deposits": "Dépôts",
       "withdrawals": "Retraits",
-      "pending": "En attente · {{amount}}"
+      "pending": "En attente · {{amount}}",
+      "vsPrevMonth": "vs mois précédent"
     },
     "chart": {
       "title": "Volume des transactions (30 j)",
