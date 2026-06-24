@@ -35,18 +35,23 @@ module.exports = {
       throw new ApiError('VALIDATION_ERROR', { message: 'Champ « avatar » (image) requis.' });
     }
     const userId = req.user.id;
-    const avatarUrl = await avatarService.uploadAvatar({
+    // public_id de l'avatar courant → supprimé après l'upload du nouveau
+    // (delete-before-replace : un seul asset Cloudinary par user).
+    const current = await userModel.findById(userId);
+    const { url, publicId } = await avatarService.uploadAvatar({
       buffer: file.buffer,
       mimetype: file.mimetype,
       userId,
+      oldPublicId: current?.avatar_public_id,
     });
-    await userModel.setAvatar(userId, avatarUrl);
-    return ok(res, { avatar_url: avatarUrl });
+    await userModel.setAvatar(userId, url, publicId);
+    return ok(res, { avatar_url: url });
   }),
-  // DELETE /users/me/avatar — supprime l'avatar (Cloudinary + colonne).
+  // DELETE /users/me/avatar — supprime l'avatar (asset Cloudinary + colonnes).
   deleteAvatar: asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    await avatarService.deleteAvatar(userId);
+    const current = await userModel.findById(userId);
+    await avatarService.deleteAvatar(current?.avatar_public_id);
     await userModel.clearAvatar(userId);
     return noContent(res);
   }),

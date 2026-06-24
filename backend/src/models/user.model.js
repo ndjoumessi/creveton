@@ -157,19 +157,19 @@ async function incrementWallet(id, delta, executor = db) {
   return rows[0] ? Number(rows[0].wallet_balance) : null;
 }
 
-/** Enregistre l'URL relative de l'avatar (déjà écrit sur disque par le contrôleur). */
-async function setAvatar(id, url) {
+/** Enregistre l'URL Cloudinary de l'avatar + son public_id (pour le nettoyage). */
+async function setAvatar(id, url, publicId = null) {
   const { rows } = await db.query(
-    `UPDATE users SET avatar_url = $2 WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
-    [id, url]
+    `UPDATE users SET avatar_url = $2, avatar_public_id = $3 WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
+    [id, url, publicId]
   );
   return rows[0] || null;
 }
 
-/** Supprime l'URL d'avatar (remet à NULL). */
+/** Supprime l'URL d'avatar et son public_id (remet à NULL). */
 async function clearAvatar(id) {
   const { rows } = await db.query(
-    `UPDATE users SET avatar_url = NULL WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
+    `UPDATE users SET avatar_url = NULL, avatar_public_id = NULL WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
     [id]
   );
   return rows[0] || null;
