@@ -5,13 +5,24 @@
  */
 export default function Logo({ size = 40, className = '' }) {
   return (
-    <img
-      src="/logo.png"
-      alt="Creveton"
-      width={size}
-      height={size}
+    <div
       className={className}
-      style={{ objectFit: 'contain' }}
-    />
+      style={{
+        width: size + 8,
+        height: size + 8,
+        borderRadius: '50%',
+        backgroundColor: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <img
+        src="/logo.png"
+        alt="Creveton"
+        style={{ width: size, height: size, objectFit: 'contain' }}
+      />
+    </div>
   );
 }
