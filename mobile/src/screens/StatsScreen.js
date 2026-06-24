@@ -737,7 +737,7 @@ const makeStyles = (colors) => StyleSheet.create({
   kpiValue: {
     fontFamily: fonts.titleExtraBold,
     fontSize: 32,
-    color: colors.green700,
+    color: colors.textDark,
     marginTop: spacing.md,
   },
   kpiLabel: {
@@ -752,7 +752,7 @@ const makeStyles = (colors) => StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.titleSemiBold,
     fontSize: fontSizes.lg,
-    color: colors.green900,
+    color: colors.textDark,
     marginTop: spacing.xl,
     marginBottom: spacing.md,
   },
@@ -818,7 +818,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   histAgo: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted },
   histBottom: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  histScore: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.green900 },
+  histScore: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textDark },
   histCorrect: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
   histXp: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.sm, color: colors.gold500 },
   histBadge: {
@@ -855,7 +855,7 @@ const makeStyles = (colors) => StyleSheet.create({
   myRankValue: {
     fontFamily: fonts.titleBlack,
     fontSize: fontSizes.display,
-    color: colors.green900,
+    color: colors.textDark,
     marginVertical: 2,
   },
   myRankSub: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.sm, color: colors.textMuted },

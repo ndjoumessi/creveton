@@ -52,6 +52,7 @@ export const colors = {
   // — Surfaces
   surface: '#ffffff',
   surfaceCream: '#fdf6e9',
+  surfaceElevated: '#ffffff', // surface « surélevée » (clair) ; en sombre, plus claire que les cartes
   cardOnDark: '#143d24',
   overlay: 'rgba(7, 28, 16, 0.62)',
 
@@ -81,6 +82,7 @@ export const darkColors = {
   cream: '#0a0f0d', // fond de page
   surface: '#1a2b1f',
   surfaceCream: '#111a14',
+  surfaceElevated: '#22382a', // plus claire que les cartes (#1a2b1f) → tuiles « mode »
 
   // Textes : clairs sur sombre (mêmes clés que la palette claire)
   textDark: '#f0faf4', // blanc cassé verdâtre

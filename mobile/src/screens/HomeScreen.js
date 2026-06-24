@@ -567,7 +567,9 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   modeCard: {
     width: 160,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.lg,
     padding: spacing.lg,
     ...shadow.card,
@@ -643,7 +645,7 @@ const makeStyles = (colors) => StyleSheet.create({
   statValue: {
     fontFamily: fonts.titleExtraBold,
     fontSize: fontSizes.xxl,
-    color: colors.green900,
+    color: colors.textDark,
     marginTop: spacing.md,
   },
   statLabel: {
@@ -691,7 +693,7 @@ const makeStyles = (colors) => StyleSheet.create({
   lastScore: {
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.lg,
-    color: colors.green900,
+    color: colors.textDark,
   },
 
   // Tournois
