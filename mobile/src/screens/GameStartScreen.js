@@ -144,12 +144,17 @@ export default function GameStartScreen({ navigation, route }) {
     hapticMedium();
     setLoading(true);
     try {
-      const { questions: qs, error } = await drawForMode({ mode, theme, level });
+      const { questions: qs, error, warning } = await drawForMode({ mode, theme, level });
       if (error) {
         const key = error === 'notEnough' ? 'gameStart.notify.notEnough' : 'gameStart.notify.noQuestions';
         toast.show({ type: 'error', message: t(key) });
         setLoading(false);
         return;
+      }
+      // Top-up API impossible (hors-ligne) : on lance quand même avec le cache,
+      // mais on prévient que la partie peut être plus courte que prévu.
+      if (warning === 'offline') {
+        toast.show({ type: 'info', message: t('gameStart.notify.offline') });
       }
       startGame({
         mode,

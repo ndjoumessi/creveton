@@ -154,7 +154,8 @@
     "notify": {
       "noQuestions": "No questions available for this theme.",
       "startFailed": "Could not start the game.",
-      "notEnough": "Not enough cached questions for this mode."
+      "notEnough": "Not enough cached questions for this mode.",
+      "offline": "Offline: started with cached questions, some may be missing."
     },
     "chooseMode": "Choose your mode",
     "modes": {

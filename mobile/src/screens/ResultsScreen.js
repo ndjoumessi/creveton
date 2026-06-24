@@ -28,6 +28,7 @@ import {
   Skeleton,
   Confetti,
   MiniLineChart,
+  useToast,
 } from '../components';
 import { useGameStore } from '../store/gameStore';
 import { useQuestionsStore } from '../store/questionsStore';
@@ -76,6 +77,7 @@ export default function ResultsScreen({ route, navigation }) {
   const startGame = useGameStore((s) => s.startGame);
   const drawForMode = useQuestionsStore((s) => s.drawForMode);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  const toast = useToast();
 
   const goHome = () => {
     reset();
@@ -90,12 +92,16 @@ export default function ResultsScreen({ route, navigation }) {
     const { mode, theme, level } = useGameStore.getState();
     setReplaying(true);
     try {
-      const { questions, error: drawError } = await drawForMode({ mode, theme, level });
+      const { questions, error: drawError, warning } = await drawForMode({ mode, theme, level });
       if (drawError || !questions) {
         setReplaying(false);
         reset();
         navigation.navigate('Tabs', { screen: 'Play' });
         return;
+      }
+      // Top-up API impossible (hors-ligne) : on rejoue avec le cache, mais on prévient.
+      if (warning === 'offline') {
+        toast.show({ type: 'info', message: t('gameStart.notify.offline') });
       }
       const isMixed = TIMED_MODES.includes(mode);
       startGame({

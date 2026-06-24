@@ -154,7 +154,8 @@
     "notify": {
       "noQuestions": "Aucune question disponible pour ce thème.",
       "startFailed": "Impossible de démarrer la partie.",
-      "notEnough": "Pas assez de questions en cache pour ce mode."
+      "notEnough": "Pas assez de questions en cache pour ce mode.",
+      "offline": "Hors-ligne : partie lancée avec les questions en cache, certaines peuvent manquer."
     },
     "chooseMode": "Choisis ton mode",
     "modes": {
