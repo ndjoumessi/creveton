@@ -577,7 +577,7 @@ export default function TeamPage() {
         description={t('team.subtitle')}
         actions={isSuperAdmin && (
           <button type="button" className="btn btn-primary" onClick={() => setShowInvite(true)}>
-            <UserPlus size={16} /> {t('team.invite')}
+            <UserPlus size={16} /> {t('team.invite.button')}
           </button>
         )}
       />

@@ -1417,12 +1417,18 @@
   "team": {
     "title": "Équipe d'administration",
     "subtitle": "Gérez les accès et les rôles de votre équipe",
-    "invite": "Inviter un membre",
+    "invite": {
+      "button": "Inviter un membre",
+      "expired": "Invitation expirée",
+      "expiresIn": "Expire dans {{time}}"
+    },
     "stats": {
       "total": "Total membres",
       "superAdmins": "Super Admins",
       "admins": "Admins",
-      "moderators": "Modérateurs"
+      "moderators": "Modérateurs",
+      "active7d": "Actifs (7 j)",
+      "pendingInvites": "Invitations en attente"
     },
     "columns": {
       "member": "Membre",
