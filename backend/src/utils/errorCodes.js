@@ -32,6 +32,7 @@ const ERROR_CODES = {
   TOURNAMENT_NOT_FOUND: { http: 404, message: 'Tournoi introuvable.' },
   CHALLENGE_NOT_FOUND: { http: 404, message: 'Challenge introuvable.' },
   NO_QUESTIONS_AVAILABLE: { http: 404, message: 'Aucune question disponible pour ce filtre.' },
+  INVITATION_NOT_FOUND: { http: 404, message: 'Invitation introuvable.' },
   NOT_FOUND: { http: 404, message: 'Ressource introuvable.' },
 
   EMAIL_ALREADY_USED: { http: 409, message: 'Cet email est déjà utilisé.' },
@@ -43,6 +44,7 @@ const ERROR_CODES = {
   ALREADY_PLAYED: { http: 409, message: 'Challenge déjà joué.' },
   ALREADY_ANSWERED: { http: 409, message: 'Réponse déjà enregistrée pour cette question.' },
   TOURNAMENT_ALREADY_RUNNING: { http: 409, message: 'Le tournoi est déjà en cours.' },
+  INVITATION_NOT_PENDING: { http: 409, message: "Cette invitation n'est plus en attente." },
 
   OTP_EXPIRED: { http: 410, message: 'Le code OTP a expiré.' },
   INVITE_EXPIRED: { http: 410, message: "L'invitation est invalide ou a expiré." },
@@ -62,6 +64,7 @@ const ERROR_CODES = {
   NOT_IMPLEMENTED: { http: 501, message: 'Endpoint non encore implémenté (scaffold).' },
   SMS_PROVIDER_UNAVAILABLE: { http: 503, message: 'Service SMS temporairement indisponible.' },
   PAYMENT_PROVIDER_UNAVAILABLE: { http: 503, message: 'Service de paiement temporairement indisponible.' },
+  EMAIL_SEND_FAILED: { http: 503, message: "L'envoi de l'email a échoué, réessayez plus tard." },
 };
 
 module.exports = ERROR_CODES;

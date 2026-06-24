@@ -18,7 +18,17 @@ const stats = asyncHandler(async (req, res) => {
 
 /** POST /admin/team/invite — crée un compte modérateur/admin + lien d'invitation. */
 const invite = asyncHandler(async (req, res) => {
-  return created(res, await teamService.invite(req.body));
+  return created(res, await teamService.invite(req.body, req.user.id));
+});
+
+/** GET /admin/team/invitations — liste paginée des invitations (audit). */
+const invitations = asyncHandler(async (req, res) => {
+  return ok(res, await teamService.listInvitations(req.query));
+});
+
+/** POST /admin/team/invitations/:id/resend — renvoie l'email d'invitation. */
+const resendInvite = asyncHandler(async (req, res) => {
+  return ok(res, await teamService.resendInvitation(req.params.id, req.user.id, req.body.lang));
 });
 
 /** POST /admin/team/accept-invite (public) — active le compte via le token Redis. */
@@ -52,4 +62,16 @@ const patchRolePermissions = asyncHandler(async (req, res) => {
   return ok(res, await teamService.setRolePermissions(req.params.role, req.body.permissions, req.user.id));
 });
 
-module.exports = { list, stats, invite, acceptInvite, changeRole, remove, activity, roles, patchRolePermissions };
+module.exports = {
+  list,
+  stats,
+  invite,
+  invitations,
+  resendInvite,
+  acceptInvite,
+  changeRole,
+  remove,
+  activity,
+  roles,
+  patchRolePermissions,
+};

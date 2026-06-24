@@ -27,6 +27,12 @@ const updateMe = Joi.object({
   }),
 }).min(1);
 
+/** POST /users/me/referral/invite — parrainage d'un ami par email. */
+const referralInvite = Joi.object({
+  email: Joi.string().email().required(),
+  lang: Joi.string().valid(...LANGS).default('fr'),
+});
+
 /** Pagination générique (historique, transactions). */
 const pagination = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(20),
@@ -97,6 +103,7 @@ const adminLeaderboard = Joi.object({
 
 module.exports = {
   updateMe,
+  referralInvite,
   pagination,
   adminList,
   adminSuspend,

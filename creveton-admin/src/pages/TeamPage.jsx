@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
   UserPlus, Eye, ShieldCheck, KeyRound, UserX, UserCheck, Trash2,
-  MoreVertical, Users, Check, Clock,
+  MoreVertical, Users, Check, Clock, Mail, MailCheck, MailX, RefreshCw,
 } from 'lucide-react';
 import teamService from '../services/team.service';
 import { useApiData } from '../hooks/useApiData';
@@ -296,21 +296,26 @@ function InviteModal({ open, onClose, onInvited }) {
   const { t } = useTranslation();
   const [sending, setSending] = useState(false);
   const [inviteUrl, setInviteUrl] = useState(null);
+  const [emailSent, setEmailSent] = useState(false);
+  const [invitedEmail, setInvitedEmail] = useState('');
   const [copied, setCopied] = useState(false);
   const {
     register, handleSubmit, watch, reset, formState: { errors },
-  } = useForm({ defaultValues: { email: '', name: '', role: 'moderator', message: '' } });
+  } = useForm({ defaultValues: { email: '', name: '', role: 'moderator', lang: 'fr', message: '' } });
 
   useEffect(() => {
     if (open) {
-      reset({ email: '', name: '', role: 'moderator', message: '' });
+      reset({ email: '', name: '', role: 'moderator', lang: 'fr', message: '' });
       setInviteUrl(null);
+      setEmailSent(false);
+      setInvitedEmail('');
       setCopied(false);
     }
   }, [open, reset]);
 
   const role = watch('role');
   const name = watch('name');
+  const lang = watch('lang');
   const grantedModules = accessibleModules(DEFAULT_ROLE_PERMISSIONS[role] || {});
 
   const submit = async (payload) => {
@@ -320,11 +325,15 @@ function InviteModal({ open, onClose, onInvited }) {
         email: payload.email.trim(),
         name: payload.name.trim(),
         role: payload.role,
+        lang: payload.lang,
         message: payload.message?.trim() || undefined,
       });
-      // L'email n'est pas encore envoyé automatiquement → on affiche le lien à copier.
+      // L'email est envoyé automatiquement (Resend). On confirme l'envoi ; le lien
+      // reste copiable en repli (utile si l'email n'a pas pu partir).
       setInviteUrl(res.invite_url || null);
-      notify.success(t('team.notify.inviteCreated'));
+      setEmailSent(!!res.email_sent);
+      setInvitedEmail(payload.email.trim());
+      notify.success(res.email_sent ? t('team.notify.inviteSent') : t('team.notify.inviteCreated'));
       onInvited();
     } catch {
       notify.error(t('team.notify.inviteFailed'));
@@ -340,17 +349,39 @@ function InviteModal({ open, onClose, onInvited }) {
       .catch(() => notify.error(t('team.notify.copyFailed')));
   };
 
-  // Écran de confirmation : lien d'invitation copiable.
+  // Écran de confirmation : email envoyé (+ lien copiable en repli).
   if (inviteUrl) {
     return (
       <Modal
         open={open}
         onClose={onClose}
-        title={t('team.modal.inviteCreatedTitle')}
+        title={emailSent ? t('team.modal.inviteSentTitle') : t('team.modal.inviteCreatedTitle')}
         width={560}
         footer={<button type="button" className="btn btn-primary" onClick={onClose}>{t('common.close')}</button>}
       >
         <div className="stack" style={{ gap: 14 }}>
+          {emailSent ? (
+            <div
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: 'var(--bg-mute)', border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-sm)', padding: '12px 14px',
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 26, height: 26, borderRadius: '50%', background: '#1a5230', color: '#fff', flexShrink: 0,
+                }}
+                aria-hidden="true"
+              >
+                <Check size={15} strokeWidth={3} />
+              </span>
+              <span style={{ fontSize: 14 }}>{t('team.modal.inviteSentMessage', { email: invitedEmail })}</span>
+            </div>
+          ) : (
+            <p className="field-error" style={{ fontSize: 13.5, margin: 0 }}>{t('team.modal.emailNotSent')}</p>
+          )}
           <p style={{ fontSize: 14, margin: 0 }}>{t('team.modal.inviteLinkHint')}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <code
@@ -435,6 +466,27 @@ function InviteModal({ open, onClose, onInvited }) {
               })}
             </div>
           </div>
+          <div className="field">
+            <span className="team-field-label">{t('team.modal.language')}</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {['fr', 'en'].map((lng) => (
+                <label
+                  key={lng}
+                  className={`team-lang-choice ${lang === lng ? 'on' : ''}`}
+                  style={{
+                    flex: 1, textAlign: 'center', cursor: 'pointer', userSelect: 'none',
+                    padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13.5, fontWeight: 600,
+                    border: `1px solid ${lang === lng ? 'var(--gold)' : 'var(--border)'}`,
+                    background: lang === lng ? 'var(--gold-soft, rgba(212,160,23,0.12))' : 'transparent',
+                    color: lang === lng ? 'var(--gold-ink, var(--text))' : 'var(--text-soft, var(--text))',
+                  }}
+                >
+                  <input type="radio" value={lng} {...register('lang')} style={{ display: 'none' }} />
+                  {t(`team.modal.lang_${lng}`)}
+                </label>
+              ))}
+            </div>
+          </div>
           <div className="field" style={{ marginBottom: 0 }}>
             <label htmlFor="team-inv-msg">{t('team.modal.message')}</label>
             <textarea
@@ -517,6 +569,89 @@ function RoleModal({ member, onClose, onSaved }) {
   );
 }
 
+/* ─────────────── Invitations en attente (audit) ─────────────── */
+function InviteStatusBadge({ status }) {
+  const { t } = useTranslation();
+  const tone = status === 'accepted' ? 'team-st-active' : status === 'expired' ? 'team-st-susp' : 'team-st-inactive';
+  return (
+    <span className={`team-status ${tone}`}>
+      <span className="team-status-dot" />
+      {t(`team.invitations.status_${status}`, status)}
+    </span>
+  );
+}
+
+function PendingInvitations({ invitations, loading, canManage, onResend, resendingId }) {
+  const { t } = useTranslation();
+  if (!canManage) return null;
+
+  return (
+    <section style={{ marginTop: 24 }}>
+      <div className="team-section-title" style={{ marginBottom: 10 }}>
+        {t('team.invitations.title')}
+        {invitations.length > 0 && <span className="muted"> · {invitations.length}</span>}
+      </div>
+      {loading ? (
+        <SkeletonTable rows={3} cols={6} />
+      ) : !invitations.length ? (
+        <div className="card"><EmptyState icon={Mail} title={t('team.invitations.emptyTitle')} message={t('team.invitations.emptyMessage')} /></div>
+      ) : (
+        <div className="card team-table-card">
+          <div className="table-wrap">
+            <table className="data team-table">
+              <thead>
+                <tr>
+                  <th>{t('team.invitations.email')}</th>
+                  <th>{t('team.invitations.name')}</th>
+                  <th>{t('team.invitations.role')}</th>
+                  <th>{t('team.invitations.statusCol')}</th>
+                  <th>{t('team.invitations.sent')}</th>
+                  <th>{t('team.invitations.expires')}</th>
+                  <th aria-label={t('team.columns.actions')} />
+                </tr>
+              </thead>
+              <tbody>
+                {invitations.map((inv) => (
+                  <tr key={inv.id}>
+                    <td><span className="cell-strong">{inv.email}</span></td>
+                    <td>{inv.name || '—'}</td>
+                    <td><RoleBadge role={inv.role} /></td>
+                    <td><InviteStatusBadge status={inv.status} /></td>
+                    <td>
+                      {inv.email_sent ? (
+                        <span className="team-status team-st-active" title={t('team.invitations.sentYes')}>
+                          <MailCheck size={14} /> {t('team.invitations.sentYes')}
+                        </span>
+                      ) : (
+                        <span className="team-status team-st-susp" title={inv.email_error || t('team.invitations.sentNo')}>
+                          <MailX size={14} /> {t('team.invitations.sentNo')}
+                        </span>
+                      )}
+                    </td>
+                    <td><span className="team-muted-cell">{dateTimeFr(inv.expires_at)}</span></td>
+                    <td>
+                      {inv.status === 'pending' && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-ghost-soft"
+                          disabled={resendingId === inv.id}
+                          onClick={() => onResend(inv)}
+                        >
+                          <RefreshCw size={14} /> {t('team.invitations.resend')}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 /* ─────────────── Page ─────────────── */
 export default function TeamPage() {
   const { t } = useTranslation();
@@ -531,13 +666,33 @@ export default function TeamPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [roleFor, setRoleFor] = useState(null);
   const [deleteFor, setDeleteFor] = useState(null);
+  const [resendingId, setResendingId] = useState(null);
 
   const { data, loading, refetch } = useApiData(() => teamService.list(), []);
   const { refetch: refetchStats } = useApiData(() => teamService.stats(), []);
+  // Invitations en attente (audit) — réservé aux super_admin (endpoint team:manage).
+  const { data: invData, loading: invLoading, refetch: refetchInvites } = useApiData(
+    () => (isSuperAdmin ? teamService.listInvitations({ status: 'pending' }) : Promise.resolve({ data: [] })),
+    [],
+  );
   const members = useMemo(() => data?.data || [], [data]);
+  const invitations = useMemo(() => invData?.data || [], [invData]);
   const kpis = useMemo(() => teamKpis(members), [members]);
 
-  const refreshAll = () => { refetch(); refetchStats(); };
+  const refreshAll = () => { refetch(); refetchStats(); refetchInvites(); };
+
+  const doResend = async (inv) => {
+    setResendingId(inv.id);
+    try {
+      const res = await teamService.resendInvitation(inv.id);
+      notify.success(res.email_sent ? t('team.notify.resent') : t('team.notify.resendNoEmail'));
+      refetchInvites();
+    } catch {
+      notify.error(t('team.notify.resendFailed'));
+    } finally {
+      setResendingId(null);
+    }
+  };
 
   const openMember = (m) => { setSelected(m); setTab('profil'); };
 
@@ -656,6 +811,15 @@ export default function TeamPage() {
           </div>
         </div>
       )}
+
+      {/* Invitations en attente (audit) — super_admin uniquement */}
+      <PendingInvitations
+        invitations={invitations}
+        loading={invLoading}
+        canManage={isSuperAdmin}
+        onResend={doResend}
+        resendingId={resendingId}
+      />
 
       {/* Drawer fiche membre */}
       <Drawer

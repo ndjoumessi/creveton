@@ -16,14 +16,32 @@ export function stats() {
   return withMock(() => api.get('/admin/team/stats').then((r) => r.data), () => mockTeamStats);
 }
 
-/** POST /admin/team/invite { email, name, role, message? } → { user, invite_url } */
+/** POST /admin/team/invite { email, name, role, lang?, message? } → { user, invite_url, email_sent, invitation_id } */
 export function invite(payload) {
   return withMock(
     () => api.post('/admin/team/invite', payload).then((r) => r.data),
     () => ({
       user: { id: `mock-${Date.now()}`, name: payload.name, email: payload.email, role: payload.role },
       invite_url: `https://admin.creveton.cm/accept-invite?token=mock-${Date.now()}`,
+      email_sent: true,
+      invitation_id: `mock-${Date.now()}`,
     }),
+  );
+}
+
+/** GET /admin/team/invitations?status=&page=&limit= → { data, page } */
+export function listInvitations(params = {}) {
+  return withMock(
+    () => api.get('/admin/team/invitations', { params }).then((r) => r.data),
+    () => ({ data: [], page: { page: 1, limit: 20, total: 0, has_more: false } }),
+  );
+}
+
+/** POST /admin/team/invitations/:id/resend { lang? } → { resent, email_sent } */
+export function resendInvitation(id, lang) {
+  return withMock(
+    () => api.post(`/admin/team/invitations/${id}/resend`, lang ? { lang } : {}).then((r) => r.data),
+    () => ({ resent: true, email_sent: true }),
   );
 }
 
@@ -63,4 +81,16 @@ export function setRolePermissions(role, permissions) {
   );
 }
 
-export default { list, stats, invite, acceptInvite, setRole, remove, activity, roles, setRolePermissions };
+export default {
+  list,
+  stats,
+  invite,
+  listInvitations,
+  resendInvitation,
+  acceptInvite,
+  setRole,
+  remove,
+  activity,
+  roles,
+  setRolePermissions,
+};

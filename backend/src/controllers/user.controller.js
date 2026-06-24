@@ -5,6 +5,7 @@ const ApiError = require('../utils/ApiError');
 const { ok, noContent } = require('../utils/response');
 const walletService = require('../services/walletService');
 const avatarService = require('../services/avatarService');
+const referralService = require('../services/referralService');
 const userModel = require('../models/user.model');
 const sessionModel = require('../models/session.model');
 
@@ -76,6 +77,15 @@ module.exports = {
       userId: req.user.id,
       limit: req.query.limit,
       cursor: req.query.cursor,
+    });
+    return ok(res, result);
+  }),
+  // POST /users/me/referral/invite — envoie un email de parrainage à un ami.
+  referralInvite: asyncHandler(async (req, res) => {
+    const result = await referralService.inviteFriend({
+      userId: req.user.id,
+      email: req.body.email,
+      lang: req.body.lang,
     });
     return ok(res, result);
   }),

@@ -1509,7 +1509,11 @@
       "permissionsSaved": "Permissions enregistrées.",
       "permissionsFailed": "Enregistrement impossible.",
       "inviteCreated": "Invitation créée — copiez le lien à transmettre.",
-      "copyFailed": "Copie impossible."
+      "copyFailed": "Copie impossible.",
+      "inviteSent": "Invitation envoyée par email.",
+      "resent": "Invitation renvoyée par email.",
+      "resendNoEmail": "Lien régénéré, mais l'email n'a pas pu partir.",
+      "resendFailed": "Échec du renvoi de l'invitation."
     },
     "confirm": {
       "deleteTitle": "Retirer le membre",
@@ -1547,7 +1551,30 @@
       "inviteLinkHint": "L'email n'est pas encore envoyé automatiquement. Copiez ce lien et transmettez-le au nouveau membre :",
       "inviteLinkExpiry": "Ce lien expire dans 72 heures.",
       "copyLink": "Copier le lien",
-      "copied": "Copié"
+      "copied": "Copié",
+      "language": "Langue de l'email",
+      "lang_fr": "Français",
+      "lang_en": "Anglais",
+      "inviteSentTitle": "Invitation envoyée",
+      "inviteSentMessage": "Email envoyé à {{email}}.",
+      "emailNotSent": "L'email n'a pas pu être envoyé — partagez le lien ci-dessous."
+    },
+    "invitations": {
+      "title": "Invitations en attente",
+      "email": "Email",
+      "name": "Nom",
+      "role": "Rôle",
+      "statusCol": "Statut",
+      "sent": "Email",
+      "expires": "Expire le",
+      "resend": "Renvoyer",
+      "emptyTitle": "Aucune invitation en attente",
+      "emptyMessage": "Les invitations envoyées apparaîtront ici jusqu'à leur acceptation.",
+      "sentYes": "Envoyé",
+      "sentNo": "Non envoyé",
+      "status_pending": "En attente",
+      "status_accepted": "Acceptée",
+      "status_expired": "Expirée"
     }
   },
   "roles": {

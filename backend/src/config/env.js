@@ -62,6 +62,17 @@ const env = {
     fromNumber: process.env.TWILIO_FROM_NUMBER || '',
   },
 
+  // Email transactionnel (Resend) — invitations équipe + parrainage joueur.
+  email: {
+    apiKey: process.env.RESEND_API_KEY || '',
+    from: process.env.EMAIL_FROM || 'Creveton <noreply@creveton.cm>',
+    // Base de la console admin pour les liens d'invitation (ADMIN_URL ou legacy ADMIN_BASE_URL).
+    adminUrl: (process.env.ADMIN_URL || process.env.ADMIN_BASE_URL || 'https://admin.creveton.cm').replace(/\/$/, ''),
+    // Lien profond / store pour le parrainage joueur (?ref=CODE est ajouté).
+    appDeepLinkUrl: (process.env.APP_DEEP_LINK_URL || 'https://creveton.cm').replace(/\/$/, ''),
+    referralLimitPerDay: int(process.env.REFERRAL_LIMIT_PER_DAY, 10),
+  },
+
   features: {
     tournamentsPaidEnabled: bool(process.env.FEATURE_TOURNAMENTS_PAID_ENABLED, false),
   },

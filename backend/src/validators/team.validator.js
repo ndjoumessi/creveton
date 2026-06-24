@@ -7,7 +7,20 @@ const invite = Joi.object({
   email: Joi.string().email().required(),
   name: Joi.string().min(2).max(100).required(),
   role: Joi.string().valid('moderator', 'admin').required(),
+  lang: Joi.string().valid('fr', 'en').default('fr'),
   message: Joi.string().max(2000).allow('').optional(),
+});
+
+/** GET /admin/team/invitations — liste paginée (filtre statut). */
+const listInvitations = Joi.object({
+  status: Joi.string().valid('pending', 'accepted', 'expired').optional(),
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(20),
+});
+
+/** POST /admin/team/invitations/:id/resend — langue de l'email (optionnelle). */
+const resendInvitation = Joi.object({
+  lang: Joi.string().valid('fr', 'en').default('fr'),
 });
 
 /** PATCH /admin/team/:id/role */
@@ -34,4 +47,4 @@ const permissions = Joi.object({
     .required(),
 });
 
-module.exports = { invite, role, acceptInvite, permissions };
+module.exports = { invite, role, acceptInvite, permissions, listInvitations, resendInvitation };

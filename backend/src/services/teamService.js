@@ -8,6 +8,9 @@ const { redis } = require('../config/redis');
 const teamModel = require('../models/team.model');
 const userModel = require('../models/user.model');
 const settingsModel = require('../models/settings.model');
+const invitationModel = require('../models/invitation.model');
+const emailService = require('./emailService');
+const env = require('../config/env');
 
 /**
  * Logique métier « Équipe & Rôles » (console §Équipe).
@@ -22,8 +25,10 @@ const BCRYPT_COST = 12;
 const PERMISSIONS_KEY = 'role_permissions';
 const INVITE_TTL_SEC = 72 * 3600; // 72 h pour accepter l'invitation.
 const inviteKey = (token) => `invite:${token}`;
-// Base de la console admin pour les liens d'invitation (configurable).
-const ADMIN_BASE_URL = (process.env.ADMIN_BASE_URL || 'https://admin.creveton.cm').replace(/\/$/, '');
+// Base de la console admin pour les liens d'invitation (env.email.adminUrl :
+// ADMIN_URL, sinon legacy ADMIN_BASE_URL, sinon défaut).
+const ADMIN_BASE_URL = env.email.adminUrl;
+const acceptUrl = (token) => `${ADMIN_BASE_URL}/accept-invite?token=${token}`;
 
 const ROLE_LIST = ['super_admin', 'admin', 'moderator', 'player'];
 const SYSTEM_ROLES = ['super_admin', 'player'];
@@ -119,9 +124,16 @@ async function memberActivity(id) {
  * POST /admin/team/invite — crée un compte modérateur/admin INACTIF (sans mot de
  * passe) et génère un lien d'invitation (token UUID en Redis, TTL 72 h). Le compte
  * s'active à l'acceptation (accept-invite). super_admin non invitable (validateur).
- * @returns {Promise<{ user: object, invite_url: string }>}
+ *
+ * Envoie l'email d'invitation (Resend) et écrit une ligne d'audit dans
+ * admin_invitations. L'échec d'email ne bloque JAMAIS la création de l'invitation
+ * (statut d'envoi conservé dans email_sent / email_error).
+ *
+ * @param {{ email, name, role, lang? }} params
+ * @param {string|null} invitedBy  id de l'admin émetteur (pour l'audit + l'email).
+ * @returns {Promise<{ user, invite_url, email_sent, invitation_id }>}
  */
-async function invite({ email, name, role }) {
+async function invite({ email, name, role, lang = 'fr' }, invitedBy = null) {
   if (await userModel.findByEmail(email)) throw new ApiError('EMAIL_ALREADY_USED');
 
   const referralCode = await userModel.generateUniqueReferralCode();
@@ -150,13 +162,43 @@ async function invite({ email, name, role }) {
 
   const token = crypto.randomUUID();
   await redis.set(inviteKey(token), JSON.stringify({ user_id: user.id }), 'EX', INVITE_TTL_SEC);
-  const inviteUrl = `${ADMIN_BASE_URL}/accept-invite?token=${token}`;
-  // TODO: brancher l'envoi d'email (Resend/SMTP). En attendant, on journalise le lien.
-  logger.info('Invitation équipe créée', { email, role, invite_url: inviteUrl });
+  const inviteUrl = acceptUrl(token);
+
+  // Envoi de l'email (ne jette jamais — renvoie { sent, error? }).
+  const inviter = invitedBy ? await userModel.findById(invitedBy) : null;
+  const emailResult = await emailService.sendTeamInvitation({
+    to: email,
+    inviteeName: name,
+    inviterName: inviter?.name,
+    role,
+    inviteUrl,
+    lang,
+  });
+
+  // Audit persistant (permet de lister les invitations en attente). Best-effort.
+  let invitationId = null;
+  try {
+    const row = await invitationModel.create({
+      email,
+      name,
+      role,
+      invited_by: invitedBy,
+      invite_token: token,
+      email_sent: emailResult.sent === true,
+      email_error: emailResult.sent ? null : (emailResult.error || (emailResult.skipped ? 'RESEND_API_KEY absente' : null)),
+    });
+    invitationId = row.id;
+  } catch (err) {
+    logger.error('Audit invitation non enregistré', { email, error: err.message });
+  }
+
+  logger.info('Invitation équipe créée', { email, role, invite_url: inviteUrl, email_sent: emailResult.sent === true });
 
   return {
     user: { id: user.id, name: user.name, email: user.email, role: user.role },
     invite_url: inviteUrl,
+    email_sent: emailResult.sent === true,
+    invitation_id: invitationId,
   };
 }
 
@@ -179,7 +221,80 @@ async function acceptInvite({ token, password }) {
   if (!updated) throw new ApiError('USER_NOT_FOUND');
   await redis.del(inviteKey(token));
 
+  // Marque l'invitation comme acceptée dans l'audit (best-effort — ne fait pas
+  // échouer l'activation si la table ou la ligne est absente).
+  try {
+    await invitationModel.markAccepted(token);
+  } catch (err) {
+    logger.error('Audit invitation (accept) non mis à jour', { error: err.message });
+  }
+
   return { message: 'Compte activé' };
+}
+
+/**
+ * GET /admin/team/invitations — liste paginée des invitations (audit), filtrable
+ * par statut. @returns {{ data, page }}.
+ */
+async function listInvitations({ status = null, page = 1, limit = 20 } = {}) {
+  const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+  const safePage = Math.max(parseInt(page, 10) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+  const { data, total } = await invitationModel.list({ status, limit: safeLimit, offset });
+  return {
+    data: data.map((r) => ({
+      id: r.id,
+      email: r.email,
+      name: r.name ?? null,
+      role: r.role,
+      status: r.status,
+      email_sent: r.email_sent,
+      email_error: r.email_error ?? null,
+      invited_by: r.invited_by ?? null,
+      invited_by_name: r.invited_by_name ?? null,
+      expires_at: r.expires_at,
+      accepted_at: r.accepted_at ?? null,
+      created_at: r.created_at,
+    })),
+    page: { page: safePage, limit: safeLimit, total, has_more: offset + data.length < total },
+  };
+}
+
+/**
+ * POST /admin/team/invitations/:id/resend — renvoie l'email d'une invitation
+ * encore en attente. Recrée le token Redis s'il a expiré (l'invitation est
+ * valable 72 h, le token Redis aussi — mais ils peuvent diverger après un
+ * redémarrage Redis). @returns {{ resent: true, email_sent }}.
+ */
+async function resendInvitation(id, invitedBy = null, lang = 'fr') {
+  const inv = await invitationModel.findById(id);
+  if (!inv) throw new ApiError('INVITATION_NOT_FOUND');
+  if (inv.status === 'accepted') throw new ApiError('INVITATION_NOT_PENDING');
+  if (inv.status === 'expired' || new Date(inv.expires_at) < new Date()) {
+    await invitationModel.markExpired(id);
+    throw new ApiError('INVITE_EXPIRED');
+  }
+
+  // S'assure que le token Redis existe encore ; sinon le recréer pour ce compte.
+  const exists = await redis.get(inviteKey(inv.invite_token));
+  if (!exists) {
+    const account = await userModel.findByEmail(inv.email);
+    if (!account) throw new ApiError('USER_NOT_FOUND');
+    await redis.set(inviteKey(inv.invite_token), JSON.stringify({ user_id: account.id }), 'EX', INVITE_TTL_SEC);
+  }
+
+  const inviter = invitedBy ? await userModel.findById(invitedBy) : null;
+  const emailResult = await emailService.sendTeamInvitation({
+    to: inv.email,
+    inviteeName: inv.name,
+    inviterName: inviter?.name,
+    role: inv.role,
+    inviteUrl: acceptUrl(inv.invite_token),
+    lang: lang || 'fr',
+  });
+  await invitationModel.setEmailStatus(id, emailResult.sent === true, emailResult.sent ? null : (emailResult.error || null));
+
+  return { resent: true, email_sent: emailResult.sent === true };
 }
 
 /**
@@ -270,6 +385,8 @@ module.exports = {
   memberActivity,
   invite,
   acceptInvite,
+  listInvitations,
+  resendInvitation,
   setRole,
   remove,
   listRoles,

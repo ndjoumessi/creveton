@@ -17,6 +17,10 @@ router.patch(
   ctrl.patchRolePermissions
 );
 
+// Invitations (audit) — routes statiques AVANT les routes /:id.
+router.get('/invitations', requirePermission('team:manage'), validate(schemas.listInvitations, 'query'), ctrl.invitations);
+router.post('/invitations/:id/resend', requirePermission('team:manage'), validate(schemas.resendInvitation), ctrl.resendInvite);
+
 // Membres de l'équipe.
 router.get('/', requirePermission('team:read'), ctrl.list);
 router.get('/stats', requirePermission('team:read'), ctrl.stats);

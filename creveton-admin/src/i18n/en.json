@@ -1509,7 +1509,11 @@
       "permissionsSaved": "Permissions saved.",
       "permissionsFailed": "Save failed.",
       "inviteCreated": "Invitation created — copy the link to share.",
-      "copyFailed": "Copy failed."
+      "copyFailed": "Copy failed.",
+      "inviteSent": "Invitation sent by email.",
+      "resent": "Invitation resent by email.",
+      "resendNoEmail": "Link refreshed, but the email could not be sent.",
+      "resendFailed": "Failed to resend the invitation."
     },
     "confirm": {
       "deleteTitle": "Remove member",
@@ -1547,7 +1551,30 @@
       "inviteLinkHint": "Email is not sent automatically yet. Copy this link and share it with the new member:",
       "inviteLinkExpiry": "This link expires in 72 hours.",
       "copyLink": "Copy link",
-      "copied": "Copied"
+      "copied": "Copied",
+      "language": "Email language",
+      "lang_fr": "French",
+      "lang_en": "English",
+      "inviteSentTitle": "Invitation sent",
+      "inviteSentMessage": "Email sent to {{email}}.",
+      "emailNotSent": "The email could not be sent — share the link below."
+    },
+    "invitations": {
+      "title": "Pending invitations",
+      "email": "Email",
+      "name": "Name",
+      "role": "Role",
+      "statusCol": "Status",
+      "sent": "Email",
+      "expires": "Expires",
+      "resend": "Resend",
+      "emptyTitle": "No pending invitations",
+      "emptyMessage": "Sent invitations will appear here until accepted.",
+      "sentYes": "Sent",
+      "sentNo": "Not sent",
+      "status_pending": "Pending",
+      "status_accepted": "Accepted",
+      "status_expired": "Expired"
     }
   },
   "roles": {
