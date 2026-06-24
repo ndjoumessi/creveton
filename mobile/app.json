@@ -3,11 +3,18 @@
     "name": "Creveton",
     "slug": "creveton",
     "version": "1.0.0",
+    "owner": "ndjoumessi",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "creveton",
     "userInterfaceStyle": "light",
     "backgroundColor": "#0b2e1a",
+    "updates": {
+      "url": "https://u.expo.dev/9d8a0a53-32bf-4759-be3b-df6bfedf4822"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "backgroundColor": "#0b2e1a",
@@ -17,16 +24,21 @@
       "supportsTablet": true,
       "bundleIdentifier": "cm.creveton.app",
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
       "package": "cm.creveton.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#d4a017"
+        "backgroundColor": "#0b2e1a"
       },
-      "permissions": ["NOTIFICATIONS"],
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS"
+      ],
       "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
@@ -54,12 +66,15 @@
         "expo-image-picker",
         {
           "photosPermission": "Creveton accède à vos photos pour choisir une photo de profil.",
-          "cameraPermission": "Creveton accède à l'appareil photo pour prendre une photo de profil."
+          "cameraPermission": "Creveton accède à l'appareil photo pour prendre une photo de profil.",
+          "microphonePermission": false
         }
       ]
     ],
     "extra": {
-      "eas": {}
+      "eas": {
+        "projectId": "9d8a0a53-32bf-4759-be3b-df6bfedf4822"
+      }
     }
   }
 }
