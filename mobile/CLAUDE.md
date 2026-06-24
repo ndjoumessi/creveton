@@ -47,7 +47,7 @@ Pas de simulateur dispo ici : valider via `expo export` (build) + `expo start --
 
 - **Charte « Cockpit Émeraude »** : vert profond (#0b2e1a/#1a5230/#2a8a4f/#5eca84), **or rare ≤ 10% de l'écran** (CTA primaires, rewards, podium, timer, états actifs), crème (#fdf6e9), rouge (#e74c3c). Toujours utiliser les tokens de `theme.js`, jamais de couleurs en dur.
 - **Fonts** : Outfit (titres/scores), Space Grotesk (corps). Contraste ≥ 4.5:1.
-- **Logo** : composant `<Logo/>` (carré or + « C », pur View/Text). Aucune image externe ni drapeau.
+- **Logo** : Logo = `assets/logo.png` (cœur drapeau camerounais). Composant : `src/components/Logo.js` → `<Image source={require('../../assets/logo.png')} />`.
 - **Animations** : `Animated` (RN), slide+fade ≤ 300ms (max 500), ease-out, retour haptique < 120ms sur les boutons.
 - **Anti-triche (CDC §2.8)** : `correct_index` n'est **jamais** dans la vue joueur des questions de tournoi/challenge. Le feedback immédiat du quiz passe par **`POST /sessions/answer`** (mode normal seulement) ; `/sessions/submit` reste l'autorité finale du score. Ne jamais fabriquer de bonne réponse côté client.
 - **Courbe XP** : paliers `[0, 200, 500, 1200, 3000]` (`levelProgress`/`levelForXp` dans `format.js`). Le niveau effectif est dérivé de `total_xp` (robuste si `user.level` est périmé). Tout est borné ≥ 0.
