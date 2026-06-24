@@ -20,9 +20,8 @@ async function uploadAvatar({ buffer, mimetype, userId }) {
   const result = await cloudinary.uploader.unsigned_upload(dataUri, 
     process.env.CLOUDINARY_UPLOAD_PRESET || 'creveton_avatar',
     {
-      public_id: `user_${userId}`,
+      public_id: `user_${userId}_${Date.now()}`,
       folder: FOLDER,
-
     }
   );
   return result.secure_url;
