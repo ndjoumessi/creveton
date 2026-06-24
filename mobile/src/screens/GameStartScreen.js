@@ -52,6 +52,17 @@ export default function GameStartScreen({ navigation, route }) {
   const [level, setLevel] = useState('beginner');
   const [loading, setLoading] = useState(false);
 
+  // L'onglet « Jouer » reste monté : un nouveau tap sur une carte de mode (Accueil)
+  // met à jour route.params mais NE relance PAS le useState ci-dessus → le mode
+  // resterait figé (et en blitz/marathon, `ready` resterait false faute de thème).
+  // On resynchronise donc le mode/thème présélectionnés quand les params changent.
+  useEffect(() => {
+    if (GAME_MODES.some((m) => m.key === presetMode)) setMode(presetMode);
+  }, [presetMode]);
+  useEffect(() => {
+    if (preset) setTheme(preset);
+  }, [preset]);
+
   const isMixed = TIMED_MODES.includes(mode);
 
   const drawForMode = useQuestionsStore((s) => s.drawForMode);

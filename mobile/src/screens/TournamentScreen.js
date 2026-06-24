@@ -126,7 +126,7 @@ export default function TournamentScreen() {
     <Screen dark padded={false}>
       {/* En-tête sombre */}
       <View style={styles.header}>
-        <Title color={colors.cream}>{tr('tournaments.title')}</Title>
+        <Title color={colors.textOnDark}>{tr('tournaments.title')}</Title>
 
         <View style={styles.banner}>
           <Text style={styles.bannerText}>

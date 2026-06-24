@@ -3,7 +3,7 @@
 // Android), pas de ScrollView, champs non contrôlés (valeurs en ref) → le
 // formulaire ne se réinitialise pas quand le clavier s'ouvre.
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -27,7 +27,8 @@ import {
   isValidPassword,
 } from '../utils/validation';
 import { SEXES, LANGS } from '../constants/config';
-import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 const STEPS = [
   { titleKey: 'auth.register.step1', n: '1/3' },
@@ -43,6 +44,8 @@ const CITIES = [
 
 export default function RegisterScreen({ navigation }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const register = useAuthStore((s) => s.register);
   const loading = useAuthStore((s) => s.loading);
 
@@ -288,6 +291,8 @@ export default function RegisterScreen({ navigation }) {
 
 // Saisie téléphone non contrôlée (9 chiffres).
 function PhoneInput({ defaultValue, onChangeText, placeholder }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <AuthField
       style={styles.phoneInner}
@@ -302,6 +307,8 @@ function PhoneInput({ defaultValue, onChangeText, placeholder }) {
 }
 
 function Pills({ options, value, onChange }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.pills}>
       {options.map((o) => {
@@ -320,7 +327,7 @@ function Pills({ options, value, onChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.green900 },
   kav: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.lg },
   brand: { alignItems: 'center', marginBottom: spacing.lg },
@@ -328,7 +335,7 @@ const styles = StyleSheet.create({
   progress: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   seg: { flex: 1, height: 6, borderRadius: radius.pill },
   stepN: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.gold500 },
-  title: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.green900, marginBottom: spacing.lg },
+  title: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.textDark, marginBottom: spacing.lg },
   fieldLabel: {
     fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.sm,
@@ -345,7 +352,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  prefixText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.base, color: colors.cream },
+  prefixText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.base, color: colors.textOnDark },
   phoneField: { flex: 1 },
   phoneFieldError: {},
   phoneInner: { marginBottom: 0 },
@@ -356,7 +363,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.borderInput,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.white,
     paddingHorizontal: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
@@ -379,7 +386,7 @@ const styles = StyleSheet.create({
   },
   pillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
   pillText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
-  pillTextActive: { color: colors.cream },
+  pillTextActive: { color: colors.textOnDark },
   submit: { marginTop: spacing.lg },
   backBtn: { alignItems: 'center', marginTop: spacing.md },
   backText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textMuted },
@@ -392,7 +399,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     maxHeight: '60%',
   },
-  modalTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.green900, marginBottom: spacing.md },
+  modalTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.textDark, marginBottom: spacing.md },
   cityRow: {
     flexDirection: 'row',
     alignItems: 'center',

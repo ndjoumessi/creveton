@@ -31,7 +31,7 @@ const LABEL_KEYS = {
 
 function TabItem({ routeName, focused }) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const lift = useRef(new Animated.Value(focused ? 1 : 0)).current;
   useEffect(() => {
@@ -44,7 +44,9 @@ function TabItem({ routeName, focused }) {
   }, [focused, lift]);
 
   const translateY = lift.interpolate({ inputRange: [0, 1], outputRange: [0, -2] });
-  const color = focused ? colors.gold500 : colors.textFaint;
+  // Inactif : en clair on garde textFaint (#9ca3af, lisible sur barre blanche, inchangé) ;
+  // en sombre on monte à textMuted (#9dbfaa), plus lisible sur la barre sombre (#162a1e).
+  const color = focused ? colors.gold500 : isDark ? colors.textMuted : colors.textFaint;
 
   return (
     <View style={styles.item}>

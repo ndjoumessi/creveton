@@ -67,6 +67,16 @@ régénérer avec `/impeccable document`.
   timer global 62 s) ; `/sessions/answer` (feedback immédiat, mode `normal` only) une
   réponse < 150 ms → `CHEAT_DETECTED`. La bonne réponse n'est révélée qu'après soumission.
   (Seuils assouplis depuis 2 répétitions / 1 s / 500 ms pour limiter les faux positifs.)
+- **Avatars (médias)** : stockés sur **Cloudinary**, jamais sur le disque local (éphémère
+  sur Railway). `POST /users/me/avatar` (multipart, champ `avatar` ; `config/multer.js`
+  `avatarUpload` = memoryStorage, 5 Mo, filtre `image/*` → rejet en `ApiError` 400) →
+  `services/avatarService.js` (`uploader.unsigned_upload` via preset
+  `CLOUDINARY_UPLOAD_PRESET`, défaut `creveton_avatar`, `public_id user_<id>`, dossier
+  `creveton/avatars`) → on persiste `secure_url` (`userModel.setAvatar`). Le recadrage
+  **200×200** vit dans le preset Cloudinary. `DELETE /users/me/avatar` supprime côté
+  Cloudinary + colonne. Config : `config/cloudinary.js` lit `CLOUDINARY_CLOUD_NAME/
+  API_KEY/API_SECRET` (+ `CLOUDINARY_UPLOAD_PRESET`) depuis l'env — à définir aussi sur
+  Railway. Côté mobile, `avatar_url` est une URL HTTPS absolue (rendue telle quelle).
 
 ## Frontend (`creveton-admin/`) — conventions
 

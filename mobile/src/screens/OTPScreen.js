@@ -19,13 +19,13 @@ import { useTranslation } from 'react-i18next';
 import { Screen, Logo, Title, Body, Label, AppButton, useToast } from '../components';
 import { useAuthStore } from '../store/authStore';
 import {
-  colors,
   fonts,
   fontSizes,
   radius,
   spacing,
   shadow,
 } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { formatTimer } from '../utils/format';
 
 const LENGTH = 6;
@@ -46,6 +46,10 @@ function prettyPhone(raw) {
 
 export default function OTPScreen({ route, navigation }) {
   const { t } = useTranslation();
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  // Liens verts : vert profond sur crème (clair), vert clair lisible en sombre.
+  const linkGreen = isDark ? colors.green300 : colors.green700;
   const { phone, otpExpiresAt } = route.params || {};
   const verifyOtp = useAuthStore((s) => s.verifyOtp);
   const resendOtp = useAuthStore((s) => s.resendOtp);
@@ -205,7 +209,7 @@ export default function OTPScreen({ route, navigation }) {
         onPress={() => navigation.goBack()}
         hitSlop={8}
       >
-        <Body color={colors.green700} style={styles.backText}>
+        <Body color={linkGreen} style={styles.backText}>
           {t('auth.register.back')}
         </Body>
       </Pressable>
@@ -222,7 +226,7 @@ export default function OTPScreen({ route, navigation }) {
         <Title style={styles.heading}>{t('auth.otp.title')}</Title>
         <Body muted style={styles.subtitle}>
           {t('auth.otp.subtitle')}{'\n'}
-          <Body style={styles.phone}>{prettyPhone(phone)}</Body>
+          <Body style={[styles.phone, isDark && { color: colors.green300 }]}>{prettyPhone(phone)}</Body>
         </Body>
       </View>
 
@@ -292,7 +296,7 @@ export default function OTPScreen({ route, navigation }) {
       >
         <Body
           style={styles.resend}
-          color={canResend ? colors.green700 : colors.textFaint}
+          color={canResend ? linkGreen : colors.textFaint}
         >
           {resending ? t('auth.otp.misc.resending') : t('auth.otp.resend')}
         </Body>
@@ -301,7 +305,7 @@ export default function OTPScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   content: { paddingBottom: spacing.xxl },
   back: { alignSelf: 'flex-start', marginBottom: spacing.lg },
   backText: { fontFamily: fonts.bodySemiBold },
@@ -322,7 +326,7 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: fonts.titleBold,
     fontSize: 22,
-    color: colors.green900,
+    color: colors.textDark,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },

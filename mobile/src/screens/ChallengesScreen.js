@@ -132,7 +132,7 @@ export default function ChallengesScreen({ navigation }) {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerTitleWrap}>
-            <Title color={colors.cream}>⚔️ {t('challengesHub.title')}</Title>
+            <Title color={colors.textOnDark}>⚔️ {t('challengesHub.title')}</Title>
             <Body style={styles.subtitle}>{t('challengesHub.subtitle')}</Body>
           </View>
           {activeCount > 0 ? (
