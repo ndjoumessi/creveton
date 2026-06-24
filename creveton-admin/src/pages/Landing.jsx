@@ -14,7 +14,6 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useCountUp } from '../hooks/useCountUp';
-import LogoCameroun from '../components/LogoCameroun';
 import './Landing.css';
 
 // Données structurelles (icônes, emojis, valeurs non traduisibles).
@@ -115,7 +114,7 @@ export default function Landing() {
         <div className="land-container land-hero-inner">
           <div className="land-hero-copy">
             <div className="land-logo" aria-hidden="true">
-              <LogoCameroun size={96} />
+              <img src="/logo.png" alt="Creveton" width={96} height={96} style={{ objectFit: 'contain' }} />
             </div>
 
             <h1 className="land-title">Creveton</h1>
@@ -286,7 +285,7 @@ export default function Landing() {
       <footer className="land-footer">
         <div className="land-container land-footer-inner">
           <div className="land-footer-brand">
-            <LogoCameroun size={32} />
+            <img src="/logo.png" alt="Creveton" width={32} height={32} style={{ objectFit: 'contain' }} />
             <p className="land-footer-copy">
               © 2026 Creveton · Cameroun · {t('landing.footer.rights')}
             </p>
