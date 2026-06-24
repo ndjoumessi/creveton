@@ -363,6 +363,12 @@
   },
   "profile": {
     "title": "Profil",
+    "stats": {
+      "games": "Parties",
+      "successRate": "Taux",
+      "streak": "Streak",
+      "rank": "Rang"
+    },
     "level": "Niveau {{n}} · {{name}}",
     "edit": "Modifier le profil",
     "myLevel": "Mon niveau",
