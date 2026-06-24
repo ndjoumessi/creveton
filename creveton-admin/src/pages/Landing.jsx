@@ -127,10 +127,11 @@ export default function Landing() {
               <a className="land-btn land-btn-gold" href="#">
                 {t('landing.hero.download')}
               </a>
-              <Link className="land-cta-secondary" to={consoleTarget}>
-                {t('landing.hero.adminAccess')}
-              </Link>
             </div>
+            {/* Lien console admin : sous le bouton (plus à droite) — discret, doré. */}
+            <Link className="land-cta-admin" to={consoleTarget}>
+              {t('landing.hero.adminAccess')}
+            </Link>
           </div>
 
           {/* Mockup téléphone */}

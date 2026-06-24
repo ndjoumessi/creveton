@@ -189,6 +189,23 @@
   color: #fff;
 }
 
+/* Lien console admin — sous le bouton « Télécharger », discret et doré.
+   inline-block → suit l'alignement du hero (gauche en desktop, centré en mobile).
+   Police héritée (Space Grotesk, charte). */
+.land-cta-admin {
+  display: inline-block;
+  margin-top: 16px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--gold500);
+  text-decoration: none;
+  opacity: 0.9;
+  transition: opacity 150ms ease;
+}
+.land-cta-admin:hover {
+  opacity: 1;
+}
+
 /* ─────────────── Mockup téléphone ─────────────── */
 .land-phone-wrap {
   display: flex;
