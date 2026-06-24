@@ -1279,6 +1279,12 @@
     },
     "misc": {
       "demoBanner": "Mode démo actif — toute saisie ouvre une session admin fictive."
+    },
+    "backHome": "← Retour à l’accueil",
+    "stats": {
+      "users": "Utilisateurs",
+      "games": "Parties",
+      "themes": "Thèmes"
     }
   },
   "landing": {

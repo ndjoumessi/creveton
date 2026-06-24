@@ -11,16 +11,47 @@
 .login-aside {
   background: var(--green900);
   color: #fff;
-  padding: 48px 40px;
+  padding: 56px 44px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 40px;
 }
 .login-aside-top {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
+}
+
+/* Stats marque (décoratives) — 3 colonnes */
+.login-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 22px 0;
+}
+.login-stats li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.login-stats strong {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: #fff;
+  line-height: 1;
+}
+.login-stats span {
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--gold400);
 }
 .login-brand {
   font-family: 'Outfit', sans-serif;
@@ -52,10 +83,22 @@
 
 /* ─────────── Panneau droit (formulaire) ─────────── */
 .login-main {
+  position: relative;
   background: #fff;
   display: grid;
   place-items: center;
   padding: 24px;
+}
+.login-back-link {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  font-size: 13px;
+  color: var(--gold500);
+  text-decoration: none;
+}
+.login-back-link:hover {
+  text-decoration: underline;
 }
 .login-form {
   width: min(400px, 100%);

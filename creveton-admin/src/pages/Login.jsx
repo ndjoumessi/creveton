@@ -1,12 +1,12 @@
 import { useForm } from 'react-hook-form';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LogIn, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { notify } from '../components/Toast';
 import PasswordInput from '../components/PasswordInput';
-import Logo from '../components/Logo';
+import LogoCameroun from '../components/LogoCameroun';
 import { USE_MOCKS } from '../services/api';
 import './Login.css';
 
@@ -61,13 +61,29 @@ export default function Login() {
 
   return (
     <div className="login-split">
-      {/* Panneau marque (masqué < 768px) */}
+      {/* Panneau marque (masqué < 768px) — contenu centré verticalement */}
       <aside className="login-aside">
         <div className="login-aside-top">
-          <Logo size={56} />
+          <LogoCameroun size={80} />
           <span className="login-brand">{t('login.title')}</span>
           <p className="login-tagline">{t('login.leftTagline')}</p>
         </div>
+
+        <ul className="login-stats" aria-hidden="true">
+          <li>
+            <strong>500+</strong>
+            <span>{t('login.stats.users')}</span>
+          </li>
+          <li>
+            <strong>1k+</strong>
+            <span>{t('login.stats.games')}</span>
+          </li>
+          <li>
+            <strong>6</strong>
+            <span>{t('login.stats.themes')}</span>
+          </li>
+        </ul>
+
         <div className="login-aside-bottom">
           <p className="login-quote">{t('login.leftQuote')}</p>
           <span className="login-version">v1.0</span>
@@ -76,6 +92,7 @@ export default function Login() {
 
       {/* Panneau formulaire */}
       <main className="login-main">
+        <Link to="/" className="login-back-link">{t('login.backHome')}</Link>
         <form onSubmit={handleSubmit(onSubmit)} className="login-form">
           <h1 className="login-welcome">{t('login.welcome')}</h1>
           <p className="login-subtitle">{t('login.subtitle')}</p>

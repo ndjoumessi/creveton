@@ -1279,6 +1279,12 @@
     },
     "misc": {
       "demoBanner": "Demo mode active — any input opens a mock admin session."
+    },
+    "backHome": "← Back to home",
+    "stats": {
+      "users": "Users",
+      "games": "Games",
+      "themes": "Themes"
     }
   },
   "landing": {
