@@ -14,6 +14,7 @@ import {
   Share,
   ActivityIndicator,
   ScrollView,
+  TextInput,
   BackHandler,
   useWindowDimensions,
 } from 'react-native';
@@ -23,7 +24,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Screen, Avatar, AppButton, AppInput, useToast } from '../components';
+import { Screen, Avatar, AppButton, useToast } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
 import { wallet, users } from '../services/endpoints';
@@ -169,6 +170,7 @@ export default function ProfileScreen() {
   const [age, setAge] = useState('');
   const [sexe, setSexe] = useState('N');
   const [lang, setLang] = useState('fr');
+  const [focusedField, setFocusedField] = useState(null);
   const { height: windowHeight } = useWindowDimensions();
   const editAnim = useRef(new Animated.Value(0)).current;
 
@@ -597,7 +599,8 @@ export default function ProfileScreen() {
             style={[StyleSheet.absoluteFill, styles.sheetBackdrop, { opacity: editAnim }]}
             onPress={closeEdit}
           />
-          <Animated.View style={[styles.sheet, styles.sheetEdit, { transform: [{ translateY: editTranslateY }] }]}>
+          <Animated.View style={[styles.editSheet, { transform: [{ translateY: editTranslateY }] }]}>
+            {/* A. Header : drag handle + titre + ✕ */}
             <View style={styles.sheetHandle} />
             <View style={styles.sheetTitleRow}>
               <Text style={styles.sheetTitle}>{t('profile.editModal.title')}</Text>
@@ -606,54 +609,79 @@ export default function ProfileScreen() {
                 hitSlop={10}
                 style={styles.sheetClose}
                 accessibilityRole="button"
-                accessibilityLabel={t('profile.editModal.cancel')}
+                accessibilityLabel={t('common.cancel')}
               >
                 <Text style={styles.sheetCloseText}>✕</Text>
               </Pressable>
             </View>
 
+            {/* B. Champs : label statique + TextInput (focus → bordure or) */}
             <ScrollView
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.sheetScrollContent}
               showsVerticalScrollIndicator={false}
             >
-              <AppInput
-                label={t('profile.editModal.name')}
-                value={nom}
-                onChangeText={setNom}
-                placeholder={t('profile.misc.defaultName')}
-              />
-              <AppInput
-                label={t('profile.editModal.city')}
-                value={ville}
-                onChangeText={setVille}
-                placeholder={t('profile.placeholder.city')}
-              />
-              <AppInput
-                label={t('profile.editModal.age')}
-                value={age}
-                onChangeText={setAge}
-                keyboardType="number-pad"
-                placeholder={t('profile.placeholder.age')}
-              />
-
-              <Text style={styles.fieldLabel}>{t('profile.editModal.gender')}</Text>
-              <View style={styles.pillRow}>
-                {SEXES.map((s) => {
-                  const sel = s.key === sexe;
-                  return (
-                    <Pressable key={s.key} onPress={() => setSexe(s.key)} style={[styles.pill, sel && styles.pillActive]}>
-                      <Text style={[styles.pillText, sel && styles.pillTextActive]}>
-                        {t(`profile.misc.gender.${s.key}`)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.inputLabel}>{t('profile.editModal.name')}</Text>
+                <TextInput
+                  value={nom}
+                  onChangeText={setNom}
+                  onFocus={() => setFocusedField('name')}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder={t('profile.misc.defaultName')}
+                  placeholderTextColor={colors.textFaint}
+                  style={[styles.input, focusedField === 'name' && styles.inputFocused]}
+                />
               </View>
 
+              <View style={styles.fieldGroup}>
+                <Text style={styles.inputLabel}>{t('profile.editModal.city')}</Text>
+                <TextInput
+                  value={ville}
+                  onChangeText={setVille}
+                  onFocus={() => setFocusedField('city')}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder={t('profile.placeholder.city')}
+                  placeholderTextColor={colors.textFaint}
+                  style={[styles.input, focusedField === 'city' && styles.inputFocused]}
+                />
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.inputLabel}>{t('profile.editModal.age')}</Text>
+                <TextInput
+                  value={age}
+                  onChangeText={setAge}
+                  onFocus={() => setFocusedField('age')}
+                  onBlur={() => setFocusedField(null)}
+                  keyboardType="number-pad"
+                  placeholder={t('profile.placeholder.age')}
+                  placeholderTextColor={colors.textFaint}
+                  style={[styles.input, focusedField === 'age' && styles.inputFocused]}
+                />
+              </View>
+
+              {/* C. Sexe : pills (style inchangé) */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.inputLabel}>{t('profile.editModal.gender')}</Text>
+                <View style={styles.pillRow}>
+                  {SEXES.map((s) => {
+                    const sel = s.key === sexe;
+                    return (
+                      <Pressable key={s.key} onPress={() => setSexe(s.key)} style={[styles.pill, sel && styles.pillActive]}>
+                        <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                          {t(`profile.misc.gender.${s.key}`)}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* D. Boutons */}
               <View style={styles.sheetActions}>
-                <AppButton variant="primary" title={t('profile.editModal.save')} fullWidth loading={saving} onPress={saveEdit} />
-                <AppButton variant="ghost" title={t('profile.editModal.cancel')} fullWidth onPress={closeEdit} />
+                <AppButton variant="primary" title={t('common.save')} fullWidth loading={saving} onPress={saveEdit} />
+                <AppButton variant="ghost" title={t('common.cancel')} fullWidth onPress={closeEdit} />
               </View>
             </ScrollView>
           </Animated.View>
@@ -860,9 +888,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.green900 },
-  // Sheet d'édition : borné en hauteur pour que le ScrollView défile sous le clavier.
-  sheetEdit: { maxHeight: '88%' },
+  sheetTitle: { fontFamily: fonts.titleBold, fontSize: 20, color: colors.green900 },
+  // Sheet d'édition (overlay) — ancré en bas, coins arrondis, ombre vers le haut.
+  // Borné à 88% pour que le ScrollView défile sous le clavier.
+  editSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    padding: 20,
+    maxHeight: '88%',
+    shadowColor: colors.green900,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 20,
+  },
   sheetTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -874,7 +918,8 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.pill,
+    borderRadius: radius.lg,
+    backgroundColor: colors.border,
   },
   sheetCloseText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg, color: colors.textMuted },
   sheetScrollContent: { paddingBottom: 40 },
@@ -891,7 +936,26 @@ const styles = StyleSheet.create({
   actionCancelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textMuted },
 
   // Edit sheet fields
-  fieldLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody, marginTop: spacing.xs },
+  fieldGroup: { marginBottom: spacing.lg },
+  inputLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    color: colors.textMuted,
+    marginBottom: 6,
+  },
+  input: {
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: 14,
+    fontFamily: fonts.bodyRegular,
+    fontSize: 15,
+    color: colors.green900,
+    backgroundColor: colors.white,
+  },
+  inputFocused: { borderColor: colors.gold500 },
   pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   pill: {
     paddingVertical: spacing.sm,
@@ -906,5 +970,5 @@ const styles = StyleSheet.create({
   pillActive: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
   pillText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
   pillTextActive: { color: colors.green900, fontFamily: fonts.bodySemiBold },
-  sheetActions: { marginTop: spacing.lg, gap: spacing.sm },
+  sheetActions: { marginTop: spacing.sm, gap: 10 },
 });
