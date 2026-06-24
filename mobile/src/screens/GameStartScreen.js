@@ -32,9 +32,13 @@ const GAME_MODES = [
 
 export default function GameStartScreen({ navigation, route }) {
   const preset = route.params?.presetTheme;
+  // Mode pré-sélectionné depuis l'accueil (cartes « Choisir un mode »).
+  const presetMode = route.params?.presetMode;
   const { t } = useTranslation();
   const toast = useToast();
-  const [mode, setMode] = useState('normal');
+  const [mode, setMode] = useState(
+    GAME_MODES.some((m) => m.key === presetMode) ? presetMode : 'normal'
+  );
   const [theme, setTheme] = useState(preset || null);
   const [level, setLevel] = useState('beginner');
   const [loading, setLoading] = useState(false);

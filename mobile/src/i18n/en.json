@@ -79,6 +79,8 @@
   },
   "home": {
     "greeting": "Hello, {{name}} 👋",
+    "heroSubtitle": "Ready to play?",
+    "chooseMode": "Choose a mode",
     "playCard": {
       "title": "Ready for a new quiz?",
       "subtitle": "Choose your theme and beat your record.",

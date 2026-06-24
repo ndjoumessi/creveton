@@ -39,7 +39,6 @@ import {
   radius,
   spacing,
   shadow,
-  emeraldGradient,
 } from '../constants/theme';
 import {
   formatDateTime,
@@ -56,6 +55,14 @@ const ICON_BG = {
   rate: '#dbeafe',
   streak: colors.errorBg, // #fee2e2
 };
+
+// Modes de jeu mis en avant sur l'accueil → deep-link vers GameStart (presetMode).
+// La couleur sémantique (vert/rouge/or) est doublée d'un libellé (charte).
+const PLAY_MODES = [
+  { key: 'normal', emoji: '⚡', color: colors.green500, bg: colors.successBg },
+  { key: 'blitz', emoji: '⏱', color: colors.red400, bg: colors.errorBg },
+  { key: 'marathon', emoji: '🏃', color: colors.gold500, bg: colors.goldVeil },
+];
 
 function medalFor(rank) {
   return rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉';
@@ -228,6 +235,7 @@ export default function HomeScreen({ navigation }) {
               <Logo size={40} />
               <Body style={styles.greeting}>{t('home.greeting', { name: firstName })}</Body>
             </View>
+            <Body style={styles.heroSubtitle}>{t('home.heroSubtitle')}</Body>
             <View style={styles.levelWrap}>
               <LevelBadge level={user?.level ?? 1} xp={user?.total_xp ?? 0} />
             </View>
@@ -245,31 +253,35 @@ export default function HomeScreen({ navigation }) {
 
         {/* Corps cream */}
         <View style={styles.body}>
-          {/* Jouer maintenant */}
-          <LinearGradient
-            colors={emeraldGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.playCard}
+          {/* Choisir un mode — cartes horizontales → GameStart pré-réglé */}
+          <View style={styles.sectionHeaderTight}>
+            <Heading color={colors.green900}>{t('home.chooseMode')}</Heading>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.modesScroll}
           >
-            <View style={styles.playText}>
-              <Heading color={colors.white} style={styles.playTitle}>
-                {t('home.playCard.title')}
-              </Heading>
-              <Body color={colors.textOnDarkMuted} style={styles.playDesc}>
-                {t('home.playCard.subtitle')}
-              </Body>
-              <AppButton
-                title={t('home.playCard.button')}
-                variant="primary"
-                size="md"
-                fullWidth={false}
-                onPress={() => navigation.navigate('Play')}
-                style={styles.playBtn}
-              />
-            </View>
-            <Body style={styles.playEmoji}>⚡</Body>
-          </LinearGradient>
+            {PLAY_MODES.map((m) => (
+              <Pressable
+                key={m.key}
+                onPress={() => navigation.navigate('Play', { presetMode: m.key })}
+                style={styles.modeCard}
+                accessibilityRole="button"
+                accessibilityLabel={t(`gameStart.modes.${m.key}.name`)}
+              >
+                <View style={[styles.modeIcon, { backgroundColor: m.bg }]}>
+                  <Text style={styles.modeIconText}>{m.emoji}</Text>
+                </View>
+                <Text style={[styles.modeName, { color: m.color }]}>
+                  {t(`gameStart.modes.${m.key}.name`)}
+                </Text>
+                <Text style={styles.modeDesc} numberOfLines={2}>
+                  {t(`gameStart.modes.${m.key}.desc`)}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
 
           {/* Défi du jour */}
           <LinearGradient
@@ -514,6 +526,12 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xl,
     color: colors.white,
   },
+  heroSubtitle: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.sm,
+    color: colors.gold400,
+    marginTop: spacing.xs,
+  },
   levelWrap: { marginTop: spacing.sm },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
 
@@ -528,19 +546,40 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
 
-  // Jouer
-  playCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: radius.xl,
-    padding: spacing.xl,
+  // Choisir un mode
+  modesScroll: {
+    gap: spacing.md,
+    paddingRight: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
+  },
+  modeCard: {
+    width: 160,
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     ...shadow.card,
   },
-  playText: { flex: 1 },
-  playTitle: { color: colors.white, fontSize: fontSizes.lg },
-  playDesc: { marginTop: spacing.xs, fontSize: fontSizes.sm, lineHeight: 19 },
-  playBtn: { marginTop: spacing.lg, alignSelf: 'flex-start' },
-  playEmoji: { fontSize: 56, marginLeft: spacing.sm },
+  modeIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeIconText: { fontSize: 22 },
+  modeName: {
+    fontFamily: fonts.titleBold,
+    fontSize: fontSizes.base,
+    marginTop: spacing.md,
+  },
+  modeDesc: {
+    fontFamily: fonts.bodyRegular,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    marginTop: 2,
+    lineHeight: 15,
+  },
 
   // Défi du jour
   challengeCard: {
