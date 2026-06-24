@@ -838,9 +838,12 @@ const makeStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  langPillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
+  // Actif = or (état actif de la charte) : indispensable en mode sombre, où
+  // green900 se confondait avec la surface (cream→#0d1f14) → pastille « invisible ».
+  // Or sur green900/cream = lisible dans les deux thèmes (cf. pills Sexe, même écran).
+  langPillActive: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
   langPillText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs, color: colors.textBody },
-  langPillTextActive: { color: colors.textOnDark },
+  langPillTextActive: { color: colors.green900 },
   themeToggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   themeToggleIcon: { fontSize: 13 },
 
