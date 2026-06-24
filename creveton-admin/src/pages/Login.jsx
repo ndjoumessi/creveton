@@ -6,6 +6,7 @@ import { LogIn, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { notify } from '../components/Toast';
 import PasswordInput from '../components/PasswordInput';
+import Logo from '../components/Logo';
 import { USE_MOCKS } from '../services/api';
 import './Login.css';
 
@@ -63,7 +64,7 @@ export default function Login() {
       {/* Panneau marque (masqué < 768px) — contenu centré verticalement */}
       <aside className="login-aside">
         <div className="login-aside-top">
-          <img src="/logo.png" alt="Creveton" width={80} height={80} style={{ objectFit: 'contain' }} />
+          <Logo size={80} />
           <span className="login-brand">{t('login.title')}</span>
           <p className="login-tagline">{t('login.leftTagline')}</p>
         </div>
