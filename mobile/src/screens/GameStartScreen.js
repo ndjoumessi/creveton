@@ -17,7 +17,8 @@ import {
 } from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
 import { useGameStore } from '../store/gameStore';
-import { themeGradients, colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { themeGradients, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { themeLabel, levelLabel } from '../utils/format';
 import { hapticMedium } from '../utils/haptics';
 
@@ -35,6 +36,8 @@ export default function GameStartScreen({ navigation, route }) {
   // Mode pré-sélectionné depuis l'accueil (cartes « Choisir un mode »).
   const presetMode = route.params?.presetMode;
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const toast = useToast();
   const [mode, setMode] = useState(
     GAME_MODES.some((m) => m.key === presetMode) ? presetMode : 'normal'
@@ -301,14 +304,14 @@ export default function GameStartScreen({ navigation, route }) {
 
 const COL_GAP = spacing.md;
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg },
-  back: { fontSize: fontSizes.xxl, color: colors.green900 },
+  back: { fontSize: fontSizes.xxl, color: colors.textDark },
   headerTitle: { fontSize: fontSizes.xl },
   section: {
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.lg,
-    color: colors.green900,
+    color: colors.textDark,
     marginTop: spacing.md,
     marginBottom: spacing.md,
   },
@@ -338,7 +341,7 @@ const styles = StyleSheet.create({
   },
   checkText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.sm, color: colors.green900 },
   themeEmoji: { fontSize: 32 },
-  themeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.white, marginTop: spacing.xs },
+  themeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.textOnDark, marginTop: spacing.xs },
   themeMeta: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: 'rgba(255,255,255,0.7)' },
 
   modes: { gap: spacing.sm },
@@ -354,11 +357,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  modeRowActive: { borderColor: colors.gold500, backgroundColor: colors.cream },
+  modeRowActive: { borderColor: colors.gold500, backgroundColor: colors.goldVeil },
   modeEmoji: { fontSize: 24 },
   modeBody: { flex: 1 },
-  modeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.green900 },
-  modeNameActive: { color: colors.green900 },
+  modeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.textDark },
+  modeNameActive: { color: colors.textDark },
   modeDesc: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 1 },
   modeCheck: { fontFamily: fonts.bodyBold, fontSize: fontSizes.lg, color: colors.gold500 },
 
@@ -375,7 +378,7 @@ const styles = StyleSheet.create({
   },
   levelPillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
   levelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
-  levelTextActive: { color: colors.white },
+  levelTextActive: { color: colors.textOnDark },
 
   recap: {
     backgroundColor: colors.cream,
@@ -385,7 +388,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gold500,
   },
-  recapText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.grey, textAlign: 'center' },
+  recapText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center' },
   hint: { marginTop: spacing.lg, textAlign: 'center' },
 
   cta: { marginTop: spacing.xl },

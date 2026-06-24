@@ -6,9 +6,10 @@
 //    dans un ref côté écran).
 //  - Seul l'état de focus (bordure) est local à ce champ.
 
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useState, useMemo } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
-import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 const AuthField = forwardRef(function AuthField(
   {
@@ -22,6 +23,8 @@ const AuthField = forwardRef(function AuthField(
   },
   ref
 ) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [focused, setFocused] = useState(false);
   const borderColor = error
     ? colors.red400
@@ -39,7 +42,7 @@ const AuthField = forwardRef(function AuthField(
           onChangeText={onChangeText}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholderTextColor={colors.textFaint}
+          placeholderTextColor={colors.textMuted}
           style={styles.input}
           {...inputProps}
         />
@@ -56,12 +59,12 @@ const AuthField = forwardRef(function AuthField(
   );
 });
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { marginBottom: spacing.lg },
   label: {
     fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.sm,
-    color: colors.textBody,
+    color: colors.textMuted,
     marginBottom: spacing.sm,
   },
   field: {
@@ -70,7 +73,7 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: radius.md,
     borderWidth: 1.5,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.white,
     paddingHorizontal: spacing.lg,
   },
   input: {

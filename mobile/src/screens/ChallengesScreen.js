@@ -9,7 +9,7 @@
 // lui, le vrai endpoint create (adversaire aléatoire tant que la recherche d'amis
 // n'est pas branchée), pour qu'au moins le flux de création soit fonctionnel.
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -36,7 +36,8 @@ import { challenges } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { useGameStore } from '../store/gameStore';
 import { levelForXp } from '../utils/format';
-import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { hapticLight } from '../utils/haptics';
 
 // ─── Données de démonstration (TODO: brancher GET /challenges?status=…) ──────────
@@ -57,6 +58,8 @@ const MOCK_COMPLETED = [
 const TABS = ['received', 'sent', 'completed'];
 
 export default function ChallengesScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const toast = useToast();
   const startGame = useGameStore((s) => s.startGame);
@@ -247,6 +250,8 @@ export default function ChallengesScreen({ navigation }) {
 }
 
 function OpponentRow({ t, name, xp, theme, questions, right }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.cardRow}>
       <Avatar name={name} size={44} />
@@ -272,6 +277,8 @@ function OpponentRow({ t, name, xp, theme, questions, right }) {
 }
 
 function ReceivedCard({ t, item, onAccept, onDecline }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <AppCard tone="light" padding="md" radius={radius.lg} style={[styles.card, styles.cardReceived]}>
       <OpponentRow t={t} name={item.name} xp={item.xp} theme={item.theme} questions={item.questions} />
@@ -287,6 +294,8 @@ function ReceivedCard({ t, item, onAccept, onDecline }) {
 }
 
 function SentCard({ t, item, onCancel }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <AppCard tone="light" padding="md" radius={radius.lg} style={[styles.card, styles.cardSent]}>
       <OpponentRow t={t} name={item.name} xp={item.xp} theme={item.theme} questions={item.questions} />
@@ -303,6 +312,8 @@ function SentCard({ t, item, onCancel }) {
 }
 
 function CompletedCard({ t, item }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const win = item.outcome === 'win';
   return (
     <AppCard tone="light" padding="md" radius={radius.lg} style={[styles.card, styles.cardCompleted]}>
@@ -323,6 +334,8 @@ function CompletedCard({ t, item }) {
 }
 
 function EmptyChallenges({ t, onLaunch }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyEmoji}>⚔️</Text>
@@ -341,7 +354,7 @@ function EmptyChallenges({ t, onLaunch }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.lg, gap: spacing.md },
   headerTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
   headerTitleWrap: { flex: 1, gap: 2 },
@@ -353,7 +366,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     marginTop: spacing.xs,
   },
-  countPillText: { fontFamily: fonts.titleBold, fontSize: fontSizes.xs, color: colors.cream },
+  countPillText: { fontFamily: fonts.titleBold, fontSize: fontSizes.xs, color: colors.textOnDark },
 
   tabs: { flexDirection: 'row', gap: spacing.xl },
   tab: { alignItems: 'center', paddingBottom: spacing.xs },
@@ -376,7 +389,7 @@ const styles = StyleSheet.create({
     zIndex: 20,
     ...shadow.gold,
   },
-  fabIcon: { fontFamily: fonts.titleBold, fontSize: 30, color: colors.white, marginTop: -2 },
+  fabIcon: { fontFamily: fonts.titleBold, fontSize: 30, color: colors.textOnDark, marginTop: -2 },
   demoBanner: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
@@ -407,7 +420,7 @@ const styles = StyleSheet.create({
   actionPrimary: { flex: 1.4 },
 
   sentFooter: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.md, flexWrap: 'wrap' },
-  sentScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.green900 },
+  sentScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.textDark },
   sentWaiting: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
   sentSpacer: { flex: 1 },
   cancelLink: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, color: colors.red600 },
@@ -420,7 +433,7 @@ const styles = StyleSheet.create({
 
   empty: { alignItems: 'center', paddingTop: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.sm },
   emptyEmoji: { fontSize: 64, opacity: 0.9 },
-  emptyTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.green700 },
+  emptyTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.textDark },
   emptyText: { textAlign: 'center' },
   emptyBtn: { marginTop: spacing.md },
 
@@ -435,7 +448,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: radius.pill, backgroundColor: colors.border, marginBottom: spacing.sm },
-  sheetTitle: { color: colors.green900, marginBottom: spacing.xs },
+  sheetTitle: { color: colors.textDark, marginBottom: spacing.xs },
   fieldLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody, marginTop: spacing.sm },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
@@ -446,9 +459,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  chipActive: { borderColor: colors.green500, backgroundColor: colors.successBgSoft },
+  chipActive: { borderColor: colors.green900, backgroundColor: colors.green900 },
   chipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
-  chipTextActive: { color: colors.green900 },
+  chipTextActive: { color: colors.textOnDark },
   searchNote: { fontSize: fontSizes.xs, marginTop: -spacing.xs },
   launchBtn: { marginTop: spacing.lg },
 });

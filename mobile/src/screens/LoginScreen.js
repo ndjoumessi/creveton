@@ -4,7 +4,7 @@
 // dont les valeurs vivent dans un ref → la frappe ne réinitialise jamais le
 // formulaire quand le clavier s'ouvre.
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,10 +19,13 @@ import { useTranslation } from 'react-i18next';
 import { Logo, AppButton, AuthField } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { isValidEmail } from '../utils/validation';
-import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 export default function LoginScreen({ navigation }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const login = useAuthStore((s) => s.login);
   const loading = useAuthStore((s) => s.loading);
 
@@ -118,7 +121,7 @@ export default function LoginScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.green900 },
   kav: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.lg },
   brand: { alignItems: 'center', marginBottom: spacing.xl },
@@ -131,13 +134,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.titleBold,
     fontSize: 26,
-    color: colors.green900,
+    color: colors.textDark,
     marginBottom: spacing.xs,
   },
   subtitle: {
     fontFamily: fonts.bodyRegular,
     fontSize: fontSizes.md,
-    color: colors.grey,
+    color: colors.textMuted,
     marginBottom: spacing.xl,
   },
   error: {

@@ -2,7 +2,7 @@
 // Terminés). Gratuits au lancement ; le payant est derrière un flag (API §8).
 // En-tête sombre, corps clair (crème) avec cartes blanches.
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { View, Text, Animated, FlatList, StyleSheet, Pressable, Modal } from 'react-native';
@@ -20,7 +20,8 @@ import {
 } from '../components';
 import { tournaments as tournamentsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
-import { colors, fonts, fontSizes, radius, spacing, themeAccent, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, themeAccent, shadow } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { formatDateTime } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
@@ -52,6 +53,8 @@ function formatCountdown(startsAt) {
 }
 
 export default function TournamentScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t: tr } = useTranslation();
   const toast = useToast();
   const navigation = useNavigation();
@@ -223,6 +226,8 @@ export default function TournamentScreen() {
 }
 
 function TournamentCard({ t, onJoin }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t: tr } = useTranslation();
   const accent = themeAccent[t.theme] || colors.green500;
   const free = (t.entry_fee ?? 0) === 0 || t.type === 'free';
@@ -310,6 +315,8 @@ function TournamentCard({ t, onJoin }) {
 }
 
 function FillBar({ ratio }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const grow = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(grow, {
@@ -327,6 +334,8 @@ function FillBar({ ratio }) {
 }
 
 function RunningPill() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t: tr } = useTranslation();
   const pulse = useRef(new Animated.Value(0.5)).current;
   useEffect(() => {
@@ -349,6 +358,8 @@ function RunningPill() {
 }
 
 function EmptyTournaments() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t: tr } = useTranslation();
   return (
     <View style={styles.empty}>
@@ -361,7 +372,7 @@ function EmptyTournaments() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.md },
   banner: {
     backgroundColor: colors.goldVeil,
@@ -465,7 +476,7 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   confirmEmoji: { fontSize: 44 },
-  confirmTitle: { color: colors.green900, textAlign: 'center' },
+  confirmTitle: { color: colors.textDark, textAlign: 'center' },
   confirmText: { textAlign: 'center' },
   confirmActions: { width: '100%', marginTop: spacing.lg, gap: spacing.sm },
   confirmCancel: { marginTop: 0 },

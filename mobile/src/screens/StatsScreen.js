@@ -805,7 +805,7 @@ const makeStyles = (colors) => StyleSheet.create({
     overflow: 'hidden',
     ...shadow.soft,
   },
-  histCardIncomplete: { backgroundColor: '#f3f4f6', opacity: 0.85 },
+  histCardIncomplete: { backgroundColor: colors.surfaceCream, opacity: 0.85 },
   histBand: { width: 4 },
   histBody: { flex: 1, padding: spacing.md, gap: spacing.xs },
   histTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -883,7 +883,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   podiumCol: { flex: 1, alignItems: 'center', borderRadius: radius.lg, padding: spacing.md, gap: 2 },
   podiumFirst: { backgroundColor: colors.goldVeil, borderWidth: 2, borderColor: colors.gold500 },
-  podiumSide: { backgroundColor: '#f8f9fa', borderWidth: 1, borderColor: colors.border },
+  podiumSide: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   podiumMedal: { fontSize: 22, marginBottom: 2 },
   podiumName: {
     fontFamily: fonts.titleBold,
