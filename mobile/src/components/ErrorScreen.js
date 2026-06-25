@@ -4,10 +4,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AppButton from './AppButton';
+import Icon from './Icon';
 import { colors, fonts, fontSizes, spacing } from '../constants/theme';
 
 export default function ErrorScreen({
   emoji = '🦐',
+  icon, // composant Lucide optionnel : remplace l'emoji par une icône vectorielle
   title = 'Oups…',
   message = 'Une erreur est survenue.',
   onRetry,
@@ -18,7 +20,13 @@ export default function ErrorScreen({
   const onDark = dark && !inline;
   return (
     <View style={[styles.container, onDark && styles.dark, inline && styles.inline]}>
-      <Text style={styles.emoji}>{emoji}</Text>
+      {icon ? (
+        <View style={styles.iconWrap}>
+          <Icon icon={icon} size={52} color={onDark ? colors.cream : colors.textDark} strokeWidth={1.5} />
+        </View>
+      ) : (
+        <Text style={styles.emoji}>{emoji}</Text>
+      )}
       <Text style={[styles.title, onDark && styles.onDarkText]}>{title}</Text>
       <Text style={[styles.message, onDark ? styles.onDarkMuted : styles.muted]}>
         {message}
@@ -42,6 +50,7 @@ const styles = StyleSheet.create({
   inline: { flex: 0, paddingVertical: spacing.xxl },
   dark: { backgroundColor: colors.green900 },
   emoji: { fontSize: 56, marginBottom: spacing.lg },
+  iconWrap: { marginBottom: spacing.lg },
   title: {
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.xl,

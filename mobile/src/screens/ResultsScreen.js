@@ -30,7 +30,7 @@ import {
   MiniLineChart,
   useToast,
 } from '../components';
-import { Lightbulb } from 'lucide-react-native';
+import { Lightbulb, WifiOff } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import { useGameStore } from '../store/gameStore';
 import { useQuestionsStore } from '../store/questionsStore';
@@ -147,7 +147,7 @@ export default function ResultsScreen({ route, navigation }) {
     return (
       <ErrorScreen
         dark
-        emoji="📶"
+        icon={WifiOff}
         title={t('offline.savedOffline')}
         message={t('offline.savedOfflineMessage')}
         onRetry={goHome}
