@@ -298,6 +298,7 @@
     "modal": {
       "create": "New question",
       "edit": "Edit question",
+      "duplicate": "Duplicate question",
       "step1": "Content",
       "step2": "Options",
       "step3": "Metadata",

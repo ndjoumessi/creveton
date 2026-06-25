@@ -401,8 +401,10 @@ const EMPTY_DRAFT = {
   explanation: '', explanationEn: '', theme: 'culture', level: 'beginner', tags: [],
 };
 
-/* Convertit une question existante en brouillon pré-rempli (« Dupliquer »). */
-function draftFromQuestion(q) {
+/* Convertit une question existante en brouillon pré-rempli.
+ * `isDuplicate` : ajoute le suffixe « (Copie) » à l'énoncé UNIQUEMENT lors d'une
+ * duplication — jamais en édition (sinon l'énoncé édité serait pollué). */
+function draftFromQuestion(q, isDuplicate = false) {
   if (!q) return EMPTY_DRAFT;
   const base = (q.options || []).map((o) => o.text || '');
   const baseEn = (q.options || []).map((o) => o.text_en || '');
@@ -412,7 +414,7 @@ function draftFromQuestion(q) {
   if (correct == null) correct = (q.options || []).findIndex((o) => o.is_correct);
   if (correct == null || correct < 0) correct = 0;
   return {
-    textFr: `${q.text_fr || ''} (Copie)`,
+    textFr: isDuplicate ? `${q.text_fr || ''} (Copie)` : (q.text_fr || ''),
     textEn: q.text_en || '',
     opts,
     optsEn,
@@ -425,7 +427,7 @@ function draftFromQuestion(q) {
   };
 }
 
-function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
+function CreateModal({ open, onClose, onCreate, submitting, prefill, duplicate = false }) {
   const { t, i18n } = useTranslation();
   const [step, setStep] = useState(0);
   const [textFr, setTextFr] = useState('');
@@ -526,14 +528,15 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
     clearImage();
   };
 
-  // Hydrate le formulaire à l'ouverture (vierge, ou pré-rempli pour « Dupliquer »).
+  // Hydrate le formulaire à l'ouverture (vierge, édition, ou duplication).
+  // Le suffixe « (Copie) » n'est ajouté qu'en duplication (cf. draftFromQuestion).
   useEffect(() => {
     if (!open) return;
-    const dft = draftFromQuestion(prefill);
+    const dft = draftFromQuestion(prefill, duplicate);
     setStep(0); setTextFr(dft.textFr); setTextEn(dft.textEn); setOpts(dft.opts); setOptsEn(dft.optsEn); setCorrect(dft.correct);
     setExplanation(dft.explanation); setExplanationEn(dft.explanationEn); setTheme(dft.theme); setLevel(dft.level); setTagInput(''); setTags(dft.tags);
     clearImage();
-  }, [open, prefill]);
+  }, [open, prefill, duplicate]);
 
   // Auto-resize du textarea énoncé.
   const autoGrow = (el) => { if (!el) return; el.style.height = 'auto'; el.style.height = `${Math.min(el.scrollHeight, 320)}px`; };
@@ -728,7 +731,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   };
 
   return (
-    <Modal open={open} onClose={close} title={prefill ? t('questions.modal.edit') : t('questions.modal.create')} footer={footer} width={860}>
+    <Modal open={open} onClose={close} title={duplicate ? t('questions.modal.duplicate') : (prefill ? t('questions.modal.edit') : t('questions.modal.create'))} footer={footer} width={860}>
       <div className="steps">
         {STEP_META.map((s, i) => (
           <div key={s.key} style={{ display: 'contents' }}>
@@ -1403,6 +1406,10 @@ export default function Questions() {
   const [showImport, setShowImport] = useState(false);
   const [creating, setCreating] = useState(false);
   const [prefill, setPrefill] = useState(null);
+  // Distingue Dupliquer (ajoute « (Copie) ») d'Éditer (préremplit sans suffixe).
+  const [duplicating, setDuplicating] = useState(false);
+  // id de la question en cours d'édition (null en création/duplication) → PATCH.
+  const [editingId, setEditingId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [tab, setTab] = useState('overview');
   const [submitting, setSubmitting] = useState(false);
@@ -1426,7 +1433,7 @@ export default function Questions() {
   // Section « Gestion bilingue » du drawer : repliée par défaut (réinit à l'ouverture).
   const [bilingualOpen, setBilingualOpen] = useState(false);
 
-  const { data, loading, refetch } = useApiData(
+  const { data, loading, refetch, setData } = useApiData(
     () => questionsService.list(filters),
     [filters.theme, filters.level, filters.status, filters.q],
   );
@@ -1526,24 +1533,44 @@ export default function Questions() {
     run: () => doArchive(q),
   });
 
-  const createQuestion = async (payload, resetForm, imageFile) => {
+  const saveQuestion = async (payload, resetForm, imageFile) => {
     setSubmitting(true);
     try {
-      const created = await questionsService.create(payload);
-      // Image (optionnelle) : uploadée après la création (la route exige l'id).
-      // Un échec d'upload ne fait PAS échouer la création — la question existe.
-      if (imageFile && created?.id) {
-        try { await questionsService.uploadImage(created.id, imageFile); }
-        catch { notify.error(t('questions.image.uploadFailed')); }
+      if (editingId) {
+        // ÉDITION → PATCH en place (jamais de copie). text_fr reste requis (validé).
+        const updated = await questionsService.update(editingId, payload);
+        let mediaUrl = updated?.media_url;
+        // Nouvelle image éventuelle (l'existante se gère aussi dans le drawer) :
+        // on n'envoie pas media_url dans le PATCH → l'image actuelle est préservée.
+        if (imageFile) {
+          try { const r = await questionsService.uploadImage(editingId, imageFile); mediaUrl = r?.media_url ?? mediaUrl; }
+          catch { notify.error(t('questions.image.uploadFailed')); }
+        }
+        // Mise à jour locale de la ligne (pas de refetch complet).
+        const merged = { ...updated, media_url: mediaUrl };
+        setData((d) => (d && Array.isArray(d.data)
+          ? { ...d, data: d.data.map((row) => (row.id === editingId ? { ...row, ...merged } : row)) }
+          : d));
+        notify.success(t('questions.notify.updated'));
+      } else {
+        // CRÉATION / DUPLICATION → POST (flux inchangé).
+        const created = await questionsService.create(payload);
+        // Image (optionnelle) : uploadée après la création (la route exige l'id).
+        // Un échec d'upload ne fait PAS échouer la création — la question existe.
+        if (imageFile && created?.id) {
+          try { await questionsService.uploadImage(created.id, imageFile); }
+          catch { notify.error(t('questions.image.uploadFailed')); }
+        }
+        notify.success(duplicating ? t('toast.duplicated') : t('toast.saved'));
+        refetch();
       }
-      notify.success(prefill ? t('toast.duplicated') : t('toast.saved'));
-      resetForm(); setCreating(false); setPrefill(null); refetch();
+      resetForm(); setCreating(false); setPrefill(null); setDuplicating(false); setEditingId(null);
     } catch { notify.error(t('questions.notify.saveFailed')); } finally { setSubmitting(false); }
   };
-  const startCreate = () => { setPrefill(null); setCreating(true); };
-  const startEdit = (q) => { setPrefill(q); setDetail(null); setCreating(true); };
-  const startDuplicate = (q) => { setPrefill(q); setDetail(null); setCreating(true); };
-  const closeCreate = () => { setCreating(false); setPrefill(null); };
+  const startCreate = () => { setPrefill(null); setDuplicating(false); setEditingId(null); setCreating(true); };
+  const startEdit = (q) => { setPrefill(q); setDuplicating(false); setEditingId(q.id); setDetail(null); setCreating(true); };
+  const startDuplicate = (q) => { setPrefill(q); setDuplicating(true); setEditingId(null); setDetail(null); setCreating(true); };
+  const closeCreate = () => { setCreating(false); setPrefill(null); setDuplicating(false); setEditingId(null); };
 
   const openDetail = (q) => { setTab('overview'); setTestPick(null); setPreviewNight(false); setBilingualOpen(false); setDetail(q); };
 
@@ -2019,7 +2046,7 @@ export default function Questions() {
       )}
 
       {/* Modal de création / édition par étapes */}
-      <CreateModal open={creating} onClose={closeCreate} onCreate={createQuestion} submitting={submitting} prefill={prefill} />
+      <CreateModal open={creating} onClose={closeCreate} onCreate={saveQuestion} submitting={submitting} prefill={prefill} duplicate={duplicating} />
 
       {/* Modal rejet (motif obligatoire) */}
       <RejectModal
