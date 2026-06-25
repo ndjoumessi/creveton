@@ -257,6 +257,7 @@ table.data th.sortable:hover { color: var(--ink); }
 table.data td { padding: 0 16px; height: 56px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 table.data tbody tr { transition: background 0.12s; }
 table.data tbody tr:hover { background: #f0f7f0; }
+[data-theme="dark"] table.data tbody tr:hover { background: var(--surface-2); }
 table.data tbody tr:last-child td { border-bottom: none; }
 .cell-strong { font-family: 'Outfit'; font-weight: 500; color: var(--ink); }
 .table-pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--border); }
