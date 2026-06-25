@@ -11,11 +11,32 @@ const importService = require('../../services/importService');
 const pushService = require('../../services/pushService');
 const userModel = require('../../models/user.model');
 const questionEvent = require('../../models/questionEvent.model');
+const logger = require('../../config/logger');
 
 /**
  * Administration des questions (spec §12) : CRUD, workflow de statut, import CSV
  * et retrait d'urgence (force-sync). Rôles vérifiés au niveau des routes.
  */
+
+/**
+ * Auto-traduction NON BLOQUANTE (fire-and-forget) : remplit la langue manquante
+ * d'une question via l'IA. Un échec est journalisé sans jamais faire échouer
+ * l'opération métier (création/màj/import). Pas de clé Anthropic → no-op silencieux.
+ * @param {{id:string, text_fr?:string, text_en?:string}} q
+ */
+function fireAutoTranslate(q) {
+  if (!q || !q.id) return;
+  if (!process.env.ANTHROPIC_API_KEY) return; // IA non configurée → on n'essaie pas
+  const needsEN = !q.text_en && q.text_fr;
+  const needsFR = !q.text_fr && q.text_en; // cas limite (question créée en EN)
+  if (needsEN) {
+    aiCorrectorService.autoTranslate(q.id, 'fr')
+      .catch((err) => logger.warn('Auto-traduction FR→EN échouée', { id: q.id, error: err.message }));
+  } else if (needsFR) {
+    aiCorrectorService.autoTranslate(q.id, 'en')
+      .catch((err) => logger.warn('Auto-traduction EN→FR échouée', { id: q.id, error: err.message }));
+  }
+}
 
 /** GET /admin/questions */
 const list = asyncHandler(async (req, res) => {
@@ -31,16 +52,46 @@ const get = asyncHandler(async (req, res) => {
   return ok(res, questionModel.toAdminView(row));
 });
 
-/** POST /admin/questions → 201 */
+/** POST /admin/questions → 201 (+ auto-traduction non bloquante) */
 const create = asyncHandler(async (req, res) => {
   const question = await questionService.createByAdmin(req.body, req.user.id);
+  fireAutoTranslate(question);
   return created(res, question);
 });
 
-/** PATCH /admin/questions/:id */
+/** PATCH /admin/questions/:id (+ auto-traduction non bloquante si langue manquante) */
 const update = asyncHandler(async (req, res) => {
   const question = await questionService.updateByAdmin(req.params.id, req.body, req.user.id);
+  fireAutoTranslate(question);
   return ok(res, question);
+});
+
+/**
+ * POST /admin/questions/:id/translate — traduction BLOQUANTE (retour immédiat
+ * pour le bouton « Traduire » de la console). Body: { target_lang: 'en'|'fr' }.
+ */
+const translate = asyncHandler(async (req, res) => {
+  const { target_lang: targetLang } = req.body;
+  const row = await questionModel.findByIdAny(req.params.id);
+  if (!row || row.deleted_at) throw new ApiError('QUESTION_NOT_FOUND');
+
+  // Valide la présence de la source.
+  if (targetLang === 'en' && !row.text_fr) {
+    throw new ApiError('VALIDATION_ERROR', { message: 'text_fr requis pour traduire vers l\'anglais.' });
+  }
+  if (targetLang === 'fr' && !row.text_en) {
+    throw new ApiError('VALIDATION_ERROR', { message: 'text_en requis pour traduire vers le français.' });
+  }
+
+  const sourceLang = targetLang === 'en' ? 'fr' : 'en';
+  const result = await aiCorrectorService.autoTranslate(req.params.id, sourceLang);
+  const fresh = await questionModel.findByIdAny(req.params.id);
+  return ok(res, {
+    translated: result.translated,
+    text_fr: fresh ? fresh.text_fr : row.text_fr,
+    text_en: fresh ? fresh.text_en : row.text_en,
+    options: fresh ? fresh.options : row.options,
+  });
 });
 
 /** POST /admin/questions/:id/transition */
@@ -74,8 +125,8 @@ const uploadImage = asyncHandler(async (req, res) => {
 
 /** POST /admin/questions/improve-text — correcteur IA (proxy Anthropic serveur). */
 const improveText = asyncHandler(async (req, res) => {
-  const { text, lang, type } = req.body;
-  const suggestion = await aiCorrectorService.improveText({ text, lang, type });
+  const { text, lang, type, action } = req.body;
+  const suggestion = await aiCorrectorService.improveText({ text, lang, type, action });
   return ok(res, { suggestion, changed: suggestion !== text });
 });
 
@@ -117,6 +168,13 @@ const importCsv = asyncHandler(async (req, res) => {
   }
   const force = req.body?.force === 'true' || req.body?.force === true;
   const report = await importService.importCsv(req.file.buffer, { createdBy: req.user.id, force });
+  // Auto-traduction non bloquante des questions importées (FR→EN par défaut).
+  if (process.env.ANTHROPIC_API_KEY && Array.isArray(report.inserted_ids)) {
+    for (const id of report.inserted_ids) {
+      aiCorrectorService.autoTranslate(id, 'fr')
+        .catch((err) => logger.warn('Auto-traduction import FR→EN échouée', { id, error: err.message }));
+    }
+  }
   return ok(res, {
     total_rows: report.total,
     accepted: report.accepted,
@@ -144,4 +202,4 @@ const forceSync = asyncHandler(async (req, res) => {
   return res.status(202).json({ pushed: result.pushed, devices_targeted: devices });
 });
 
-module.exports = { list, get, create, update, transition, remove, uploadImage, deleteImage, improveText, importCsv, forceSync, globalStats, stats, history };
+module.exports = { list, get, create, update, translate, transition, remove, uploadImage, deleteImage, improveText, importCsv, forceSync, globalStats, stats, history };

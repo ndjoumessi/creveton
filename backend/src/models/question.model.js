@@ -23,14 +23,25 @@ const PLAYER_COLUMNS = 'id, type, text_fr, text_en, options, theme, level, media
  */
 function toPlayerView(row, lang = 'fr') {
   if (!row) return null;
+  // `text` = langue choisie (rétro-compat : clients ne connaissant pas text_fr/
+  // text_en). On expose AUSSI les deux langues pour permettre au client de basculer
+  // FR↔EN sans re-sync (le quiz mobile localise selon i18n.language).
   const text = lang === 'en' && row.text_en ? row.text_en : row.text_fr;
   const rawOptions = Array.isArray(row.options) ? row.options : [];
   return {
     id: row.id,
     type: row.type,
+    text_fr: row.text_fr,
+    text_en: row.text_en ?? null,
     text,
-    // On ré-indexe et on retire is_correct (jamais exposé).
-    options: rawOptions.map((opt, index) => ({ index, text: opt.text })),
+    // On ré-indexe et on retire is_correct (jamais exposé). text (FR, rétro-compat)
+    // + text_fr explicite + text_en (nullable) pour la localisation côté client.
+    options: rawOptions.map((opt, index) => ({
+      index,
+      text: opt.text,
+      text_fr: opt.text,
+      text_en: opt.text_en ?? null,
+    })),
     theme: row.theme,
     level: row.level,
     media_url: row.media_url ?? null,
@@ -440,6 +451,42 @@ async function update(id, fields) {
   return rows[0] || null;
 }
 
+/**
+ * Applique une TRADUCTION (auto-traduction IA) sans toucher à la solution.
+ * Met à jour text_fr/text_en/options (fusion text/text_en) + bump `version`
+ * (le trigger bump `updated_at` → la question repart en delta sync, les clients
+ * récupèrent la nouvelle langue). Contrairement à `update`, ne réinitialise PAS
+ * `success_rate` (une traduction ne change pas la difficulté de la question).
+ * Recalcule `text_hash` si `text_fr` change (cohérence de la détection de doublons).
+ * @returns {Promise<object|null>} ligne mise à jour.
+ */
+async function applyTranslation(id, { text_fr, text_en, options }) {
+  const sets = [];
+  const params = [id];
+  if (text_fr !== undefined) {
+    params.push(text_fr);
+    sets.push(`text_fr = $${params.length}`);
+    sets.push(`text_hash = encode(digest(lower(btrim(regexp_replace($${params.length}, '\\s+', ' ', 'g'))), 'sha256'), 'hex')`);
+  }
+  if (text_en !== undefined) {
+    params.push(text_en);
+    sets.push(`text_en = $${params.length}`);
+  }
+  if (options !== undefined) {
+    params.push(JSON.stringify(options));
+    sets.push(`options = $${params.length}::jsonb`);
+  }
+  if (sets.length === 0) return null;
+  sets.push('version = version + 1');
+  const { rows } = await db.query(
+    `UPDATE questions SET ${sets.join(', ')}
+      WHERE id = $1 AND deleted_at IS NULL
+      RETURNING *`,
+    params
+  );
+  return rows[0] || null;
+}
+
 /** Change le statut (workflow). @returns ligne mise à jour ou null. */
 async function setStatus(id, status) {
   const { rows } = await db.query(
@@ -576,6 +623,7 @@ module.exports = {
   removeMedia,
   listAdmin,
   update,
+  applyTranslation,
   setStatus,
   softDelete,
 };

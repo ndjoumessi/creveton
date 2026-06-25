@@ -23,8 +23,9 @@ export async function initDatabase() {
     CREATE TABLE IF NOT EXISTS questions (
       id            TEXT PRIMARY KEY NOT NULL,
       type          TEXT,
-      text          TEXT,
-      options       TEXT,          -- JSON: [{ index, text }]
+      text          TEXT,          -- énoncé FR (langue principale)
+      text_en       TEXT,          -- énoncé EN (optionnel, bilingue)
+      options       TEXT,          -- JSON: [{ index, text, text_en }]
       theme         TEXT,
       level         TEXT,
       media_url     TEXT,
@@ -41,6 +42,7 @@ export async function initDatabase() {
   for (const col of [
     'correct_index INTEGER',
     'explanation TEXT',
+    'text_en TEXT',
   ]) {
     try {
       await db.execAsync(`ALTER TABLE questions ADD COLUMN ${col};`);
@@ -58,11 +60,12 @@ export async function upsertQuestions(questions = []) {
   await db.withTransactionAsync(async () => {
     for (const q of questions) {
       await db.runAsync(
-        `INSERT INTO questions (id, type, text, options, theme, level, media_url, correct_index, explanation, version, deleted, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        `INSERT INTO questions (id, type, text, text_en, options, theme, level, media_url, correct_index, explanation, version, deleted, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
          ON CONFLICT(id) DO UPDATE SET
            type=excluded.type,
            text=excluded.text,
+           text_en=excluded.text_en,
            options=excluded.options,
            theme=excluded.theme,
            level=excluded.level,
@@ -75,7 +78,9 @@ export async function upsertQuestions(questions = []) {
         [
           q.id,
           q.type || 'mcq',
-          q.text || '',
+          // Le backend renvoie text (=FR rétro-compat), text_fr et text_en.
+          q.text || q.text_fr || '',
+          q.text_en || null,
           JSON.stringify(q.options || []),
           q.theme || null,
           q.level || null,
@@ -146,6 +151,7 @@ function rowToQuestion(row) {
     id: row.id,
     type: row.type,
     text: row.text,
+    text_en: row.text_en || null,
     options,
     theme: row.theme,
     level: row.level,

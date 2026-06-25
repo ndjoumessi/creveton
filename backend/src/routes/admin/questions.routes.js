@@ -35,6 +35,9 @@ router.delete('/:id/image', requirePermission('questions:update'), ctrl.deleteIm
 // Correcteur IA (proxy Anthropic serveur). `questions:manage` n'existe pas → on
 // réutilise `questions:update`. La clé reste côté serveur (jamais dans le frontend).
 router.post('/improve-text', requirePermission('questions:update'), validate(schemas.improveText), ctrl.improveText);
+// Traduction IA d'une question (FR↔EN). `questions:manage` n'existe pas → on
+// réutilise `questions:update` (cohérent avec improve-text / image).
+router.post('/:id/translate', requirePermission('questions:update'), validate(schemas.translate), ctrl.translate);
 router.post('/import', requirePermission('questions:import'), upload.single('file'), ctrl.importCsv);
 router.post('/force-sync', requirePermission('questions:force-sync'), validate(schemas.forceSync), ctrl.forceSync);
 router.delete('/:id', requirePermission('questions:delete'), ctrl.remove);

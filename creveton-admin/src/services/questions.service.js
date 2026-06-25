@@ -79,8 +79,16 @@ export function deleteImage(id) {
  * POST /admin/questions/improve-text — correcteur IA via proxy backend (la clé
  * Anthropic reste côté serveur, jamais dans le frontend). → { suggestion, changed }.
  */
-export function improveText({ text, lang = 'fr', type = 'statement' }) {
-  return api.post('/admin/questions/improve-text', { text, lang, type }).then((r) => r.data);
+export function improveText({ text, lang = 'fr', type = 'statement', action = 'correct' }) {
+  return api.post('/admin/questions/improve-text', { text, lang, type, action }).then((r) => r.data);
+}
+
+/**
+ * POST /admin/questions/:id/translate — traduction IA d'une question EXISTANTE
+ * (FR↔EN), bloquante. → { translated, text_fr, text_en, options }.
+ */
+export function translateQuestion(id, targetLang) {
+  return api.post(`/admin/questions/${id}/translate`, { target_lang: targetLang }).then((r) => r.data);
 }
 
 /** POST /admin/questions/force-sync (push silencieux). */
@@ -117,6 +125,6 @@ export function questionHistory(id) {
 
 export default {
   list, create, update, transition, remove, importCsv, forceSync,
-  uploadImage, deleteImage, improveText,
+  uploadImage, deleteImage, improveText, translateQuestion,
   globalStats, questionStats, questionHistory,
 };

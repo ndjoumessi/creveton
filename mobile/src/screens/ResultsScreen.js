@@ -36,6 +36,7 @@ import { useAuthStore } from '../store/authStore';
 import { users } from '../services/endpoints';
 import { TIMED_MODES } from '../constants/config';
 import { hapticSuccess } from '../utils/haptics';
+import { getOptionText, normalizeLang } from '../utils/i18n';
 import { colors, fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
 
 // Android : LayoutAnimation nécessite ce flag (no-op sous Fabric / iOS).
@@ -51,11 +52,14 @@ const EXPAND_ANIM = {
   delete: { type: 'easeInEaseOut', property: 'opacity' },
 };
 
-// Texte d'une option par son index (review[] enrichi côté store). null si absent.
-function optionText(options, idx) {
+// Texte localisé d'une option par son index (review[] enrichi côté store : les
+// options portent `text` (FR) + `text_en`). null si absent.
+function optionText(options, idx, lang) {
   if (!Array.isArray(options) || idx == null) return null;
   const byIndex = options.find((o) => o && o.index === idx);
-  return (byIndex || options[idx])?.text ?? null;
+  const opt = byIndex || options[idx];
+  if (!opt) return null;
+  return getOptionText(opt, lang) || null;
 }
 
 export default function ResultsScreen({ route, navigation }) {
@@ -171,7 +175,8 @@ export default function ResultsScreen({ route, navigation }) {
 }
 
 function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = normalizeLang(i18n.language);
   const total = result.total_questions || 0;
   const correct = result.correct_count || 0;
   const pct = total ? Math.round((correct / total) * 100) : 0;
@@ -394,9 +399,12 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
             const good = item.is_correct;
             const anim = rowAnims[i] || new Animated.Value(1);
             const open = !!openRows[i];
-            const title = item.question_text || t('results.misc.questionN', { n: i + 1 });
-            const correctText = optionText(item.options, item.correct_index);
-            const yourText = optionText(item.options, item.your_index);
+            const localizedTitle = lang === 'en'
+              ? (item.question_text_en || item.question_text)
+              : item.question_text;
+            const title = localizedTitle || t('results.misc.questionN', { n: i + 1 });
+            const correctText = optionText(item.options, item.correct_index, lang);
+            const yourText = optionText(item.options, item.your_index, lang);
             return (
               <Animated.View
                 key={item.question_id || i}

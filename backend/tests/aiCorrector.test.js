@@ -80,6 +80,27 @@ t('EN explanation → 200 + prompt anglais', async () => {
   expect(opts.body).toContain('educational quiz corrector');
 });
 
+// ── action='translate' → prompt de traduction FR→EN ─────────────────────────
+t('action=translate → 200 + prompt de traduction (FR→EN)', async () => {
+  mockAnthropic('What is the capital of Cameroon?');
+  const token = await modToken();
+
+  const r = await post(token, {
+    text: 'Quelle est la capitale du Cameroun ?',
+    lang: 'en',
+    type: 'statement',
+    action: 'translate',
+  });
+
+  expect(r.status).toBe(200);
+  expect(r.body.suggestion).toBe('What is the capital of Cameroon?');
+  expect(r.body.changed).toBe(true);
+  const [, opts] = fetchSpy.mock.calls[0];
+  // Prompt de traduction (et non de correction).
+  expect(opts.body).toContain('translating a Cameroonian quiz question');
+  expect(opts.body).not.toContain('educational quiz corrector');
+});
+
 // ── changed=false quand la suggestion == le texte ────────────────────────────
 t('suggestion identique → changed=false', async () => {
   mockAnthropic('Texte déjà correct.');

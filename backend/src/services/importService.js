@@ -224,10 +224,12 @@ async function importCsv(buffer, { createdBy = null, persist = true, force = fal
   }
 
   let inserted = 0;
+  const insertedIds = [];
   if (persist) {
     for (const question of toInsert) {
-      await questionModel.create({ ...question, created_by: createdBy });
+      const row = await questionModel.create({ ...question, created_by: createdBy });
       inserted += 1;
+      if (row && row.id) insertedIds.push(row.id);
     }
   }
 
@@ -243,6 +245,7 @@ async function importCsv(buffer, { createdBy = null, persist = true, force = fal
     rejected: errors.length,
     warnings: warningsList.length,
     inserted,
+    inserted_ids: insertedIds,
     errors,
     warnings_list: warningsList,
   };

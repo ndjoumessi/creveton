@@ -68,6 +68,17 @@ function truncate(s, max) {
 }
 
 
+/* Badge d'état de traduction : FR+EN (vert) / FR (gris) / EN (ambre, cas limite). */
+function BilingualBadge({ q }) {
+  const { t } = useTranslation();
+  const hasFr = Boolean(q.text_fr);
+  const hasEn = Boolean(q.text_en);
+  if (hasFr && hasEn) return <span className="q-lang-badge q-lang-badge--both" title={t('questions.bilingual.frEn')}>FR+EN</span>;
+  if (hasFr) return <span className="q-lang-badge q-lang-badge--fr" title={t('questions.bilingual.frOnly')}>FR</span>;
+  if (hasEn) return <span className="q-lang-badge q-lang-badge--en" title="EN">EN</span>;
+  return null;
+}
+
 /* Pilule de niveau (Débutant vert clair / Intermédiaire or / Expert rouge doux). */
 function LevelPill({ level }) {
   const { t } = useTranslation();
@@ -323,7 +334,7 @@ function ImportModal({ open, onClose, onDone }) {
  * par le proxy backend `/admin/questions/improve-text` (la clé Anthropic reste
  * côté serveur). `kind` = 'statement' | 'explanation'.
  */
-function useCorrector(text, kind, onAccept) {
+function useCorrector(text, kind, onAccept, lang = 'fr') {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
@@ -334,7 +345,7 @@ function useCorrector(text, kind, onAccept) {
     setErr(null); setSuggestion(null); setLoading(true);
     try {
       // Le correcteur passe par le proxy backend → aucune clé Anthropic dans le frontend.
-      const res = await questionsService.improveText({ text, lang: 'fr', type: kind });
+      const res = await questionsService.improveText({ text, lang, type: kind });
       setSuggestion((res?.suggestion || '').trim());
     } catch (e) {
       // Pas de réponse serveur (réseau coupé) → message « réseau » ; sinon erreur API.
@@ -386,7 +397,7 @@ const STEP_META = [
 
 const MAX_TEXT = 300;
 const EMPTY_DRAFT = {
-  textFr: '', opts: ['', '', '', ''], correct: 0,
+  textFr: '', textEn: '', opts: ['', '', '', ''], optsEn: ['', '', '', ''], correct: 0,
   explanation: '', theme: 'culture', level: 'beginner', tags: [],
 };
 
@@ -394,13 +405,17 @@ const EMPTY_DRAFT = {
 function draftFromQuestion(q) {
   if (!q) return EMPTY_DRAFT;
   const base = (q.options || []).map((o) => o.text || '');
+  const baseEn = (q.options || []).map((o) => o.text_en || '');
   const opts = [...base, '', '', '', ''].slice(0, 4);
+  const optsEn = [...baseEn, '', '', '', ''].slice(0, 4);
   let correct = q.correct_index;
   if (correct == null) correct = (q.options || []).findIndex((o) => o.is_correct);
   if (correct == null || correct < 0) correct = 0;
   return {
     textFr: `${q.text_fr || ''} (Copie)`,
+    textEn: q.text_en || '',
     opts,
+    optsEn,
     correct,
     explanation: q.explanation || '',
     theme: q.theme || 'culture',
@@ -413,9 +428,13 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [textFr, setTextFr] = useState('');
+  const [textEn, setTextEn] = useState('');
   const [opts, setOpts] = useState(['', '', '', '']);
+  const [optsEn, setOptsEn] = useState(['', '', '', '']);
   const [correct, setCorrect] = useState(0);
   const [explanation, setExplanation] = useState('');
+  // Traduction IA : indicateur d'occupation ('stmt' | 'all' | `opt-${i}`).
+  const [translating, setTranslating] = useState(null);
   const [theme, setTheme] = useState('culture');
   const [level, setLevel] = useState('beginner');
   const [tagInput, setTagInput] = useState('');
@@ -439,12 +458,52 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
     setOffset({ x: 50, y: 50 }); // nouvelle image → recadrage centré par défaut
   };
 
-  // Correcteurs IA (énoncé + explication) — bouton ✨ + panneau de suggestion.
+  // Correcteurs IA — bouton ✨ + panneau de suggestion. FR (énoncé/explication)
+  // + EN (énoncé) avec la langue cible adaptée.
   const stmtAi = useCorrector(textFr, 'statement', setTextFr);
   const explAi = useCorrector(explanation, 'explanation', setExplanation);
+  const stmtEnAi = useCorrector(textEn, 'statement', setTextEn, 'en');
+
+  // Traduction IA FR→EN (action='translate'). En création la question n'a pas
+  // encore d'id → on passe par le correcteur (improve-text action=translate),
+  // pas l'endpoint /:id/translate (réservé aux questions existantes, cf. drawer).
+  const translateText = async (frText, type) => {
+    const res = await questionsService.improveText({ text: frText, lang: 'en', type, action: 'translate' });
+    return (res?.suggestion || '').trim();
+  };
+  const onTranslateStatement = async () => {
+    const src = textFr.trim();
+    if (src.length < 10) return;
+    setTranslating('stmt');
+    try { setTextEn(await translateText(src, 'statement')); }
+    catch { notify.error(t('questions.bilingual.translateFailed')); }
+    finally { setTranslating(null); }
+  };
+  const onTranslateOption = async (i) => {
+    const src = (opts[i] || '').trim();
+    if (!src) return;
+    setTranslating(`opt-${i}`);
+    try {
+      const en = await translateText(src, 'statement');
+      setOptsEn((arr) => arr.map((x, idx) => (idx === i ? en : x)));
+    } catch { notify.error(t('questions.bilingual.translateFailed')); }
+    finally { setTranslating(null); }
+  };
+  const onTranslateAllOptions = async () => {
+    setTranslating('all');
+    try {
+      const next = [...optsEn];
+      for (let i = 0; i < opts.length; i += 1) {
+        const src = (opts[i] || '').trim();
+        if (src) next[i] = await translateText(src, 'statement');
+      }
+      setOptsEn(next);
+    } catch { notify.error(t('questions.bilingual.translateFailed')); }
+    finally { setTranslating(null); }
+  };
 
   const reset = () => {
-    setStep(0); setTextFr(''); setOpts(['', '', '', '']); setCorrect(0);
+    setStep(0); setTextFr(''); setTextEn(''); setOpts(['', '', '', '']); setOptsEn(['', '', '', '']); setCorrect(0);
     setExplanation(''); setTheme('culture'); setLevel('beginner'); setTagInput(''); setTags([]);
     clearImage();
   };
@@ -453,7 +512,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   useEffect(() => {
     if (!open) return;
     const dft = draftFromQuestion(prefill);
-    setStep(0); setTextFr(dft.textFr); setOpts(dft.opts); setCorrect(dft.correct);
+    setStep(0); setTextFr(dft.textFr); setTextEn(dft.textEn); setOpts(dft.opts); setOptsEn(dft.optsEn); setCorrect(dft.correct);
     setExplanation(dft.explanation); setTheme(dft.theme); setLevel(dft.level); setTagInput(''); setTags(dft.tags);
     clearImage();
   }, [open, prefill]);
@@ -464,6 +523,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
 
   const close = () => { reset(); onClose(); };
   const setOpt = (i, v) => setOpts((o) => o.map((x, idx) => (idx === i ? v : x)));
+  const setOptEn = (i, v) => setOptsEn((o) => o.map((x, idx) => (idx === i ? v : x)));
   const addTag = () => { const tg = tagInput.trim(); if (tg && !tags.includes(tg)) setTags((p) => [...p, tg]); setTagInput(''); };
 
   // --- Validation temps réel ---
@@ -482,8 +542,9 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
     if (!canCreate) return;
     onCreate({
       text_fr: trimmed,
+      text_en: textEn.trim() || null,
       type: 'mcq',
-      options: opts.map((text, i) => ({ text, is_correct: i === correct })),
+      options: opts.map((text, i) => ({ text, text_en: (optsEn[i] || '').trim() || null, is_correct: i === correct })),
       explanation: explanation || null,
       theme,
       level,
@@ -550,6 +611,38 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                     : <><AlertCircle size={13} /> {textOver ? t('questions.validation.statementTooLong', { max: MAX_TEXT }) : t('questions.validation.statementTooShort')}</>}
                 </div>
               </div>
+
+              {/* Énoncé EN (optionnel) — traduction auto FR→EN + correcteur EN. */}
+              <div className="field">
+                <div className="q-field-head">
+                  <label>{t('questions.bilingual.statementEn')} <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span></label>
+                  <div className="row nowrap" style={{ gap: 6 }}>
+                    <button
+                      type="button"
+                      className="q-translate-btn"
+                      disabled={textFr.trim().length < 10 || translating === 'stmt'}
+                      onClick={onTranslateStatement}
+                    >
+                      {translating === 'stmt'
+                        ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
+                        : <>🌐 {t('questions.bilingual.translateToEn')}</>}
+                    </button>
+                    {stmtEnAi.button}
+                  </div>
+                </div>
+                <textarea
+                  className="textarea"
+                  rows={3}
+                  spellCheck="true"
+                  lang="en"
+                  placeholder={t('questions.placeholder.statementEn')}
+                  value={textEn}
+                  onChange={(e) => setTextEn(e.target.value)}
+                />
+                {stmtEnAi.panel}
+                <div className={`char-count ${textEn.length > MAX_TEXT ? 'over' : textEn.length > 270 ? 'warn' : ''}`}>{textEn.length} / {MAX_TEXT}</div>
+              </div>
+
               <div className="field">
                 <div className="q-field-head">
                   <label>{t('questions.modal.explanation')} <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span></label>
@@ -584,11 +677,35 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
 
           {step === 1 && (
             <div className="field" style={{ marginBottom: 0 }}>
-              <label>{t('questions.modal.optionsChoose')}</label>
+              <div className="q-field-head">
+                <label>{t('questions.modal.optionsChoose')}</label>
+                <button
+                  type="button"
+                  className="q-translate-btn"
+                  disabled={!opts.some((o) => o.trim()) || translating === 'all'}
+                  onClick={onTranslateAllOptions}
+                >
+                  {translating === 'all'
+                    ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
+                    : <>🌐 {t('questions.bilingual.translateAll')}</>}
+                </button>
+              </div>
               {opts.map((v, i) => (
-                <div className={`q-opt-row ${correct === i ? 'is-correct' : ''}`} key={LETTERS[i]}>
+                <div className={`q-opt-row q-opt-row--bi ${correct === i ? 'is-correct' : ''}`} key={LETTERS[i]}>
                   <span className="q-opt-letter">{LETTERS[i]}</span>
-                  <input className="input" placeholder={t('questions.placeholder.option', { letter: LETTERS[i] })} value={v} onChange={(e) => setOpt(i, e.target.value)} />
+                  <div className="q-opt-bi">
+                    <input className="input" placeholder={t('questions.placeholder.option', { letter: LETTERS[i] })} value={v} onChange={(e) => setOpt(i, e.target.value)} />
+                    <button
+                      type="button"
+                      className="q-translate-mini"
+                      title={t('questions.bilingual.translateToEn')}
+                      disabled={!v.trim() || translating === `opt-${i}`}
+                      onClick={() => onTranslateOption(i)}
+                    >
+                      {translating === `opt-${i}` ? <span className="q-ai-spin" /> : '🌐'}
+                    </button>
+                    <input className="input" lang="en" placeholder={t('questions.placeholder.optionEn', { letter: LETTERS[i] })} value={optsEn[i]} onChange={(e) => setOptEn(i, e.target.value)} />
+                  </div>
                   <label className="q-opt-radio" title={t('questions.modal.markCorrect')}>
                     <input type="radio" name="q-correct-option" checked={correct === i} onChange={() => setCorrect(i)} />
                     <span>{t('questions.modal.goodAnswer')}</span>
@@ -1209,6 +1326,8 @@ export default function Questions() {
   // Aperçu drawer : mode nuit + simulation de réponse.
   const [previewNight, setPreviewNight] = useState(false);
   const [testPick, setTestPick] = useState(null);
+  // Traduction IA d'une question existante (drawer) : 'en' | 'fr' en cours, ou null.
+  const [translatingDetail, setTranslatingDetail] = useState(null);
 
   const { data, loading, refetch } = useApiData(
     () => questionsService.list(filters),
@@ -1354,6 +1473,18 @@ export default function Questions() {
       return;
     }
     doTransition(q, toStatus);
+  };
+
+  // Traduction IA d'une question EXISTANTE (drawer) via l'endpoint dédié.
+  const doTranslateDetail = async (q, targetLang) => {
+    setTranslatingDetail(targetLang);
+    try {
+      const res = await questionsService.translateQuestion(q.id, targetLang);
+      setDetail((d) => (d ? { ...d, text_fr: res.text_fr, text_en: res.text_en, options: res.options || d.options } : d));
+      notify.success(t('questions.bilingual.translated'));
+      refetch();
+    } catch { notify.error(t('questions.bilingual.translateFailed')); }
+    finally { setTranslatingDetail(null); }
   };
 
   // Copie le JSON de la question dans le presse-papiers (onglet Aperçu).
@@ -1689,6 +1820,7 @@ export default function Questions() {
                           <span className="q-statement-row">
                             {q.media_url && <img src={q.media_url} alt="" className="q-statement-thumb" title={t('questions.image.hasBadge')} loading="lazy" />}
                             <span className="q-statement-text">{truncate(q.text_fr, STATEMENT_MAX)}</span>
+                            <BilingualBadge q={q} />
                           </span>
                           {q.explanation && <span className="q-statement-sub">{truncate(q.explanation, 90)}</span>}
                         </td>
@@ -1899,8 +2031,46 @@ export default function Questions() {
                     )}
                   </div>
 
-                  <div className="q-section-label">{t('questions.misc.statementRaw')}</div>
+                  <div className="q-section-label">{t('questions.bilingual.statementFr')}</div>
                   <textarea className="textarea q-raw" readOnly value={detail.text_fr || ''} rows={3} />
+
+                  {/* ÉNONCÉ (EN) — texte traduit, ou état « non traduit » + bouton. */}
+                  <div className="q-section-label q-section-label--bi">
+                    {t('questions.bilingual.statementEn')}
+                    {detail.text_en
+                      ? <span className="q-bi-badge q-bi-badge--ok">FR+EN</span>
+                      : <span className="q-bi-badge q-bi-badge--missing">{t('questions.bilingual.notTranslated')}</span>}
+                  </div>
+                  {detail.text_en ? (
+                    <textarea className="textarea q-raw" readOnly value={detail.text_en} rows={3} />
+                  ) : (
+                    <button
+                      type="button"
+                      className="q-translate-btn"
+                      disabled={!detail.text_fr || translatingDetail === 'en'}
+                      onClick={() => doTranslateDetail(detail, 'en')}
+                    >
+                      {translatingDetail === 'en'
+                        ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
+                        : <>🌐 {t('questions.bilingual.translateToEn')}</>}
+                    </button>
+                  )}
+
+                  {/* Options FR / EN côte à côte (petite police). */}
+                  {opts.length > 0 && (
+                    <>
+                      <div className="q-section-label">{t('questions.modal.options')}</div>
+                      <div className="q-bi-opts">
+                        {opts.map((o, i) => (
+                          <div className={`q-bi-opt ${i === correctIdx ? 'is-correct' : ''}`} key={`${detail.id}-bi-${i}`}>
+                            <span className="q-bi-letter">{LETTERS[i]}</span>
+                            <span className="q-bi-fr">{o.text}</span>
+                            <span className={`q-bi-en ${o.text_en ? '' : 'q-bi-en--missing'}`}>{o.text_en || t('questions.bilingual.notTranslated')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
 
                   {detail.explanation && (
                     <>

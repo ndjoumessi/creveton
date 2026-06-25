@@ -7,7 +7,7 @@
 // Anti-triche : tournoi/challenge n'appellent pas l'endpoint (repli surbrillance).
 // /sessions/submit reste appelé à la fin (avec session_id).
 
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -30,6 +30,7 @@ import { parseApiError } from '../services/api';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
+import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -72,7 +73,8 @@ function QuestionMedia({ uri }) {
 }
 
 export default function QuizScreen({ navigation }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = normalizeLang(i18n.language);
   const toast = useToast();
   const questions = useGameStore((s) => s.questions);
   const currentIndex = useGameStore((s) => s.currentIndex);
@@ -430,6 +432,18 @@ export default function QuizScreen({ navigation }) {
     }
   }, [correctStreak, streakBounce]);
 
+  // Localisation FR/EN — recalculée si la question change OU si la langue change
+  // pendant la partie (toggle FR↔EN dans Profil) : le quiz en cours se met à jour.
+  const displayText = useMemo(() => getQuestionText(question, lang), [question, lang]);
+  const displayOptions = useMemo(
+    () => (question?.options || []).map((opt, i) => ({
+      ...opt,
+      index: opt.index ?? i,
+      label: getOptionText(opt, lang),
+    })),
+    [question, lang]
+  );
+
   if (submitting) return <LoadingScreen message={t('quiz.misc.submitting')} />;
   if (!question) return <LoadingScreen message={t('common.loading')} />;
 
@@ -483,20 +497,20 @@ export default function QuizScreen({ navigation }) {
       {/* Question */}
       <View style={styles.card}>
         {question.media_url ? <QuestionMedia uri={question.media_url} /> : null}
-        <Text style={styles.question}>{question.text}</Text>
+        <Text style={styles.question}>{displayText}</Text>
         <View style={styles.goldBar} />
       </View>
 
       {/* Options A–D */}
       <View style={styles.options}>
-        {(question.options || []).map((opt, i) => (
+        {displayOptions.map((opt, i) => (
           <OptionRow
-            key={opt.index ?? i}
+            key={opt.index}
             letter={LETTERS[i]}
-            text={opt.text}
-            optionIndex={opt.index ?? i}
+            text={opt.label}
+            optionIndex={opt.index}
             answered={answered}
-            onPress={() => handleAnswer({ selectedIndex: opt.index ?? i })}
+            onPress={() => handleAnswer({ selectedIndex: opt.index })}
           />
         ))}
       </View>

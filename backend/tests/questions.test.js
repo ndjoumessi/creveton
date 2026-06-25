@@ -59,6 +59,58 @@ t('GET /questions : set filtré + seed, SANS solution (anti-triche)', async () =
   expect(q.options.every((o) => 'index' in o && 'text' in o && !('is_correct' in o))).toBe(true);
 });
 
+t('GET /questions : expose text_fr, text_en et options[].text_en (bilingue)', async () => {
+  const user = await H.createUser({ role: 'player' });
+  const token = H.tokenFor(user);
+  await H.db.query(
+    `INSERT INTO questions (text_fr, text_en, type, options, correct_index, theme, level, status)
+     VALUES ($1, $2, 'mcq', $3::jsonb, 1, 'geographie', 'beginner', 'approved')`,
+    [
+      'Quelle est la capitale du Cameroun ?',
+      'What is the capital of Cameroon?',
+      JSON.stringify([
+        { text: 'Douala', text_en: 'Douala', is_correct: false },
+        { text: 'Yaoundé', text_en: 'Yaoundé', is_correct: true },
+      ]),
+    ]
+  );
+
+  const r = await request(app)
+    .get('/api/v1/questions')
+    .query({ theme: 'geographie', level: 'beginner', count: 1 })
+    .set('Authorization', `Bearer ${token}`);
+
+  expect(r.status).toBe(200);
+  const q = r.body.data[0];
+  expect(q.text_fr).toBe('Quelle est la capitale du Cameroun ?');
+  expect(q.text_en).toBe('What is the capital of Cameroon?');
+  expect(q.text).toBe('Quelle est la capitale du Cameroun ?'); // rétro-compat (FR)
+  // text_en par option ; toujours sans is_correct (anti-triche).
+  expect(q.options.every((o) => 'text_en' in o && !('is_correct' in o))).toBe(true);
+  expect(q.options[1].text_en).toBe('Yaoundé');
+});
+
+t('GET /questions/delta : new[] inclut text_en', async () => {
+  const user = await H.createUser({ role: 'player' });
+  const token = H.tokenFor(user);
+  await H.db.query(
+    `INSERT INTO questions (text_fr, text_en, type, options, correct_index, theme, level, status)
+     VALUES ('Énoncé FR', 'EN statement', 'mcq', $1::jsonb, 0, 'culture', 'beginner', 'approved')`,
+    [JSON.stringify([{ text: 'A', text_en: 'A-en', is_correct: true }, { text: 'B', text_en: 'B-en', is_correct: false }])]
+  );
+
+  const r = await request(app)
+    .get('/api/v1/questions/delta')
+    .query({ since: '2000-01-01T00:00:00Z' })
+    .set('Authorization', `Bearer ${token}`);
+
+  expect(r.status).toBe(200);
+  const q = r.body.new.find((x) => x.text_fr === 'Énoncé FR');
+  expect(q).toBeTruthy();
+  expect(q.text_en).toBe('EN statement');
+  expect(q.options[0].text_en).toBe('A-en');
+});
+
 t('GET /questions : même seed → même tirage (équité challenge)', async () => {
   const { token } = await setup(8);
   const seed = 'challenge-seed-42';

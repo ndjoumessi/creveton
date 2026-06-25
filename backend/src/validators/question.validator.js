@@ -36,6 +36,7 @@ const adminCreate = Joi.object({
     .items(
       Joi.object({
         text: Joi.string().required(),
+        text_en: Joi.string().allow(null, '').optional(),
         is_correct: Joi.boolean().required(),
       })
     )
@@ -87,6 +88,14 @@ const improveText = Joi.object({
   text: Joi.string().min(3).max(600).required(),
   lang: Joi.string().valid('fr', 'en').default('fr'),
   type: Joi.string().valid('statement', 'explanation').default('statement'),
+  // 'correct' = correction orthographe/grammaire (défaut) ; 'translate' = traduit
+  // le texte (FR→EN) selon `lang` cible.
+  action: Joi.string().valid('correct', 'translate').default('correct'),
 });
 
-module.exports = { list, delta, all, adminCreate, adminUpdate, adminTransition, forceSync, adminList, improveText };
+/** POST /admin/questions/:id/translate — traduction IA d'une question (FR↔EN) */
+const translate = Joi.object({
+  target_lang: Joi.string().valid('en', 'fr').required(),
+});
+
+module.exports = { list, delta, all, adminCreate, adminUpdate, adminTransition, forceSync, adminList, improveText, translate };

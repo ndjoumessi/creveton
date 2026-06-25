@@ -378,7 +378,9 @@
       "tags": "Type then Enter (e.g. capital)",
       "rejectReason": "Explain why this question is rejected…",
       "explanationCreate": "Explanation shown after the answer…",
-      "tagExample": "e.g. capital"
+      "tagExample": "e.g. capital",
+      "statementEn": "English statement (auto-translated or manual)…",
+      "optionEn": "Option {{letter}} (EN)"
     },
     "events": {
       "created": "Created",
@@ -505,6 +507,20 @@
       "noChange": "No correction needed",
       "error": "Corrector temporarily unavailable.",
       "errorNetwork": "Connection error. Try again."
+    },
+    "bilingual": {
+      "translateToEn": "Translate to English",
+      "translateToFr": "Translate to French",
+      "translating": "Translating...",
+      "translated": "Translation complete.",
+      "translateFailed": "Translation unavailable. Try again.",
+      "notTranslated": "Not translated",
+      "translateAll": "Translate all",
+      "statementEn": "Statement (EN)",
+      "statementFr": "Statement (FR)",
+      "explanationEn": "Explanation (EN)",
+      "frOnly": "FR only",
+      "frEn": "FR + EN"
     }
   },
   "users": {

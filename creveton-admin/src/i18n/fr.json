@@ -378,7 +378,9 @@
       "tags": "Saisissez puis Entrée (ex. capitale)",
       "rejectReason": "Expliquez pourquoi cette question est rejetée…",
       "explanationCreate": "Explication affichée après la réponse…",
-      "tagExample": "Ex. capitale"
+      "tagExample": "Ex. capitale",
+      "statementEn": "English statement (auto-translated or manual)…",
+      "optionEn": "Option {{letter}} (EN)"
     },
     "events": {
       "created": "Créée",
@@ -505,6 +507,20 @@
       "noChange": "Aucune correction nécessaire",
       "error": "Le correcteur est temporairement indisponible.",
       "errorNetwork": "Erreur de connexion. Réessayez."
+    },
+    "bilingual": {
+      "translateToEn": "Traduire vers l'anglais",
+      "translateToFr": "Traduire vers le français",
+      "translating": "Traduction en cours...",
+      "translated": "Traduction effectuée.",
+      "translateFailed": "Traduction indisponible. Réessayez.",
+      "notTranslated": "Non traduit",
+      "translateAll": "Tout traduire",
+      "statementEn": "Énoncé (EN)",
+      "statementFr": "Énoncé (FR)",
+      "explanationEn": "Explication (EN)",
+      "frOnly": "FR uniquement",
+      "frEn": "FR + EN"
     }
   },
   "users": {

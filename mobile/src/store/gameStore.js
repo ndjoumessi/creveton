@@ -124,7 +124,11 @@ export const useGameStore = create((set, get) => ({
             ...result,
             review: result.review.map((item) => {
               const q = qById.get(item.question_id);
-              return q ? { ...item, question_text: q.text, options: q.options || [] } : item;
+              // On porte les DEUX langues (FR + EN) pour que le récap se localise
+              // selon i18n.language (ResultsScreen). Les options portent déjà text_en.
+              return q
+                ? { ...item, question_text: q.text, question_text_en: q.text_en || null, options: q.options || [] }
+                : item;
             }),
           }
         : result;
