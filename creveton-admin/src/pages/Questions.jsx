@@ -1994,8 +1994,13 @@ export default function Questions() {
             ? detail.correct_index
             : opts.findIndex((o) => o.is_correct);
           // Aperçu dans la langue active de la console (repli FR si EN absent).
+          // Recalculé à CHAQUE rendu (l'IIFE re-tourne quand Questions() se
+          // re-rend sur 'languageChanged') → bascule FR↔EN immédiate, drawer ouvert.
           const displayText = i18n.language === 'en' && detail.text_en ? detail.text_en : detail.text_fr;
           const displayOption = (o) => (i18n.language === 'en' && o.text_en ? o.text_en : o.text);
+          const displayExplanation = i18n.language === 'en' && detail.explanation_en
+            ? detail.explanation_en
+            : detail.explanation;
           return (
             <div className="q-drawer">
               {/* Hero sombre */}
@@ -2083,8 +2088,8 @@ export default function Questions() {
                     {(testPick == null || testPick >= 0) && correctIdx >= 0 && (
                       <div className="q-phone-answer">{t('questions.preview.correctAnswer', { letter: LETTERS[correctIdx], text: opts[correctIdx] ? displayOption(opts[correctIdx]) : '' })}</div>
                     )}
-                    {detail.explanation && (testPick == null || testPick >= 0) && (
-                      <div className="q-phone-explain"><span>💡</span><span>{detail.explanation}</span></div>
+                    {displayExplanation && (testPick == null || testPick >= 0) && (
+                      <div className="q-phone-explain"><span>💡</span><span>{displayExplanation}</span></div>
                     )}
                   </div>
 
@@ -2129,10 +2134,10 @@ export default function Questions() {
                     </>
                   )}
 
-                  {detail.explanation && (
+                  {displayExplanation && (
                     <>
                       <div className="q-section-label">{t('questions.misc.fullExplanation')}</div>
-                      <div className="explain">{detail.explanation}</div>
+                      <div className="explain">{displayExplanation}</div>
                     </>
                   )}
 
