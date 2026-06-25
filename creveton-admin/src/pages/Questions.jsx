@@ -1090,7 +1090,7 @@ const KANBAN_COLS = [
   { status: 'archived' },
 ];
 function KanbanBoard({ rows, onOpen, onMove }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [dragId, setDragId] = useState(null);
   const [overCol, setOverCol] = useState(null);
   const byStatus = useMemo(() => {
@@ -1129,7 +1129,7 @@ function KanbanBoard({ rows, onOpen, onMove }) {
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === 'Enter') onOpen(q); }}
                 >
-                  <div className="q-kanban-card-text">{truncate(q.text_fr, 60)}</div>
+                  <div className="q-kanban-card-text">{truncate(i18n.language === 'en' && q.text_en ? q.text_en : q.text_fr, 60)}</div>
                   <div className="q-kanban-card-meta">
                     <ThemeBadge theme={q.theme} />
                     <LevelPill level={q.level} />
@@ -1806,6 +1806,10 @@ export default function Questions() {
                   const isExp = expanded.has(q.id);
                   const opts = q.options || [];
                   const cIdx = q.correct_index != null ? q.correct_index : opts.findIndex((o) => o.is_correct);
+                  // Affiche l'énoncé/explication dans la langue active de la console
+                  // (repli FR si la traduction EN manque).
+                  const displayText = i18n.language === 'en' && q.text_en ? q.text_en : q.text_fr;
+                  const displayExplanation = i18n.language === 'en' && q.explanation_en ? q.explanation_en : q.explanation;
                   return (
                     <Fragment key={q.id}>
                       <tr className={`clickable ${on ? 'q-row-on' : ''}`} onClick={() => openDetail(q)}>
@@ -1819,10 +1823,10 @@ export default function Questions() {
                         <td className="q-cell-statement">
                           <span className="q-statement-row">
                             {q.media_url && <img src={q.media_url} alt="" className="q-statement-thumb" title={t('questions.image.hasBadge')} loading="lazy" />}
-                            <span className="q-statement-text">{truncate(q.text_fr, STATEMENT_MAX)}</span>
+                            <span className="q-statement-text">{truncate(displayText, STATEMENT_MAX)}</span>
                             <BilingualBadge q={q} />
                           </span>
-                          {q.explanation && <span className="q-statement-sub">{truncate(q.explanation, 90)}</span>}
+                          {displayExplanation && <span className="q-statement-sub">{truncate(displayExplanation, 90)}</span>}
                         </td>
                         <td className="q-cell-edit" onClick={(e) => e.stopPropagation()}>
                           {editing && editing.id === q.id && editing.field === 'theme' ? (
@@ -1866,11 +1870,11 @@ export default function Questions() {
                               {opts.map((o, idx) => (
                                 <div className={`q-expand-opt ${idx === cIdx ? 'correct' : ''}`} key={`${q.id}-x-${idx}`}>
                                   <span className="q-expand-letter">{LETTERS[idx]}</span>
-                                  <span className="q-expand-text">{o.text}</span>
+                                  <span className="q-expand-text">{i18n.language === 'en' && o.text_en ? o.text_en : o.text}</span>
                                   {idx === cIdx && <Check size={14} />}
                                 </div>
                               ))}
-                              {q.explanation && <div className="explain q-expand-explain">{q.explanation}</div>}
+                              {displayExplanation && <div className="explain q-expand-explain">{displayExplanation}</div>}
                             </div>
                           </td>
                         </tr>
