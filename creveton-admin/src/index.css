@@ -505,6 +505,16 @@ table.data tbody tr:last-child td { border-bottom: none; }
 /* Bannière maintenance */
 .maintenance-banner { display: flex; align-items: center; justify-content: center; gap: 9px; background: var(--red); color: #fff; font-weight: 600; font-size: 13.5px; padding: 9px 16px; text-align: center; }
 
+/* Bannière d'installation PWA : carte plate discrète, ancrée en bas. */
+.install-banner { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 16px; max-width: calc(100vw - 32px); background: var(--surface); color: var(--ink); border: 1px solid var(--border-green); border-radius: var(--radius-pill); box-shadow: var(--shadow-md); padding: 8px 8px 8px 18px; }
+.install-banner__text { display: inline-flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.install-banner__actions { display: inline-flex; align-items: center; gap: 4px; }
+.install-banner__cta { background: var(--gold); color: var(--green900); border: none; border-radius: var(--radius-pill); padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.install-banner__cta:hover { background: var(--gold400); }
+.install-banner__close { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: transparent; border: none; border-radius: 50%; color: var(--muted, #6b7280); cursor: pointer; }
+.install-banner__close:hover { background: var(--bg-mute); color: var(--ink); }
+@media (max-width: 480px) { .install-banner__text { white-space: normal; } }
+
 /* Indicateur joueurs en ligne */
 .online-badge { display: inline-flex; align-items: center; gap: 7px; }
 .online-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green500); box-shadow: 0 0 0 0 rgba(42,138,79,0.5); animation: pulse 1.6s infinite; }

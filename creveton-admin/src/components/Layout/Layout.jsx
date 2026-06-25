@@ -6,6 +6,7 @@ import Header from './Header';
 import ErrorBoundary from '../ErrorBoundary';
 import CommandPalette from '../CommandPalette';
 import ScrollToTop from '../ScrollToTop';
+import InstallPrompt from '../InstallPrompt';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { setDateTimeZone } from '../../utils/format';
@@ -38,6 +39,7 @@ export default function Layout() {
       </div>
       <CommandPalette />
       <ScrollToTop />
+      <InstallPrompt />
     </div>
   );
 }
