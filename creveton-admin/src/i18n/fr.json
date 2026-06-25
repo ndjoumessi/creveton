@@ -493,7 +493,8 @@
       "removeTitle": "Supprimer l'image ?",
       "removeMessage": "L'image sera retirée de cette question. Action irréversible.",
       "hasBadge": "Cette question a une image",
-      "dropTitle": "Glisser une image ici ou cliquer pour parcourir"
+      "dropTitle": "Glisser une image ici ou cliquer pour parcourir",
+      "dragHint": "Glisser pour recadrer"
     },
     "corrector": {
       "button": "✨ Améliorer",

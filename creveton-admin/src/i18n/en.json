@@ -493,7 +493,8 @@
       "removeTitle": "Remove image?",
       "removeMessage": "The image will be removed from this question. This cannot be undone.",
       "hasBadge": "This question has an image",
-      "dropTitle": "Drag an image here or click to browse"
+      "dropTitle": "Drag an image here or click to browse",
+      "dragHint": "Drag to reposition"
     },
     "corrector": {
       "button": "✨ Improve",

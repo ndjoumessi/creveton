@@ -424,15 +424,19 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   // route image exige un id de question). `imagePreview` = objectURL pour l'aperçu.
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  // Recadrage de l'image (object-position via glisser) — {x,y} en %, aperçu only.
+  const [offset, setOffset] = useState({ x: 50, y: 50 });
   const taRef = useRef(null);
 
   const clearImage = () => {
     setImagePreview((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
     setImageFile(null);
+    setOffset({ x: 50, y: 50 });
   };
   const pickImage = (file) => {
     setImagePreview((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
     setImageFile(file);
+    setOffset({ x: 50, y: 50 }); // nouvelle image → recadrage centré par défaut
   };
 
   // Correcteurs IA (énoncé + explication) — bouton ✨ + panneau de suggestion.
@@ -565,7 +569,15 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
               {/* Image = contenu (déplacée depuis Métadonnées) : énoncé + image ensemble. */}
               <div className="field" style={{ marginBottom: 0 }}>
                 <label>🖼 {t('questions.image.label')}</label>
-                <ImageDropzone previewUrl={imagePreview} onSelect={pickImage} onClear={clearImage} height={150} />
+                <ImageDropzone
+                  previewUrl={imagePreview}
+                  onSelect={pickImage}
+                  onClear={clearImage}
+                  height={150}
+                  compact
+                  offset={offset}
+                  onOffsetChange={setOffset}
+                />
               </div>
             </>
           )}
@@ -646,7 +658,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
               <LevelBadge level={level} />
             </div>
             <div className="mp-timer"><span style={{ width: '60%' }} /></div>
-            {imagePreview && <img src={imagePreview} alt="" className="mp-img" />}
+            {imagePreview && <img src={imagePreview} alt="" className="mp-img" style={{ objectPosition: `${offset.x}% ${offset.y}%` }} />}
             <div className="mp-q">{trimmed || t('questions.placeholder.statementPreview')}</div>
             {opts.map((o, i) => (
               <div className={`mp-opt ${i === correct && o.trim() ? 'correct' : ''}`} key={LETTERS[i]}>
@@ -1027,7 +1039,7 @@ const IMG_MAX = 2 * 1024 * 1024;
  * pointillée ; avec aperçu → image pleine largeur + overlay « Remplacer / Supprimer ».
  * Valide type (JPG/PNG/WebP) et taille (2 Mo) avant d'appeler `onSelect(file)`.
  */
-function ImageDropzone({ previewUrl, onSelect, onClear, busy = false, height = 180 }) {
+function ImageDropzone({ previewUrl, onSelect, onClear, busy = false, height = 180, compact = false, offset = { x: 50, y: 50 }, onOffsetChange = () => {} }) {
   const { t } = useTranslation();
   const [drag, setDrag] = useState(false);
   const inputRef = useRef(null);
@@ -1045,8 +1057,8 @@ function ImageDropzone({ previewUrl, onSelect, onClear, busy = false, height = 1
   return (
     <>
       {previewUrl ? (
-        <div className="q-img-box">
-          <img src={previewUrl} alt="" className="q-img-box-img" />
+        <div className={`q-img-box ${compact ? 'q-img-box--compact' : ''}`}>
+          <DraggableImage src={previewUrl} offset={offset} onOffsetChange={onOffsetChange} />
           <div className="q-img-overlay">
             <button type="button" className="btn btn-light" disabled={busy} onClick={pick}>🔄 {t('questions.image.replace')}</button>
             <button type="button" className="btn btn-light" disabled={busy} onClick={onClear}>🗑 {t('questions.image.remove')}</button>
@@ -1075,11 +1087,72 @@ function ImageDropzone({ previewUrl, onSelect, onClear, busy = false, height = 1
   );
 }
 
+/* ---------- Image repositionnable (glisser pour recadrer) ---------- */
+// Remplace le point focal figé : l'admin fait glisser l'image dans le cadre
+// (object-fit:cover). `offset` {x,y} en % est piloté par le parent → synchro de
+// l'aperçu mobile. Souris + tactile (admin sur tablette).
+function DraggableImage({ src, offset, onOffsetChange }) {
+  const { t } = useTranslation();
+  const [dragging, setDragging] = useState(false);
+  const [showHint, setShowHint] = useState(true);
+  const dragStart = useRef(null);
+  const containerRef = useRef(null);
+
+  // Indice « glisser pour recadrer » : visible 2 s à chaque nouvelle image.
+  useEffect(() => {
+    setShowHint(true);
+    const id = setTimeout(() => setShowHint(false), 2200);
+    return () => clearTimeout(id);
+  }, [src]);
+
+  const start = (cx, cy) => {
+    setDragging(true);
+    dragStart.current = { x: cx, y: cy, ox: offset.x, oy: offset.y };
+  };
+  const move = (cx, cy) => {
+    if (!dragging || !dragStart.current || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const dx = ((cx - dragStart.current.x) / rect.width) * 100;
+    const dy = ((cy - dragStart.current.y) / rect.height) * 100;
+    onOffsetChange({
+      x: Math.max(0, Math.min(100, dragStart.current.ox - dx)),
+      y: Math.max(0, Math.min(100, dragStart.current.oy - dy)),
+    });
+  };
+  const end = () => { setDragging(false); dragStart.current = null; };
+
+  return (
+    <div
+      ref={containerRef}
+      className={`q-drag-img ${dragging ? 'is-dragging' : ''}`}
+      onMouseDown={(e) => { start(e.clientX, e.clientY); e.preventDefault(); }}
+      onMouseMove={(e) => move(e.clientX, e.clientY)}
+      onMouseUp={end}
+      onMouseLeave={end}
+      onTouchStart={(e) => { const tp = e.touches[0]; if (tp) start(tp.clientX, tp.clientY); }}
+      onTouchMove={(e) => { const tp = e.touches[0]; if (tp) move(tp.clientX, tp.clientY); }}
+      onTouchEnd={end}
+    >
+      <img
+        src={src}
+        alt=""
+        className="q-drag-img-el"
+        draggable={false}
+        style={{ objectPosition: `${offset.x}% ${offset.y}%` }}
+      />
+      {showHint && <div className="q-drag-hint">✋ {t('questions.image.dragHint')}</div>}
+    </div>
+  );
+}
+
 /* ---------- Section image (drawer détail) — upload immédiat ---------- */
 function QuestionImageSection({ question, onChange, onRequestRemove }) {
   const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
+  const [offset, setOffset] = useState({ x: 50, y: 50 });
   const mediaUrl = question.media_url || null;
+  // Recadrage centré par défaut à chaque changement d'image.
+  useEffect(() => { setOffset({ x: 50, y: 50 }); }, [mediaUrl]);
 
   const onPick = async (file) => {
     setUploading(true);
@@ -1097,7 +1170,7 @@ function QuestionImageSection({ question, onChange, onRequestRemove }) {
   return (
     <>
       <div className="q-section-label">🖼 {t('questions.image.label')}</div>
-      <ImageDropzone previewUrl={mediaUrl} onSelect={onPick} onClear={onRequestRemove} busy={uploading} height={120} />
+      <ImageDropzone previewUrl={mediaUrl} onSelect={onPick} onClear={onRequestRemove} busy={uploading} height={120} offset={offset} onOffsetChange={setOffset} />
     </>
   );
 }
