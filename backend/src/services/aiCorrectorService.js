@@ -72,17 +72,29 @@ async function callAnthropic(prompt, { maxTokens = 600, meta = {} } = {}) {
 }
 
 /**
- * Prompt de TRADUCTION d'un seul texte (action='translate' du correcteur). Bornes :
- * énoncé 300 / explication 500 caractères. Réponse = texte traduit uniquement.
+ * Prompt de TRADUCTION d'un seul texte (action='translate' du correcteur).
+ * `targetLang` = langue CIBLE ('en' = FR→EN par défaut, rétro-compat ; 'fr' = EN→FR).
+ * Bornes : énoncé 300 / explication 500 caractères. Réponse = texte traduit seul.
  */
-function buildTranslatePrompt(type, text) {
+function buildTranslatePrompt(targetLang, type, text) {
   const isExpl = type === 'explanation';
   const max = isExpl ? 500 : 300;
+  const what = isExpl ? 'explanation' : 'statement';
+  if (targetLang === 'fr') {
+    return (
+      'You are translating a Cameroonian quiz question from English to French.\n'
+      + 'Translate accurately, keeping the same meaning and difficulty.\n'
+      + 'Keep proper nouns (Cameroonian cities, people, institutions) as-is.\n'
+      + `Maximum ${max} characters for a ${what}.\n`
+      + 'Reply ONLY with the translated text, no explanation.\n'
+      + `English text: "${text}"`
+    );
+  }
   return (
     'You are translating a Cameroonian quiz question from French to English.\n'
     + 'Translate accurately, keeping the same meaning and difficulty.\n'
     + 'Keep proper nouns (Cameroonian cities, people, institutions) as-is.\n'
-    + `Maximum ${max} characters for a ${isExpl ? 'explanation' : 'statement'}.\n`
+    + `Maximum ${max} characters for a ${what}.\n`
     + 'Reply ONLY with the translated text, no explanation.\n'
     + `French text: "${text}"`
   );
@@ -117,8 +129,9 @@ function buildPrompt(lang, type, text) {
  * @returns {Promise<string>} texte corrigé/traduit (trim)
  */
 async function improveText({ text, lang = 'fr', type = 'statement', action = 'correct' }) {
+  // En traduction, `lang` est la langue CIBLE ('en' = FR→EN, 'fr' = EN→FR).
   const prompt = action === 'translate'
-    ? buildTranslatePrompt(type, text)
+    ? buildTranslatePrompt(lang, type, text)
     : buildPrompt(lang, type, text);
   const out = await callAnthropic(prompt, { meta: { type, lang, action } });
   // Claude enrobe parfois sa réponse de guillemets (« "texte" ») — on les retire

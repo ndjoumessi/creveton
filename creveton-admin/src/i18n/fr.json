@@ -523,6 +523,7 @@
       "explanationEn": "Explication (EN)",
       "fullExplanationEn": "Explication complète (EN)",
       "management": "Gestion bilingue (FR + EN)",
+      "primary": "Principal",
       "frOnly": "FR uniquement",
       "frEn": "FR + EN"
     }

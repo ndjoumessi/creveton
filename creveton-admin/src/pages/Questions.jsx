@@ -467,27 +467,34 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const stmtEnAi = useCorrector(textEn, 'statement', setTextEn, 'en');
   const explEnAi = useCorrector(explanationEn, 'explanation', setExplanationEn, 'en');
 
-  // Traduction IA FR→EN (action='translate'). En création la question n'a pas
-  // encore d'id → on passe par le correcteur (improve-text action=translate),
-  // pas l'endpoint /:id/translate (réservé aux questions existantes, cf. drawer).
-  const translateText = async (frText, type) => {
-    const res = await questionsService.improveText({ text: frText, lang: 'en', type, action: 'translate' });
+  // Traduction IA (action='translate'). En création la question n'a pas encore
+  // d'id → on passe par le correcteur (improve-text action=translate), pas
+  // l'endpoint /:id/translate (réservé aux questions existantes, cf. drawer).
+  // `targetLang` = langue CIBLE ('en' = FR→EN par défaut, 'fr' = EN→FR).
+  const translateText = async (srcText, type, targetLang = 'en') => {
+    const res = await questionsService.improveText({ text: srcText, lang: targetLang, type, action: 'translate' });
     return (res?.suggestion || '').trim();
   };
-  const onTranslateStatement = async () => {
-    const src = textFr.trim();
+  // Remplit le champ `targetLang` depuis l'autre langue (énoncé).
+  const translateStatementInto = async (targetLang) => {
+    const src = (targetLang === 'en' ? textFr : textEn).trim();
     if (src.length < 10) return;
-    setTranslating('stmt');
-    try { setTextEn(await translateText(src, 'statement')); }
-    catch { notify.error(t('questions.bilingual.translateFailed')); }
+    setTranslating(`stmt-${targetLang}`);
+    try {
+      const out = await translateText(src, 'statement', targetLang);
+      (targetLang === 'en' ? setTextEn : setTextFr)(out);
+    } catch { notify.error(t('questions.bilingual.translateFailed')); }
     finally { setTranslating(null); }
   };
-  const onTranslateExplanation = async () => {
-    const src = explanation.trim();
+  // Remplit le champ `targetLang` depuis l'autre langue (explication).
+  const translateExplanationInto = async (targetLang) => {
+    const src = (targetLang === 'en' ? explanation : explanationEn).trim();
     if (!src) return;
-    setTranslating('expl');
-    try { setExplanationEn(await translateText(src, 'explanation')); }
-    catch { notify.error(t('questions.bilingual.translateFailed')); }
+    setTranslating(`expl-${targetLang}`);
+    try {
+      const out = await translateText(src, 'explanation', targetLang);
+      (targetLang === 'en' ? setExplanationEn : setExplanation)(out);
+    } catch { notify.error(t('questions.bilingual.translateFailed')); }
     finally { setTranslating(null); }
   };
   const onTranslateOption = async (i) => {
@@ -538,18 +545,22 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const addTag = () => { const tg = tagInput.trim(); if (tg && !tags.includes(tg)) setTags((p) => [...p, tg]); setTagInput(''); };
 
   // --- Validation temps réel ---
-  const trimmed = textFr.trim();
-  const textOk = trimmed.length >= 10;
-  const textOver = textFr.length > MAX_TEXT;
+  // EN d'abord : en mode anglais, l'énoncé EN devient le champ PRIMAIRE (saisi),
+  // le FR (requis en DB) est rempli par auto-traduction EN→FR au clic « Suivant ».
+  const isEn = i18n.language === 'en';
+  const trimmed = textFr.trim(); // source de vérité enregistrée (text_fr)
+  const primaryStmt = isEn ? textEn : textFr;
+  const stmtOk = primaryStmt.trim().length >= 10;
+  const stmtOver = primaryStmt.length > MAX_TEXT;
   const optsOk = Boolean(opts[0].trim() && opts[1].trim());
   const correctOk = Boolean(opts[correct]?.trim());
-  const canCreate = textOk && !textOver && optsOk && correctOk;
-  const nextDisabled = (step === 0 && !(textOk && !textOver)) || (step === 1 && !(optsOk && correctOk));
+  // Enregistrement : le primaire valide ET text_fr rempli (DB) — garanti par
+  // l'auto-traduction EN→FR à l'étape 1.
+  const canCreate = stmtOk && !stmtOver && trimmed.length >= 10 && optsOk && correctOk;
+  const nextDisabled = (step === 0 && !(stmtOk && !stmtOver)) || (step === 1 && !(optsOk && correctOk));
 
   // Aperçu mobile : RÉVISION SEULE (lecture). Suit la langue active de la console
-  // (repli FR si l'EN est vide). Ne change PAS la source de vérité : le FR reste
-  // le champ requis pour l'enregistrement.
-  const isEn = i18n.language === 'en';
+  // (repli FR si l'EN est vide). Ne change PAS la source de vérité.
   const previewText = isEn && textEn.trim() ? textEn.trim() : trimmed;
   const previewOption = (i) => {
     const en = (optsEn[i] || '').trim();
@@ -575,13 +586,31 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
     }, reset, imageFile);
   };
 
+  // « Suivant » : en mode EN, si l'admin n'a saisi que l'EN, on remplit le FR
+  // (requis en DB) par auto-traduction EN→FR AVANT d'avancer. Idem explication.
+  const goNext = async () => {
+    if (step === 0 && isEn && textEn.trim().length >= 10 && textFr.trim().length < 10) {
+      setTranslating('stmt-fr');
+      try {
+        const fr = await translateText(textEn.trim(), 'statement', 'fr');
+        if (fr) setTextFr(fr);
+        if (explanationEn.trim() && !explanation.trim()) {
+          const ef = await translateText(explanationEn.trim(), 'explanation', 'fr');
+          if (ef) setExplanation(ef);
+        }
+      } catch { notify.error(t('questions.bilingual.translateFailed')); }
+      finally { setTranslating(null); }
+    }
+    setStep((s) => Math.min(2, s + 1));
+  };
+
   const footer = (
     <>
       <button className="btn btn-ghost-soft" onClick={close}>{t('questions.modal.cancel')}</button>
       <div style={{ flex: 1 }} />
       {step > 0 && <button className="btn" onClick={() => setStep((s) => Math.max(0, s - 1))}><ChevronLeft size={15} /> {t('questions.modal.previous')}</button>}
       {step < 2 && (
-        <button className="btn btn-primary" onClick={() => setStep((s) => Math.min(2, s + 1))} disabled={nextDisabled}>
+        <button className="btn btn-primary" onClick={goNext} disabled={nextDisabled || translating === 'stmt-fr'}>
           {t('questions.modal.next')} <ChevronRight size={15} />
         </button>
       )}
@@ -592,6 +621,111 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
       )}
     </>
   );
+
+  // Champ ÉNONCÉ bilingue (réordonné selon la langue). `isPrimary` = champ saisi
+  // en premier (badge « Principal » + indice de validation) ; le secondaire porte
+  // un bouton 🌐 « traduire depuis l'autre langue » + le tag « (optionnelle) ».
+  const renderStatementField = (fieldLang, isPrimary) => {
+    const isFr = fieldLang === 'fr';
+    const value = isFr ? textFr : textEn;
+    const setValue = isFr ? setTextFr : setTextEn;
+    const ai = isFr ? stmtAi : stmtEnAi;
+    const over = value.length > MAX_TEXT;
+    const otherFilled = (isFr ? textEn : textFr).trim().length >= 10;
+    return (
+      <div className="field" key={`stmt-${fieldLang}`}>
+        <div className="q-field-head">
+          <label>
+            {isFr ? t('questions.bilingual.statementFr') : t('questions.bilingual.statementEn')}{' '}
+            {isPrimary
+              ? <span className="q-field-role">{t('questions.bilingual.primary')}</span>
+              : <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span>}
+          </label>
+          <div className="row nowrap" style={{ gap: 6 }}>
+            {!isPrimary && (
+              <button
+                type="button"
+                className="q-translate-btn"
+                disabled={!otherFilled || translating === `stmt-${fieldLang}`}
+                onClick={() => translateStatementInto(fieldLang)}
+              >
+                {translating === `stmt-${fieldLang}`
+                  ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
+                  : <>🌐 {isFr ? t('questions.bilingual.translateToFr') : t('questions.bilingual.translateToEn')}</>}
+              </button>
+            )}
+            {ai.button}
+          </div>
+        </div>
+        <textarea
+          ref={isPrimary ? taRef : undefined}
+          className={`textarea ${isPrimary ? 'q-grow' : ''}`}
+          rows={isPrimary ? 4 : 3}
+          spellCheck="true"
+          lang={fieldLang}
+          placeholder={isFr ? t('questions.placeholder.statementFr') : t('questions.placeholder.statementEn')}
+          value={value}
+          onChange={(e) => { setValue(e.target.value); if (isPrimary) autoGrow(e.target); }}
+        />
+        {ai.panel}
+        <div className={`char-count ${over ? 'over' : value.length > 270 ? 'warn' : ''}`}>{value.length} / {MAX_TEXT}</div>
+        {isPrimary && (
+          <div className={`valid-hint ${stmtOk && !stmtOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
+            {stmtOk && !stmtOver
+              ? <><Check size={13} /> {t('questions.validation.statementOk')}</>
+              : <><AlertCircle size={13} /> {stmtOver ? t('questions.validation.statementTooLong', { max: MAX_TEXT }) : t('questions.validation.statementTooShort')}</>}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Champ EXPLICATION bilingue (réordonné, toujours optionnel).
+  const renderExplanationField = (fieldLang, isPrimary) => {
+    const isFr = fieldLang === 'fr';
+    const value = isFr ? explanation : explanationEn;
+    const setValue = isFr ? setExplanation : setExplanationEn;
+    const ai = isFr ? explAi : explEnAi;
+    const otherFilled = (isFr ? explanationEn : explanation).trim().length > 0;
+    return (
+      <div className="field" key={`expl-${fieldLang}`}>
+        <div className="q-field-head">
+          <label>
+            {isFr ? t('questions.modal.explanation') : t('questions.bilingual.explanationEn')}{' '}
+            <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span>
+          </label>
+          <div className="row nowrap" style={{ gap: 6 }}>
+            {!isPrimary && (
+              <button
+                type="button"
+                className="q-translate-btn"
+                disabled={!otherFilled || translating === `expl-${fieldLang}`}
+                onClick={() => translateExplanationInto(fieldLang)}
+              >
+                {translating === `expl-${fieldLang}`
+                  ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
+                  : <>🌐 {isFr ? t('questions.bilingual.translateToFr') : t('questions.bilingual.translateToEn')}</>}
+              </button>
+            )}
+            {ai.button}
+          </div>
+        </div>
+        <textarea
+          className="textarea"
+          rows={3}
+          spellCheck="true"
+          lang={fieldLang}
+          placeholder={isFr ? t('questions.placeholder.explanationCreate') : t('questions.placeholder.explanationEn')}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        {ai.panel}
+        {!isFr && (
+          <div className={`char-count ${value.length > 500 ? 'over' : value.length > 470 ? 'warn' : ''}`}>{value.length} / 500</div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <Modal open={open} onClose={close} title={prefill ? t('questions.modal.edit') : t('questions.modal.create')} footer={footer} width={860}>
@@ -611,108 +745,15 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
         <div className="q-create-form">
           {step === 0 && (
             <>
-              <div className="field">
-                <div className="q-field-head">
-                  <label>{t('questions.bilingual.statementFr')}</label>
-                  {stmtAi.button}
-                </div>
-                <textarea
-                  ref={taRef}
-                  className="textarea q-grow"
-                  rows={4}
-                  spellCheck="true"
-                  lang="fr"
-                  placeholder={t('questions.placeholder.statementFr')}
-                  value={textFr}
-                  onChange={(e) => { setTextFr(e.target.value); autoGrow(e.target); }}
-                />
-                {stmtAi.panel}
-                <div className={`char-count ${textOver ? 'over' : textFr.length > 270 ? 'warn' : ''}`}>{textFr.length} / {MAX_TEXT}</div>
-                <div className={`valid-hint ${textOk && !textOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
-                  {textOk && !textOver
-                    ? <><Check size={13} /> {t('questions.validation.statementOk')}</>
-                    : <><AlertCircle size={13} /> {textOver ? t('questions.validation.statementTooLong', { max: MAX_TEXT }) : t('questions.validation.statementTooShort')}</>}
-                </div>
-              </div>
+              {/* Énoncé bilingue réordonné selon la langue console : le primaire
+                  (saisi) d'abord, le secondaire (traduisible) ensuite. */}
+              {renderStatementField(isEn ? 'en' : 'fr', true)}
+              {renderStatementField(isEn ? 'fr' : 'en', false)}
 
-              {/* Énoncé EN (optionnel) — traduction auto FR→EN + correcteur EN. */}
-              <div className="field">
-                <div className="q-field-head">
-                  <label>{t('questions.bilingual.statementEn')} <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span></label>
-                  <div className="row nowrap" style={{ gap: 6 }}>
-                    <button
-                      type="button"
-                      className="q-translate-btn"
-                      disabled={textFr.trim().length < 10 || translating === 'stmt'}
-                      onClick={onTranslateStatement}
-                    >
-                      {translating === 'stmt'
-                        ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
-                        : <>🌐 {t('questions.bilingual.translateToEn')}</>}
-                    </button>
-                    {stmtEnAi.button}
-                  </div>
-                </div>
-                <textarea
-                  className="textarea"
-                  rows={3}
-                  spellCheck="true"
-                  lang="en"
-                  placeholder={t('questions.placeholder.statementEn')}
-                  value={textEn}
-                  onChange={(e) => setTextEn(e.target.value)}
-                />
-                {stmtEnAi.panel}
-                <div className={`char-count ${textEn.length > MAX_TEXT ? 'over' : textEn.length > 270 ? 'warn' : ''}`}>{textEn.length} / {MAX_TEXT}</div>
-              </div>
+              {/* Explication bilingue, même ordonnancement (toujours optionnelle). */}
+              {renderExplanationField(isEn ? 'en' : 'fr', true)}
+              {renderExplanationField(isEn ? 'fr' : 'en', false)}
 
-              <div className="field">
-                <div className="q-field-head">
-                  <label>{t('questions.modal.explanation')} <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span></label>
-                  {explAi.button}
-                </div>
-                <textarea
-                  className="textarea"
-                  rows={3}
-                  spellCheck="true"
-                  lang="fr"
-                  placeholder={t('questions.placeholder.explanationCreate')}
-                  value={explanation}
-                  onChange={(e) => setExplanation(e.target.value)}
-                />
-                {explAi.panel}
-              </div>
-
-              {/* Explication EN (optionnelle) — traduction auto FR→EN + correcteur EN. */}
-              <div className="field">
-                <div className="q-field-head">
-                  <label>{t('questions.bilingual.explanationEn')} <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span></label>
-                  <div className="row nowrap" style={{ gap: 6 }}>
-                    <button
-                      type="button"
-                      className="q-translate-btn"
-                      disabled={!explanation.trim() || translating === 'expl'}
-                      onClick={onTranslateExplanation}
-                    >
-                      {translating === 'expl'
-                        ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
-                        : <>🌐 {t('questions.bilingual.translateToEn')}</>}
-                    </button>
-                    {explEnAi.button}
-                  </div>
-                </div>
-                <textarea
-                  className="textarea"
-                  rows={3}
-                  spellCheck="true"
-                  lang="en"
-                  placeholder={t('questions.placeholder.explanationEn')}
-                  value={explanationEn}
-                  onChange={(e) => setExplanationEn(e.target.value)}
-                />
-                {explEnAi.panel}
-                <div className={`char-count ${explanationEn.length > 500 ? 'over' : explanationEn.length > 470 ? 'warn' : ''}`}>{explanationEn.length} / 500</div>
-              </div>
               {/* Image = contenu (déplacée depuis Métadonnées) : énoncé + image ensemble. */}
               <div className="field" style={{ marginBottom: 0 }}>
                 <label>🖼 {t('questions.image.label')}</label>

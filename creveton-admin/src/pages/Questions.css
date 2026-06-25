@@ -524,6 +524,18 @@
 .q-opt-radio input { accent-color: var(--green500); width: 15px; height: 15px; }
 .q-opt-text { flex: 1; }
 .q-opt-label { font-weight: 400; color: var(--muted); font-size: 12px; }
+/* Badge « Principal » du champ primaire (énoncé) — pastille verte discrète. */
+.q-field-role {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: #e3f3ea;
+  color: var(--green700);
+}
 
 /* Niveau : pills de sélection (step Métadonnées) */
 .q-level-pills { display: inline-flex; gap: 6px; flex-wrap: wrap; }
