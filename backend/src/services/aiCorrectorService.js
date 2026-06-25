@@ -120,7 +120,10 @@ async function improveText({ text, lang = 'fr', type = 'statement', action = 'co
   const prompt = action === 'translate'
     ? buildTranslatePrompt(type, text)
     : buildPrompt(lang, type, text);
-  return callAnthropic(prompt, { meta: { type, lang, action } });
+  const out = await callAnthropic(prompt, { meta: { type, lang, action } });
+  // Claude enrobe parfois sa réponse de guillemets (« "texte" ») — on les retire
+  // (correction ET traduction) pour ne pas réinjecter de guillemets parasites.
+  return out.replace(/^["']|["']$/g, '').trim();
 }
 
 /**

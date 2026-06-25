@@ -381,7 +381,8 @@
       "tagExample": "Ex. capitale",
       "statementEn": "English statement (auto-translated or manual)…",
       "optionEn": "Option {{letter}} (EN)",
-      "explanationEn": "English explanation shown after the answer…"
+      "explanationEn": "English explanation shown after the answer…",
+      "statementFr": "Quelle est la capitale… ?"
     },
     "events": {
       "created": "Créée",

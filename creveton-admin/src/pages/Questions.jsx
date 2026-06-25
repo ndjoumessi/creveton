@@ -611,7 +611,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                   rows={4}
                   spellCheck="true"
                   lang="fr"
-                  placeholder={t('questions.placeholder.statement')}
+                  placeholder={t('questions.placeholder.statementFr')}
                   value={textFr}
                   onChange={(e) => { setTextFr(e.target.value); autoGrow(e.target); }}
                 />
