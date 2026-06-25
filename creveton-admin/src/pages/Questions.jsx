@@ -1943,6 +1943,9 @@ export default function Questions() {
           const correctIdx = detail.correct_index != null
             ? detail.correct_index
             : opts.findIndex((o) => o.is_correct);
+          // Aperçu dans la langue active de la console (repli FR si EN absent).
+          const displayText = i18n.language === 'en' && detail.text_en ? detail.text_en : detail.text_fr;
+          const displayOption = (o) => (i18n.language === 'en' && o.text_en ? o.text_en : o.text);
           return (
             <div className="q-drawer">
               {/* Hero sombre */}
@@ -2000,13 +2003,13 @@ export default function Questions() {
                     </div>
                     <div className="q-phone-timer"><span style={{ width: '60%' }} /></div>
                     {detail.media_url && <img src={detail.media_url} alt="" className="q-phone-img" />}
-                    <div className="q-phone-q">{detail.text_fr || t('questions.drawer.noStatement')}</div>
+                    <div className="q-phone-q">{displayText || t('questions.drawer.noStatement')}</div>
                     <div className="q-phone-opts">
                       {opts.map((o, i) => {
                         const testing = testPick != null;
                         const answered = testPick != null && testPick >= 0;
                         if (!testing) {
-                          return <PreviewOption key={`${detail.id}-mp-${i}`} letter={LETTERS[i]} text={o.text} correct={i === correctIdx} />;
+                          return <PreviewOption key={`${detail.id}-mp-${i}`} letter={LETTERS[i]} text={displayOption(o)} correct={i === correctIdx} />;
                         }
                         const showCorrect = answered && i === correctIdx;
                         const showWrong = answered && i === testPick && i !== correctIdx;
@@ -2019,7 +2022,7 @@ export default function Questions() {
                             disabled={answered}
                           >
                             <span className="q-mp-letter">{LETTERS[i]}</span>
-                            <span className="q-mp-opt-text">{o.text || t('questions.placeholder.option', { letter: LETTERS[i] })}</span>
+                            <span className="q-mp-opt-text">{displayOption(o) || t('questions.placeholder.option', { letter: LETTERS[i] })}</span>
                             {showCorrect && <Check size={15} className="q-mp-check" />}
                             {showWrong && <X size={15} className="q-mp-check" />}
                           </button>
@@ -2028,15 +2031,15 @@ export default function Questions() {
                     </div>
                     {testPick === -1 && <div className="q-phone-hint">{t('questions.preview.selectAnswer')}</div>}
                     {(testPick == null || testPick >= 0) && correctIdx >= 0 && (
-                      <div className="q-phone-answer">{t('questions.preview.correctAnswer', { letter: LETTERS[correctIdx], text: opts[correctIdx]?.text })}</div>
+                      <div className="q-phone-answer">{t('questions.preview.correctAnswer', { letter: LETTERS[correctIdx], text: opts[correctIdx] ? displayOption(opts[correctIdx]) : '' })}</div>
                     )}
                     {detail.explanation && (testPick == null || testPick >= 0) && (
                       <div className="q-phone-explain"><span>💡</span><span>{detail.explanation}</span></div>
                     )}
                   </div>
 
-                  <div className="q-section-label">{t('questions.bilingual.statementFr')}</div>
-                  <textarea className="textarea q-raw" readOnly value={detail.text_fr || ''} rows={3} />
+                  <div className="q-section-label">{t('questions.misc.statementRaw')}</div>
+                  <textarea className="textarea q-raw" readOnly value={displayText || ''} rows={3} />
 
                   {/* ÉNONCÉ (EN) — texte traduit, ou état « non traduit » + bouton. */}
                   <div className="q-section-label q-section-label--bi">
