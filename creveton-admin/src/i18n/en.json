@@ -488,7 +488,8 @@
       "guidelines": "Optional image · JPG, PNG or WebP · Max 2 MB · Recommended: 800×450px (16:9)",
       "removeTitle": "Remove image?",
       "removeMessage": "The image will be removed from this question. This cannot be undone.",
-      "hasBadge": "This question has an image"
+      "hasBadge": "This question has an image",
+      "dropTitle": "Drag an image here or click to browse"
     }
   },
   "users": {

@@ -345,11 +345,25 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const [level, setLevel] = useState('beginner');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState([]);
+  // Image optionnelle : fichier gardé en local, uploadé APRÈS la création (la
+  // route image exige un id de question). `imagePreview` = objectURL pour l'aperçu.
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const taRef = useRef(null);
+
+  const clearImage = () => {
+    setImagePreview((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
+    setImageFile(null);
+  };
+  const pickImage = (file) => {
+    setImagePreview((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
+    setImageFile(file);
+  };
 
   const reset = () => {
     setStep(0); setTextFr(''); setOpts(['', '', '', '']); setCorrect(0);
     setExplanation(''); setTheme('culture'); setLevel('beginner'); setTagInput(''); setTags([]);
+    clearImage();
   };
 
   // Hydrate le formulaire à l'ouverture (vierge, ou pré-rempli pour « Dupliquer »).
@@ -358,6 +372,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
     const dft = draftFromQuestion(prefill);
     setStep(0); setTextFr(dft.textFr); setOpts(dft.opts); setCorrect(dft.correct);
     setExplanation(dft.explanation); setTheme(dft.theme); setLevel(dft.level); setTagInput(''); setTags(dft.tags);
+    clearImage();
   }, [open, prefill]);
 
   // Auto-resize du textarea énoncé.
@@ -390,7 +405,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
       theme,
       level,
       tags,
-    }, reset);
+    }, reset, imageFile);
   };
 
   const footer = (
@@ -516,6 +531,10 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                     ))}
                   </div>
                 )}
+              </div>
+              <div className="field">
+                <label>🖼 {t('questions.image.label')}</label>
+                <ImageDropzone previewUrl={imagePreview} onSelect={pickImage} onClear={clearImage} height={150} />
               </div>
               <div className={`valid-hint ${canCreate ? 'ok' : 'ko'}`}>
                 {canCreate
@@ -906,19 +925,70 @@ function KanbanBoard({ rows, onOpen, onMove }) {
   );
 }
 
-/* ---------- Section image (drawer détail) ---------- */
+/* ---------- Image : dropzone réutilisable (modale création + drawer détail) ---------- */
 const IMG_MIME = ['image/jpeg', 'image/png', 'image/webp'];
 const IMG_MAX = 2 * 1024 * 1024;
-function QuestionImageSection({ question, onChange, onRequestRemove }) {
-  const { t } = useTranslation();
-  const [uploading, setUploading] = useState(false);
-  const inputRef = useRef(null);
-  const mediaUrl = question.media_url || null;
 
-  const onPick = async (file) => {
+/**
+ * Zone d'image réutilisable : glisser-déposer OU clic. Sans aperçu → grande zone
+ * pointillée ; avec aperçu → image pleine largeur + overlay « Remplacer / Supprimer ».
+ * Valide type (JPG/PNG/WebP) et taille (2 Mo) avant d'appeler `onSelect(file)`.
+ */
+function ImageDropzone({ previewUrl, onSelect, onClear, busy = false, height = 180 }) {
+  const { t } = useTranslation();
+  const [drag, setDrag] = useState(false);
+  const inputRef = useRef(null);
+
+  const validate = (file) => {
     if (!file) return;
     if (!IMG_MIME.includes(file.type)) { notify.error(t('questions.image.errType')); return; }
     if (file.size > IMG_MAX) { notify.error(t('questions.image.errSize')); return; }
+    onSelect(file);
+  };
+  const pick = () => { if (!busy) inputRef.current?.click(); };
+  const onDrop = (e) => { e.preventDefault(); setDrag(false); if (!busy) validate(e.dataTransfer.files?.[0]); };
+  const onChange = (e) => { validate(e.target.files?.[0]); e.target.value = ''; };
+
+  return (
+    <>
+      {previewUrl ? (
+        <div className="q-img-box">
+          <img src={previewUrl} alt="" className="q-img-box-img" />
+          <div className="q-img-overlay">
+            <button type="button" className="btn btn-light" disabled={busy} onClick={pick}>🔄 {t('questions.image.replace')}</button>
+            <button type="button" className="btn btn-light" disabled={busy} onClick={onClear}>🗑 {t('questions.image.remove')}</button>
+          </div>
+          {busy && <div className="q-img-busy">{t('questions.image.uploading')}</div>}
+        </div>
+      ) : (
+        <div
+          className={`q-dropzone ${drag ? 'is-drag' : ''} ${busy ? 'is-busy' : ''}`}
+          style={{ minHeight: height }}
+          role="button"
+          tabIndex={0}
+          onClick={pick}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } }}
+          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={onDrop}
+        >
+          <div className="q-dropzone-icon">🖼</div>
+          <div className="q-dropzone-text">{busy ? t('questions.image.uploading') : t('questions.image.dropTitle')}</div>
+          <div className="q-dropzone-sub">{t('questions.image.guidelines')}</div>
+        </div>
+      )}
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onChange} />
+    </>
+  );
+}
+
+/* ---------- Section image (drawer détail) — upload immédiat ---------- */
+function QuestionImageSection({ question, onChange, onRequestRemove }) {
+  const { t } = useTranslation();
+  const [uploading, setUploading] = useState(false);
+  const mediaUrl = question.media_url || null;
+
+  const onPick = async (file) => {
     setUploading(true);
     try {
       const res = await questionsService.uploadImage(question.id, file);
@@ -928,26 +998,13 @@ function QuestionImageSection({ question, onChange, onRequestRemove }) {
       notify.error(t('questions.image.uploadFailed'));
     } finally {
       setUploading(false);
-      if (inputRef.current) inputRef.current.value = '';
     }
   };
 
   return (
     <>
       <div className="q-section-label">{t('questions.image.label')}</div>
-      {mediaUrl && <img src={mediaUrl} alt="" className="q-media-img" />}
-      <div className="q-media-actions">
-        <button type="button" className="btn" disabled={uploading} onClick={() => inputRef.current?.click()}>
-          📷 {uploading ? t('questions.image.uploading') : mediaUrl ? t('questions.image.replace') : t('questions.image.add')}
-        </button>
-        {mediaUrl && (
-          <button type="button" className="btn btn-ghost-soft" disabled={uploading} onClick={onRequestRemove}>
-            🗑 {t('questions.image.remove')}
-          </button>
-        )}
-        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => onPick(e.target.files[0])} />
-      </div>
-      <div className="q-media-hint">{t('questions.image.guidelines')}</div>
+      <ImageDropzone previewUrl={mediaUrl} onSelect={onPick} onClear={onRequestRemove} busy={uploading} height={180} />
     </>
   );
 }
@@ -1087,10 +1144,16 @@ export default function Questions() {
     run: () => doArchive(q),
   });
 
-  const createQuestion = async (payload, resetForm) => {
+  const createQuestion = async (payload, resetForm, imageFile) => {
     setSubmitting(true);
     try {
-      await questionsService.create(payload);
+      const created = await questionsService.create(payload);
+      // Image (optionnelle) : uploadée après la création (la route exige l'id).
+      // Un échec d'upload ne fait PAS échouer la création — la question existe.
+      if (imageFile && created?.id) {
+        try { await questionsService.uploadImage(created.id, imageFile); }
+        catch { notify.error(t('questions.image.uploadFailed')); }
+      }
       notify.success(prefill ? t('toast.duplicated') : t('toast.saved'));
       resetForm(); setCreating(false); setPrefill(null); refetch();
     } catch { notify.error(t('questions.notify.saveFailed')); } finally { setSubmitting(false); }
@@ -1457,9 +1520,9 @@ export default function Questions() {
                         </td>
                         <td className="q-cell-num">{page * PAGE_SIZE + i + 1}</td>
                         <td className="q-cell-statement">
-                          <span className="q-statement-text">
-                            {truncate(q.text_fr, STATEMENT_MAX)}
-                            {q.media_url && <span className="q-media-badge" title={t('questions.image.hasBadge')}>📷</span>}
+                          <span className="q-statement-row">
+                            {q.media_url && <img src={q.media_url} alt="" className="q-statement-thumb" title={t('questions.image.hasBadge')} loading="lazy" />}
+                            <span className="q-statement-text">{truncate(q.text_fr, STATEMENT_MAX)}</span>
                           </span>
                           {q.explanation && <span className="q-statement-sub">{truncate(q.explanation, 90)}</span>}
                         </td>
@@ -1678,13 +1741,7 @@ export default function Questions() {
                     </>
                   )}
 
-                  {detail.source && (
-                    <>
-                      <div className="q-section-label">{t('questions.misc.source')}</div>
-                      <div className="q-source">{detail.source}</div>
-                    </>
-                  )}
-
+                  {/* IMAGE — champ optionnel le plus visible (avant SOURCE). */}
                   <QuestionImageSection
                     question={detail}
                     onChange={(url) => { setDetail((d) => ({ ...d, media_url: url })); refetch(); }}
@@ -1702,6 +1759,13 @@ export default function Questions() {
                       },
                     })}
                   />
+
+                  {detail.source && (
+                    <>
+                      <div className="q-section-label">{t('questions.misc.source')}</div>
+                      <div className="q-source">{detail.source}</div>
+                    </>
+                  )}
                 </div>
               )}
 

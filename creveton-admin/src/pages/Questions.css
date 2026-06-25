@@ -820,16 +820,62 @@
   .q-kanban-card:hover { transform: none; }
 }
 
-/* Image de question (drawer détail) */
-.q-media-img {
-  display: block;
-  max-width: 100%;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  margin-bottom: 12px;
+/* Image de question — zone de dépôt (création + drawer) */
+.q-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 32px 20px;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  background: var(--bg-mute);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
-.q-media-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.q-media-hint { font-size: 12px; color: var(--muted); margin-top: 9px; }
+.q-dropzone:hover { border-color: var(--gold); }
+.q-dropzone.is-drag { border-color: var(--gold); background: var(--cream); }
+.q-dropzone.is-busy { opacity: 0.6; cursor: default; }
+.q-dropzone-icon { font-size: 32px; line-height: 1; }
+.q-dropzone-text { font-weight: 600; font-size: 14px; color: var(--ink); }
+.q-dropzone-sub { font-size: 12px; color: var(--muted); }
+
+/* Image présente : aperçu pleine largeur + overlay actions */
+.q-img-box {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.q-img-box-img { display: block; width: 100%; max-height: 200px; object-fit: cover; }
+.q-img-overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 8px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+}
+.q-img-box .btn-light {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  border: none;
+}
+.q-img-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+}
+
 /* Aperçu téléphone : image au-dessus de l'énoncé */
 .q-phone-img {
   display: block;
@@ -839,5 +885,14 @@
   border-radius: 10px;
   margin-bottom: 10px;
 }
-/* Badge 📷 dans la liste (questions avec image) */
-.q-media-badge { margin-left: 6px; font-size: 12px; opacity: 0.85; vertical-align: middle; }
+
+/* Liste : miniature d'image avant l'énoncé */
+.q-statement-row { display: flex; align-items: center; gap: 8px; }
+.q-statement-thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
