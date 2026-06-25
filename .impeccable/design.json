@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-06-21T00:00:00.000Z",
+  "generatedAt": "2026-06-25T00:00:00.000Z",
   "title": "Design System: Creveton Admin",
   "extensions": {
     "colorMeta": {
@@ -8,7 +8,7 @@
       "green500": { "role": "primary", "displayName": "Vert Émeraude", "canonical": "#2a8a4f", "tonalRamp": ["oklch(22% 0.05 152)", "oklch(31% 0.07 152)", "oklch(40% 0.09 152)", "oklch(50% 0.11 152)", "oklch(60% 0.12 152)", "oklch(72% 0.11 152)", "oklch(85% 0.07 152)", "oklch(95% 0.03 152)"] },
       "gold": { "role": "secondary", "displayName": "Or Creveton", "canonical": "#d4a017", "tonalRamp": ["oklch(33% 0.06 85)", "oklch(43% 0.08 85)", "oklch(53% 0.10 85)", "oklch(63% 0.12 85)", "oklch(74% 0.13 85)", "oklch(83% 0.12 85)", "oklch(90% 0.08 85)", "oklch(96% 0.04 85)"] },
       "text": { "role": "neutral", "displayName": "Texte Ardoise", "canonical": "#374151", "tonalRamp": ["oklch(25% 0.01 255)", "oklch(35% 0.015 255)", "oklch(45% 0.02 255)", "oklch(55% 0.02 255)", "oklch(67% 0.015 255)", "oklch(80% 0.01 255)", "oklch(90% 0.006 255)", "oklch(98% 0.003 255)"] },
-      "red": { "role": "tertiary", "displayName": "Rouge Alerte", "canonical": "#dc2626", "tonalRamp": ["oklch(30% 0.10 25)", "oklch(40% 0.14 25)", "oklch(50% 0.18 25)", "oklch(58% 0.21 25)", "oklch(68% 0.18 25)", "oklch(80% 0.12 25)", "oklch(90% 0.06 25)", "oklch(96% 0.02 25)"] }
+      "red": { "role": "tertiary", "displayName": "Rouge Alerte", "canonical": "#e74c3c", "tonalRamp": ["oklch(32% 0.10 28)", "oklch(42% 0.14 28)", "oklch(52% 0.17 28)", "oklch(62% 0.19 28)", "oklch(70% 0.16 28)", "oklch(80% 0.11 28)", "oklch(90% 0.05 28)", "oklch(96% 0.02 28)"] }
     },
     "typographyMeta": {
       "display": { "displayName": "Display", "purpose": "Grandes valeurs KPI ; la donnée qu'on lit de loin." },
@@ -59,7 +59,7 @@
       "refersTo": "button-danger",
       "description": "Action destructrice — toujours derrière confirmation. Rouge plein, texte blanc.",
       "html": "<button class=\"ds-btn-danger\">Supprimer</button>",
-      "css": ".ds-btn-danger { display:inline-flex; align-items:center; gap:7px; background:#dc2626; color:#fff; border:1px solid #dc2626; padding:9px 15px; border-radius:8px; font-family:'Outfit',sans-serif; font-weight:600; font-size:13.5px; transition:all .15s; } .ds-btn-danger:hover { background:#c0392b; border-color:#c0392b; } .ds-btn-danger:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(220,38,38,0.3); }"
+      "css": ".ds-btn-danger { display:inline-flex; align-items:center; gap:7px; background:#e74c3c; color:#fff; border:1px solid #e74c3c; padding:9px 15px; border-radius:8px; font-family:'Outfit',sans-serif; font-weight:600; font-size:13.5px; transition:all .15s; } .ds-btn-danger:hover { background:#c0392b; border-color:#c0392b; } .ds-btn-danger:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(231,76,60,0.3); }"
     },
     {
       "name": "Search Input",
@@ -100,6 +100,14 @@
       "description": "Marche d'or du classement : médaille circulaire dégradée, fond crème, bordure dorée. Là où le quiz respire.",
       "html": "<div class=\"ds-podium-card\"><div class=\"ds-medal\">1</div><div class=\"ds-podium-name\">Cédric Fotso</div><div class=\"ds-podium-score\">1 650 pts</div></div>",
       "css": ".ds-podium-card { background:linear-gradient(180deg,#fffbe9,#fff); border:1px solid #f0d27a; border-radius:14px; padding:18px 14px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.08); width:160px; } .ds-medal { width:48px; height:48px; border-radius:50%; display:grid; place-items:center; margin:0 auto 10px; background:linear-gradient(135deg,#d4a017,#e8b830); color:#fff; font-family:'Outfit',sans-serif; font-weight:800; font-size:18px; } .ds-podium-name { font-family:'Outfit',sans-serif; font-weight:700; font-size:15px; color:#0b2e1a; } .ds-podium-score { font-family:'Outfit',sans-serif; font-weight:700; font-size:20px; color:#1a5230; margin-top:6px; }"
+    },
+    {
+      "name": "Install Banner (PWA)",
+      "kind": "custom",
+      "refersTo": "install-banner",
+      "description": "Bandeau d'installation PWA : pilule flottante bas-centre, n'apparaît que sur beforeinstallprompt. CTA Or (action primaire, or rare à sa place), croix pour masquer définitivement.",
+      "html": "<div class=\"ds-install-banner\"><span class=\"ds-install-text\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"3\"/></svg> Installer Creveton Admin comme application</span><span class=\"ds-install-actions\"><button class=\"ds-install-cta\">Installer</button><button class=\"ds-install-close\" aria-label=\"Ne plus afficher\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"/><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"/></svg></button></span></div>",
+      "css": ".ds-install-banner { display:inline-flex; align-items:center; gap:16px; background:#fff; color:#0b2e1a; border:1px solid #d6e6db; border-radius:999px; box-shadow:0 4px 16px rgba(11,46,26,0.10); padding:8px 8px 8px 18px; } .ds-install-text { display:inline-flex; align-items:center; gap:9px; font-family:'Space Grotesk',sans-serif; font-size:13.5px; font-weight:600; white-space:nowrap; } .ds-install-actions { display:inline-flex; align-items:center; gap:4px; } .ds-install-cta { background:#d4a017; color:#0b2e1a; border:none; border-radius:999px; padding:7px 16px; font-family:'Outfit',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s; } .ds-install-cta:hover { background:#e8b830; } .ds-install-cta:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(212,160,23,0.3); } .ds-install-close { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; background:transparent; border:none; border-radius:50%; color:#6b7280; cursor:pointer; transition:background .15s, color .15s; } .ds-install-close:hover { background:#f3f4f6; color:#0b2e1a; }"
     }
   ],
   "narrative": {

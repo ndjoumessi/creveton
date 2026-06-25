@@ -8,13 +8,14 @@ colors:
   green300: "#5eca84"
   gold: "#d4a017"
   gold-light: "#e8b830"
-  bg: "#f8f9fa"
+  bg: "#f0f4f0"
   surface: "#ffffff"
   border: "#e5e7eb"
+  border-green: "#d6e6db"
   text: "#374151"
   ink: "#0b2e1a"
   muted: "#6b7280"
-  red: "#dc2626"
+  red: "#e74c3c"
 typography:
   display:
     fontFamily: "Outfit, system-ui, sans-serif"
@@ -121,8 +122,8 @@ camerounaise vit dans le couple vert/or ; elle ne passe jamais avant la lisibili
 Le système est **dense mais scannable**. Beaucoup d'information par écran (KPI, tables,
 listes, drawers), mais une hiérarchie typographique franche — Outfit pour tout ce qui
 structure (titres, chiffres, libellés de table), Space Grotesk pour le corps — tient le
-regard. Les surfaces sont plates au repos, posées sur un fond gris très clair
-(`#f8f9fa`), délimitées par une bordure d'1px (`#e5e7eb`) et une ombre quasi invisible.
+regard. Les surfaces sont plates au repos, posées sur un fond gris très clair légèrement
+teinté vert (`#f0f4f0`), délimitées par une bordure d'1px (`#e5e7eb`) et une ombre quasi invisible.
 La profondeur est réservée à ce qui flotte vraiment : modales et drawers.
 
 Ce système rejette explicitement le **template admin gris générique** (rien ne
@@ -140,7 +141,8 @@ et le **mur de chiffres** (tables brutes sans états vides ni regroupement).
 ## 2. Colors
 
 Une charte à deux voix — un vert profond qui porte la structure, un or rare qui signale
-la valeur — posée sur des neutres modernes et froids.
+la valeur — posée sur des neutres modernes : ardoise froide pour le texte, légèrement
+teintés vert pour les fonds.
 
 ### Primary
 - **Vert Nuit** (`#0b2e1a`, `green900` / `ink`) : la couleur d'autorité. Fond de la
@@ -163,7 +165,10 @@ la valeur — posée sur des neutres modernes et froids.
 - **Texte** (`#374151`, `text`) : corps de texte, valeurs de table.
 - **Encre** (`#0b2e1a`, `ink`) : titres (identique au Vert Nuit — l'encre EST le vert).
 - **Sourdine** (`#6b7280`, `muted`) : labels secondaires, sous-titres, méta, placeholders.
-- **Fond** (`#f8f9fa`, `bg`) : fond applicatif sous toutes les surfaces.
+- **Fond** (`#f0f4f0`, `bg`) : fond applicatif sous toutes les surfaces — gris très clair
+  légèrement teinté vert (la « voix » du cockpit jusque dans le neutre).
+- **Bordure verte** (`#d6e6db`, `border-green`) : variante teintée vert de la bordure,
+  pour les séparations qui veulent rester dans la charte (cartes douces, bandeau d'install).
 - **Surface** (`#ffffff`, `surface`) : cartes, tables, modales, champs.
 - **Bordure** (`#e5e7eb`, `border`) : toutes les séparations — 1px, jamais plus.
 
@@ -235,7 +240,7 @@ réservée à ce qui se superpose réellement (overlay), jamais à ce qui est da
 - **Hover / Focus:** primary fonce vers `#143d23` ; transition `all 0.15s`. Les champs
   reçoivent un halo `0 0 0 3px rgba(42,138,79,0.12)` + bordure émeraude au focus.
 - **Success** (`.btn-success`) : émeraude plein, texte blanc — Approuver, Démarrer.
-- **Danger** (`.btn-danger`) : rouge plein (`#dc2626`), texte blanc — actions destructrices.
+- **Danger** (`.btn-danger`) : rouge plein (`#e74c3c`), texte blanc — actions destructrices.
 - **Ghost** (`.btn-ghost`) : transparent, contour Vert Nuit — action secondaire.
 - **Gold** (`.btn-gold`) : dégradé or, texte Vert Nuit — réservé login / premium.
 - **Icon buttons** (`.icon-btn` 36px, `.icon-action` 32px) : carrés arrondis pour les
@@ -250,7 +255,7 @@ réservée à ce qui se superpose réellement (overlay), jamais à ce qui est da
 
 ### Cards / Containers
 - **Corner Style:** 12px (`--radius`) ; modales 16px, podium 14px.
-- **Background:** Surface blanche sur fond `#f8f9fa`.
+- **Background:** Surface blanche sur fond `#f0f4f0`.
 - **Shadow Strategy:** ombre Repos uniquement (cf. Elevation). Plat par défaut.
 - **Border:** 1px `#e5e7eb`, systématique.
 - **Internal Padding:** `20px 22px` (`.card-pad`).
