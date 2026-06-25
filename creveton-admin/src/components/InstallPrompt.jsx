@@ -21,6 +21,7 @@ export default function InstallPrompt() {
 
     const handler = (e) => {
       e.preventDefault();
+      if (localStorage.getItem(DISMISS_KEY) === 'true') return;
       setDeferred(e);
     };
     window.addEventListener('beforeinstallprompt', handler);
