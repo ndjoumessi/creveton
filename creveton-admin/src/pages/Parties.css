@@ -438,3 +438,6 @@
 
 /* ── Dark-mode hover overrides (light hardcoded → dark border) ── */
 [data-theme="dark"] .ses-pill:hover { border-color: var(--border-green); }
+
+/* ── Dark-mode base surface override (neutral light → dark track) ── */
+[data-theme="dark"] .ses-bar { background: var(--bg-mute); }

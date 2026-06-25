@@ -1176,6 +1176,14 @@
 [data-theme="dark"] .q-btn-sync:hover { background: rgba(212, 160, 23, 0.18); }
 [data-theme="dark"] .q-search-clear:hover { background: var(--surface-2); }
 [data-theme="dark"] .q-exp-btn:hover { background: var(--surface-2); }
-/* .q-row-on (selected row) intentionally NOT overridden here: its base bg
-   (#f3fbf5) is also hardcoded-light, so fixing only :hover would invert the
-   resting/hover states. Tracked as a separate selected-row dark-state fix. */
+
+/* ── Dark-mode base surface overrides (neutral light → dark surface/track) ── */
+[data-theme="dark"] .q-rate-track { background: var(--bg-mute); }
+[data-theme="dark"] .q-dist-bar-wrap { background: var(--bg-mute); }
+[data-theme="dark"] .q-expand-letter { background: var(--surface-2); }
+[data-theme="dark"] .q-dist-letter { background: var(--surface-2); }
+[data-theme="dark"] .q-kanban-col { background: var(--surface-2); }
+[data-theme="dark"] .q-kanban-col.over { background: var(--bg-mute); }
+/* Selected/expanded row: base + hover fixed together (no resting/hover inversion). */
+[data-theme="dark"] .q-row-on { background: var(--surface-2); }
+[data-theme="dark"] .q-table tbody tr.q-row-on:hover { background: var(--bg-mute); }

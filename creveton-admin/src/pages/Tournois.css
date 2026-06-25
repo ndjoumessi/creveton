@@ -108,3 +108,7 @@
 .tour-payout { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink); white-space: nowrap; }
 /* Bannière info discrète (mode gratuit). */
 .tour-banner-info { align-items: center; }
+
+/* ── Dark-mode base surface overrides (neutral light → dark track) ── */
+[data-theme="dark"] .tour-players-bar { background: var(--bg-mute); }
+[data-theme="dark"] .tour-detail-fill { background: var(--bg-mute); }

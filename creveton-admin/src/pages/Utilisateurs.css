@@ -275,3 +275,6 @@
 [data-theme="dark"] .u-menu button:hover { background: var(--surface-2); }
 [data-theme="dark"] .u-menu button.danger:hover { background: rgba(231, 76, 60, 0.16); }
 [data-theme="dark"] .u-copy-pill:hover { background: var(--surface-2); }
+
+/* ── Dark-mode base surface override (neutral light → dark surface) ── */
+[data-theme="dark"] .u-chart { background: var(--surface-2); }

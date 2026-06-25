@@ -572,3 +572,10 @@ table.data tbody tr:last-child td { border-bottom: none; }
 [data-theme="dark"] .pwd-eye:hover { background: var(--surface-2); }
 [data-theme="dark"] .btn-danger-ghost:hover { background: rgba(231, 76, 60, 0.16); }
 [data-theme="dark"] .icon-action.danger:hover { background: rgba(231, 76, 60, 0.16); }
+
+/* ── Dark-mode base surface overrides (neutral light → dark surface/track) ── */
+[data-theme="dark"] .progress { background: var(--bg-mute); }
+[data-theme="dark"] .scope-pills { background: var(--bg-mute); }
+[data-theme="dark"] .step .num { background: var(--surface-2); }
+[data-theme="dark"] .cmdk-kbd, [data-theme="dark"] .cmdk-trigger kbd { background: var(--bg-mute); }
+[data-theme="dark"] .cmdk-ico { background: var(--surface-2); }
