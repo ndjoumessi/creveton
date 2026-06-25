@@ -28,8 +28,8 @@
   --border-green: #d6e6db;
   --text: #374151;
   --ink: #0b2e1a;
-  --muted: #6b7280;
-  --fg-faint: #9ca3af;
+  --muted: #646b77; /* AA corps : 4.83:1 sur --bg, 4.88:1 sur --bg-mute (était #6b7280 = 4.35:1, échec) */
+  --fg-faint: #6b7380; /* AA corps sur surfaces blanches (placeholders/méta) : 4.78:1 (était #9ca3af = 2.5:1) */
   /* Surfaces sombres structurelles (sidebar/header) — flippées en thème nuit. */
   --bg-sidebar: #0b2e1a;
   --bg-header: #0b2e1a;
@@ -84,7 +84,13 @@
   transition: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Scrollbar custom (webkit) — discrète, teintée vert. */
