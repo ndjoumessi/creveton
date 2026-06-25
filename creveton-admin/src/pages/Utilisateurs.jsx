@@ -7,8 +7,9 @@ import {
 } from 'recharts';
 import {
   Search, Eye, UserX, KeyRound, Trash2, UserPlus, ShieldCheck, Mail,
-  Download, MoreVertical, Copy, Check,
+  Download, MoreVertical, Copy, Check, Target, TrendingUp, MapPin,
 } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import usersService from '../services/users.service';
 import sessionsService from '../services/sessions.service';
 import { useApiData } from '../hooks/useApiData';
@@ -303,9 +304,9 @@ function ProgressionTab({ user, sessions, loading }) {
       )}
 
       <div className="u-stat-grid">
-        <div className="u-stat"><div className="u-stat-k">🎯 {t('users.drawer.games')}</div><div className="u-stat-v">{num(stats.games)}</div></div>
+        <div className="u-stat"><div className="u-stat-k"><Icon icon={Target} size={14} /> {t('users.drawer.games')}</div><div className="u-stat-v">{num(stats.games)}</div></div>
         <div className="u-stat"><div className="u-stat-k">⭐ {t('users.drawer.avgScore')}</div><div className="u-stat-v">{num(stats.avgScore)}</div></div>
-        <div className="u-stat"><div className="u-stat-k">📈 {t('users.drawer.successRate')}</div><div className="u-stat-v">{stats.successRate} %</div></div>
+        <div className="u-stat"><div className="u-stat-k"><Icon icon={TrendingUp} size={14} /> {t('users.drawer.successRate')}</div><div className="u-stat-v">{stats.successRate} %</div></div>
         <div className="u-stat"><div className="u-stat-k">🔥 {t('users.drawer.maxStreak')}</div><div className="u-stat-v">{num(stats.maxStreak)}</div></div>
       </div>
 
@@ -768,7 +769,7 @@ export default function Utilisateurs() {
         return (
           <div className="u-contact">
             {u.phone ? <span className="u-phone"><span className="u-flag">🇨🇲</span>{u.phone}</span> : <span className="muted">—</span>}
-            <span className="u-contact-city">📍 {u.ville || '—'}</span>
+            <span className="u-contact-city"><Icon icon={MapPin} size={13} /> {u.ville || '—'}</span>
           </div>
         );
       },

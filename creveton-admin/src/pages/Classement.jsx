@@ -1,7 +1,8 @@
 import './Classement.css';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trophy } from 'lucide-react';
+import { Trophy, Globe, Target, CalendarDays, CalendarRange } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import leaderboardService from '../services/leaderboard.service';
 import { useApiData } from '../hooks/useApiData';
 import { themeLabels } from '../constants/theme';
@@ -13,10 +14,10 @@ import EmptyState from '../components/EmptyState';
 import { Skeleton, SkeletonTable } from '../components/Skeleton';
 
 const SCOPES = [
-  { key: 'global', labelKey: 'leaderboard.scopes.global', icon: '🌍' },
-  { key: 'theme', labelKey: 'leaderboard.scopes.theme', icon: '🎯' },
-  { key: 'weekly', labelKey: 'leaderboard.scopes.weekly', icon: '📅' },
-  { key: 'monthly', labelKey: 'leaderboard.scopes.monthly', icon: '📆' },
+  { key: 'global', labelKey: 'leaderboard.scopes.global', icon: Globe },
+  { key: 'theme', labelKey: 'leaderboard.scopes.theme', icon: Target },
+  { key: 'weekly', labelKey: 'leaderboard.scopes.weekly', icon: CalendarDays },
+  { key: 'monthly', labelKey: 'leaderboard.scopes.monthly', icon: CalendarRange },
 ];
 
 // Niveaux joueur 1..5 — couleur + libellé (sens doublé : jamais la teinte seule).
@@ -82,7 +83,7 @@ function PodiumFirst({ player }) {
       <div className="lb-podium-city lb-city-light">{player.ville || '—'}</div>
       <div className="lb-podium-score lb-score-light">{num(player.score)}</div>
       <div className="lb-podium-pts lb-pts-light">{t('leaderboard.pts')}</div>
-      <span className="lb-champ-badge">🏆 {t('leaderboard.champion')}</span>
+      <span className="lb-champ-badge"><Icon icon={Trophy} size={16} /> {t('leaderboard.champion')}</span>
     </div>
   );
 }
@@ -148,7 +149,7 @@ export default function Classement() {
               className={`lb-pill${scope === s.key ? ' active' : ''}`}
               onClick={() => setScope(s.key)}
             >
-              <span className="lb-pill-icon" aria-hidden="true">{s.icon}</span>
+              <span className="lb-pill-icon"><Icon icon={s.icon} size={16} /></span>
               {t(s.labelKey)}
             </button>
           ))}

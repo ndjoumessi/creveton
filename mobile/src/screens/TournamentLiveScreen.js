@@ -20,6 +20,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Lightbulb, Check } from 'lucide-react-native';
+import Icon from '../components/Icon';
 import { CircularTimer } from '../components';
 import { useTournamentSocket } from '../hooks/useTournamentSocket';
 import { useTournamentStore } from '../store/tournamentStore';
@@ -211,9 +213,15 @@ function RevealPanel({ t, reveal, myId }) {
   return (
     <View style={styles.revealPanel}>
       {reveal?.explanation ? (
-        <Text style={styles.explainText}>💡 {reveal.explanation}</Text>
+        <View style={styles.explainBox}>
+          <Icon icon={Lightbulb} size={18} color={colors.textDark} />
+          <Text style={[styles.explainText, styles.explainTextFlex]}>{reveal.explanation}</Text>
+        </View>
       ) : (
-        <Text style={styles.explainText}>✅ {t('tournamentLive.correctAnswer')}</Text>
+        <View style={styles.explainBox}>
+          <Icon icon={Check} size={18} color={colors.textDark} />
+          <Text style={[styles.explainText, styles.explainTextFlex]}>{t('tournamentLive.correctAnswer')}</Text>
+        </View>
       )}
       <MiniLeaderboard t={t} board={reveal?.leaderboard} myId={myId} limit={5} />
     </View>
@@ -369,10 +377,16 @@ const styles = StyleSheet.create({
   },
 
   revealPanel: { marginTop: spacing.lg, gap: spacing.md },
-  explainText: {
+  explainBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
     backgroundColor: colors.cream,
     borderRadius: radius.lg,
     padding: spacing.lg,
+  },
+  explainTextFlex: { flex: 1 },
+  explainText: {
     fontFamily: fonts.bodyRegular,
     fontSize: fontSizes.md,
     color: colors.textDark,

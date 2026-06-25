@@ -6,6 +6,8 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { View, Text, Animated, FlatList, StyleSheet, Pressable, Modal } from 'react-native';
+import { Users, Clock, Calendar, Timer } from 'lucide-react-native';
+import Icon from '../components/Icon';
 import {
   Screen,
   Title,
@@ -287,24 +289,36 @@ function TournamentCard({ t, onJoin }) {
         </View>
 
         <View style={styles.metaBlock}>
-          <Body style={styles.metaLine}>
-            👥 {t.registered_players ?? 0} / {t.max_players ?? 0} {tr('tournaments.card.players')}
-          </Body>
+          <View style={styles.metaRow}>
+            <Icon icon={Users} size={15} color={colors.textBody} />
+            <Body style={styles.metaLine}>
+              {t.registered_players ?? 0} / {t.max_players ?? 0} {tr('tournaments.card.players')}
+            </Body>
+          </View>
           <FillBar ratio={ratio} />
           {countdown ? (
-            <Body style={styles.countdownLine}>⏳ {tr('tournaments.card.startsIn')} {countdown}</Body>
+            <View style={styles.metaRow}>
+              <Icon icon={Clock} size={15} color={colors.gold500} />
+              <Body style={styles.countdownLine}>{tr('tournaments.card.startsIn')} {countdown}</Body>
+            </View>
           ) : (
-            <Body muted style={styles.metaLineMuted}>
-              📅 {formatDateTime(t.starts_at) || tr('tournaments.misc.dateTbd')}
-            </Body>
+            <View style={styles.metaRow}>
+              <Icon icon={Calendar} size={15} color={colors.textMuted} />
+              <Body muted style={styles.metaLineMuted}>
+                {formatDateTime(t.starts_at) || tr('tournaments.misc.dateTbd')}
+              </Body>
+            </View>
           )}
           {/* `format` n'est pas stocké en base (count/time passés au /start) → l'API
               renvoie null. On masque la ligne plutôt que d'afficher des tirets. */}
           {t.format?.questions != null && t.format?.time_per_q_s != null ? (
-            <Body muted style={styles.metaLineMuted}>
-              ⏱ {t.format.questions} {tr('tournaments.card.questions')} · {t.format.time_per_q_s}
-              {tr('tournaments.card.perQ')}
-            </Body>
+            <View style={styles.metaRow}>
+              <Icon icon={Timer} size={15} color={colors.textMuted} />
+              <Body muted style={styles.metaLineMuted}>
+                {t.format.questions} {tr('tournaments.card.questions')} · {t.format.time_per_q_s}
+                {tr('tournaments.card.perQ')}
+              </Body>
+            </View>
           ) : null}
         </View>
 
@@ -445,6 +459,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
 
   metaBlock: { gap: spacing.xs },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   metaLine: {
     fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.md,

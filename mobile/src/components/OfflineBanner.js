@@ -7,9 +7,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { WifiOff } from 'lucide-react-native';
 import { useNetworkStore } from '../store/networkStore';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { colors, fonts } from '../constants/theme';
+import Icon from './Icon';
 
 const BAR_HEIGHT = 32;
 
@@ -50,7 +52,8 @@ export default function OfflineBanner() {
       pointerEvents={visible ? 'auto' : 'none'}
     >
       <Pressable style={styles.inner} onPress={() => setDismissed(true)} hitSlop={6}>
-        <Text style={styles.text} numberOfLines={1}>📶 {t('offline.banner')}</Text>
+        <Icon icon={WifiOff} size={15} color={colors.green900} />
+        <Text style={styles.text} numberOfLines={1}>{t('offline.banner')}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -65,6 +68,6 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     backgroundColor: colors.gold500,
   },
-  inner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  inner: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   text: { fontFamily: fonts.titleBold, fontSize: 13, color: colors.green900 },
 });

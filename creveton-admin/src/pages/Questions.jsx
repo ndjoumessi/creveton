@@ -7,7 +7,9 @@ import {
   ChevronLeft, ChevronRight, X, FileText, ListChecks, Tags, Copy, AlertCircle,
   AlertTriangle, CheckCircle2, XCircle, Pencil, BarChart3, History, Lock,
   LayoutGrid, Table2, Moon, Sun, Code2, Play, Rows3,
+  Sparkles, Globe, Image, RefreshCw, Trash2, Lightbulb, Info, Hand, Clock,
 } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import Papa from 'papaparse';
 import questionsService from '../services/questions.service';
 import { useApiData } from '../hooks/useApiData';
@@ -46,12 +48,14 @@ function inPeriod(iso, period) {
 }
 
 // Pills d'accès rapide : { id, type: all|status|theme|level, value, icon }.
+// `icon` : composant Lucide pour les pills de STATUT (UI fonctionnelle), emoji
+// pour les thèmes/niveaux (identité de contenu — conservés tels quels).
 const QUICK_PILLS = [
-  { id: 'all', type: 'all', icon: '🌟' },
-  { id: 'approved', type: 'status', value: 'approved', icon: '✓' },
-  { id: 'pending_review', type: 'status', value: 'pending_review', icon: '⏳' },
-  { id: 'draft', type: 'status', value: 'draft', icon: '📝' },
-  { id: 'rejected', type: 'status', value: 'rejected', icon: '⚠️' },
+  { id: 'all', type: 'all', icon: Sparkles },
+  { id: 'approved', type: 'status', value: 'approved', icon: Check },
+  { id: 'pending_review', type: 'status', value: 'pending_review', icon: Clock },
+  { id: 'draft', type: 'status', value: 'draft', icon: FileText },
+  { id: 'rejected', type: 'status', value: 'rejected', icon: AlertTriangle },
   { id: 'geographie', type: 'theme', value: 'geographie', icon: '🌍' },
   { id: 'culture', type: 'theme', value: 'culture', icon: '📚' },
   { id: 'histoire', type: 'theme', value: 'histoire', icon: '🏛️' },
@@ -360,7 +364,7 @@ function useCorrector(text, kind, onAccept, lang = 'fr') {
     <button type="button" className="q-ai-btn" disabled={loading || !text.trim()} onClick={run}>
       {loading
         ? <><span className="q-ai-spin" /> {t('questions.corrector.loading')}</>
-        : <>✨ {t('questions.corrector.button')}</>}
+        : <><Icon icon={Sparkles} size={16} /> {t('questions.corrector.button')}</>}
     </button>
   );
   const panel = (err || suggestion != null) ? (
@@ -654,7 +658,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill, duplicate =
               >
                 {translating === `stmt-${fieldLang}`
                   ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
-                  : <>🌐 {isFr ? t('questions.bilingual.translateToFr') : t('questions.bilingual.translateToEn')}</>}
+                  : <><Icon icon={Globe} size={16} /> {isFr ? t('questions.bilingual.translateToFr') : t('questions.bilingual.translateToEn')}</>}
               </button>
             )}
             {ai.button}
@@ -707,7 +711,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill, duplicate =
               >
                 {translating === `expl-${fieldLang}`
                   ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
-                  : <>🌐 {isFr ? t('questions.bilingual.translateToFr') : t('questions.bilingual.translateToEn')}</>}
+                  : <><Icon icon={Globe} size={16} /> {isFr ? t('questions.bilingual.translateToFr') : t('questions.bilingual.translateToEn')}</>}
               </button>
             )}
             {ai.button}
@@ -759,7 +763,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill, duplicate =
 
               {/* Image = contenu (déplacée depuis Métadonnées) : énoncé + image ensemble. */}
               <div className="field" style={{ marginBottom: 0 }}>
-                <label>🖼 {t('questions.image.label')}</label>
+                <label><Icon icon={Image} size={16} /> {t('questions.image.label')}</label>
                 <ImageDropzone
                   previewUrl={imagePreview}
                   onSelect={pickImage}
@@ -785,7 +789,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill, duplicate =
                 >
                   {translating === 'all'
                     ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
-                    : <>🌐 {t('questions.bilingual.translateAll')}</>}
+                    : <><Icon icon={Globe} size={16} /> {t('questions.bilingual.translateAll')}</>}
                 </button>
               </div>
               {opts.map((v, i) => (
@@ -797,10 +801,11 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill, duplicate =
                       type="button"
                       className="q-translate-mini"
                       title={t('questions.bilingual.translateToEn')}
+                      aria-label={t('questions.bilingual.translateToEn')}
                       disabled={!v.trim() || translating === `opt-${i}`}
                       onClick={() => onTranslateOption(i)}
                     >
-                      {translating === `opt-${i}` ? <span className="q-ai-spin" /> : '🌐'}
+                      {translating === `opt-${i}` ? <span className="q-ai-spin" /> : <Icon icon={Globe} size={16} />}
                     </button>
                     <input className="input" lang="en" placeholder={t('questions.placeholder.optionEn', { letter: LETTERS[i] })} value={optsEn[i]} onChange={(e) => setOptEn(i, e.target.value)} />
                   </div>
@@ -1108,7 +1113,7 @@ function StatsPane({ question }) {
       )}
       {comparison && (
         <p className={`q-compare q-compare-${comparison.tone}`}>
-          {comparison.tone === 'hard' ? '⚠️' : comparison.tone === 'easy' ? 'ℹ️' : '✓'} {t('questions.misc.questionIs', { text: comparison.text })}
+          <Icon icon={comparison.tone === 'hard' ? AlertTriangle : comparison.tone === 'easy' ? Info : Check} size={14} /> {t('questions.misc.questionIs', { text: comparison.text })}
         </p>
       )}
     </div>
@@ -1275,8 +1280,8 @@ function ImageDropzone({ previewUrl, onSelect, onClear, busy = false, height = 1
         <div className={`q-img-box ${compact ? 'q-img-box--compact' : ''}`}>
           <DraggableImage src={previewUrl} offset={offset} onOffsetChange={onOffsetChange} />
           <div className="q-img-overlay">
-            <button type="button" className="btn btn-light" disabled={busy} onClick={pick}>🔄 {t('questions.image.replace')}</button>
-            <button type="button" className="btn btn-light" disabled={busy} onClick={onClear}>🗑 {t('questions.image.remove')}</button>
+            <button type="button" className="btn btn-light" disabled={busy} onClick={pick}><Icon icon={RefreshCw} size={16} /> {t('questions.image.replace')}</button>
+            <button type="button" className="btn btn-light" disabled={busy} onClick={onClear}><Icon icon={Trash2} size={16} /> {t('questions.image.remove')}</button>
           </div>
           {busy && <div className="q-img-busy">{t('questions.image.uploading')}</div>}
         </div>
@@ -1292,7 +1297,7 @@ function ImageDropzone({ previewUrl, onSelect, onClear, busy = false, height = 1
           onDragLeave={() => setDrag(false)}
           onDrop={onDrop}
         >
-          <div className="q-dropzone-icon">🖼</div>
+          <div className="q-dropzone-icon"><Icon icon={Image} size={28} /></div>
           <div className="q-dropzone-text">{busy ? t('questions.image.uploading') : t('questions.image.dropTitle')}</div>
           <div className="q-dropzone-sub">{t('questions.image.guidelines')}</div>
         </div>
@@ -1355,7 +1360,7 @@ function DraggableImage({ src, offset, onOffsetChange }) {
         draggable={false}
         style={{ objectPosition: `${offset.x}% ${offset.y}%` }}
       />
-      {showHint && <div className="q-drag-hint">✋ {t('questions.image.dragHint')}</div>}
+      {showHint && <div className="q-drag-hint"><Icon icon={Hand} size={16} /> {t('questions.image.dragHint')}</div>}
     </div>
   );
 }
@@ -1384,7 +1389,7 @@ function QuestionImageSection({ question, onChange, onRequestRemove }) {
 
   return (
     <>
-      <div className="q-section-label">🖼 {t('questions.image.label')}</div>
+      <div className="q-section-label"><Icon icon={Image} size={16} /> {t('questions.image.label')}</div>
       <ImageDropzone previewUrl={mediaUrl} onSelect={onPick} onClear={onRequestRemove} busy={uploading} height={120} offset={offset} onOffsetChange={setOffset} />
     </>
   );
@@ -1869,7 +1874,9 @@ export default function Questions() {
           <div className="q-quick-pills">
             {QUICK_PILLS.map((p) => (
               <button key={p.id} type="button" className={`q-quick-pill ${pillActive(p) ? 'is-active' : ''}`} onClick={() => applyPill(p)}>
-                <span aria-hidden="true">{p.icon}</span> {pillLabel(p)}
+                {typeof p.icon === 'string'
+                  ? <span aria-hidden="true">{p.icon}</span>
+                  : <Icon icon={p.icon} size={14} />} {pillLabel(p)}
               </button>
             ))}
           </div>
@@ -2170,7 +2177,7 @@ export default function Questions() {
                       <div className="q-phone-answer">{t('questions.preview.correctAnswer', { letter: LETTERS[correctIdx], text: opts[correctIdx] ? displayOption(opts[correctIdx]) : '' })}</div>
                     )}
                     {displayExplanation && (testPick == null || testPick >= 0) && (
-                      <div className="q-phone-explain"><span>💡</span><span>{displayExplanation}</span></div>
+                      <div className="q-phone-explain"><Icon icon={Lightbulb} size={16} /><span>{displayExplanation}</span></div>
                     )}
                   </div>
 
@@ -2234,7 +2241,7 @@ export default function Questions() {
                       aria-expanded={bilingualOpen}
                       onClick={() => setBilingualOpen((v) => !v)}
                     >
-                      <span>🌐 {t('questions.bilingual.management')}</span>
+                      <span><Icon icon={Globe} size={16} /> {t('questions.bilingual.management')}</span>
                       <ChevronRight size={16} className={`q-bilingual-chevron ${bilingualOpen ? 'open' : ''}`} />
                     </button>
 
@@ -2258,7 +2265,7 @@ export default function Questions() {
                           >
                             {translatingDetail === 'en'
                               ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
-                              : <>🌐 {t('questions.bilingual.translateToEn')}</>}
+                              : <><Icon icon={Globe} size={16} /> {t('questions.bilingual.translateToEn')}</>}
                           </button>
                         )}
 
@@ -2298,7 +2305,7 @@ export default function Questions() {
                               >
                                 {translatingDetail === 'en'
                                   ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
-                                  : <>🌐 {t('questions.bilingual.translateToEn')}</>}
+                                  : <><Icon icon={Globe} size={16} /> {t('questions.bilingual.translateToEn')}</>}
                               </button>
                             )}
                           </>

@@ -8,6 +8,8 @@
 
 import React, { forwardRef, useState, useMemo } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
+import Icon from './Icon';
 import { fonts, fontSizes, radius, spacing } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
@@ -17,7 +19,7 @@ const AuthField = forwardRef(function AuthField(
     defaultValue,
     onChangeText,
     error,
-    rightToggle, // { active, onToggle, on:'🙈', off:'👁' }
+    rightToggle, // { active, onToggle } — active = mot de passe visible
     style,
     ...inputProps
   },
@@ -47,10 +49,18 @@ const AuthField = forwardRef(function AuthField(
           {...inputProps}
         />
         {rightToggle ? (
-          <Pressable onPress={rightToggle.onToggle} hitSlop={10} style={styles.toggle}>
-            <Text style={styles.toggleIcon}>
-              {rightToggle.active ? rightToggle.on || '🙈' : rightToggle.off || '👁'}
-            </Text>
+          <Pressable
+            onPress={rightToggle.onToggle}
+            hitSlop={10}
+            style={styles.toggle}
+            accessibilityRole="button"
+            accessibilityLabel="Afficher/Masquer le mot de passe"
+          >
+            <Icon
+              icon={rightToggle.active ? EyeOff : Eye}
+              size={20}
+              color={colors.textDark}
+            />
           </Pressable>
         ) : null}
       </View>
@@ -84,7 +94,6 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.textDark,
   },
   toggle: { paddingLeft: spacing.sm },
-  toggleIcon: { fontSize: fontSizes.lg },
   error: {
     fontFamily: fonts.bodyRegular,
     fontSize: fontSizes.xs,

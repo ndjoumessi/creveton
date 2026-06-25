@@ -19,6 +19,8 @@ import {
   Modal,
   StyleSheet,
 } from 'react-native';
+import { Swords } from 'lucide-react-native';
+import Icon from '../components/Icon';
 import {
   Screen,
   Title,
@@ -135,7 +137,10 @@ export default function ChallengesScreen({ navigation }) {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerTitleWrap}>
-            <Title color={colors.textOnDark}>⚔️ {t('challengesHub.title')}</Title>
+            <View style={styles.titleRow}>
+              <Icon icon={Swords} size={22} color={colors.textOnDark} />
+              <Title color={colors.textOnDark}>{t('challengesHub.title')}</Title>
+            </View>
             <Body style={styles.subtitle}>{t('challengesHub.subtitle')}</Body>
           </View>
           {activeCount > 0 ? (
@@ -169,7 +174,8 @@ export default function ChallengesScreen({ navigation }) {
         {/* Bannière hors-ligne : les défis nécessitent une connexion. */}
         {!isOnline ? (
           <View style={styles.offlineBanner}>
-            <Text style={styles.offlineBannerText}>⚔️ {t('offline.challenges')}</Text>
+            <Icon icon={Swords} size={15} color={colors.green900} />
+            <Text style={styles.offlineBannerText}>{t('offline.challenges')}</Text>
           </View>
         ) : null}
         {/* Bannière honnêteté : ces listes sont des données de démonstration. */}
@@ -403,6 +409,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.lg, gap: spacing.md },
   headerTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
   headerTitleWrap: { flex: 1, gap: 2 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   subtitle: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.gold400 },
   countPill: {
     backgroundColor: colors.green700,
@@ -448,6 +455,9 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   },
   demoBannerText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.gold500 },
   offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
     backgroundColor: colors.goldVeil,

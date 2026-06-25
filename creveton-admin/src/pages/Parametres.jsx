@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import {
   User, Shield, ToggleLeft, Bell, Settings as Cog, Plug, Info,
   Save, Check, Monitor, Database, Zap, Server, Download,
-  RefreshCw, LogOut, KeyRound, AlertTriangle, Globe,
+  RefreshCw, LogOut, KeyRound, AlertTriangle, Globe, Sun, Moon, Lock,
 } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import settingsService from '../services/settings.service';
 import healthService from '../services/health.service';
 import authService from '../services/auth.service';
@@ -220,7 +221,7 @@ function AccountSection({ user, lang, setLang }) {
         <div className="field set-theme-field">
           <label>{t('settings.account.theme')}</label>
           <div className="set-theme-toggle" onMouseLeave={() => setHoverDark(null)}>
-            <span className={`set-theme-side ${!previewDark ? 'is-on' : ''}`}>☀️ {t('settings.account.themeLight')}</span>
+            <span className={`set-theme-side ${!previewDark ? 'is-on' : ''}`}><Icon icon={Sun} size={16} /> {t('settings.account.themeLight')}</span>
             <button
               type="button"
               role="switch"
@@ -234,7 +235,7 @@ function AccountSection({ user, lang, setLang }) {
             >
               <span className="set-switch-thumb" />
             </button>
-            <span className={`set-theme-side ${previewDark ? 'is-on' : ''}`}>🌙 {t('settings.account.themeDark')}</span>
+            <span className={`set-theme-side ${previewDark ? 'is-on' : ''}`}><Icon icon={Moon} size={16} /> {t('settings.account.themeDark')}</span>
           </div>
 
           <div className="set-theme-preview-wrap">
@@ -381,7 +382,7 @@ function FlagsSection({ setMaintenance }) {
           <div className="set-flag-main">
             <div className="set-flag-title">
               {flag.label}
-              {flag.locked && <span className="set-flag-badge" title={t('settings.flags.cdcTitle')}>🔒 CDC §6</span>}
+              {flag.locked && <span className="set-flag-badge" title={t('settings.flags.cdcTitle')}><Icon icon={Lock} size={16} /> CDC §6</span>}
             </div>
             <p className="set-flag-desc">{flag.description}</p>
             {flag.locked && <p className="set-flag-status">{t('settings.flags.lockedStatus')}</p>}

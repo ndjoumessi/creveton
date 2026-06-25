@@ -30,6 +30,8 @@ import {
   MiniLineChart,
   useToast,
 } from '../components';
+import { Lightbulb } from 'lucide-react-native';
+import Icon from '../components/Icon';
 import { useGameStore } from '../store/gameStore';
 import { useQuestionsStore } from '../store/questionsStore';
 import { useAuthStore } from '../store/authStore';
@@ -483,9 +485,12 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
                       </View>
                     ) : null}
                     {(item.explanation || item.explanation_en) ? (
-                      <Text style={styles.detailExpl}>
-                        💡 {lang === 'en' && item.explanation_en ? item.explanation_en : item.explanation}
-                      </Text>
+                      <View style={styles.detailExplRow}>
+                        <Icon icon={Lightbulb} size={14} color={colors.textMuted} />
+                        <Text style={[styles.detailExpl, styles.detailExplFlex]}>
+                          {lang === 'en' && item.explanation_en ? item.explanation_en : item.explanation}
+                        </Text>
+                      </View>
                     ) : null}
                   </View>
                 ) : null}
@@ -700,6 +705,8 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontStyle: 'italic',
   },
+  detailExplRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  detailExplFlex: { flex: 1 },
 
   xpBlock: { marginTop: spacing.xl },
   xpLabel: { fontFamily: fonts.bodySemiBold, marginBottom: spacing.sm },

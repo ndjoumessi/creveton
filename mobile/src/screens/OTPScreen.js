@@ -15,8 +15,10 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { Smartphone } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Screen, Logo, Title, Body, Label, AppButton, useToast } from '../components';
+import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import {
   fonts,
@@ -220,7 +222,7 @@ export default function OTPScreen({ route, navigation }) {
         <Animated.View
           style={[styles.badge, { transform: [{ translateY: badgeTranslate }] }]}
         >
-          <Body style={styles.badgeEmoji}>📱</Body>
+          <Icon icon={Smartphone} size={38} color={colors.green500} />
         </Animated.View>
 
         <Title style={styles.heading}>{t('auth.otp.title')}</Title>
@@ -322,7 +324,6 @@ const makeStyles = (colors) => StyleSheet.create({
     marginTop: spacing.lg,
     marginBottom: spacing.lg,
   },
-  badgeEmoji: { fontSize: 38, lineHeight: 46 },
   heading: {
     fontFamily: fonts.titleBold,
     fontSize: 22,

@@ -5,8 +5,10 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Info } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Screen, Title, Body, AppButton, useToast } from '../components';
+import Icon from '../components/Icon';
 import {
   THEMES,
   LEVELS,
@@ -43,6 +45,7 @@ export default function GameStartScreen({ navigation, route }) {
   const sectionStyle = isDark ? [styles.section, { color: colors.green300 }] : styles.section;
   // Indice « choisis un thème » : doré (attire l'œil) en sombre ; en clair, l'or
   // sur crème serait illisible → on garde le muté lisible. L'icône ℹ️ reste dans les 2.
+  const hintColor = isDark ? colors.gold400 : colors.textMuted;
   const hintStyle = isDark ? [styles.hint, { color: colors.gold400 }] : styles.hint;
   const toast = useToast();
   const [mode, setMode] = useState(
@@ -300,9 +303,12 @@ export default function GameStartScreen({ navigation, route }) {
           <Body style={styles.recapText}>{recap}</Body>
         </Animated.View>
       ) : (
-        <Body style={hintStyle}>
-          ℹ️  {t('gameStart.misc.hint')}
-        </Body>
+        <View style={styles.hintRow}>
+          <Icon icon={Info} size={16} color={hintColor} />
+          <Body style={hintStyle}>
+            {t('gameStart.misc.hint')}
+          </Body>
+        </View>
       )}
 
       <Animated.View style={{ transform: [{ scale: pulse }] }}>
@@ -414,8 +420,14 @@ const makeStyles = (colors) => StyleSheet.create({
     borderColor: colors.gold500,
   },
   recapText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center' },
-  hint: {
+  hintRow: {
     marginTop: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  hint: {
     textAlign: 'center',
     color: colors.textMuted,
     fontFamily: fonts.bodyMedium,

@@ -23,6 +23,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
+import { Lightbulb } from 'lucide-react-native';
+import Icon from '../components/Icon';
 import { LoadingScreen, ProgressDots, CircularTimer, useToast } from '../components';
 import { useGameStore } from '../store/gameStore';
 import { sessions as sessionsApi } from '../services/endpoints';
@@ -541,16 +543,25 @@ export default function QuizScreen({ navigation }) {
           pointerEvents="none"
           style={[styles.explain, { opacity: explainOpacity, transform: [{ translateY: explainY }] }]}
         >
-          <Text style={styles.explainText}>
-            {(() => {
-              // Explication dans la langue active (repli FR si EN absent).
-              const expl = lang === 'en' && answered.explanation_en
-                ? answered.explanation_en
-                : answered.explanation;
-              if (expl) return `💡 ${expl}`;
-              return answered.isCorrect ? t('quiz.goodAnswer') : t('quiz.misc.wrongAnswer');
-            })()}
-          </Text>
+          {(() => {
+            // Explication dans la langue active (repli FR si EN absent).
+            const expl = lang === 'en' && answered.explanation_en
+              ? answered.explanation_en
+              : answered.explanation;
+            if (expl) {
+              return (
+                <View style={styles.explainRow}>
+                  <Icon icon={Lightbulb} size={16} color={colors.textDark} />
+                  <Text style={[styles.explainText, styles.explainTextFlex]}>{expl}</Text>
+                </View>
+              );
+            }
+            return (
+              <Text style={styles.explainText}>
+                {answered.isCorrect ? t('quiz.goodAnswer') : t('quiz.misc.wrongAnswer')}
+              </Text>
+            );
+          })()}
           <View style={styles.autoTrack}>
             <Animated.View style={[styles.autoFill, { width: autoNextWidth }]} />
           </View>
@@ -885,6 +896,8 @@ const styles = StyleSheet.create({
     zIndex: 6,
   },
   explainText: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.sm, color: colors.textDark, lineHeight: 20 },
+  explainRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  explainTextFlex: { flex: 1 },
   autoTrack: {
     height: 4,
     borderRadius: 2,

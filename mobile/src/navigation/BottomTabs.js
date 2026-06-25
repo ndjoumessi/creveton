@@ -13,13 +13,15 @@ import TournamentScreen from '../screens/TournamentScreen';
 import ChallengesScreen from '../screens/ChallengesScreen';
 import StatsScreen from '../screens/StatsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import { Home, Gamepad2, Trophy, Swords, BarChart2, User } from 'lucide-react-native';
 import { tournaments as tournamentsApi } from '../services/endpoints';
 import { fonts, shadow, spacing, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import Icon from '../components/Icon';
 
 const Tab = createBottomTabNavigator();
 
-const ICONS = { Home: '🏠', Play: '▶', Tournaments: '🏆', Challenges: '⚔️', Stats: '📊', Profile: '👤' };
+const ICONS = { Home, Play: Gamepad2, Tournaments: Trophy, Challenges: Swords, Stats: BarChart2, Profile: User };
 const LABEL_KEYS = {
   Home: 'tabs.home',
   Play: 'tabs.play',
@@ -50,11 +52,9 @@ function TabItem({ routeName, focused }) {
 
   return (
     <View style={styles.item}>
-      <Animated.Text
-        style={[styles.icon, { color, transform: [{ translateY }] }]}
-      >
-        {ICONS[routeName]}
-      </Animated.Text>
+      <Animated.View style={{ transform: [{ translateY }] }}>
+        <Icon icon={ICONS[routeName]} size={24} color={color} strokeWidth={focused ? 2.25 : 1.75} />
+      </Animated.View>
       <Text style={[styles.label, { color }]}>{t(LABEL_KEYS[routeName])}</Text>
       <View style={[styles.dot, focused && styles.dotActive]} />
     </View>
@@ -126,7 +126,6 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   tabItem: { paddingTop: spacing.xs },
   item: { alignItems: 'center', justifyContent: 'center', width: 64, minHeight: MIN_TOUCH, gap: 2 },
-  icon: { fontSize: 24 },
   label: { fontFamily: fonts.bodyMedium, fontSize: 11 },
   dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'transparent', marginTop: 1 },
   dotActive: { backgroundColor: colors.gold500 },

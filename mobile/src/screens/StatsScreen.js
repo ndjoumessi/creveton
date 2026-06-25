@@ -12,8 +12,10 @@ import {
   Dimensions,
 } from 'react-native';
 import Svg, { Path, Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
+import { BarChart2, Trophy, Target, TrendingUp } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Screen, Avatar, AppButton, Body, Skeleton } from '../components';
+import Icon from '../components/Icon';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
@@ -32,8 +34,8 @@ import { themeEmoji, themeLabel, levelLabel, timeAgo, levelProgress, avatarUri }
 import { hapticLight } from '../utils/haptics';
 
 const TABS = [
-  { key: 'stats', emoji: '📊', labelKey: 'stats.tabs.myStats' },
-  { key: 'rank', emoji: '🏆', labelKey: 'stats.tabs.leaderboard' },
+  { key: 'stats', icon: BarChart2, labelKey: 'stats.tabs.myStats' },
+  { key: 'rank', icon: Trophy, labelKey: 'stats.tabs.leaderboard' },
 ];
 
 const PODIUM_MEDALS = ['🥇', '🥈', '🥉'];
@@ -316,8 +318,13 @@ export default function StatsScreen({ navigation }) {
               onPress={() => setTab(tabItem.key)}
               style={[styles.tab, active && styles.tabActive]}
             >
+              <Icon
+                icon={tabItem.icon}
+                size={16}
+                color={active ? colors.green900 : 'rgba(255,255,255,0.88)'}
+              />
               <Text style={[styles.tabText, active && styles.tabTextActive]}>
-                {tabItem.emoji} {t(tabItem.labelKey)}
+                {t(tabItem.labelKey)}
               </Text>
             </Pressable>
           );
@@ -381,7 +388,7 @@ function StatsTab({ stats, history, loading, onPlay }) {
   }
 
   const KPI = [
-    { icon: '🎯', bg: colors.successBg, value: fmt(stats.totalGames), label: t('stats.kpi.games') },
+    { icon: Target, bg: colors.successBg, value: fmt(stats.totalGames), label: t('stats.kpi.games') },
     {
       icon: '⭐',
       bg: '#fef9c3',
@@ -390,7 +397,7 @@ function StatsTab({ stats, history, loading, onPlay }) {
       label: t('stats.kpi.avgScore'),
     },
     {
-      icon: '📈',
+      icon: TrendingUp,
       bg: '#dbeafe',
       value: `${stats.successRate}%`,
       color: rateColor(stats.successRate, colors),
@@ -417,7 +424,11 @@ function StatsTab({ stats, history, loading, onPlay }) {
         {KPI.map((k) => (
           <View key={k.label} style={styles.kpiCard}>
             <View style={[styles.kpiIcon, { backgroundColor: k.bg }]}>
-              <Text style={styles.kpiIconText}>{k.icon}</Text>
+              {typeof k.icon === 'function' ? (
+                <Icon icon={k.icon} size={24} color={colors.textDark} />
+              ) : (
+                <Text style={styles.kpiIconText}>{k.icon}</Text>
+              )}
             </View>
             <Text style={[styles.kpiValue, k.color ? { color: k.color } : null]}>{k.value}</Text>
             <Text style={styles.kpiLabel}>{k.label}</Text>
@@ -733,6 +744,8 @@ const makeStyles = (colors) => StyleSheet.create({
   tab: {
     flex: 1,
     height: 40,
+    flexDirection: 'row',
+    gap: 6,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',

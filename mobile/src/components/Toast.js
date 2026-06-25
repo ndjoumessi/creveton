@@ -12,15 +12,17 @@ import React, {
 } from 'react';
 import { Animated, Text, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CheckCircle2, AlertCircle, Info } from 'lucide-react-native';
+import Icon from './Icon';
 import { colors, fonts, fontSizes, radius, spacing, shadow, zIndex } from '../constants/theme';
 
 const ToastContext = createContext({ show: () => {} });
 export const useToast = () => useContext(ToastContext);
 
 const TYPES = {
-  success: { bg: colors.green700, icon: '✓', accent: colors.green300 },
-  error: { bg: colors.red600, icon: '✕', accent: '#ffd2cd' },
-  info: { bg: colors.green900, icon: 'ℹ', accent: colors.gold400 },
+  success: { bg: colors.green700, icon: CheckCircle2, accent: colors.green300 },
+  error: { bg: colors.red600, icon: AlertCircle, accent: '#ffd2cd' },
+  info: { bg: colors.green900, icon: Info, accent: colors.gold400 },
 };
 
 export function ToastProvider({ children }) {
@@ -66,7 +68,7 @@ export function ToastProvider({ children }) {
           pointerEvents="box-none"
         >
           <Pressable onPress={hide} style={[styles.toast, { backgroundColor: cfg.bg }]}>
-            <Text style={[styles.icon, { color: cfg.accent }]}>{cfg.icon}</Text>
+            <Icon icon={cfg.icon} size={20} color={cfg.accent} />
             <Text style={styles.message} numberOfLines={2}>
               {toast.message}
             </Text>
@@ -95,7 +97,6 @@ const styles = StyleSheet.create({
     width: '100%',
     ...shadow.floating,
   },
-  icon: { fontFamily: fonts.bodyBold, fontSize: fontSizes.base },
   message: {
     flex: 1,
     fontFamily: fonts.bodyMedium,

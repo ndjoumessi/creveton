@@ -20,11 +20,27 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
+import {
+  Camera,
+  User,
+  Mail,
+  Smartphone,
+  MapPin,
+  Globe,
+  Moon,
+  Sun,
+  Bell,
+  Gift,
+  Key,
+  Lock,
+  Wallet,
+} from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Screen, Avatar, AppButton, useToast } from '../components';
+import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
 import { wallet, users } from '../services/endpoints';
@@ -99,14 +115,15 @@ function Section({ title, children }) {
   );
 }
 
-/** Ligne de réglage : pastille icône + libellé + (valeur | droite) + chevron. */
+/** Ligne de réglage : pastille icône + libellé + (valeur | droite) + chevron.
+ *  `icon` = composant Lucide (ex. `User`), rendu dans la pastille via <Icon>. */
 function SettingRow({ icon, iconBg, label, value, valueMuted, right, onPress, isLast }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const content = (
     <View style={[styles.row, !isLast && styles.rowDivider]}>
       <View style={[styles.rowIcon, { backgroundColor: iconBg || colors.cream }]}>
-        <Text style={styles.rowIconText}>{icon}</Text>
+        <Icon icon={icon} size={18} color={colors.green900} />
       </View>
       <Text style={styles.rowLabel}>{label}</Text>
       <View style={styles.rowRight}>
@@ -415,6 +432,8 @@ export default function ProfileScreen() {
             setAvatarSheet(true);
           }}
           disabled={uploadingAvatar}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.avatar.sheetTitle')}
         >
           <Avatar name={user?.name || ''} size={110} gold uri={photoUri} style={styles.avatarBorder} />
           {uploadingAvatar ? (
@@ -423,7 +442,7 @@ export default function ProfileScreen() {
             </View>
           ) : null}
           <View style={styles.cameraBadge}>
-            <Text style={styles.cameraBadgeIcon}>📷</Text>
+            <Icon icon={Camera} size={14} color={colors.textDark} />
           </View>
         </Pressable>
 
@@ -463,16 +482,16 @@ export default function ProfileScreen() {
       <View style={styles.body}>
         {/* C. MON COMPTE */}
         <Section title={t('profile.sections.account')}>
-          <SettingRow icon="👤" iconBg="#e8f5ed" label={t('profile.fields.name')} value={user?.name} onPress={openEdit} />
-          <SettingRow icon="📧" iconBg="#dbeafe" label={t('profile.fields.email')} value={user?.email} valueMuted />
-          <SettingRow icon="📱" iconBg="#fef9c3" label={t('profile.fields.phone')} value={user?.phone} valueMuted />
-          <SettingRow icon="📍" iconBg="#fee2e2" label={t('profile.fields.city')} value={user?.ville} onPress={openEdit} isLast />
+          <SettingRow icon={User} iconBg="#e8f5ed" label={t('profile.fields.name')} value={user?.name} onPress={openEdit} />
+          <SettingRow icon={Mail} iconBg="#dbeafe" label={t('profile.fields.email')} value={user?.email} valueMuted />
+          <SettingRow icon={Smartphone} iconBg="#fef9c3" label={t('profile.fields.phone')} value={user?.phone} valueMuted />
+          <SettingRow icon={MapPin} iconBg="#fee2e2" label={t('profile.fields.city')} value={user?.ville} onPress={openEdit} isLast />
         </Section>
 
         {/* C. PRÉFÉRENCES */}
         <Section title={t('profile.sections.preferences')}>
           <SettingRow
-            icon="🌐"
+            icon={Globe}
             iconBg="#e8f5ed"
             label={t('profile.fields.language')}
             right={
@@ -497,24 +516,24 @@ export default function ProfileScreen() {
             }
           />
           <SettingRow
-            icon={isDark ? '🌙' : '☀️'}
+            icon={isDark ? Moon : Sun}
             iconBg="#e0e7ff"
             label={t('profile.rows.appearance')}
             right={
               <View style={styles.themeToggle}>
-                <Text style={styles.themeToggleIcon}>☀️</Text>
+                <Icon icon={Sun} size={13} color={colors.textMuted} />
                 <Switch
                   value={isDark}
                   onValueChange={toggleTheme}
                   trackColor={{ false: colors.borderInput, true: colors.green700 }}
                   thumbColor={isDark ? colors.gold500 : '#ffffff'}
                 />
-                <Text style={styles.themeToggleIcon}>🌙</Text>
+                <Icon icon={Moon} size={13} color={colors.textMuted} />
               </View>
             }
           />
           <SettingRow
-            icon="🔔"
+            icon={Bell}
             iconBg="#fef9c3"
             label={t('profile.rows.notifications')}
             right={
@@ -527,7 +546,7 @@ export default function ProfileScreen() {
             }
           />
           <SettingRow
-            icon="🎁"
+            icon={Gift}
             iconBg="#f3e8ff"
             label={t('profile.referral.label')}
             isLast
@@ -554,9 +573,11 @@ export default function ProfileScreen() {
               onPress={() => toast.show({ type: 'info', message: b.req })}
               style={[styles.badge, b.unlocked ? styles.badgeUnlocked : styles.badgeLocked]}
             >
-              <Text style={[styles.badgeEmoji, !b.unlocked && styles.badgeEmojiLocked]}>
-                {b.unlocked ? b.emoji : '🔒'}
-              </Text>
+              {b.unlocked ? (
+                <Text style={styles.badgeEmoji}>{b.emoji}</Text>
+              ) : (
+                <Icon icon={Lock} size={22} color={colors.textFaint} />
+              )}
               <Text
                 style={[
                   styles.badgeLabel,
@@ -572,7 +593,7 @@ export default function ProfileScreen() {
         {/* E. Wallet (compact) */}
         {walletState === 'disabled' ? (
           <View style={styles.walletLocked}>
-            <Text style={styles.walletLockIcon}>🔒</Text>
+            <Icon icon={Lock} size={22} color={colors.textMuted} />
             <View style={styles.walletLockBody}>
               <Text style={styles.walletLockTitle}>{t('profile.wallet.title')}</Text>
               <Text style={styles.walletLockText}>{t('profile.wallet.unavailable')}</Text>
@@ -581,7 +602,10 @@ export default function ProfileScreen() {
         ) : walletState === 'loading' ? null : (
           <View style={styles.walletCard}>
             <View>
-              <Text style={styles.walletLabel}>💰 {t('profile.wallet.label')}</Text>
+              <View style={styles.walletLabelRow}>
+                <Icon icon={Wallet} size={14} color={colors.textMuted} />
+                <Text style={styles.walletLabel}>{t('profile.wallet.label')}</Text>
+              </View>
               <Text style={styles.walletBalance}>{formatFcfa(walletState.balance)}</Text>
             </View>
             <AppButton
@@ -597,7 +621,7 @@ export default function ProfileScreen() {
         {/* C. SÉCURITÉ */}
         <Section title={t('profile.sections.security')}>
           <SettingRow
-            icon="🔑"
+            icon={Key}
             iconBg="#dbeafe"
             label={t('profile.rows.changePassword')}
             value={!isOnline ? t('offline.banner') : undefined}
@@ -774,7 +798,6 @@ const makeStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  cameraBadgeIcon: { fontSize: 14 },
   headerName: { fontFamily: fonts.titleExtraBold, fontSize: 24, color: colors.textOnDark, marginTop: spacing.xs },
   headerLevel: { fontFamily: fonts.bodySemiBold, fontSize: 14, color: colors.gold400 },
   headerXpWrap: { width: '100%', paddingHorizontal: spacing.xl, marginTop: spacing.md },
@@ -832,7 +855,6 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   rowIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  rowIconText: { fontSize: 18 },
   rowLabel: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.textDark },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, maxWidth: '55%' },
   rowValue: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
@@ -859,7 +881,6 @@ const makeStyles = (colors) => StyleSheet.create({
   langPillText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs, color: colors.textBody },
   langPillTextActive: { color: colors.green900 },
   themeToggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  themeToggleIcon: { fontSize: 13 },
 
   // Code parrainage
   referralRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
@@ -893,7 +914,6 @@ const makeStyles = (colors) => StyleSheet.create({
   badgeUnlocked: { backgroundColor: colors.goldVeil, borderColor: colors.goldVeilBorder },
   badgeLocked: { backgroundColor: colors.surface, borderColor: colors.border, opacity: 0.4 },
   badgeEmoji: { fontSize: 22 },
-  badgeEmojiLocked: { opacity: 0.8 },
   badgeLabel: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, flexShrink: 1 },
   badgeLabelUnlocked: { color: colors.gold500 },
   badgeLabelLocked: { color: colors.textFaint },
@@ -909,7 +929,6 @@ const makeStyles = (colors) => StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.lg,
   },
-  walletLockIcon: { fontSize: 22, opacity: 0.6 },
   walletLockBody: { flex: 1 },
   walletLockTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.textMuted },
   walletLockText: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 1 },
@@ -923,6 +942,7 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: spacing.lg,
     ...shadow.soft,
   },
+  walletLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   walletLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
   walletBalance: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.xl, color: colors.textDark, marginTop: 2 },
 

@@ -15,8 +15,10 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Logo, AppButton, AuthField } from '../components';
+import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { isValidEmail } from '../utils/validation';
@@ -100,7 +102,12 @@ export default function LoginScreen({ navigation }) {
             rightToggle={{ active: showPassword, onToggle: () => setShowPassword((v) => !v) }}
           />
 
-          {!isOnline ? <Text style={styles.offline}>📶 {t('offline.loginRequired')}</Text> : null}
+          {!isOnline ? (
+            <View style={styles.offlineRow}>
+              <Icon icon={WifiOff} size={16} color={colors.textMuted} />
+              <Text style={styles.offline}>{t('offline.loginRequired')}</Text>
+            </View>
+          ) : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <AppButton
@@ -158,12 +165,18 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: spacing.md,
     marginTop: -spacing.sm,
   },
+  offlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: spacing.md,
+    marginTop: -spacing.sm,
+  },
   offline: {
     fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.sm,
     color: colors.textMuted,
-    marginBottom: spacing.md,
-    marginTop: -spacing.sm,
     textAlign: 'center',
   },
   submit: { marginTop: spacing.sm },

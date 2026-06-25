@@ -16,8 +16,10 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Logo, AppButton, AuthField } from '../components';
+import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import {
@@ -251,7 +253,12 @@ export default function RegisterScreen({ navigation }) {
             </>
           ) : null}
 
-          {isLast && !isOnline ? <Text style={styles.err}>📶 {t('offline.loginRequired')}</Text> : null}
+          {isLast && !isOnline ? (
+            <View style={styles.errRow}>
+              <Icon icon={WifiOff} size={14} color={colors.red400} />
+              <Text style={styles.err}>{t('offline.loginRequired')}</Text>
+            </View>
+          ) : null}
           {errors._global ? <Text style={styles.err}>{errors._global}</Text> : null}
 
           <AppButton
@@ -365,6 +372,7 @@ const makeStyles = (colors) => StyleSheet.create({
   phoneFieldError: {},
   phoneInner: { marginBottom: 0 },
   ageField: { marginTop: spacing.xs },
+  errRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   err: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.red400, marginBottom: spacing.md },
   select: {
     height: 52,

@@ -13,8 +13,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { HelpCircle, Target, TrendingUp } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
+import Icon from '../components/Icon';
 import {
   Logo,
   Heading,
@@ -84,10 +86,16 @@ function rateColor(pct, colors) {
 function StatCard({ icon, iconBg, value, valueColor, label, sub }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  // `icon` est soit un composant Lucide (UI), soit une chaîne emoji (contenu/brand).
+  const isLucide = typeof icon === 'function';
   return (
     <View style={styles.statCard}>
       <View style={[styles.statIcon, { backgroundColor: iconBg }]}>
-        <Text style={styles.statIconText}>{icon}</Text>
+        {isLucide ? (
+          <Icon icon={icon} size={24} color={colors.textDark} />
+        ) : (
+          <Text style={styles.statIconText}>{icon}</Text>
+        )}
       </View>
       <Text style={[styles.statValue, valueColor ? { color: valueColor } : null]}>
         {value}
@@ -315,9 +323,12 @@ export default function HomeScreen({ navigation }) {
             end={{ x: 1, y: 1 }}
             style={styles.challengeCard}
           >
-            <Heading color={colors.green900} style={styles.challengeTitle}>
-              ❓ {t('home.dailyChallenge.title')}
-            </Heading>
+            <View style={styles.challengeTitleRow}>
+              <Icon icon={HelpCircle} size={20} color={colors.green900} />
+              <Heading color={colors.green900} style={styles.challengeTitle}>
+                {t('home.dailyChallenge.title')}
+              </Heading>
+            </View>
             <Body color={colors.green900} style={styles.challengeDesc}>
               {t('home.dailyChallenge.subtitle')}
             </Body>
@@ -342,7 +353,7 @@ export default function HomeScreen({ navigation }) {
             ) : (
               <>
                 <StatCard
-                  icon="🎯"
+                  icon={Target}
                   iconBg={ICON_BG.games}
                   value={fmtNum(stats.totalGames)}
                   label={t('home.myStats.games')}
@@ -357,7 +368,7 @@ export default function HomeScreen({ navigation }) {
                   sub={stats.totalGames > 0 ? t('home.misc.outOfGames', { count: stats.totalGames }) : null}
                 />
                 <StatCard
-                  icon="📈"
+                  icon={TrendingUp}
                   iconBg={ICON_BG.rate}
                   value={stats.totalGames > 0 ? `${stats.successRate}%` : '—'}
                   valueColor={stats.totalGames > 0 ? rateColor(stats.successRate, colors) : colors.textDark}
@@ -621,6 +632,7 @@ const makeStyles = (colors) => StyleSheet.create({
     padding: spacing.lg,
     ...shadow.gold,
   },
+  challengeTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   challengeTitle: { fontFamily: fonts.titleBold, fontSize: fontSizes.base },
   challengeDesc: { fontSize: fontSizes.sm, marginTop: spacing.xs },
   challengeBtn: { marginTop: spacing.md, alignSelf: 'flex-start' },

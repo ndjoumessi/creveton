@@ -7,7 +7,9 @@ import {
   Server, Database, Zap, RefreshCw, Inbox, BarChart3, PieChart as PieIcon,
   Activity, Target, Gauge as GaugeIcon, Sparkles, HeartPulse, CalendarClock,
   Volume2, VolumeX, Download, LineChart as LineIcon, AreaChart as AreaIcon, Play,
+  User, Clock,
 } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell,
@@ -550,8 +552,8 @@ export default function Dashboard() {
                   <Link className="dash-feed-item" key={it.key} to={it.to}>
                     <Avatar name={it.name} size="sm" />
                     <span className="dash-feed-text">
-                      <span className={`dash-feed-ic dash-feed-ic--${it.kind}`} aria-hidden="true">
-                        {it.kind === 'game' ? '🎮' : it.kind === 'signup' ? '👤' : '✅'}
+                      <span className={`dash-feed-ic dash-feed-ic--${it.kind}`}>
+                        <Icon icon={it.kind === 'game' ? Gamepad2 : it.kind === 'signup' ? User : Check} size={16} />
                       </span>
                       {it.node}
                     </span>
@@ -743,7 +745,7 @@ export default function Dashboard() {
                     <div className="dash-tour-main">
                       <button type="button" className="dash-tour-name" onClick={() => navigate(`/tournaments/${tour.id}`)}>{tour.name}</button>
                       <div className="dash-tour-meta">
-                        {cdLabel ? <span className={`dash-tour-cd dash-cd--${si.tone}`}>⏳ {cdLabel}</span> : <span>{dateFr(tour.starts_at, "dd MMM 'à' HH'h'mm")}</span>}
+                        {cdLabel ? <span className={`dash-tour-cd dash-cd--${si.tone}`}><Icon icon={Clock} size={16} /> {cdLabel}</span> : <span>{dateFr(tour.starts_at, "dd MMM 'à' HH'h'mm")}</span>}
                         <span className="dash-tour-players">{num(tour.registered_players)}{tour.max_players ? ` / ${num(tour.max_players)}` : ''} {t('dashboard.misc.players')}</span>
                       </div>
                     </div>

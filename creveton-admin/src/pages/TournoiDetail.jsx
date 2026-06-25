@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, Play, X, Trophy, Users, Calendar, Crown, Medal, Award, Target,
 } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import tournamentsService from '../services/tournaments.service';
 import { useApiData } from '../hooks/useApiData';
 import { themeBadgeColors, themeLabels, tournamentStatusColors } from '../constants/theme';
@@ -93,7 +94,7 @@ export default function TournoiDetail() {
           <dl className="kv" style={{ marginTop: 12 }}>
             <dt>{t('tournaments.detail.type')}</dt><dd>{Number(tour.entry_fee) > 0 ? t('tournaments.card.paid') : t('tournaments.detail.freeType')}</dd>
             <dt>{t('tournaments.modal.theme')}</dt><dd>{t(`questions.themes.${tour.theme}`, themeLabels[tour.theme] || tour.theme || t('tournaments.detail.mixed'))}</dd>
-            <dt>{t('tournaments.detail.rewards')}</dt><dd>{Number(tour.entry_fee) > 0 ? fcfa(tour.prize_pool) : `🏅 ${t('tournaments.card.xpBadges')}`}</dd>
+            <dt>{t('tournaments.detail.rewards')}</dt><dd>{Number(tour.entry_fee) > 0 ? fcfa(tour.prize_pool) : <><Icon icon={Award} size={13} /> {t('tournaments.card.xpBadges')}</>}</dd>
             <dt>{t('tournaments.detail.players')}</dt>
             <dd>
               <div className="tour-detail-fill"><span style={{ width: `${fillPct}%` }} /></div>

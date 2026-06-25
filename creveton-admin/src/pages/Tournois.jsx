@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Plus, Trophy, BarChart3, LayoutGrid, List, Lock, Play, X, Users,
-  Calendar, Clock, ChevronLeft, ChevronRight, Eye,
+  Calendar, Clock, ChevronLeft, ChevronRight, Eye, Wallet, Award,
 } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import tournamentsService from '../services/tournaments.service';
 import { useApiData } from '../hooks/useApiData';
 import { THEME_KEYS } from '../constants/enums';
@@ -110,8 +111,8 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
             const payouts = estimatePayouts(tour.prize_pool, tour.type);
             return payouts
               ? <span className="tour-payouts">{payouts.slice(0, 3).map((p) => <span className="tour-payout" key={p.icon}>{p.icon} {fcfa(p.amount)}</span>)}</span>
-              : <>💰 {fcfa(tour.prize_pool)}</>;
-          })() : <>🏅 {t('tournaments.card.xpBadges', 'XP & Badges uniquement')}</>}
+              : <><Icon icon={Wallet} size={14} /> {fcfa(tour.prize_pool)}</>;
+          })() : <><Icon icon={Award} size={14} /> {t('tournaments.card.xpBadges', 'XP & Badges uniquement')}</>}
         </div>
 
         <div className="tour-card-date">
