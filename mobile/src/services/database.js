@@ -30,7 +30,8 @@ export async function initDatabase() {
       level         TEXT,
       media_url     TEXT,
       correct_index INTEGER,       -- présent en mode normal, NULL sinon
-      explanation   TEXT,
+      explanation   TEXT,           -- explication FR (révélée post-réponse)
+      explanation_en TEXT,          -- explication EN (optionnelle, bilingue)
       version       INTEGER DEFAULT 1,
       deleted       INTEGER DEFAULT 0,
       updated_at    TEXT
@@ -43,6 +44,7 @@ export async function initDatabase() {
     'correct_index INTEGER',
     'explanation TEXT',
     'text_en TEXT',
+    'explanation_en TEXT',
   ]) {
     try {
       await db.execAsync(`ALTER TABLE questions ADD COLUMN ${col};`);
@@ -60,8 +62,8 @@ export async function upsertQuestions(questions = []) {
   await db.withTransactionAsync(async () => {
     for (const q of questions) {
       await db.runAsync(
-        `INSERT INTO questions (id, type, text, text_en, options, theme, level, media_url, correct_index, explanation, version, deleted, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        `INSERT INTO questions (id, type, text, text_en, options, theme, level, media_url, correct_index, explanation, explanation_en, version, deleted, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
          ON CONFLICT(id) DO UPDATE SET
            type=excluded.type,
            text=excluded.text,
@@ -72,6 +74,7 @@ export async function upsertQuestions(questions = []) {
            media_url=excluded.media_url,
            correct_index=excluded.correct_index,
            explanation=excluded.explanation,
+           explanation_en=excluded.explanation_en,
            version=excluded.version,
            deleted=0,
            updated_at=excluded.updated_at`,
@@ -87,6 +90,7 @@ export async function upsertQuestions(questions = []) {
           q.media_url || null,
           Number.isInteger(q.correct_index) ? q.correct_index : null,
           q.explanation || null,
+          q.explanation_en || null,
           q.version || 1,
           q.updated_at || q.synced_at || null,
         ]
@@ -159,6 +163,7 @@ function rowToQuestion(row) {
     // Présents en mode normal (feedback immédiat), NULL/undefined sinon.
     correct_index: Number.isInteger(row.correct_index) ? row.correct_index : undefined,
     explanation: row.explanation || undefined,
+    explanation_en: row.explanation_en || undefined,
     version: row.version,
   };
 }

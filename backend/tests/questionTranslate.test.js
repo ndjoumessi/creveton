@@ -49,16 +49,20 @@ async function modToken() {
   return H.tokenFor(mod);
 }
 
-t('POST /:id/translate (FR→EN) : remplit text_en + options[].text_en', async () => {
+t('POST /:id/translate (FR→EN) : remplit text_en + options[].text_en + explanation_en', async () => {
   const token = await modToken();
   const { rows } = await H.db.query(
-    `INSERT INTO questions (text_fr, type, options, correct_index, theme, level, status)
-     VALUES ('Quelle est la capitale du Cameroun ?', 'mcq', $1::jsonb, 1, 'geographie', 'beginner', 'approved')
+    `INSERT INTO questions (text_fr, explanation, type, options, correct_index, theme, level, status)
+     VALUES ('Quelle est la capitale du Cameroun ?', 'Yaoundé est la capitale politique.', 'mcq', $1::jsonb, 1, 'geographie', 'beginner', 'approved')
      RETURNING id`,
     [JSON.stringify([{ text: 'Douala', is_correct: false }, { text: 'Yaoundé', is_correct: true }])]
   );
   const id = rows[0].id;
-  mockJson({ text_en: 'What is the capital of Cameroon?', options_en: ['Douala', 'Yaoundé'] });
+  mockJson({
+    text_en: 'What is the capital of Cameroon?',
+    options_en: ['Douala', 'Yaoundé'],
+    explanation_en: 'Yaoundé is the political capital.',
+  });
 
   const r = await request(app)
     .post(`/api/v1/admin/questions/${id}/translate`)
@@ -68,10 +72,16 @@ t('POST /:id/translate (FR→EN) : remplit text_en + options[].text_en', async (
   expect(r.status).toBe(200);
   expect(r.body.translated).toBe(true);
   expect(r.body.text_en).toBe('What is the capital of Cameroon?');
+  expect(r.body.explanation_en).toBe('Yaoundé is the political capital.');
 
-  // Persisté : text_en + chaque option a text_en.
-  const { rows: after } = await H.db.query('SELECT text_en, options FROM questions WHERE id = $1', [id]);
+  // Le prompt envoyé à Claude inclut bien l'explication française à traduire.
+  const [, opts] = fetchSpy.mock.calls[0];
+  expect(opts.body).toContain('French explanation');
+
+  // Persisté : text_en + chaque option a text_en + explanation_en.
+  const { rows: after } = await H.db.query('SELECT text_en, explanation_en, options FROM questions WHERE id = $1', [id]);
   expect(after[0].text_en).toBe('What is the capital of Cameroon?');
+  expect(after[0].explanation_en).toBe('Yaoundé is the political capital.');
   expect(after[0].options[1].text_en).toBe('Yaoundé');
 });
 

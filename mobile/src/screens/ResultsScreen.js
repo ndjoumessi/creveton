@@ -465,8 +465,10 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
                         </Text>
                       </View>
                     ) : null}
-                    {item.explanation ? (
-                      <Text style={styles.detailExpl}>💡 {item.explanation}</Text>
+                    {(item.explanation || item.explanation_en) ? (
+                      <Text style={styles.detailExpl}>
+                        💡 {lang === 'en' && item.explanation_en ? item.explanation_en : item.explanation}
+                      </Text>
                     ) : null}
                   </View>
                 ) : null}

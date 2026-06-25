@@ -131,6 +131,7 @@ function computeSession({ level, mode = 'normal', answers, solutions }) {
       correct_index: correctIndex,
       is_correct: isCorrect,
       explanation: solution ? solution.explanation ?? null : null,
+      explanation_en: solution ? solution.explanation_en ?? null : null,
     });
   });
 

@@ -46,6 +46,7 @@ const adminCreate = Joi.object({
   theme: Joi.string().valid(...THEMES).required(),
   level: Joi.string().valid(...LEVELS).required(),
   explanation: Joi.string().allow(null, '').optional(),
+  explanation_en: Joi.string().allow(null, '').optional(),
   tags: Joi.array().items(Joi.string()).default([]),
   language: Joi.string().valid(...LANGS).default('fr'),
   media_url: Joi.string().uri().allow(null, '').optional(),

@@ -233,6 +233,7 @@ async function answerSingle({ userId, sessionId = null, questionId, selectedInde
     correct: isCorrect,
     correct_index: info.correct_index,
     explanation: info.explanation ?? null,
+    explanation_en: info.explanation_en ?? null,
     points_earned: pointsEarned,
     speed_bonus: speed,
     streak,

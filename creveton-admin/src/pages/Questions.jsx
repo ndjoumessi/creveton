@@ -398,7 +398,7 @@ const STEP_META = [
 const MAX_TEXT = 300;
 const EMPTY_DRAFT = {
   textFr: '', textEn: '', opts: ['', '', '', ''], optsEn: ['', '', '', ''], correct: 0,
-  explanation: '', theme: 'culture', level: 'beginner', tags: [],
+  explanation: '', explanationEn: '', theme: 'culture', level: 'beginner', tags: [],
 };
 
 /* Convertit une question existante en brouillon pré-rempli (« Dupliquer »). */
@@ -418,6 +418,7 @@ function draftFromQuestion(q) {
     optsEn,
     correct,
     explanation: q.explanation || '',
+    explanationEn: q.explanation_en || '',
     theme: q.theme || 'culture',
     level: q.level || 'beginner',
     tags: Array.isArray(q.tags) ? [...q.tags] : [],
@@ -433,7 +434,8 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const [optsEn, setOptsEn] = useState(['', '', '', '']);
   const [correct, setCorrect] = useState(0);
   const [explanation, setExplanation] = useState('');
-  // Traduction IA : indicateur d'occupation ('stmt' | 'all' | `opt-${i}`).
+  const [explanationEn, setExplanationEn] = useState('');
+  // Traduction IA : indicateur d'occupation ('stmt' | 'expl' | 'all' | `opt-${i}`).
   const [translating, setTranslating] = useState(null);
   const [theme, setTheme] = useState('culture');
   const [level, setLevel] = useState('beginner');
@@ -463,6 +465,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const stmtAi = useCorrector(textFr, 'statement', setTextFr);
   const explAi = useCorrector(explanation, 'explanation', setExplanation);
   const stmtEnAi = useCorrector(textEn, 'statement', setTextEn, 'en');
+  const explEnAi = useCorrector(explanationEn, 'explanation', setExplanationEn, 'en');
 
   // Traduction IA FR→EN (action='translate'). En création la question n'a pas
   // encore d'id → on passe par le correcteur (improve-text action=translate),
@@ -476,6 +479,14 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
     if (src.length < 10) return;
     setTranslating('stmt');
     try { setTextEn(await translateText(src, 'statement')); }
+    catch { notify.error(t('questions.bilingual.translateFailed')); }
+    finally { setTranslating(null); }
+  };
+  const onTranslateExplanation = async () => {
+    const src = explanation.trim();
+    if (!src) return;
+    setTranslating('expl');
+    try { setExplanationEn(await translateText(src, 'explanation')); }
     catch { notify.error(t('questions.bilingual.translateFailed')); }
     finally { setTranslating(null); }
   };
@@ -504,7 +515,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
 
   const reset = () => {
     setStep(0); setTextFr(''); setTextEn(''); setOpts(['', '', '', '']); setOptsEn(['', '', '', '']); setCorrect(0);
-    setExplanation(''); setTheme('culture'); setLevel('beginner'); setTagInput(''); setTags([]);
+    setExplanation(''); setExplanationEn(''); setTheme('culture'); setLevel('beginner'); setTagInput(''); setTags([]);
     clearImage();
   };
 
@@ -513,7 +524,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
     if (!open) return;
     const dft = draftFromQuestion(prefill);
     setStep(0); setTextFr(dft.textFr); setTextEn(dft.textEn); setOpts(dft.opts); setOptsEn(dft.optsEn); setCorrect(dft.correct);
-    setExplanation(dft.explanation); setTheme(dft.theme); setLevel(dft.level); setTagInput(''); setTags(dft.tags);
+    setExplanation(dft.explanation); setExplanationEn(dft.explanationEn); setTheme(dft.theme); setLevel(dft.level); setTagInput(''); setTags(dft.tags);
     clearImage();
   }, [open, prefill]);
 
@@ -546,6 +557,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
       type: 'mcq',
       options: opts.map((text, i) => ({ text, text_en: (optsEn[i] || '').trim() || null, is_correct: i === correct })),
       explanation: explanation || null,
+      explanation_en: explanationEn.trim() || null,
       theme,
       level,
       tags,
@@ -658,6 +670,37 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                   onChange={(e) => setExplanation(e.target.value)}
                 />
                 {explAi.panel}
+              </div>
+
+              {/* Explication EN (optionnelle) — traduction auto FR→EN + correcteur EN. */}
+              <div className="field">
+                <div className="q-field-head">
+                  <label>{t('questions.bilingual.explanationEn')} <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span></label>
+                  <div className="row nowrap" style={{ gap: 6 }}>
+                    <button
+                      type="button"
+                      className="q-translate-btn"
+                      disabled={!explanation.trim() || translating === 'expl'}
+                      onClick={onTranslateExplanation}
+                    >
+                      {translating === 'expl'
+                        ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
+                        : <>🌐 {t('questions.bilingual.translateToEn')}</>}
+                    </button>
+                    {explEnAi.button}
+                  </div>
+                </div>
+                <textarea
+                  className="textarea"
+                  rows={3}
+                  spellCheck="true"
+                  lang="en"
+                  placeholder={t('questions.placeholder.explanationEn')}
+                  value={explanationEn}
+                  onChange={(e) => setExplanationEn(e.target.value)}
+                />
+                {explEnAi.panel}
+                <div className={`char-count ${explanationEn.length > 500 ? 'over' : explanationEn.length > 470 ? 'warn' : ''}`}>{explanationEn.length} / 500</div>
               </div>
               {/* Image = contenu (déplacée depuis Métadonnées) : énoncé + image ensemble. */}
               <div className="field" style={{ marginBottom: 0 }}>
@@ -1480,7 +1523,14 @@ export default function Questions() {
     setTranslatingDetail(targetLang);
     try {
       const res = await questionsService.translateQuestion(q.id, targetLang);
-      setDetail((d) => (d ? { ...d, text_fr: res.text_fr, text_en: res.text_en, options: res.options || d.options } : d));
+      setDetail((d) => (d ? {
+        ...d,
+        text_fr: res.text_fr,
+        text_en: res.text_en,
+        explanation: res.explanation ?? d.explanation,
+        explanation_en: res.explanation_en ?? d.explanation_en,
+        options: res.options || d.options,
+      } : d));
       notify.success(t('questions.bilingual.translated'));
       refetch();
     } catch { notify.error(t('questions.bilingual.translateFailed')); }
@@ -2083,6 +2133,32 @@ export default function Questions() {
                     <>
                       <div className="q-section-label">{t('questions.misc.fullExplanation')}</div>
                       <div className="explain">{detail.explanation}</div>
+                    </>
+                  )}
+
+                  {/* EXPLICATION (EN) — traduite (amber box) ou « non traduit » + bouton. */}
+                  {(detail.explanation || detail.explanation_en) && (
+                    <>
+                      <div className="q-section-label q-section-label--bi">
+                        {t('questions.bilingual.fullExplanationEn')}
+                        {detail.explanation_en
+                          ? <span className="q-bi-badge q-bi-badge--ok">EN</span>
+                          : <span className="q-bi-badge q-bi-badge--missing">{t('questions.bilingual.notTranslated')}</span>}
+                      </div>
+                      {detail.explanation_en ? (
+                        <div className="explain">{detail.explanation_en}</div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="q-translate-btn"
+                          disabled={!detail.explanation || translatingDetail === 'en'}
+                          onClick={() => doTranslateDetail(detail, 'en')}
+                        >
+                          {translatingDetail === 'en'
+                            ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
+                            : <>🌐 {t('questions.bilingual.translateToEn')}</>}
+                        </button>
+                      )}
                     </>
                   )}
 

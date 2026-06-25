@@ -73,6 +73,29 @@ t('score serveur : 5 bonnes réponses rapides → base+vitesse, streak ×2', asy
   expect(r.body.review[0]).toHaveProperty('explanation');
 });
 
+t('submit review : inclut explanation_en (révélation post-réponse)', async () => {
+  const user = await H.createUser({ role: 'player', total_xp: 0, level: 1 });
+  const token = H.tokenFor(user);
+  const { rows } = await H.db.query(
+    `INSERT INTO questions (text_fr, explanation, explanation_en, type, options, correct_index, theme, level, status)
+     VALUES ('Q FR ?', 'Explication FR', 'EN explanation', 'mcq', $1::jsonb, 1, 'geographie', 'beginner', 'approved')
+     RETURNING id`,
+    [JSON.stringify([{ text: 'A', is_correct: false }, { text: 'B', is_correct: true }])]
+  );
+  const id = rows[0].id;
+  const r = await submit(token, {
+    mode: 'normal',
+    theme: 'geographie',
+    level: 'beginner',
+    started_at: '2026-06-21T10:00:00Z',
+    answers: [{ question_id: id, selected_index: 1, elapsed_ms: 3000, skipped: false }],
+  });
+  expect(r.status).toBe(200);
+  const item = r.body.review.find((x) => x.question_id === id);
+  expect(item.explanation).toBe('Explication FR');
+  expect(item.explanation_en).toBe('EN explanation');
+});
+
 t('streak cassé par une mauvaise réponse + pas de bonus si lent', async () => {
   const { token, questions } = await setup(3);
   const body = {

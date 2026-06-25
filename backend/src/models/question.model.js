@@ -244,8 +244,8 @@ async function create(data, executor = db) {
   const { rows } = await executor.query(
     `INSERT INTO questions
        (text_fr, text_en, type, options, correct_index, theme, level,
-        explanation, media_url, source, status, created_by, text_hash)
-     VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10, $11, $12,
+        explanation, explanation_en, media_url, source, status, created_by, text_hash)
+     VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10, $11, $12, $13,
         encode(digest(lower(btrim(regexp_replace($1, '\\s+', ' ', 'g'))), 'sha256'), 'hex'))
      RETURNING *`,
     [
@@ -257,6 +257,7 @@ async function create(data, executor = db) {
       data.theme,
       data.level,
       data.explanation ?? null,
+      data.explanation_en ?? null,
       data.media_url ?? null,
       data.source || 'manual',
       data.status || 'pending_review',
@@ -291,7 +292,7 @@ async function findManyBrief(ids) {
 async function findSolutions(ids) {
   if (!ids || ids.length === 0) return new Map();
   const { rows } = await db.query(
-    `SELECT id, correct_index, explanation, theme, level
+    `SELECT id, correct_index, explanation, explanation_en, theme, level
        FROM questions
       WHERE id = ANY($1::uuid[])`,
     [ids]
@@ -301,7 +302,7 @@ async function findSolutions(ids) {
       r.id,
       // theme/level servent au scoring des modes mixtes (blitz/marathon) :
       // points de base par niveau réel de la question + bonus thème consécutif.
-      { correct_index: r.correct_index, explanation: r.explanation, theme: r.theme, level: r.level },
+      { correct_index: r.correct_index, explanation: r.explanation, explanation_en: r.explanation_en, theme: r.theme, level: r.level },
     ])
   );
 }
@@ -313,7 +314,7 @@ async function findSolutions(ids) {
  */
 async function findAnswerInfo(id) {
   const { rows } = await db.query(
-    `SELECT correct_index, explanation, level
+    `SELECT correct_index, explanation, explanation_en, level
        FROM questions
       WHERE id = $1 AND deleted_at IS NULL AND status = 'approved'`,
     [id]
@@ -337,6 +338,7 @@ function toAdminView(row) {
     theme: row.theme,
     level: row.level,
     explanation: row.explanation ?? null,
+    explanation_en: row.explanation_en ?? null,
     media_url: row.media_url ?? null,
     media_public_id: row.media_public_id ?? null,
     source: row.source,
@@ -421,7 +423,7 @@ async function listAdmin({ status = null, theme = null, level = null, q = null, 
  * @returns {Promise<object|null>} ligne mise à jour.
  */
 async function update(id, fields) {
-  const ALLOWED = ['text_fr', 'text_en', 'type', 'theme', 'level', 'explanation', 'media_url'];
+  const ALLOWED = ['text_fr', 'text_en', 'type', 'theme', 'level', 'explanation', 'explanation_en', 'media_url'];
   const sets = [];
   const params = [id];
   for (const key of ALLOWED) {
@@ -460,7 +462,7 @@ async function update(id, fields) {
  * Recalcule `text_hash` si `text_fr` change (cohérence de la détection de doublons).
  * @returns {Promise<object|null>} ligne mise à jour.
  */
-async function applyTranslation(id, { text_fr, text_en, options }) {
+async function applyTranslation(id, { text_fr, text_en, explanation, explanation_en, options }) {
   const sets = [];
   const params = [id];
   if (text_fr !== undefined) {
@@ -471,6 +473,14 @@ async function applyTranslation(id, { text_fr, text_en, options }) {
   if (text_en !== undefined) {
     params.push(text_en);
     sets.push(`text_en = $${params.length}`);
+  }
+  if (explanation !== undefined) {
+    params.push(explanation);
+    sets.push(`explanation = $${params.length}`);
+  }
+  if (explanation_en !== undefined) {
+    params.push(explanation_en);
+    sets.push(`explanation_en = $${params.length}`);
   }
   if (options !== undefined) {
     params.push(JSON.stringify(options));

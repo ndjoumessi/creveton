@@ -313,6 +313,7 @@ export default function QuizScreen({ navigation }) {
           selectedIndex,
           correctIndex: Number.isInteger(fb.correct_index) ? fb.correct_index : null,
           explanation: fb.explanation || null,
+          explanation_en: fb.explanation_en || null,
           isCorrect: !!fb.correct,
           timedOut,
         });
@@ -539,11 +540,14 @@ export default function QuizScreen({ navigation }) {
           style={[styles.explain, { opacity: explainOpacity, transform: [{ translateY: explainY }] }]}
         >
           <Text style={styles.explainText}>
-            {answered.explanation
-              ? `💡 ${answered.explanation}`
-              : answered.isCorrect
-                ? t('quiz.goodAnswer')
-                : t('quiz.misc.wrongAnswer')}
+            {(() => {
+              // Explication dans la langue active (repli FR si EN absent).
+              const expl = lang === 'en' && answered.explanation_en
+                ? answered.explanation_en
+                : answered.explanation;
+              if (expl) return `💡 ${expl}`;
+              return answered.isCorrect ? t('quiz.goodAnswer') : t('quiz.misc.wrongAnswer');
+            })()}
           </Text>
           <View style={styles.autoTrack}>
             <Animated.View style={[styles.autoFill, { width: autoNextWidth }]} />

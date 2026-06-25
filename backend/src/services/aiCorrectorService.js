@@ -131,24 +131,33 @@ async function improveText({ text, lang = 'fr', type = 'statement', action = 'co
  * @param {string} text           énoncé source
  * @param {string[]} optionTexts  textes des options (langue source)
  */
-function buildQuestionTranslatePrompt(sourceLang, text, optionTexts) {
+function buildQuestionTranslatePrompt(sourceLang, text, optionTexts, explanation) {
+  const hasExpl = explanation != null && String(explanation).trim() !== '';
   if (sourceLang === 'fr') {
+    const shape = hasExpl
+      ? '{\n  "text_en": "translated question",\n  "options_en": ["option A", "option B", "option C", "option D"],\n  "explanation_en": "translated explanation"\n}\n'
+      : '{\n  "text_en": "translated question",\n  "options_en": ["option A", "option B", "option C", "option D"]\n}\n';
     return (
       'You are translating a Cameroonian educational quiz question from French to English.\n'
       + 'Translate accurately. Keep proper nouns (cities, people, institutions) as-is.\n'
       + 'Return ONLY valid JSON, no explanation:\n'
-      + '{\n  "text_en": "translated question",\n  "options_en": ["option A", "option B", "option C", "option D"]\n}\n'
+      + shape
       + `French question: "${text}"\n`
       + `French options: ${JSON.stringify(optionTexts)}`
+      + (hasExpl ? `\nFrench explanation: "${explanation}"` : '')
     );
   }
+  const shape = hasExpl
+    ? '{\n  "text_fr": "question traduite",\n  "options_fr": ["option A", "option B", "option C", "option D"],\n  "explanation_fr": "explication traduite"\n}\n'
+    : '{\n  "text_fr": "question traduite",\n  "options_fr": ["option A", "option B", "option C", "option D"]\n}\n';
   return (
     'You are translating a Cameroonian educational quiz question from English to French.\n'
     + 'Translate accurately. Keep proper nouns (cities, people, institutions) as-is.\n'
     + 'Return ONLY valid JSON, no explanation:\n'
-    + '{\n  "text_fr": "question traduite",\n  "options_fr": ["option A", "option B", "option C", "option D"]\n}\n'
+    + shape
     + `English question: "${text}"\n`
     + `English options: ${JSON.stringify(optionTexts)}`
+    + (hasExpl ? `\nEnglish explanation: "${explanation}"` : '')
   );
 }
 
@@ -185,7 +194,10 @@ async function autoTranslate(questionId, sourceLang = 'fr') {
   if (!sourceText) return { translated: false, reason: 'no_source' };
 
   const sourceOptionTexts = options.map((o) => (sourceLang === 'fr' ? o.text : (o.text_en || o.text)) || '');
-  const prompt = buildQuestionTranslatePrompt(sourceLang, sourceText, sourceOptionTexts);
+  // Explication source (FR pour FR→EN, EN pour EN→FR) — traduite dans le même
+  // appel si présente.
+  const sourceExplanation = sourceLang === 'fr' ? row.explanation : row.explanation_en;
+  const prompt = buildQuestionTranslatePrompt(sourceLang, sourceText, sourceOptionTexts, sourceExplanation);
   const raw = await callAnthropic(prompt, { maxTokens: 1500, meta: { autoTranslate: true, sourceLang } });
 
   let parsed;
@@ -202,8 +214,17 @@ async function autoTranslate(questionId, sourceLang = 'fr') {
     if (!textEn) throw new ApiError('AI_UNAVAILABLE');
     // Fusionne text_en dans chaque option (conserve text + is_correct).
     const mergedOptions = options.map((o, i) => ({ ...o, text_en: (optsEn[i] || '').trim() || o.text_en || null }));
-    const updated = await questionModel.applyTranslation(questionId, { text_en: textEn, options: mergedOptions });
-    return { translated: true, targetLang, text_en: textEn, text_fr: updated ? updated.text_fr : row.text_fr };
+    const fields = { text_en: textEn, options: mergedOptions };
+    const explEn = String(parsed.explanation_en || '').trim();
+    if (sourceExplanation && explEn) fields.explanation_en = explEn;
+    const updated = await questionModel.applyTranslation(questionId, fields);
+    return {
+      translated: true,
+      targetLang,
+      text_en: textEn,
+      text_fr: updated ? updated.text_fr : row.text_fr,
+      explanation_en: updated ? updated.explanation_en : (explEn || row.explanation_en),
+    };
   }
 
   // EN → FR (cas limite : question créée en anglais sans FR).
@@ -211,8 +232,17 @@ async function autoTranslate(questionId, sourceLang = 'fr') {
   const optsFr = Array.isArray(parsed.options_fr) ? parsed.options_fr : [];
   if (!textFr) throw new ApiError('AI_UNAVAILABLE');
   const mergedOptions = options.map((o, i) => ({ ...o, text: (optsFr[i] || '').trim() || o.text }));
-  const updated = await questionModel.applyTranslation(questionId, { text_fr: textFr, options: mergedOptions });
-  return { translated: true, targetLang, text_fr: textFr, text_en: updated ? updated.text_en : row.text_en };
+  const fields = { text_fr: textFr, options: mergedOptions };
+  const explFr = String(parsed.explanation_fr || '').trim();
+  if (sourceExplanation && explFr) fields.explanation = explFr;
+  const updated = await questionModel.applyTranslation(questionId, fields);
+  return {
+    translated: true,
+    targetLang,
+    text_fr: textFr,
+    text_en: updated ? updated.text_en : row.text_en,
+    explanation: updated ? updated.explanation : (explFr || row.explanation),
+  };
 }
 
 module.exports = { improveText, autoTranslate, buildPrompt, buildTranslatePrompt, buildQuestionTranslatePrompt };

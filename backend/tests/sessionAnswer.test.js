@@ -52,6 +52,23 @@ t('bonne réponse rapide → feedback + points + bonus vitesse + session_id cré
   expect(typeof r.body.session_id).toBe('string');
 });
 
+t('feedback inclut explanation_en (révélation post-réponse)', async () => {
+  const user = await H.createUser({ role: 'player', total_xp: 0, level: 1 });
+  const token = H.tokenFor(user);
+  const { rows } = await H.db.query(
+    `INSERT INTO questions (text_fr, explanation, explanation_en, type, options, correct_index, theme, level, status)
+     VALUES ('Q FR ?', 'Explication FR', 'EN explanation', 'mcq', $1::jsonb, 1, 'geographie', 'beginner', 'approved')
+     RETURNING id`,
+    [JSON.stringify([{ text: 'A', is_correct: false }, { text: 'B', is_correct: true }])]
+  );
+  const r = await answer(token, {
+    question_id: rows[0].id, selected_index: 1, elapsed_ms: 3000, mode: 'normal',
+  });
+  expect(r.status).toBe(200);
+  expect(r.body.explanation).toBe('Explication FR');
+  expect(r.body.explanation_en).toBe('EN explanation');
+});
+
 t('streak conservé entre appels via session_id (2 bonnes → streak 2)', async () => {
   const { token, questions } = await setup(2);
   const a = await answer(token, { question_id: questions[0].id, selected_index: 1, elapsed_ms: 2000, mode: 'normal' });

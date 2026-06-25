@@ -88,6 +88,10 @@ t('GET /questions : expose text_fr, text_en et options[].text_en (bilingue)', as
   // text_en par option ; toujours sans is_correct (anti-triche).
   expect(q.options.every((o) => 'text_en' in o && !('is_correct' in o))).toBe(true);
   expect(q.options[1].text_en).toBe('Yaoundé');
+  // Anti-triche : ni explanation ni explanation_en dans la vue joueur (révélées
+  // seulement par /sessions/answer et /sessions/submit).
+  expect(q).not.toHaveProperty('explanation');
+  expect(q).not.toHaveProperty('explanation_en');
 });
 
 t('GET /questions/delta : new[] inclut text_en', async () => {

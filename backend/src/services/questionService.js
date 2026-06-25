@@ -241,6 +241,7 @@ async function createByAdmin(input, createdBy) {
     theme: input.theme,
     level: input.level,
     explanation: input.explanation ?? null,
+    explanation_en: input.explanation_en ?? null,
     media_url: input.media_url ?? null,
     source: input.source || 'manual',
     status: 'draft', // jamais publié directement (spec §12)
@@ -269,7 +270,7 @@ async function updateByAdmin(id, fields, actorId = null) {
   if (!row) throw new ApiError('QUESTION_NOT_FOUND');
 
   // Champs effectivement modifiés (diff de versions de l'onglet Historique).
-  const TRACKED = ['text_fr', 'text_en', 'theme', 'level', 'explanation', 'media_url', 'options'];
+  const TRACKED = ['text_fr', 'text_en', 'theme', 'level', 'explanation', 'explanation_en', 'media_url', 'options'];
   const changed = TRACKED.filter((k) => fields[k] !== undefined && JSON.stringify(fields[k]) !== JSON.stringify(existing[k]));
   if (changed.length) {
     const pick = (src) => Object.fromEntries(changed.map((k) => [k, src[k] ?? null]));

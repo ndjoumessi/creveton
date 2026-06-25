@@ -90,6 +90,8 @@ const translate = asyncHandler(async (req, res) => {
     translated: result.translated,
     text_fr: fresh ? fresh.text_fr : row.text_fr,
     text_en: fresh ? fresh.text_en : row.text_en,
+    explanation: fresh ? fresh.explanation : row.explanation,
+    explanation_en: fresh ? fresh.explanation_en : row.explanation_en,
     options: fresh ? fresh.options : row.options,
   });
 });

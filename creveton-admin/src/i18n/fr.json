@@ -380,7 +380,8 @@
       "explanationCreate": "Explication affichée après la réponse…",
       "tagExample": "Ex. capitale",
       "statementEn": "English statement (auto-translated or manual)…",
-      "optionEn": "Option {{letter}} (EN)"
+      "optionEn": "Option {{letter}} (EN)",
+      "explanationEn": "English explanation shown after the answer…"
     },
     "events": {
       "created": "Créée",
@@ -519,6 +520,7 @@
       "statementEn": "Énoncé (EN)",
       "statementFr": "Énoncé (FR)",
       "explanationEn": "Explication (EN)",
+      "fullExplanationEn": "Explication complète (EN)",
       "frOnly": "FR uniquement",
       "frEn": "FR + EN"
     }
