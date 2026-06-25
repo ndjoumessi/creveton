@@ -175,7 +175,7 @@
   margin-bottom: 12px;
 }
 
-.lb-ring-gold { background: #fff; box-shadow: 0 0 0 3px var(--gold); }
+.lb-ring-gold { background: var(--surface); box-shadow: 0 0 0 3px var(--gold); }
 .lb-ring-silver { box-shadow: 0 0 0 3px #9ca3af; }
 .lb-ring-bronze { box-shadow: 0 0 0 3px #b45309; }
 

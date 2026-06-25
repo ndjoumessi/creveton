@@ -292,7 +292,7 @@ function ImportModal({ open, onClose, onDone }) {
           {tab === 'accepted' && (
             report.accepted > 0
               ? <p className="muted import-tabnote"><Check size={15} /> {t('questions.import.acceptedNote', { n: report.accepted })}</p>
-              : <EmptyState title={t('questions.emptyState.acceptedTitle')} subtitle={t('questions.emptyState.acceptedSub')} />
+              : <EmptyState title={t('questions.emptyState.acceptedTitle')} message={t('questions.emptyState.acceptedSub')} />
           )}
 
           {tab === 'warnings' && (
@@ -306,7 +306,7 @@ function ImportModal({ open, onClose, onDone }) {
                   <Zap size={15} /> {t('questions.import.forceImport')}
                 </button>
               </>
-            ) : <EmptyState title={t('questions.emptyState.warningsTitle')} subtitle={t('questions.emptyState.warningsSub')} />
+            ) : <EmptyState title={t('questions.emptyState.warningsTitle')} message={t('questions.emptyState.warningsSub')} />
           )}
 
           {tab === 'rejected' && (
@@ -318,7 +318,7 @@ function ImportModal({ open, onClose, onDone }) {
                     : <div className="err" key={`e-${e.row}`}>{t('questions.misc.lineN', { n: e.row })} — {e.issue}</div>
                 ))}
               </div>
-            ) : <EmptyState title={t('questions.emptyState.rejectedTitle')} subtitle={t('questions.emptyState.rejectedSub')} />
+            ) : <EmptyState title={t('questions.emptyState.rejectedTitle')} message={t('questions.emptyState.rejectedSub')} />
           )}
 
           <button className="btn btn-block" style={{ marginTop: 14 }} onClick={reset}>

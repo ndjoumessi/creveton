@@ -241,7 +241,7 @@
 .u-mark-good { background: #dcfce7; color: #15803d; }
 .u-mark-bad { background: #fee2e2; color: #dc2626; }
 .u-mark-mid { background: #fff4e0; color: #b45309; }
-.u-hist-mid { font-size: 13px; color: #4b5563; }
+.u-hist-mid { font-size: 13px; color: var(--muted); }
 .u-hist-bot { font-size: 12px; color: var(--fg-faint); margin-top: 3px; }
 
 /* Onglet Activité — heatmap */
