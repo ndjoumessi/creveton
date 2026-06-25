@@ -426,7 +426,7 @@ function draftFromQuestion(q) {
 }
 
 function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [step, setStep] = useState(0);
   const [textFr, setTextFr] = useState('');
   const [textEn, setTextEn] = useState('');
@@ -545,6 +545,17 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
   const correctOk = Boolean(opts[correct]?.trim());
   const canCreate = textOk && !textOver && optsOk && correctOk;
   const nextDisabled = (step === 0 && !(textOk && !textOver)) || (step === 1 && !(optsOk && correctOk));
+
+  // Aperçu mobile : RÉVISION SEULE (lecture). Suit la langue active de la console
+  // (repli FR si l'EN est vide). Ne change PAS la source de vérité : le FR reste
+  // le champ requis pour l'enregistrement.
+  const isEn = i18n.language === 'en';
+  const previewText = isEn && textEn.trim() ? textEn.trim() : trimmed;
+  const previewOption = (i) => {
+    const en = (optsEn[i] || '').trim();
+    return isEn && en ? en : (opts[i] || '');
+  };
+  const previewExplanation = isEn && explanationEn.trim() ? explanationEn : explanation;
 
   const STEP_LABELS = [t('questions.modal.step1'), t('questions.modal.step2'), t('questions.modal.step3')];
   const THEME_EMOJI = { geographie: '🌍', culture: '📚', histoire: '🏛️', industrie: '🏭', sport: '⚽', science: '🔬' };
@@ -819,16 +830,16 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
             </div>
             <div className="mp-timer"><span style={{ width: '60%' }} /></div>
             {imagePreview && <img src={imagePreview} alt="" className="mp-img" style={{ objectPosition: `${offset.x}% ${offset.y}%` }} />}
-            <div className="mp-q">{trimmed || t('questions.placeholder.statementPreview')}</div>
+            <div className="mp-q">{previewText || t('questions.placeholder.statementPreview')}</div>
             {opts.map((o, i) => (
               <div className={`mp-opt ${i === correct && o.trim() ? 'correct' : ''}`} key={LETTERS[i]}>
                 <span className="mp-letter">{LETTERS[i]}</span>
-                <span className="q-opt-text">{o.trim() || t('questions.placeholder.option', { letter: LETTERS[i] })}</span>
+                <span className="q-opt-text">{previewOption(i).trim() || t('questions.placeholder.option', { letter: LETTERS[i] })}</span>
                 {i === correct && o.trim() && <Check size={15} />}
               </div>
             ))}
           </div>
-          {explanation.trim() && <div className="explain" style={{ marginTop: 12 }}>{explanation}</div>}
+          {previewExplanation.trim() && <div className="explain" style={{ marginTop: 12 }}>{previewExplanation}</div>}
         </aside>
       </div>
     </Modal>
