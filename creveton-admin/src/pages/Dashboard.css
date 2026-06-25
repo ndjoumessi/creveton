@@ -305,6 +305,10 @@
 .dash-tour-name:hover { color: var(--green500); }
 .dash-tour-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 3px; font-size: 12px; color: var(--muted); }
 .dash-tour-cd { color: #b45309; font-weight: 600; }
+/* Décompte coloré : aujourd'hui rouge · ≤ 7 j or · au-delà vert */
+.dash-cd--red { color: var(--red, #e74c3c); }
+.dash-cd--gold { color: #b45309; }
+.dash-cd--green { color: #2a8a4f; }
 .dash-tour-players { font-variant-numeric: tabular-nums; }
 .dash-tour-start { flex: none; }
 

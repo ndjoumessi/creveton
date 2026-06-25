@@ -56,22 +56,28 @@
 .tour-badge-soft { background: var(--bg-mute); color: var(--muted); }
 
 .tour-players-top { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); font-weight: 600; }
+.tour-players-top > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+.tour-players-pct { margin-left: auto; font-size: 12px; color: var(--green700); }
 .tour-players-bar { height: 7px; background: #eef1ee; border-radius: 999px; overflow: hidden; margin-top: 6px; }
 .tour-players-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; transition: width var(--t-modal); }
 
 .tour-card-rewards { font-size: 13.5px; font-weight: 600; color: var(--green700); }
 .tour-card-date { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
-.tour-card-cd { display: inline-flex; align-items: center; gap: 4px; color: #b45309; font-weight: 600; }
+.tour-card-cd { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+/* Décompte coloré : aujourd'hui rouge · ≤ 7 j or · au-delà vert */
+.tour-cd--red { color: var(--red); }
+.tour-cd--gold { color: #b45309; }
+.tour-cd--green { color: var(--green600, #2a8a4f); }
 
 .tour-card-foot { display: flex; gap: 8px; padding: 0 18px 18px; }
 .tour-card-foot .btn { flex: 1; justify-content: center; }
 .tour-card-detail { flex: 1; }
 
 /* ── Carte « Créer » ── */
-.tour-create { border: 2px dashed var(--gold); background: var(--cream); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 280px; color: var(--green900); cursor: pointer; transition: var(--t-fast); }
-.tour-create:hover { background: rgba(212, 160, 23, 0.06); }
+.tour-create { border: 2px dashed var(--gold); border-radius: 16px; background: rgba(212, 160, 23, 0.04); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 280px; color: var(--green900); cursor: pointer; transition: transform var(--t-fast), background var(--t-fast), border-color var(--t-fast); }
+.tour-create:hover { background: rgba(212, 160, 23, 0.08); border-color: var(--gold); transform: scale(1.01); }
 .tour-create svg { color: var(--gold); }
-.tour-create-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 16px; }
+.tour-create-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; }
 .tour-create-sub { font-size: 12.5px; color: var(--muted); }
 
 /* ── Modal création (2 colonnes) ── */

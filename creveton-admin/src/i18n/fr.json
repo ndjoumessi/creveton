@@ -801,7 +801,10 @@
       "free": "Gratuit",
       "formatBadge": "{{q}} Q · {{s}}s",
       "playersCount": "{{n}} / {{max}} joueurs",
-      "dateTbd": "Date à définir"
+      "dateTbd": "Date à définir",
+      "startsToday": "Aujourd'hui à {{time}}",
+      "startsTomorrow": "Demain à {{time}}",
+      "startsInDays": "dans {{n}} j"
     },
     "statuses": {
       "scheduled": "Programmé",

@@ -801,7 +801,10 @@
       "free": "Free",
       "formatBadge": "{{q}} Q · {{s}}s",
       "playersCount": "{{n}} / {{max}} players",
-      "dateTbd": "Date to be set"
+      "dateTbd": "Date to be set",
+      "startsToday": "Today at {{time}}",
+      "startsTomorrow": "Tomorrow at {{time}}",
+      "startsInDays": "in {{n}}d"
     },
     "statuses": {
       "scheduled": "Scheduled",

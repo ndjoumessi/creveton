@@ -17,8 +17,9 @@ import { useAuthStore } from '../store/authStore';
 import { USER_STATUS_KEYS } from '../constants/enums';
 import { themeBadgeColors, levelLabels } from '../constants/theme';
 import {
-  num, dateFr, dateTimeFr, isToday, dayKey, lastDays,
+  num, dateFr, dateTimeFr, dateLocale, isToday, dayKey, lastDays,
 } from '../utils/format';
+import i18nInstance from '../i18n';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import Drawer from '../components/Drawer';
@@ -211,7 +212,7 @@ function ProfilTab({ user, detail, copyCode, copied }) {
           <div><dt>{t('users.fields.age')}</dt><dd>{d.age ?? '—'}</dd></div>
           <div><dt>{t('users.fields.gender')}</dt><dd>{d.sexe ?? '—'}</dd></div>
           <div><dt>{t('users.fields.language')}</dt><dd>{(d.lang || 'fr').toUpperCase()}</dd></div>
-          <div><dt>{t('users.columns.createdAt')}</dt><dd>{dateFr(d.created_at)}</dd></div>
+          <div><dt>{t('users.columns.createdAt')}</dt><dd>{dateLocale(d.created_at, i18nInstance.language)}</dd></div>
           <div><dt>{t('users.fields.lastActivity')}</dt><dd title={d.last_active_at ? dateTimeFr(d.last_active_at) : undefined}>{relativeFr(d.last_active_at)}</dd></div>
         </dl>
       </section>
@@ -807,7 +808,7 @@ export default function Utilisateurs() {
     {
       accessorKey: 'created_at',
       header: t('users.columns.createdAt'),
-      cell: (c) => <span title={relativeFr(c.getValue())}>{dateFr(c.getValue())}</span>,
+      cell: (c) => <span title={relativeFr(c.getValue())}>{dateLocale(c.getValue(), i18nInstance.language)}</span>,
     },
     {
       id: 'actions',

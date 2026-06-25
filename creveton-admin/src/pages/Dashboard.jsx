@@ -23,7 +23,7 @@ import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
 import { parseISO, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { num, dateFr, pct } from '../utils/format';
+import { num, dateFr, pct, tournamentStart } from '../utils/format';
 import { themeLabels, themeBadgeColors, levelLabels } from '../constants/theme';
 import PageHeader from '../components/PageHeader';
 import Avatar from '../components/Avatar';
@@ -52,19 +52,6 @@ function relativeFr(iso) {
   const d = Math.floor(h / 24);
   if (d < 7) return i18n.t('common.agoDays', { n: d });
   return dateFr(iso);
-}
-
-/** Décompte « dans 9 h 23 min » / « dans 3 j » ; null si > 7 j ou passé. */
-function countdownFr(iso) {
-  if (!iso) return null;
-  const diff = new Date(iso).getTime() - Date.now();
-  if (Number.isNaN(diff) || diff <= 0) return null;
-  const min = Math.floor(diff / 60000);
-  if (min < 60) return i18n.t('common.inMinutes', { n: min });
-  const h = Math.floor(min / 60);
-  if (h < 48) return i18n.t('common.inHoursMinutes', { h, m: min % 60 });
-  const d = Math.floor(h / 24);
-  return i18n.t('common.inDays', { n: d });
 }
 
 /** Durée lisible à partir d'un nombre de secondes : « 2 j 14 h », « 3 h 12 min ». */
@@ -744,14 +731,19 @@ export default function Dashboard() {
           ) : (
             <div className="dash-tour-list">
               {upcoming.map((tour) => {
-                const cd = countdownFr(tour.starts_at);
+                const si = tournamentStart(tour.starts_at);
+                const cdLabel = si && !si.past
+                  ? (si.dayDiff === 0 ? t('tournaments.card.startsToday', { time: si.time })
+                    : si.dayDiff === 1 ? t('tournaments.card.startsTomorrow', { time: si.time })
+                      : t('tournaments.card.startsInDays', { n: si.dayDiff }))
+                  : null;
                 return (
                   <div className="dash-tour-item" key={tour.id}>
                     <span className="dash-tour-emoji" aria-hidden="true">{(themeBadgeColors[tour.theme] && themeBadgeColors[tour.theme].icon) || '🏆'}</span>
                     <div className="dash-tour-main">
                       <button type="button" className="dash-tour-name" onClick={() => navigate(`/tournaments/${tour.id}`)}>{tour.name}</button>
                       <div className="dash-tour-meta">
-                        {cd ? <span className="dash-tour-cd">⏳ {cd}</span> : <span>{dateFr(tour.starts_at, "dd MMM 'à' HH'h'mm")}</span>}
+                        {cdLabel ? <span className={`dash-tour-cd dash-cd--${si.tone}`}>⏳ {cdLabel}</span> : <span>{dateFr(tour.starts_at, "dd MMM 'à' HH'h'mm")}</span>}
                         <span className="dash-tour-players">{num(tour.registered_players)}{tour.max_players ? ` / ${num(tour.max_players)}` : ''} {t('dashboard.misc.players')}</span>
                       </div>
                     </div>

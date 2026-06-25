@@ -56,6 +56,43 @@ export function dateFr(iso, pattern = 'dd MMM yyyy') {
 
 export const dateTimeFr = (iso) => dateFr(iso, "dd MMM yyyy 'à' HH'h'mm");
 
+/**
+ * Date longue LOCALISÉE selon la langue active ('fr'|'en') :
+ * « 21 juin 2026 » / « June 21, 2026 ». Respecte le fuseau admin s'il est défini.
+ */
+export function dateLocale(iso, lang = 'fr') {
+  if (!iso) return '—';
+  try {
+    const d = typeof iso === 'string' ? parseISO(iso) : iso;
+    return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'fr-FR', {
+      dateStyle: 'long',
+      ...(activeTimeZone ? { timeZone: activeTimeZone } : {}),
+    }).format(d);
+  } catch {
+    return '—';
+  }
+}
+
+/**
+ * Décompte avant le début d'un tournoi → données pures (label/couleur côté page) :
+ *   { past } | { dayDiff, time, tone } où tone = red (aujourd'hui) · gold (≤ 7 j) · green (+).
+ * Date.now()/new Date() ici (util, hors rendu React) — autorisé.
+ */
+export function tournamentStart(iso) {
+  if (!iso) return null;
+  const start = (typeof iso === 'string' ? parseISO(iso) : iso).getTime();
+  if (Number.isNaN(start)) return null;
+  if (start - Date.now() <= 0) return { past: true };
+  const dayMs = 86400000;
+  const a = new Date(start); a.setHours(0, 0, 0, 0);
+  const b = new Date(); b.setHours(0, 0, 0, 0);
+  const dayDiff = Math.round((a.getTime() - b.getTime()) / dayMs);
+  let tone = 'green';
+  if (dayDiff === 0) tone = 'red';
+  else if (dayDiff <= 7) tone = 'gold';
+  return { past: false, dayDiff, time: dateFr(iso, "HH'h'mm"), tone };
+}
+
 /** Date courante ramenée au fuseau de l'admin (champs locaux = heure murale du fuseau). */
 function zonedNow() {
   const now = new Date();
