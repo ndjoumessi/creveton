@@ -220,7 +220,8 @@
       "pending_review": "En révision",
       "approved": "Approuvée",
       "rejected": "Rejetée",
-      "archived": "Archivée"
+      "archived": "Archivée",
+      "unknown": "Inconnu"
     },
     "themes": {
       "culture": "Culture",
@@ -254,7 +255,10 @@
       "createdBy": "Créée par",
       "modifiedBy": "Modifiée par",
       "approvedBy": "Approuvée par",
-      "lightMode": "Mode jour"
+      "lightMode": "Mode jour",
+      "createdOn": "Créée le",
+      "modifiedOn": "Modifiée le",
+      "noStatement": "Aucun énoncé"
     },
     "empty": "Importez vos premières questions",
     "emptySubtitle": "Aucune question pour l'instant. Créez-en une ou importez un lot CSV.",

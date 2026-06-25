@@ -808,7 +808,8 @@
 .q-mp-opt--btn:disabled { cursor: default; }
 .q-mp-opt.wrong { background: #fdeceb; border-color: var(--red); color: #b91c1c; }
 .q-phone--night .q-mp-opt.wrong { background: rgba(231,76,60,0.18); }
-.q-phone-hint { font-size: 12px; color: var(--muted); text-align: center; padding: 6px 0; }
+/* Indice sur le mockup vert foncé : blanc translucide (var(--muted) = gris illisible). */
+.q-phone-hint { font-size: 12px; color: rgba(255, 255, 255, 0.6); text-align: center; padding: 6px 0; }
 
 /* Accessibilité : respecte la préférence « réduire les animations ». */
 @media (prefers-reduced-motion: reduce) {
@@ -895,4 +896,47 @@
   object-fit: cover;
   border-radius: 4px;
   border: 1px solid var(--border);
+}
+
+/* Badge de statut : pastille colorée (liste + drawer) */
+.q-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.q-status-pip { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+/* Survol de ligne — repère visuel */
+.q-table tbody tr:hover { background: var(--bg-mute); }
+.q-table tbody tr.q-row-on:hover { background: #eaf7ee; }
+
+/* Pastille « Prêt à enregistrer » (étape Métadonnées) */
+.q-ready-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--green500);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Compteur de caractères : ambre dès 271 (alerte avant la limite) */
+.char-count.warn { color: var(--gold); font-weight: 600; }
+
+/* Aperçu modale : image au-dessus de l'énoncé */
+.mp-img {
+  display: block;
+  width: 100%;
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin: 10px 0;
 }

@@ -220,7 +220,8 @@
       "pending_review": "In review",
       "approved": "Approved",
       "rejected": "Rejected",
-      "archived": "Archived"
+      "archived": "Archived",
+      "unknown": "Unknown"
     },
     "themes": {
       "culture": "Culture",
@@ -254,7 +255,10 @@
       "createdBy": "Created by",
       "modifiedBy": "Modified by",
       "approvedBy": "Approved by",
-      "lightMode": "Day mode"
+      "lightMode": "Day mode",
+      "createdOn": "Created on",
+      "modifiedOn": "Modified on",
+      "noStatement": "No statement"
     },
     "empty": "Import your first questions",
     "emptySubtitle": "No questions yet. Create one or import a CSV batch.",

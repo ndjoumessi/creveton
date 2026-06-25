@@ -84,13 +84,26 @@ const LevelBadge = ({ level }) => {
 };
 
 /* Statut : point coloré + libellé (sens doublé couleur + texte). */
+// Date localisée selon la langue active. `withTime` ajoute l'heure (drawer).
+// Renvoie « — » si la date est absente/invalide (jamais de crash).
+function formatDate(date, lang, withTime = false) {
+  if (!date) return '—';
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return '—';
+  const opts = withTime ? { dateStyle: 'long', timeStyle: 'short' } : { dateStyle: 'long' };
+  return new Intl.DateTimeFormat(lang === 'fr' ? 'fr-FR' : 'en-US', opts).format(d);
+}
+
+// Badge de statut : pastille colorée (bg + fg du token). Statut inconnu/absent →
+// libellé « Inconnu » gris (BUG : t('questions.statuses.undefined') auparavant).
 function StatusDot({ status }) {
   const { t } = useTranslation();
-  const cfg = questionStatusColors[status] || { bg: '#f3f4f6', fg: '#6b7280', label: status };
+  const known = Boolean(questionStatusColors[status]);
+  const cfg = questionStatusColors[status] || { bg: '#f3f4f6', fg: '#6b7280' };
   return (
-    <span className="q-status-dot" style={{ color: cfg.fg }}>
-      <span className="dot" style={{ background: cfg.fg }} />
-      {t(`questions.statuses.${status}`, cfg.label)}
+    <span className="q-status-badge" style={{ background: cfg.bg, color: cfg.fg }}>
+      <span className="q-status-pip" style={{ background: cfg.fg }} />
+      {known ? t(`questions.statuses.${status}`, status) : t('questions.statuses.unknown')}
     </span>
   );
 }
@@ -454,7 +467,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                   value={textFr}
                   onChange={(e) => { setTextFr(e.target.value); autoGrow(e.target); }}
                 />
-                <div className={`char-count ${textOver ? 'over' : ''}`}>{textFr.length} / {MAX_TEXT}</div>
+                <div className={`char-count ${textOver ? 'over' : textFr.length > 270 ? 'warn' : ''}`}>{textFr.length} / {MAX_TEXT}</div>
                 <div className={`valid-hint ${textOk && !textOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
                   {textOk && !textOver
                     ? <><Check size={13} /> {t('questions.validation.statementOk')}</>
@@ -536,11 +549,11 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                 <label>🖼 {t('questions.image.label')}</label>
                 <ImageDropzone previewUrl={imagePreview} onSelect={pickImage} onClear={clearImage} height={150} />
               </div>
-              <div className={`valid-hint ${canCreate ? 'ok' : 'ko'}`}>
-                {canCreate
-                  ? <><Check size={13} /> {t('questions.validation.readyToSave')}</>
-                  : <><AlertCircle size={13} /> {t('questions.validation.completeToSaveShort')}</>}
-              </div>
+              {canCreate ? (
+                <div className="q-ready-pill"><Check size={14} /> {t('questions.validation.readyToSave')}</div>
+              ) : (
+                <div className="valid-hint ko"><AlertCircle size={13} /> {t('questions.validation.completeToSaveShort')}</div>
+              )}
             </>
           )}
         </div>
@@ -554,6 +567,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
               <LevelBadge level={level} />
             </div>
             <div className="mp-timer"><span style={{ width: '60%' }} /></div>
+            {imagePreview && <img src={imagePreview} alt="" className="mp-img" />}
             <div className="mp-q">{trimmed || t('questions.placeholder.statementPreview')}</div>
             {opts.map((o, i) => (
               <div className={`mp-opt ${i === correct && o.trim() ? 'correct' : ''}`} key={LETTERS[i]}>
@@ -1003,15 +1017,15 @@ function QuestionImageSection({ question, onChange, onRequestRemove }) {
 
   return (
     <>
-      <div className="q-section-label">{t('questions.image.label')}</div>
-      <ImageDropzone previewUrl={mediaUrl} onSelect={onPick} onClear={onRequestRemove} busy={uploading} height={180} />
+      <div className="q-section-label">🖼 {t('questions.image.label')}</div>
+      <ImageDropzone previewUrl={mediaUrl} onSelect={onPick} onClear={onRequestRemove} busy={uploading} height={120} />
     </>
   );
 }
 
 /* ---------- Page ---------- */
 export default function Questions() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // Filtres persistés dans l'URL (rechargeable / partageable : ?theme=&level=…).
   const [params, setParams] = useSearchParams();
   const filters = useMemo(() => ({
@@ -1651,7 +1665,9 @@ export default function Questions() {
                   <StatusDot status={detail.status} />
                 </div>
                 <div className="q-hero-meta">
-                  {t('questions.misc.heroMeta', { created: detail.created_at ? dateFr(detail.created_at) : '—', updated: detail.updated_at ? dateFr(detail.updated_at) : '—' })}
+                  {t('questions.drawer.createdOn')} {formatDate(detail.created_at, i18n.language, true)}
+                  {' · '}
+                  {t('questions.drawer.modifiedOn')} {formatDate(detail.updated_at, i18n.language, true)}
                 </div>
               </div>
 
@@ -1696,7 +1712,7 @@ export default function Questions() {
                     </div>
                     <div className="q-phone-timer"><span style={{ width: '60%' }} /></div>
                     {detail.media_url && <img src={detail.media_url} alt="" className="q-phone-img" />}
-                    <div className="q-phone-q">{detail.text_fr}</div>
+                    <div className="q-phone-q">{detail.text_fr || t('questions.drawer.noStatement')}</div>
                     <div className="q-phone-opts">
                       {opts.map((o, i) => {
                         const testing = testPick != null;
