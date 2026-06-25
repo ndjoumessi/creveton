@@ -94,7 +94,9 @@ function StatCard({ icon, iconBg, value, valueColor, label, sub }) {
     <View style={styles.statCard}>
       <View style={[styles.statIcon, { backgroundColor: iconBg }]}>
         {isLucide ? (
-          <Icon icon={icon} size={24} color={colors.textDark} />
+          // green900 (marque, ne flippe pas) — comme SettingRow : lisible sur
+          // pastille claire fixe dans les 2 thèmes. textDark virait blanc → invisible en dark.
+          <Icon icon={icon} size={24} color={colors.green900} />
         ) : (
           <Text style={styles.statIconText}>{icon}</Text>
         )}

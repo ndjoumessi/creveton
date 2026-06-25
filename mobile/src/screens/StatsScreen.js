@@ -387,8 +387,10 @@ function StatsTab({ stats, history, loading, onPlay }) {
     );
   }
 
+  // Pastilles d'icônes : pastels clairs FIXES sur les 4 tuiles (vert/jaune/bleu/rouge)
+  // — successBg/errorBg flippaient foncé en dark, rendant l'icône green900 invisible.
   const KPI = [
-    { icon: Target, bg: colors.successBg, value: fmt(stats.totalGames), label: t('stats.kpi.games') },
+    { icon: Target, bg: '#e8f5ed', value: fmt(stats.totalGames), label: t('stats.kpi.games') },
     {
       icon: '⭐',
       bg: '#fef9c3',
@@ -405,7 +407,7 @@ function StatsTab({ stats, history, loading, onPlay }) {
     },
     {
       icon: '🔥',
-      bg: colors.errorBg,
+      bg: '#fee2e2',
       // Streak max DÉRIVÉ de l'historique (streak_max persisté par partie), pas
       // du profil (souvent vide). 🔥 en préfixe seulement si > 0.
       value: stats.maxStreak > 0 ? `🔥 ${fmt(stats.maxStreak)}` : stats.maxStreak === 0 ? '0' : '—',
@@ -426,7 +428,9 @@ function StatsTab({ stats, history, loading, onPlay }) {
             <View style={[styles.kpiIcon, { backgroundColor: k.bg }]}>
               {/* Icône Lucide = composant forwardRef (typeof 'object') ; emoji = chaîne. */}
               {typeof k.icon !== 'string' ? (
-                <Icon icon={k.icon} size={24} color={colors.textDark} />
+                // green900 (marque, ne flippe pas) — aligné sur SettingRow : lisible
+                // sur pastille claire fixe en dark. textDark virait blanc → invisible.
+                <Icon icon={k.icon} size={24} color={colors.green900} />
               ) : (
                 <Text style={styles.kpiIconText}>{k.icon}</Text>
               )}
