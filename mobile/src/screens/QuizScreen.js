@@ -12,6 +12,8 @@ import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
+  Image,
+  ActivityIndicator,
   StyleSheet,
   Pressable,
   Animated,
@@ -41,6 +43,33 @@ const ANSWER_DELAY_MS = 1500;
 const TIMEOUT_DELAY_MS = 2000;
 // Modes mixtes (blitz/marathon) : feedback neutre puis avance après 800 ms.
 const MIXED_ADVANCE_MS = 800;
+
+// Image optionnelle d'une question (au-dessus de l'énoncé). Skeleton pendant le
+// chargement ; en cas d'échec (URL cassée, hors-ligne) on masque l'image en
+// silence — le quiz ne doit jamais être bloqué par un média.
+function QuestionMedia({ uri }) {
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  // Réinitialise l'état quand la question change (nouvelle URL).
+  useEffect(() => { setLoading(true); setFailed(false); }, [uri]);
+  if (!uri || failed) return null;
+  return (
+    <View style={styles.qMediaWrap}>
+      {loading ? (
+        <View style={styles.qMediaSkeleton}>
+          <ActivityIndicator color={colors.gold500} />
+        </View>
+      ) : null}
+      <Image
+        source={{ uri }}
+        style={styles.qMediaImg}
+        resizeMode="contain"
+        onLoadEnd={() => setLoading(false)}
+        onError={() => { setFailed(true); setLoading(false); }}
+      />
+    </View>
+  );
+}
 
 export default function QuizScreen({ navigation }) {
   const { t } = useTranslation();
@@ -453,6 +482,7 @@ export default function QuizScreen({ navigation }) {
 
       {/* Question */}
       <View style={styles.card}>
+        {question.media_url ? <QuestionMedia uri={question.media_url} /> : null}
         <Text style={styles.question}>{question.text}</Text>
         <View style={styles.goldBar} />
       </View>
@@ -768,6 +798,17 @@ const styles = StyleSheet.create({
   },
   question: { fontFamily: fonts.titleSemiBold, fontSize: 17, lineHeight: 26, color: colors.green900 },
   goldBar: { width: 40, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.sm },
+  // Image optionnelle de la question (au-dessus de l'énoncé).
+  qMediaWrap: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: spacing.md,
+    backgroundColor: colors.cream,
+  },
+  qMediaImg: { width: '100%', height: '100%' },
+  qMediaSkeleton: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
 
   // E. Boutons réponse.
   options: { marginTop: spacing.lg, gap: spacing.sm },

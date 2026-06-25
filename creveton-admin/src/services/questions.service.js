@@ -61,6 +61,20 @@ export function importCsv(file, { force = false } = {}) {
   );
 }
 
+/** POST /admin/questions/:id/image — upload image (multipart, champ « image »). */
+export function uploadImage(id, file) {
+  const form = new FormData();
+  form.append('image', file);
+  return api
+    .post(`/admin/questions/${id}/image`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    .then((r) => r.data);
+}
+
+/** DELETE /admin/questions/:id/image — retire l'image de la question. */
+export function deleteImage(id) {
+  return api.delete(`/admin/questions/${id}/image`).then((r) => r.data);
+}
+
 /** POST /admin/questions/force-sync (push silencieux). */
 export function forceSync(questionIds) {
   return withMock(
@@ -95,5 +109,6 @@ export function questionHistory(id) {
 
 export default {
   list, create, update, transition, remove, importCsv, forceSync,
+  uploadImage, deleteImage,
   globalStats, questionStats, questionHistory,
 };

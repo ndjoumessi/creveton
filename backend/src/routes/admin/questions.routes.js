@@ -23,6 +23,15 @@ router.post(
   validate(schemas.adminTransition),
   ctrl.transition
 );
+// Image de question (upload signé Cloudinary). `questions:manage` n'existe pas —
+// on réutilise la permission granulaire `questions:update` (modifier la question).
+router.post(
+  '/:id/image',
+  requirePermission('questions:update'),
+  upload.questionImageUpload.single('image'),
+  ctrl.uploadImage
+);
+router.delete('/:id/image', requirePermission('questions:update'), ctrl.deleteImage);
 router.post('/import', requirePermission('questions:import'), upload.single('file'), ctrl.importCsv);
 router.post('/force-sync', requirePermission('questions:force-sync'), validate(schemas.forceSync), ctrl.forceSync);
 router.delete('/:id', requirePermission('questions:delete'), ctrl.remove);

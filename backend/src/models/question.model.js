@@ -327,6 +327,7 @@ function toAdminView(row) {
     level: row.level,
     explanation: row.explanation ?? null,
     media_url: row.media_url ?? null,
+    media_public_id: row.media_public_id ?? null,
     source: row.source,
     status: row.status,
     version: row.version,
@@ -341,6 +342,27 @@ function toAdminView(row) {
 /** Récupère une question par id, quel que soit son statut (vue admin). */
 async function findByIdAny(id) {
   const { rows } = await db.query('SELECT * FROM questions WHERE id = $1', [id]);
+  return rows[0] || null;
+}
+
+/**
+ * Associe une image Cloudinary à une question (URL publique + public_id pour la
+ * suppression ultérieure). Renvoie la ligne mise à jour (ou null si introuvable).
+ */
+async function setMedia(id, url, publicId = null) {
+  const { rows } = await db.query(
+    `UPDATE questions SET media_url = $2, media_public_id = $3, updated_at = now() WHERE id = $1 RETURNING *`,
+    [id, url, publicId]
+  );
+  return rows[0] || null;
+}
+
+/** Retire l'image d'une question (colonnes à NULL). Renvoie la ligne mise à jour. */
+async function removeMedia(id) {
+  const { rows } = await db.query(
+    `UPDATE questions SET media_url = NULL, media_public_id = NULL, updated_at = now() WHERE id = $1 RETURNING *`,
+    [id]
+  );
   return rows[0] || null;
 }
 
@@ -550,6 +572,8 @@ module.exports = {
   findSolutions,
   findAnswerInfo,
   findByIdAny,
+  setMedia,
+  removeMedia,
   listAdmin,
   update,
   setStatus,

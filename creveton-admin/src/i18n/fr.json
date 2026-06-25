@@ -472,6 +472,23 @@
       "demoPoints": "● 350 pts",
       "selectAnswer": "Sélectionnez une réponse…",
       "correctAnswer": "✓ Bonne réponse : {{letter}}. {{text}}"
+    },
+    "image": {
+      "label": "Image (optionnelle)",
+      "add": "Ajouter une image",
+      "replace": "Remplacer l'image",
+      "remove": "Supprimer l'image",
+      "uploading": "Envoi…",
+      "uploaded": "Image ajoutée",
+      "removed": "Image supprimée",
+      "uploadFailed": "Échec de l'envoi de l'image",
+      "removeFailed": "Échec de la suppression",
+      "errType": "Format invalide : JPG, PNG ou WebP attendu.",
+      "errSize": "Image trop lourde (max 2 Mo).",
+      "guidelines": "Image optionnelle · JPG, PNG ou WebP · Max 2 Mo · Recommandé : 800×450px (16:9)",
+      "removeTitle": "Supprimer l'image ?",
+      "removeMessage": "L'image sera retirée de cette question. Action irréversible.",
+      "hasBadge": "Cette question a une image"
     }
   },
   "users": {

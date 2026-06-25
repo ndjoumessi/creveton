@@ -43,5 +43,24 @@ const avatarUpload = multer({
   },
 });
 
+/**
+ * Upload mémoire pour l'image d'une question (admin). Le buffer est poussé vers
+ * Cloudinary (upload SIGNÉ + transformation 800px côté service). Limite 2 Mo +
+ * filtre strict JPG/PNG/WebP (pas tout `image/*` : ni SVG ni GIF en quiz). Rejet
+ * en ApiError → 400 propre.
+ */
+const QUESTION_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+const questionImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter(req, file, cb) {
+    if (file.mimetype && QUESTION_IMAGE_MIME.includes(file.mimetype)) {
+      return cb(null, true);
+    }
+    return cb(new ApiError('VALIDATION_ERROR', { message: 'Image JPG, PNG ou WebP attendue (max 2 Mo).' }));
+  },
+});
+
 module.exports = upload;
 module.exports.avatarUpload = avatarUpload;
+module.exports.questionImageUpload = questionImageUpload;

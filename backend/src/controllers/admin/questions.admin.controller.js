@@ -2,9 +2,10 @@
 
 const asyncHandler = require('../../utils/asyncHandler');
 const ApiError = require('../../utils/ApiError');
-const { ok, created } = require('../../utils/response');
+const { ok, created, noContent } = require('../../utils/response');
 const questionService = require('../../services/questionService');
 const questionModel = require('../../models/question.model');
+const questionMediaService = require('../../services/questionMediaService');
 const importService = require('../../services/importService');
 const pushService = require('../../services/pushService');
 const userModel = require('../../models/user.model');
@@ -51,6 +52,32 @@ const transition = asyncHandler(async (req, res) => {
 const remove = asyncHandler(async (req, res) => {
   const question = await questionService.softDeleteByAdmin(req.params.id, req.user.id);
   return ok(res, question);
+});
+
+/** POST /admin/questions/:id/image — upload image (multipart, champ « image »). */
+const uploadImage = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new ApiError('VALIDATION_ERROR', { message: 'Champ « image » (fichier) requis.' });
+  }
+  const current = await questionModel.findByIdAny(req.params.id);
+  if (!current) throw new ApiError('QUESTION_NOT_FOUND');
+  const { url, publicId } = await questionMediaService.uploadQuestionImage({
+    buffer: req.file.buffer,
+    mimetype: req.file.mimetype,
+    questionId: req.params.id,
+    oldPublicId: current.media_public_id, // delete-before-replace (best-effort)
+  });
+  await questionModel.setMedia(req.params.id, url, publicId);
+  return ok(res, { media_url: url });
+});
+
+/** DELETE /admin/questions/:id/image — supprime l'asset Cloudinary + colonnes. */
+const deleteImage = asyncHandler(async (req, res) => {
+  const current = await questionModel.findByIdAny(req.params.id);
+  if (!current) throw new ApiError('QUESTION_NOT_FOUND');
+  await questionMediaService.deleteQuestionImage(current.media_public_id);
+  await questionModel.removeMedia(req.params.id);
+  return noContent(res);
 });
 
 /** GET /admin/questions/stats — stats globales (par thème + extrêmes). */
@@ -109,4 +136,4 @@ const forceSync = asyncHandler(async (req, res) => {
   return res.status(202).json({ pushed: result.pushed, devices_targeted: devices });
 });
 
-module.exports = { list, get, create, update, transition, remove, importCsv, forceSync, globalStats, stats, history };
+module.exports = { list, get, create, update, transition, remove, uploadImage, deleteImage, importCsv, forceSync, globalStats, stats, history };

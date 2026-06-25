@@ -906,6 +906,52 @@ function KanbanBoard({ rows, onOpen, onMove }) {
   );
 }
 
+/* ---------- Section image (drawer détail) ---------- */
+const IMG_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+const IMG_MAX = 2 * 1024 * 1024;
+function QuestionImageSection({ question, onChange, onRequestRemove }) {
+  const { t } = useTranslation();
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef(null);
+  const mediaUrl = question.media_url || null;
+
+  const onPick = async (file) => {
+    if (!file) return;
+    if (!IMG_MIME.includes(file.type)) { notify.error(t('questions.image.errType')); return; }
+    if (file.size > IMG_MAX) { notify.error(t('questions.image.errSize')); return; }
+    setUploading(true);
+    try {
+      const res = await questionsService.uploadImage(question.id, file);
+      onChange(res.media_url);
+      notify.success(t('questions.image.uploaded'));
+    } catch {
+      notify.error(t('questions.image.uploadFailed'));
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  return (
+    <>
+      <div className="q-section-label">{t('questions.image.label')}</div>
+      {mediaUrl && <img src={mediaUrl} alt="" className="q-media-img" />}
+      <div className="q-media-actions">
+        <button type="button" className="btn" disabled={uploading} onClick={() => inputRef.current?.click()}>
+          📷 {uploading ? t('questions.image.uploading') : mediaUrl ? t('questions.image.replace') : t('questions.image.add')}
+        </button>
+        {mediaUrl && (
+          <button type="button" className="btn btn-ghost-soft" disabled={uploading} onClick={onRequestRemove}>
+            🗑 {t('questions.image.remove')}
+          </button>
+        )}
+        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => onPick(e.target.files[0])} />
+      </div>
+      <div className="q-media-hint">{t('questions.image.guidelines')}</div>
+    </>
+  );
+}
+
 /* ---------- Page ---------- */
 export default function Questions() {
   const { t } = useTranslation();
@@ -1411,7 +1457,10 @@ export default function Questions() {
                         </td>
                         <td className="q-cell-num">{page * PAGE_SIZE + i + 1}</td>
                         <td className="q-cell-statement">
-                          <span className="q-statement-text">{truncate(q.text_fr, STATEMENT_MAX)}</span>
+                          <span className="q-statement-text">
+                            {truncate(q.text_fr, STATEMENT_MAX)}
+                            {q.media_url && <span className="q-media-badge" title={t('questions.image.hasBadge')}>📷</span>}
+                          </span>
                           {q.explanation && <span className="q-statement-sub">{truncate(q.explanation, 90)}</span>}
                         </td>
                         <td className="q-cell-edit" onClick={(e) => e.stopPropagation()}>
@@ -1583,6 +1632,7 @@ export default function Questions() {
                       <span className="q-phone-pts">{t('questions.preview.demoPoints')}</span>
                     </div>
                     <div className="q-phone-timer"><span style={{ width: '60%' }} /></div>
+                    {detail.media_url && <img src={detail.media_url} alt="" className="q-phone-img" />}
                     <div className="q-phone-q">{detail.text_fr}</div>
                     <div className="q-phone-opts">
                       {opts.map((o, i) => {
@@ -1634,6 +1684,24 @@ export default function Questions() {
                       <div className="q-source">{detail.source}</div>
                     </>
                   )}
+
+                  <QuestionImageSection
+                    question={detail}
+                    onChange={(url) => { setDetail((d) => ({ ...d, media_url: url })); refetch(); }}
+                    onRequestRemove={() => setConfirm({
+                      title: t('questions.image.removeTitle'),
+                      message: t('questions.image.removeMessage'),
+                      confirmLabel: t('questions.image.remove'),
+                      run: async () => {
+                        try {
+                          await questionsService.deleteImage(detail.id);
+                          setDetail((d) => ({ ...d, media_url: null }));
+                          setConfirm(null); refetch();
+                          notify.success(t('questions.image.removed'));
+                        } catch { notify.error(t('questions.image.removeFailed')); }
+                      },
+                    })}
+                  />
                 </div>
               )}
 

@@ -819,3 +819,25 @@
   .q-dist-bar { transition: none; }
   .q-kanban-card:hover { transform: none; }
 }
+
+/* Image de question (drawer détail) */
+.q-media-img {
+  display: block;
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.q-media-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.q-media-hint { font-size: 12px; color: var(--muted); margin-top: 9px; }
+/* Aperçu téléphone : image au-dessus de l'énoncé */
+.q-phone-img {
+  display: block;
+  width: 100%;
+  max-height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+/* Badge 📷 dans la liste (questions avec image) */
+.q-media-badge { margin-left: 6px; font-size: 12px; opacity: 0.85; vertical-align: middle; }

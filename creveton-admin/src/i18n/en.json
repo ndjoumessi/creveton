@@ -472,6 +472,23 @@
       "demoPoints": "● 350 pts",
       "selectAnswer": "Select an answer…",
       "correctAnswer": "✓ Correct answer: {{letter}}. {{text}}"
+    },
+    "image": {
+      "label": "Image (optional)",
+      "add": "Add image",
+      "replace": "Replace image",
+      "remove": "Remove image",
+      "uploading": "Uploading…",
+      "uploaded": "Image added",
+      "removed": "Image removed",
+      "uploadFailed": "Image upload failed",
+      "removeFailed": "Removal failed",
+      "errType": "Invalid format: JPG, PNG or WebP expected.",
+      "errSize": "Image too large (max 2 MB).",
+      "guidelines": "Optional image · JPG, PNG or WebP · Max 2 MB · Recommended: 800×450px (16:9)",
+      "removeTitle": "Remove image?",
+      "removeMessage": "The image will be removed from this question. This cannot be undone.",
+      "hasBadge": "This question has an image"
     }
   },
   "users": {
