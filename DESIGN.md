@@ -98,6 +98,11 @@ components:
   badge:
     rounded: "7px"
     padding: "3px 10px"
+  install-banner:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    padding: "8px 8px 8px 18px"
 ---
 
 # Design System: Creveton Admin
@@ -271,6 +276,24 @@ large. Médailles circulaires en dégradé — or (`#d4a017→#e8b830`), argent
 (`#9aa3ad→#c4ccd4`), bronze (`#b27a44→#d09a63`) — et la carte d'or prend un fond crème
 (`#fffbe9→#fff`) et une bordure dorée. C'est l'endroit où l'app de quiz « respire » dans
 l'admin.
+
+### Install Banner (PWA)
+Bandeau d'installation discret (`.install-banner`, composant `InstallPrompt`) : l'admin
+est une **PWA installable**, et ce bandeau n'apparaît que lorsque le navigateur émet
+`beforeinstallprompt` — jamais si l'utilisateur l'a déjà masqué ou si l'app tourne déjà en
+standalone (installée).
+- **Forme:** pilule flottante (`--radius-pill`), Surface blanche, bordure verte douce 1px
+  (`--border-green`), ombre `--shadow-md`. C'est une couche qui **flotte** : l'ombre y est
+  donc justifiée (cf. Elevation, profondeur réservée à ce qui flotte).
+- **Position:** `fixed`, ancrée en **bas-centre** de l'écran (`bottom: 20px`), au-dessus du
+  contenu — présence offerte, jamais imposée ; n'interrompt aucune tâche.
+- **Contenu:** icône `download` + libellé « Installer Creveton Admin comme application »,
+  CTA Or « Installer » (`.install-banner__cta` — action primaire, l'or rare est ici à sa
+  place), puis croix « Ne plus afficher » (`.install-banner__close`, ghost discret).
+- **Sens doublé:** l'action porte icône **et** libellé explicite ; le CTA Or reste minuscule
+  (une seule pilule), conforme à La Règle de l'Or Rare.
+- **Persistance:** « Installer » accepté ou croix → masqué **définitivement**
+  (`localStorage`), y compris après rafraîchissement et sur chaque nouvel événement.
 
 ## 6. Do's and Don'ts
 
