@@ -473,7 +473,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   card: { ...shadow.card },
   cardReceived: { borderLeftWidth: 4, borderLeftColor: colors.gold500 },
   cardSent: { borderLeftWidth: 4, borderLeftColor: colors.green500 },
-  cardCompleted: { borderLeftWidth: 4, borderLeftColor: '#9ca3af' },
+  cardCompleted: { borderLeftWidth: 4, borderLeftColor: colors.textMuted },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   cardMid: { flex: 1, gap: 2 },
   cardName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.textDark },
