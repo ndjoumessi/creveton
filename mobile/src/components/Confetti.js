@@ -3,6 +3,7 @@
 
 import React, { useEffect, useRef, useMemo } from 'react';
 import { Animated, Easing, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 import { colors } from '../constants/theme';
 
 const PALETTE = [colors.green500, colors.green300, colors.gold500, colors.gold400, colors.cream];
@@ -17,6 +18,7 @@ function rng(seed) {
 
 export default function Confetti({ count = 28, duration = 2000, originSeed = 7 }) {
   const { width, height } = useWindowDimensions();
+  const reduceMotion = useReduceMotion();
 
   const particles = useMemo(() => {
     const rand = rng(originSeed * 1000 + count);
@@ -30,6 +32,10 @@ export default function Confetti({ count = 28, duration = 2000, originSeed = 7 }
       spin: rand() > 0.5 ? 1 : -1,
     }));
   }, [count, width, originSeed]);
+
+  // a11y : le confetti est purement décoratif — on ne le rend pas du tout si
+  // « réduire les animations » est activé.
+  if (reduceMotion) return null;
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>

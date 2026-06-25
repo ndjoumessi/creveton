@@ -378,7 +378,10 @@ export default function HomeScreen({ navigation }) {
             <>
               <View style={styles.sectionHeader}>
                 <Heading color={sectionColor}>{t('home.misc.lastGames')}</Heading>
-                <Pressable onPress={() => navigation.navigate('Stats')} hitSlop={6}>
+                <Pressable
+                  onPress={() => navigation.navigate('Stats')}
+                  hitSlop={{ top: 15, bottom: 15, left: 12, right: 12 }} // cible tactile ≥44px (lien texte inline)
+                >
                   <Body style={styles.seeAll}>{t('home.misc.seeAll')}</Body>
                 </Pressable>
               </View>
@@ -395,7 +398,7 @@ export default function HomeScreen({ navigation }) {
             <Heading color={sectionColor}>{t('home.tournaments.title')}</Heading>
             <Pressable
               onPress={() => navigation.navigate('Tournaments')}
-              hitSlop={6}
+              hitSlop={{ top: 15, bottom: 15, left: 12, right: 12 }} // cible tactile ≥44px (lien texte inline)
             >
               <Body style={styles.seeAll}>{t('home.tournaments.seeAll')}</Body>
             </Pressable>

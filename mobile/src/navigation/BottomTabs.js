@@ -14,7 +14,7 @@ import ChallengesScreen from '../screens/ChallengesScreen';
 import StatsScreen from '../screens/StatsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { tournaments as tournamentsApi } from '../services/endpoints';
-import { fonts, shadow, spacing } from '../constants/theme';
+import { fonts, shadow, spacing, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 const Tab = createBottomTabNavigator();
@@ -125,7 +125,7 @@ const makeStyles = (colors) => StyleSheet.create({
     ...shadow.tabBar,
   },
   tabItem: { paddingTop: spacing.xs },
-  item: { alignItems: 'center', justifyContent: 'center', width: 64, gap: 2 },
+  item: { alignItems: 'center', justifyContent: 'center', width: 64, minHeight: MIN_TOUCH, gap: 2 },
   icon: { fontSize: 24 },
   label: { fontFamily: fonts.bodyMedium, fontSize: 11 },
   dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'transparent', marginTop: 1 },

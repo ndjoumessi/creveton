@@ -11,12 +11,12 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { hapticLight } from '../utils/haptics';
 
 const SIZES = {
-  sm: { height: 42, font: fontSizes.md, px: spacing.lg },
+  sm: { height: Math.max(42, MIN_TOUCH), font: fontSizes.md, px: spacing.lg }, // ≥44 (WCAG) / 48 (Android)
   md: { height: 52, font: fontSizes.base, px: spacing.xl },
   lg: { height: 60, font: fontSizes.lg, px: spacing.xl },
 };

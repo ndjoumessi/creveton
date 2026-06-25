@@ -8,6 +8,7 @@ import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNetworkStore } from '../store/networkStore';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 import { colors, fonts } from '../constants/theme';
 
 const BAR_HEIGHT = 32;
@@ -15,6 +16,7 @@ const BAR_HEIGHT = 32;
 export default function OfflineBanner() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReduceMotion();
   const isOnline = useNetworkStore((s) => s.isOnline);
   const [dismissed, setDismissed] = useState(false);
   const [mounted, setMounted] = useState(false); // garde la vue montée le temps du slide-up
@@ -33,12 +35,12 @@ export default function OfflineBanner() {
     if (visible) setMounted(true);
     Animated.timing(slide, {
       toValue: visible ? 0 : -total,
-      duration: 300,
+      duration: reduceMotion ? 0 : 300, // a11y : pas de glissement si « réduire les animations »
       useNativeDriver: true,
     }).start(({ finished }) => {
       if (finished && !visible) setMounted(false);
     });
-  }, [visible, slide, total]);
+  }, [visible, slide, total, reduceMotion]);
 
   if (!mounted && !visible) return null;
 

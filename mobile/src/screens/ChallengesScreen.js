@@ -35,7 +35,7 @@ import { challenges } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { useGameStore } from '../store/gameStore';
 import { levelForXp } from '../utils/format';
-import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { hapticLight } from '../utils/haptics';
@@ -414,7 +414,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   countPillText: { fontFamily: fonts.titleBold, fontSize: fontSizes.xs, color: colors.textOnDark },
 
   tabs: { flexDirection: 'row', gap: spacing.xl },
-  tab: { alignItems: 'center', paddingBottom: spacing.xs },
+  tab: { minHeight: MIN_TOUCH, alignItems: 'center', justifyContent: 'center', paddingBottom: spacing.xs },
   tabLabel: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.base, color: colors.textOnDarkMuted },
   tabLabelActive: { color: colors.gold400 },
   tabUnderline: { height: 3, width: '100%', marginTop: spacing.xs, borderRadius: radius.pill, backgroundColor: 'transparent' },
@@ -522,6 +522,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     flexBasis: '30%',
     flexGrow: 1,
     minWidth: 96,
+    minHeight: MIN_TOUCH, // cible tactile ≥44/48
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xs,
     borderRadius: radius.md,
@@ -529,6 +530,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surfaceElevated,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 2,
   },
   themeChipActive: { backgroundColor: colors.green900, borderColor: colors.gold400, borderWidth: 2 },

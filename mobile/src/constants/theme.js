@@ -4,6 +4,12 @@
 // Outfit (titres/scores) + Space Grotesk (corps).
 // ════════════════════════════════════════════════════════════════════════
 
+import { Platform } from 'react-native';
+
+// Cible tactile minimale — WCAG 2.1 AA = 44px ; Material/Android = 48dp.
+// À appliquer en minHeight/minWidth sur tout élément interactif compact.
+export const MIN_TOUCH = Platform.OS === 'android' ? 48 : 44;
+
 export const colors = {
   // — Verts (identité)
   green900: '#0b2e1a',
@@ -87,8 +93,8 @@ export const darkColors = {
   // Textes : clairs sur sombre (mêmes clés que la palette claire)
   textDark: '#f0faf4', // primaire — blanc cassé verdâtre (~15:1 sur la page)
   textBody: '#e8f5ed', // paragraphes — légèrement plus chaud que textDark
-  textMuted: '#9dbfaa', // secondaire / labels (~8:1)
-  textFaint: '#6a9070', // contenu très dé-emphasé uniquement (~4.6:1)
+  textMuted: '#9dbfaa', // secondaire / labels (~7.4–8.6:1 sur toutes surfaces sombres)
+  textFaint: '#7da88a', // dé-emphasé : AA corps (≥5.5:1) — relevé de #6a9070 (échouait 4.1:1 sur cartes)
   textOnDark: '#ffffff', // texte sur en-têtes vert profond → blanc pur
 
   // Bordures & séparateurs

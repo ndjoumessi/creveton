@@ -31,7 +31,7 @@ import { wallet, users } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { setLanguage } from '../i18n';
 import { SEXES } from '../constants/config';
-import { fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow, motion, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { formatFcfa, levelProgress, avatarUri } from '../utils/format';
@@ -842,12 +842,15 @@ const makeStyles = (colors) => StyleSheet.create({
   // Langue (pills inline)
   langPills: { flexDirection: 'row', gap: spacing.xs },
   langPill: {
+    minHeight: MIN_TOUCH, // cible tactile ≥44/48
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: radius.pill,
     backgroundColor: colors.cream,
     borderWidth: 1,
     borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Actif = or (état actif de la charte) : indispensable en mode sombre, où
   // green900 se confondait avec la surface (cream→#0d1f14) → pastille « invisible ».
@@ -862,12 +865,15 @@ const makeStyles = (colors) => StyleSheet.create({
   referralRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
   referralCode: { fontFamily: fonts.titleBold, fontSize: fontSizes.sm, color: colors.textDark, flexShrink: 1 },
   copyBtn: {
+    minHeight: MIN_TOUCH, // cible tactile ≥44/48
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: radius.pill,
     backgroundColor: colors.goldVeil,
     borderWidth: 1,
     borderColor: colors.goldVeilBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   copyBtnText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs, color: colors.gold500 },
 
@@ -981,10 +987,12 @@ const makeStyles = (colors) => StyleSheet.create({
 
   // Action sheet (photo)
   actionRow: {
+    minHeight: MIN_TOUCH, // cible tactile ≥44/48
     paddingVertical: spacing.md,
     borderRadius: radius.lg,
     backgroundColor: colors.cream,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   actionText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.base, color: colors.textDark },
   actionCancel: { backgroundColor: 'transparent' },
@@ -1013,12 +1021,15 @@ const makeStyles = (colors) => StyleSheet.create({
   inputFocused: { borderColor: colors.gold500 },
   pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   pill: {
+    minHeight: MIN_TOUCH, // cible tactile ≥44/48
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Pill sélectionné = or (état actif autorisé) + texte green900 pour le contraste
   // (blanc sur or échouerait le ratio ≥ 4.5:1 de la charte).

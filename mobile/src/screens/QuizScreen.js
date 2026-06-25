@@ -28,6 +28,7 @@ import { useGameStore } from '../store/gameStore';
 import { sessions as sessionsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
@@ -107,6 +108,7 @@ export default function QuizScreen({ navigation }) {
   const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const reduceMotion = useReduceMotion();
   const timerAnim = useRef(new Animated.Value(1)).current; // 1 → 0
   const explainY = useRef(new Animated.Value(40)).current;
   const explainOpacity = useRef(new Animated.Value(0)).current;
@@ -134,12 +136,12 @@ export default function QuizScreen({ navigation }) {
       scoreTarget.current += points;
       Animated.timing(scoreAnim, {
         toValue: scoreTarget.current,
-        duration: 600,
+        duration: reduceMotion ? 0 : 600, // a11y : score affiché direct, sans roulement
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }).start();
     },
-    [scoreAnim]
+    [scoreAnim, reduceMotion]
   );
 
   const clearTimers = useCallback(() => {
@@ -565,6 +567,7 @@ function GlobalTimer({ mode, leftMs, totalMs, t }) {
   const seconds = Math.max(0, Math.ceil(leftMs / 1000));
   const urgent = seconds <= 10;
   const label = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  const reduceMotion = useReduceMotion();
   const pulse = useRef(new Animated.Value(1)).current;
   const progress = useRef(new Animated.Value(1)).current; // 1 plein → 0 vide
 
@@ -581,9 +584,9 @@ function GlobalTimer({ mode, leftMs, totalMs, t }) {
     return () => anim.stop();
   }, [progress, totalMs]);
 
-  // Pulsation sous les 10 s.
+  // Pulsation sous les 10 s — emphase décorative, coupée si « réduire les animations ».
   useEffect(() => {
-    if (!urgent) {
+    if (!urgent || reduceMotion) {
       pulse.setValue(1);
       return undefined;
     }
@@ -598,7 +601,7 @@ function GlobalTimer({ mode, leftMs, totalMs, t }) {
       loop.stop();
       pulse.setValue(1);
     };
-  }, [urgent, pulse]);
+  }, [urgent, pulse, reduceMotion]);
 
   const sw = GT_STROKE[mode] || 4;
   const r = (GT_SIZE - sw) / 2;

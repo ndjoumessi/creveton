@@ -173,7 +173,10 @@ export default function GameStartScreen({ navigation, route }) {
   return (
     <Screen scroll>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.navigate('Home')} hitSlop={8}>
+        <Pressable
+          onPress={() => navigation.navigate('Home')}
+          hitSlop={{ top: 12, bottom: 12, left: 14, right: 14 }} // cible tactile ≥44px (flèche retour)
+        >
           <Text style={styles.back}>←</Text>
         </Pressable>
         <Title style={styles.headerTitle}>{t('gameStart.title')}</Title>

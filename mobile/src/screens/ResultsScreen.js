@@ -36,6 +36,7 @@ import { useAuthStore } from '../store/authStore';
 import { users } from '../services/endpoints';
 import { TIMED_MODES } from '../constants/config';
 import { hapticSuccess } from '../utils/haptics';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 import { getOptionText, normalizeLang } from '../utils/i18n';
 import { colors, fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
 
@@ -251,7 +252,23 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
   // — Bloc palier débloqué : léger « pop » + lueur.
   const levelGlow = useRef(new Animated.Value(0)).current;
 
+  const reduceMotion = useReduceMotion();
+
   useEffect(() => {
+    // a11y : « réduire les animations » → état final direct (pas d'entrée animée,
+    // pas de count-up). Le confetti se neutralise lui-même (composant Confetti).
+    if (reduceMotion) {
+      heroScale.setValue(1);
+      heroRotate.setValue(1);
+      recordSlide.setValue(isRecord ? 1 : 0);
+      xpFill.setValue(1);
+      levelGlow.setValue(result.level_unlocked ? 1 : 0);
+      scoreAnim.setValue(result.score || 0);
+      setDisplayScore(result.score || 0);
+      if (isRecord) hapticSuccess();
+      return undefined;
+    }
+
     Animated.spring(heroScale, {
       toValue: 1,
       friction: 5,
@@ -305,7 +322,7 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
     }
 
     return () => scoreAnim.removeAllListeners();
-  }, [heroScale, heroRotate, scoreAnim, xpFill, levelGlow, recordSlide, isRecord, result]);
+  }, [heroScale, heroRotate, scoreAnim, xpFill, levelGlow, recordSlide, isRecord, result, reduceMotion]);
 
   // — Historique récent pour la mini-courbe de progression.
   useEffect(() => {

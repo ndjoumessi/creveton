@@ -6,6 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 import { colors, fonts } from '../constants/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -23,6 +24,7 @@ export default function CircularTimer({
   const r = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * r;
   const scale = useRef(new Animated.Value(1)).current;
+  const reduceMotion = useReduceMotion();
 
   // strokeDashoffset : 0 = arc complet (progress 1), circ = vide (progress 0)
   const dashoffset = progress.interpolate({
@@ -35,8 +37,10 @@ export default function CircularTimer({
     outputRange: [RED, RED, ORANGE, GOLD],
   });
 
-  // Pulsation sous les 5 s.
+  // Pulsation sous les 5 s — emphase décorative, désactivée si « réduire les
+  // animations » (le décompte chiffré + l'arc restent, eux, fonctionnels).
   useEffect(() => {
+    if (reduceMotion) return undefined;
     if (seconds <= 5 && seconds > 0) {
       const loop = Animated.loop(
         Animated.sequence([
@@ -50,7 +54,8 @@ export default function CircularTimer({
         scale.setValue(1);
       };
     }
-  }, [seconds, scale]);
+    return undefined;
+  }, [seconds, scale, reduceMotion]);
 
   return (
     <Animated.View style={[styles.wrap, { width: size, height: size, transform: [{ scale }] }]}>
