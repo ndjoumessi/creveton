@@ -1,5 +1,5 @@
 import './Tournois.css';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,6 +11,7 @@ import { useApiData } from '../hooks/useApiData';
 import { themeBadgeColors, themeLabels, tournamentStatusColors } from '../constants/theme';
 import { num, fcfa, dateFr, pct } from '../utils/format';
 import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
 import { Skeleton } from '../components/Skeleton';
@@ -42,9 +43,23 @@ export default function TournoiDetail() {
   const podium = useMemo(() => participants.slice(0, 3), [participants]);
   const isClosed = tour && ['closed', 'paid'].includes(tour.status);
 
-  const act = async (fn, label) => {
-    try { await fn(id); notify.success(label); refetch(); }
-    catch (e) { notify.error(e?.response?.data?.error?.message || t('tournaments.notify.actionFailed')); }
+  // Confirmation explicite avant toute action sensible (démarrer / annuler / payout).
+  const [confirm, setConfirm] = useState(null); // { fn, label, title, body, confirmLabel, danger }
+  const [busy, setBusy] = useState(false);
+
+  const runConfirm = async () => {
+    if (!confirm) return;
+    setBusy(true);
+    try {
+      await confirm.fn(id);
+      notify.success(confirm.label);
+      refetch();
+    } catch (e) {
+      notify.error(e?.response?.data?.error?.message || t('tournaments.notify.actionFailed'));
+    } finally {
+      setBusy(false);
+      setConfirm(null);
+    }
   };
 
   if (loading && !data) {
@@ -68,12 +83,12 @@ export default function TournoiDetail() {
             <StatusBadge status={tour.status} />
             {(tour.status === 'scheduled' || tour.status === 'open') && (
               <>
-                <button className="btn btn-success" onClick={() => act(tournamentsService.start, t('tournaments.toast.startedSimple'))}><Play size={15} /> {t('tournaments.actions.start')}</button>
-                <button className="btn btn-danger-ghost" onClick={() => { if (window.confirm(t('tournaments.confirm.cancelSimple'))) act(tournamentsService.cancel, t('tournaments.toast.cancelled')); }}><X size={15} /> {t('tournaments.actions.cancel')}</button>
+                <button className="btn btn-success" onClick={() => setConfirm({ fn: tournamentsService.start, label: t('tournaments.toast.startedSimple'), title: t('tournaments.confirm.startTitle'), body: t('tournaments.confirm.startBody'), confirmLabel: t('tournaments.actions.start') })}><Play size={15} /> {t('tournaments.actions.start')}</button>
+                <button className="btn btn-danger-ghost" onClick={() => setConfirm({ fn: tournamentsService.cancel, label: t('tournaments.toast.cancelled'), title: t('tournaments.confirm.cancelTitle'), body: t('tournaments.confirm.cancelBody', { name: tour.name }), confirmLabel: t('tournaments.actions.cancel'), danger: true })}><X size={15} /> {t('tournaments.actions.cancel')}</button>
               </>
             )}
             {(tour.status === 'running' || tour.status === 'closed') && (
-              <button className="btn btn-gold" onClick={() => act(tournamentsService.payout, t('tournaments.toast.resultsValidated'))}><Trophy size={15} /> {t('tournaments.actions.validateResults')}</button>
+              <button className="btn btn-gold" onClick={() => setConfirm({ fn: tournamentsService.payout, label: t('tournaments.toast.resultsValidated'), title: t('tournaments.confirm.payoutTitle'), body: t('tournaments.confirm.payoutBody'), confirmLabel: t('tournaments.actions.validateResults'), danger: true })}><Trophy size={15} /> {t('tournaments.actions.validateResults')}</button>
             )}
           </>
         )}
@@ -160,6 +175,23 @@ export default function TournoiDetail() {
           </div>
         )}
       </div>
+
+      {/* Confirmation des actions sensibles */}
+      <Modal
+        open={!!confirm}
+        onClose={() => (busy ? null : setConfirm(null))}
+        title={confirm?.title}
+        footer={confirm && (
+          <>
+            <button className="btn" onClick={() => setConfirm(null)} disabled={busy}>{t('common.cancel')}</button>
+            <button className={`btn ${confirm.danger ? 'btn-danger' : 'btn-primary'}`} onClick={runConfirm} disabled={busy}>
+              {confirm.confirmLabel}
+            </button>
+          </>
+        )}
+      >
+        {confirm && <p style={{ margin: 0 }}>{confirm.body}</p>}
+      </Modal>
     </>
   );
 }

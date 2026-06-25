@@ -668,6 +668,14 @@ export default function Utilisateurs() {
     } catch { notify.error(t('users.notify.resetFailed')); }
   };
 
+  const [confirmRole, setConfirmRole] = useState(null); // { user, role } en attente de confirmation
+
+  // Ouvre la confirmation avant tout changement de rôle (permission sensible).
+  const askChangeRole = (u, role) => {
+    if (!role || role === u.role) return;
+    setConfirmRole({ user: u, role });
+  };
+
   const doChangeRole = async (u, role) => {
     if (!role || role === u.role) { setRoleFor(null); return; }
     try {
@@ -935,7 +943,7 @@ export default function Utilisateurs() {
               {isSuperAdmin && (
                 <label className="u-foot-role">
                   <ShieldCheck size={15} /> {t('users.columns.role')}
-                  <select className="select" value={selected.role} onChange={(e) => doChangeRole(selected, e.target.value)}>
+                  <select className="select" value={selected.role} onChange={(e) => askChangeRole(selected, e.target.value)}>
                     {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{t(`users.roles.${r}`)}</option>)}
                   </select>
                 </label>
@@ -1032,10 +1040,38 @@ export default function Utilisateurs() {
         {roleFor && (
           <div className="field" style={{ marginBottom: 0 }}>
             <label>{t('users.actions.changeRole')}</label>
-            <select className="select" defaultValue={roleFor.role} onChange={(e) => doChangeRole(roleFor, e.target.value)}>
+            <select className="select" value={roleFor.role} onChange={(e) => askChangeRole(roleFor, e.target.value)}>
               {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{t(`users.roles.${r}`)}</option>)}
             </select>
           </div>
+        )}
+      </Modal>
+
+      {/* Confirmation — changement de rôle (permission sensible) */}
+      <Modal
+        open={!!confirmRole}
+        onClose={() => setConfirmRole(null)}
+        title={t('users.confirm.roleChangeTitle')}
+        footer={confirmRole && (
+          <>
+            <button className="btn" onClick={() => setConfirmRole(null)}>{t('common.cancel')}</button>
+            <button
+              className="btn btn-primary"
+              onClick={() => { doChangeRole(confirmRole.user, confirmRole.role); setConfirmRole(null); }}
+            >
+              {t('users.confirm.roleChangeConfirm')}
+            </button>
+          </>
+        )}
+      >
+        {confirmRole && (
+          <p style={{ margin: 0 }}>
+            {t('users.confirm.roleChangeMessage', {
+              name: confirmRole.user.name,
+              from: t(`users.roles.${confirmRole.user.role}`),
+              to: t(`users.roles.${confirmRole.role}`),
+            })}
+          </p>
         )}
       </Modal>
     </>

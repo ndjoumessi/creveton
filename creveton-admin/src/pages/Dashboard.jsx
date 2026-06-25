@@ -28,6 +28,7 @@ import { fr } from 'date-fns/locale';
 import { num, dateFr, pct, tournamentStart } from '../utils/format';
 import { themeLabels, themeBadgeColors, levelLabels } from '../constants/theme';
 import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
 import KpiCard from '../components/KpiCard';
 import ThemeBadge from '../components/ThemeBadge';
@@ -451,13 +452,20 @@ export default function Dashboard() {
     }
   };
 
+  const [confirmStart, setConfirmStart] = useState(null); // tournoi en attente de démarrage
+  const [startBusy, setStartBusy] = useState(false);
+
   const startTournament = async (tour) => {
+    setStartBusy(true);
     try {
       await tournamentsService.start(tour.id);
       notify.success(t('toast.tournamentStarted'));
       refetch();
     } catch (e) {
       notify.error(e?.response?.data?.error?.message || t('dashboard.notify.startFailed'));
+    } finally {
+      setStartBusy(false);
+      setConfirmStart(null);
     }
   };
 
@@ -749,7 +757,7 @@ export default function Dashboard() {
                         <span className="dash-tour-players">{num(tour.registered_players)}{tour.max_players ? ` / ${num(tour.max_players)}` : ''} {t('dashboard.misc.players')}</span>
                       </div>
                     </div>
-                    <button type="button" className="btn btn-sm btn-success dash-tour-start" onClick={() => startTournament(tour)}>
+                    <button type="button" className="btn btn-sm btn-success dash-tour-start" onClick={() => setConfirmStart(tour)}>
                       <Play size={13} /> {t('dashboard.misc.start')}
                     </button>
                   </div>
@@ -948,6 +956,21 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Confirmation — démarrer un tournoi */}
+      <Modal
+        open={!!confirmStart}
+        onClose={() => (startBusy ? null : setConfirmStart(null))}
+        title={t('tournaments.confirm.startTitle')}
+        footer={confirmStart && (
+          <>
+            <button className="btn" onClick={() => setConfirmStart(null)} disabled={startBusy}>{t('common.cancel')}</button>
+            <button className="btn btn-primary" onClick={() => startTournament(confirmStart)} disabled={startBusy}>{t('tournaments.actions.start')}</button>
+          </>
+        )}
+      >
+        {confirmStart && <p style={{ margin: 0 }}>{t('tournaments.confirm.startBody')}</p>}
+      </Modal>
     </>
   );
 }

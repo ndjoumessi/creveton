@@ -360,7 +360,9 @@
       "archiveTitle": "Archiver la question",
       "archiveMessage": "Cette question sera retirée du quiz. Aucun endpoint de restauration n’existe — l’archivage est définitif côté console.",
       "bulkArchiveTitle": "Archiver la sélection",
-      "bulkArchiveMessage": "{{n}} question(s) seront archivées et retirées du quiz. Action sans restauration côté console."
+      "bulkArchiveMessage": "{{n}} question(s) seront archivées et retirées du quiz. Action sans restauration côté console.",
+      "bulkApproveTitle": "Approuver les questions sélectionnées ?",
+      "bulkApproveMessage": "{{n}} question(s) seront publiées et synchronisées vers les joueurs."
     },
     "a11y": {
       "removeTag": "Retirer {{tag}}",
@@ -665,7 +667,10 @@
       "resetPassword": "Réinitialiser le mot de passe de {{name}} ?",
       "delete": "Supprimer définitivement {{name}} (RGPD) ? Action irréversible.",
       "deletePrompt": "Pour confirmer, saisissez SUPPRIMER :",
-      "deleteKeyword": "SUPPRIMER"
+      "deleteKeyword": "SUPPRIMER",
+      "roleChangeTitle": "Changer le rôle ?",
+      "roleChangeMessage": "Le rôle de {{name}} passera de {{from}} à {{to}}.",
+      "roleChangeConfirm": "Changer le rôle"
     },
     "notify": {
       "copyFailed": "Copie impossible.",
@@ -954,7 +959,13 @@
     },
     "confirm": {
       "cancel": "Annuler le tournoi « {{name}} » ?",
-      "cancelSimple": "Annuler ce tournoi ?"
+      "cancelSimple": "Annuler ce tournoi ?",
+      "startTitle": "Démarrer ce tournoi ?",
+      "startBody": "Les inscriptions seront closes et le tournoi démarrera immédiatement pour les joueurs inscrits.",
+      "cancelTitle": "Annuler ce tournoi ?",
+      "cancelBody": "Le tournoi « {{name}} » sera annulé et les joueurs inscrits notifiés. Cette action est irréversible.",
+      "payoutTitle": "Valider les résultats ?",
+      "payoutBody": "Les gains seront distribués aux gagnants. Cette action est définitive et irréversible."
     },
     "notify": {
       "startFailed": "Démarrage impossible.",
@@ -1309,7 +1320,15 @@
       "updating": "Mise à jour…",
       "update": "Mettre à jour"
     },
-    "pageDescription": "Compte, sécurité, feature flags, système et intégrations."
+    "pageDescription": "Compte, sécurité, feature flags, système et intégrations.",
+    "confirm": {
+      "maintenanceTitle": "Activer la maintenance ?",
+      "maintenanceBody": "Tous les joueurs seront déconnectés et verront une page de maintenance jusqu'à la désactivation.",
+      "maintenanceConfirm": "Activer la maintenance",
+      "revokeTitle": "Révoquer toutes les autres sessions ?",
+      "revokeBody": "Toutes vos autres sessions actives seront déconnectées immédiatement. Cette action est irréversible.",
+      "revokeConfirm": "Révoquer"
+    }
   },
   "login": {
     "title": "Creveton",

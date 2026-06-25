@@ -343,9 +343,16 @@ export default function Tournois() {
 
   const openDetail = (tour) => navigate(`/tournaments/${tour.id}`);
 
-  const doStart = async (tour) => {
-    try { await tournamentsService.start(tour.id); notify.success(t('tournaments.toast.started', { name: tour.name })); refetch(); }
+  const [confirmStart, setConfirmStart] = useState(null); // tournoi en attente de démarrage
+  const [startBusy, setStartBusy] = useState(false);
+
+  const doStart = (tour) => setConfirmStart(tour); // ouvre la confirmation
+  const runStart = async () => {
+    if (!confirmStart) return;
+    setStartBusy(true);
+    try { await tournamentsService.start(confirmStart.id); notify.success(t('tournaments.toast.started', { name: confirmStart.name })); refetch(); }
     catch (e) { notify.error(e?.response?.data?.error?.message || t('tournaments.notify.startFailedMin')); }
+    finally { setStartBusy(false); setConfirmStart(null); }
   };
   const doCancel = async (tour) => {
     if (!window.confirm(t('tournaments.confirm.cancel', { name: tour.name }))) return;
@@ -456,6 +463,21 @@ export default function Tournois() {
       )}
 
       <CreateModal open={creating} onClose={() => setCreating(false)} onCreate={create} submitting={submitting} />
+
+      {/* Confirmation — démarrer un tournoi */}
+      <Modal
+        open={!!confirmStart}
+        onClose={() => (startBusy ? null : setConfirmStart(null))}
+        title={t('tournaments.confirm.startTitle')}
+        footer={confirmStart && (
+          <>
+            <button className="btn" onClick={() => setConfirmStart(null)} disabled={startBusy}>{t('common.cancel')}</button>
+            <button className="btn btn-primary" onClick={runStart} disabled={startBusy}>{t('tournaments.actions.start')}</button>
+          </>
+        )}
+      >
+        {confirmStart && <p style={{ margin: 0 }}>{t('tournaments.confirm.startBody')}</p>}
+      </Modal>
     </>
   );
 }

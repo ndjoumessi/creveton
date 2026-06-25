@@ -360,7 +360,9 @@
       "archiveTitle": "Archive the question",
       "archiveMessage": "This question will be removed from the quiz. No restore endpoint exists — archiving is permanent on the console side.",
       "bulkArchiveTitle": "Archive the selection",
-      "bulkArchiveMessage": "{{n}} question(s) will be archived and removed from the quiz. Action with no restore on the console side."
+      "bulkArchiveMessage": "{{n}} question(s) will be archived and removed from the quiz. Action with no restore on the console side.",
+      "bulkApproveTitle": "Approve the selected questions?",
+      "bulkApproveMessage": "{{n}} question(s) will be published and synced to players."
     },
     "a11y": {
       "removeTag": "Remove {{tag}}",
@@ -665,7 +667,10 @@
       "resetPassword": "Reset {{name}}'s password?",
       "delete": "Permanently delete {{name}} (GDPR)? This action is irreversible.",
       "deletePrompt": "To confirm, type DELETE:",
-      "deleteKeyword": "DELETE"
+      "deleteKeyword": "DELETE",
+      "roleChangeTitle": "Change role?",
+      "roleChangeMessage": "{{name}}'s role will change from {{from}} to {{to}}.",
+      "roleChangeConfirm": "Change role"
     },
     "notify": {
       "copyFailed": "Copy failed.",
@@ -954,7 +959,13 @@
     },
     "confirm": {
       "cancel": "Cancel the tournament “{{name}}”?",
-      "cancelSimple": "Cancel this tournament?"
+      "cancelSimple": "Cancel this tournament?",
+      "startTitle": "Start this tournament?",
+      "startBody": "Registrations will close and the tournament will start immediately for registered players.",
+      "cancelTitle": "Cancel this tournament?",
+      "cancelBody": "The tournament “{{name}}” will be cancelled and registered players notified. This action cannot be undone.",
+      "payoutTitle": "Validate results?",
+      "payoutBody": "Winnings will be distributed to the winners. This action is final and cannot be undone."
     },
     "notify": {
       "startFailed": "Could not start.",
@@ -1309,7 +1320,15 @@
       "updating": "Updating…",
       "update": "Update"
     },
-    "pageDescription": "Account, security, feature flags, system and integrations."
+    "pageDescription": "Account, security, feature flags, system and integrations.",
+    "confirm": {
+      "maintenanceTitle": "Enable maintenance mode?",
+      "maintenanceBody": "All players will be signed out and shown a maintenance page until it is disabled.",
+      "maintenanceConfirm": "Enable maintenance",
+      "revokeTitle": "Revoke all other sessions?",
+      "revokeBody": "All your other active sessions will be signed out immediately. This action cannot be undone.",
+      "revokeConfirm": "Revoke"
+    }
   },
   "login": {
     "title": "Creveton",

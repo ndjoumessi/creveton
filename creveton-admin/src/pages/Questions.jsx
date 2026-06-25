@@ -933,7 +933,7 @@ function RejectModal({ open, onClose, onConfirm, busy }) {
 }
 
 /* ---------- Modal de confirmation destructrice ---------- */
-function ConfirmModal({ open, title, message, confirmLabel, onConfirm, onClose, busy }) {
+function ConfirmModal({ open, title, message, confirmLabel, onConfirm, onClose, busy, icon: ConfirmIcon = Archive, variant = 'btn-danger' }) {
   const { t } = useTranslation();
   return (
     <Modal
@@ -943,8 +943,8 @@ function ConfirmModal({ open, title, message, confirmLabel, onConfirm, onClose, 
       footer={(
         <>
           <button className="btn btn-ghost-soft" onClick={onClose}>{t('common.cancel')}</button>
-          <button className="btn btn-danger" disabled={busy} onClick={onConfirm}>
-            <Archive size={15} /> {confirmLabel}
+          <button className={`btn ${variant}`} disabled={busy} onClick={onConfirm}>
+            <ConfirmIcon size={15} /> {confirmLabel}
           </button>
         </>
       )}
@@ -1651,8 +1651,19 @@ export default function Questions() {
     try {
       await Promise.all(eligibleApprove.map((q) => questionsService.transition(q.id, 'approved')));
       notify.success(t('questions.notify.bulkApproved', { n: eligibleApprove.length }));
-      clearSel(); refetch();
+      clearSel(); setConfirm(null); refetch();
     } catch { notify.error(t('questions.notify.bulkApproveFailed')); } finally { setActionBusy(false); }
+  };
+  const askBulkApprove = () => {
+    if (!eligibleApprove.length) { notify.info(t('questions.notify.noEligibleApprove')); return; }
+    setConfirm({
+      title: t('questions.confirm.bulkApproveTitle'),
+      message: t('questions.confirm.bulkApproveMessage', { n: eligibleApprove.length }),
+      confirmLabel: `${t('questions.actions.approve')} (${eligibleApprove.length})`,
+      icon: ThumbsUp,
+      variant: 'btn-success',
+      run: bulkApprove,
+    });
   };
   const bulkArchive = async () => {
     const items = selectedRows;
@@ -2042,7 +2053,7 @@ export default function Questions() {
         <div className="q-bulk-bar">
           <span className="q-bulk-count">{selected.size} {t('questions.selected')}</span>
           <div className="row wrap" style={{ gap: 8, marginLeft: 'auto' }}>
-            <button className="btn btn-sm btn-success" disabled={actionBusy} onClick={bulkApprove}>
+            <button className="btn btn-sm btn-success" disabled={actionBusy} onClick={askBulkApprove}>
               <ThumbsUp size={14} /> {t('questions.approveAll')}{eligibleApprove.length ? ` (${eligibleApprove.length})` : ''}
             </button>
             <button className="btn btn-sm" disabled={actionBusy} onClick={askBulkArchive}><Archive size={14} /> {t('questions.archiveAll')}</button>
@@ -2070,6 +2081,8 @@ export default function Questions() {
         title={confirm?.title}
         message={confirm?.message}
         confirmLabel={confirm?.confirmLabel}
+        icon={confirm?.icon}
+        variant={confirm?.variant}
         onConfirm={() => confirm?.run()}
         onClose={() => setConfirm(null)}
       />

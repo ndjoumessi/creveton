@@ -16,6 +16,7 @@ import { useUiStore } from '../store/uiStore';
 import useThemeStore from '../store/themeStore';
 import { num, dateFr, dateTimeFr } from '../utils/format';
 import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
 import AvatarUpload from '../components/AvatarUpload';
 import PasswordInput from '../components/PasswordInput';
 import { Skeleton } from '../components/Skeleton';
@@ -287,12 +288,17 @@ function SecuritySection() {
     finally { setBusy(false); }
   };
 
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
+  const [revokeBusy, setRevokeBusy] = useState(false);
+
   const revokeOthers = async () => {
+    setRevokeBusy(true);
     try {
       const r = await settingsService.revokeOtherSessions();
       notify.success(t('settings.security.revoked', { count: r.revoked }));
       refetch();
     } catch { notify.error(t('settings.security.revokeFailed')); }
+    finally { setRevokeBusy(false); setConfirmRevoke(false); }
   };
 
   return (
@@ -329,7 +335,7 @@ function SecuritySection() {
             <h3 className="card-title">{t('settings.security.activeSessions')}</h3>
             <p className="card-sub">{t('settings.security.sessionsSub')}</p>
           </div>
-          <button className="btn btn-danger-ghost btn-sm" onClick={revokeOthers}><LogOut size={14} /> {t('settings.security.revokeOthersShort')}</button>
+          <button className="btn btn-danger-ghost btn-sm" onClick={() => setConfirmRevoke(true)}><LogOut size={14} /> {t('settings.security.revokeOthersShort')}</button>
         </div>
         {loadingSessions ? (
           <Skeleton w="100%" h={48} r={10} style={{ marginTop: 10 }} />
@@ -350,6 +356,21 @@ function SecuritySection() {
         )}
         <div className="set-note"><AlertTriangle size={14} /> {t('settings.security.historyNote')}</div>
       </div>
+
+      {/* Confirmation — révocation des autres sessions (irréversible) */}
+      <Modal
+        open={confirmRevoke}
+        onClose={() => (revokeBusy ? null : setConfirmRevoke(false))}
+        title={t('settings.confirm.revokeTitle')}
+        footer={(
+          <>
+            <button className="btn" onClick={() => setConfirmRevoke(false)} disabled={revokeBusy}>{t('common.cancel')}</button>
+            <button className="btn btn-danger" onClick={revokeOthers} disabled={revokeBusy}>{t('settings.confirm.revokeConfirm')}</button>
+          </>
+        )}
+      >
+        <p style={{ margin: 0 }}>{t('settings.confirm.revokeBody')}</p>
+      </Modal>
     </>
   );
 }
@@ -358,6 +379,13 @@ function SecuritySection() {
 function FlagsSection({ setMaintenance }) {
   const { t } = useTranslation();
   const { data: flags, loading, setData } = useApiData(() => settingsService.getFlags(), []);
+  const [confirmMaint, setConfirmMaint] = useState(null); // flag en attente d'activation
+
+  // Activer la maintenance déconnecte tous les joueurs → confirmation. La désactivation reste directe.
+  const onToggle = (flag, enabled) => {
+    if (flag.key === 'maintenance_mode' && enabled) { setConfirmMaint(flag); return; }
+    toggle(flag, enabled);
+  };
 
   const toggle = async (flag, enabled) => {
     // Optimiste.
@@ -387,9 +415,24 @@ function FlagsSection({ setMaintenance }) {
             <p className="set-flag-desc">{flag.description}</p>
             {flag.locked && <p className="set-flag-status">{t('settings.flags.lockedStatus')}</p>}
           </div>
-          <Toggle checked={flag.enabled} onChange={(v) => toggle(flag, v)} disabled={!flag.editable} />
+          <Toggle checked={flag.enabled} onChange={(v) => onToggle(flag, v)} disabled={!flag.editable} />
         </div>
       ))}
+
+      {/* Confirmation — activation du mode maintenance (déconnecte tous les joueurs) */}
+      <Modal
+        open={!!confirmMaint}
+        onClose={() => setConfirmMaint(null)}
+        title={t('settings.confirm.maintenanceTitle')}
+        footer={(
+          <>
+            <button className="btn" onClick={() => setConfirmMaint(null)}>{t('common.cancel')}</button>
+            <button className="btn btn-danger" onClick={() => { toggle(confirmMaint, true); setConfirmMaint(null); }}>{t('settings.confirm.maintenanceConfirm')}</button>
+          </>
+        )}
+      >
+        <p style={{ margin: 0 }}>{t('settings.confirm.maintenanceBody')}</p>
+      </Modal>
     </div>
   );
 }
