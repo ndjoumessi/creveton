@@ -435,3 +435,6 @@
   .ses-score-stats { grid-template-columns: repeat(2, 1fr); row-gap: 14px; }
   .ses-score-big { font-size: 54px; }
 }
+
+/* ── Dark-mode hover overrides (light hardcoded → dark border) ── */
+[data-theme="dark"] .ses-pill:hover { border-color: var(--border-green); }

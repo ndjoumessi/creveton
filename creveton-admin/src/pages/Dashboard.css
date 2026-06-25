@@ -322,3 +322,9 @@
 .dash-icon-btn { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); display: grid; place-items: center; cursor: pointer; transition: var(--t-fast); }
 .dash-icon-btn:hover { color: var(--green700); border-color: #d1d5db; }
 .dash-chart-legend--top { margin-bottom: 6px; }
+
+/* ── Dark-mode hover overrides (light hardcoded → dark surface/border) ── */
+[data-theme="dark"] .dash-feed-item:hover { background: var(--surface-2); }
+[data-theme="dark"] .dash-health-cell:hover { background: var(--surface-2); }
+[data-theme="dark"] .dash-sound:hover { border-color: var(--border-green); }
+[data-theme="dark"] .dash-icon-btn:hover { border-color: var(--border-green); }

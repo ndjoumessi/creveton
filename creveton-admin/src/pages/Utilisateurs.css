@@ -270,3 +270,8 @@
 
 /* Modales : pills durée */
 .u-duration-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── Dark-mode hover overrides (light hardcoded → dark surface/tint) ── */
+[data-theme="dark"] .u-menu button:hover { background: var(--surface-2); }
+[data-theme="dark"] .u-menu button.danger:hover { background: rgba(231, 76, 60, 0.16); }
+[data-theme="dark"] .u-copy-pill:hover { background: var(--surface-2); }

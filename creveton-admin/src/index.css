@@ -563,3 +563,12 @@ table.data tbody tr:last-child td { border-bottom: none; }
 .mobile-preview .mp-opt { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.08); margin-bottom: 9px; font-size: 14px; }
 .mobile-preview .mp-opt.correct { background: rgba(42,138,79,0.35); border: 1px solid var(--green300); }
 .mobile-preview .mp-letter { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.15); display: grid; place-items: center; font-family: 'Outfit'; font-weight: 700; font-size: 12px; flex: none; }
+
+/* ── Dark-mode hover overrides (light hardcoded → dark surface/tint) ── */
+[data-theme="dark"] .btn:hover { background: var(--surface-2); border-color: var(--border-green); }
+[data-theme="dark"] .icon-btn:hover { background: var(--surface-2); border-color: var(--border-green); }
+[data-theme="dark"] .btn-ghost-soft:hover { background: var(--surface-2); }
+[data-theme="dark"] .icon-action:hover { background: var(--surface-2); }
+[data-theme="dark"] .pwd-eye:hover { background: var(--surface-2); }
+[data-theme="dark"] .btn-danger-ghost:hover { background: rgba(231, 76, 60, 0.16); }
+[data-theme="dark"] .icon-action.danger:hover { background: rgba(231, 76, 60, 0.16); }

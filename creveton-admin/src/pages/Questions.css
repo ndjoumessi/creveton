@@ -1171,3 +1171,11 @@
 .q-bilingual-chevron { flex: none; transition: transform 0.15s ease; }
 .q-bilingual-chevron.open { transform: rotate(90deg); }
 .q-bilingual-body { margin-top: 12px; }
+
+/* ── Dark-mode hover overrides (light hardcoded → dark surface/tint) ── */
+[data-theme="dark"] .q-btn-sync:hover { background: rgba(212, 160, 23, 0.18); }
+[data-theme="dark"] .q-search-clear:hover { background: var(--surface-2); }
+[data-theme="dark"] .q-exp-btn:hover { background: var(--surface-2); }
+/* .q-row-on (selected row) intentionally NOT overridden here: its base bg
+   (#f3fbf5) is also hardcoded-light, so fixing only :hover would invert the
+   resting/hover states. Tracked as a separate selected-row dark-state fix. */
