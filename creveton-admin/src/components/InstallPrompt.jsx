@@ -5,25 +5,31 @@ const DISMISS_KEY = 'creveton_admin_pwa_dismissed';
 
 /**
  * Bannière discrète « Installer l'application » : n'apparaît que lorsque le
- * navigateur émet `beforeinstallprompt` (PWA installable, non encore installée)
- * et que l'utilisateur ne l'a pas masquée définitivement (localStorage).
+ * navigateur émet `beforeinstallprompt` (PWA installable, non encore installée),
+ * que l'app n'est pas déjà lancée en mode standalone, et que l'utilisateur ne
+ * l'a pas masquée définitivement (localStorage).
  */
 export default function InstallPrompt() {
   const [deferred, setDeferred] = useState(null);
 
   useEffect(() => {
-    if (localStorage.getItem(DISMISS_KEY) === 'true') return undefined;
+    // Ne JAMAIS écouter si déjà masquée par l'utilisateur ou déjà installée
+    // (lancée en standalone) — vérifié AVANT d'attacher l'écouteur.
+    const dismissed = localStorage.getItem(DISMISS_KEY) === 'true';
+    const installed = window.matchMedia('(display-mode: standalone)').matches;
+    if (dismissed || installed) return undefined;
+
     const handler = (e) => {
       e.preventDefault();
       setDeferred(e);
     };
     window.addEventListener('beforeinstallprompt', handler);
     // Une fois installée, on retire la bannière.
-    const installed = () => setDeferred(null);
-    window.addEventListener('appinstalled', installed);
+    const onInstalled = () => setDeferred(null);
+    window.addEventListener('appinstalled', onInstalled);
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('appinstalled', installed);
+      window.removeEventListener('appinstalled', onInstalled);
     };
   }, []);
 
@@ -32,7 +38,9 @@ export default function InstallPrompt() {
   const install = async () => {
     deferred.prompt();
     try {
-      await deferred.userChoice;
+      const { outcome } = await deferred.userChoice;
+      // Acceptée → on n'a plus jamais besoin de reproposer l'installation.
+      if (outcome === 'accepted') localStorage.setItem(DISMISS_KEY, 'true');
     } finally {
       setDeferred(null);
     }
