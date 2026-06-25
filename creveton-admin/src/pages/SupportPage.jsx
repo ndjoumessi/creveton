@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send, ExternalLink,
+  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send, ExternalLink, AlertTriangle,
 } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis,
@@ -89,7 +89,7 @@ export default function SupportPage() {
 
   const { data: kpi, loading: kpiLoading } = useApiData(fetchKpi, []);
   const { data: stats, loading: statsLoading } = useApiData(fetchStats, []);
-  const { data: reportsData, loading: reportsLoading, setData: setReportsData } = useApiData(fetchReports, []);
+  const { data: reportsData, loading: reportsLoading } = useApiData(fetchReports, []);
 
   const status = TABS.find((x) => x.key === tab)?.status ?? null;
 
@@ -162,10 +162,27 @@ export default function SupportPage() {
   }, [t, loadTickets, closeDrawer]);
 
   // ── Actions signalements ──
-  const ignoreReport = useCallback((id) => {
-    setReportsData((prev) => ({ ...prev, data: (prev?.data || []).filter((r) => r.id !== id) }));
-    notify.success(t('support.notify.reportIgnored'));
-  }, [setReportsData, t]);
+  // Export CSV RÉEL des signalements déjà chargés côté client (pas d'endpoint
+  // backend Support). Blob + lien <a download> éphémère → succès réel.
+  const exportReportsCsv = useCallback(() => {
+    const headers = ['id', 'question', 'reported_by', 'reason', 'count', 'created_at'];
+    const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [
+      headers.join(','),
+      ...reports.map((r) => [r.id, r.question_text, r.reported_by, r.reason, r.count, r.created_at].map(cell).join(',')),
+    ].join('\r\n');
+    const blob = new Blob(['﻿', csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `creveton_signalements_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    // Littéral : pas de clé i18n dédiée et les fichiers i18n sont hors scope ici.
+    notify.success('Export CSV téléchargé');
+  }, [reports]);
 
   // Colonnes de la table des signalements.
   const reportColumns = useMemo(() => [
@@ -203,7 +220,7 @@ export default function SupportPage() {
     },
     {
       id: 'actions', header: t('support.reports.columns.actions'), enableSorting: false,
-      cell: ({ row }) => (
+      cell: () => (
         <div className="sup-row-actions">
           <button type="button" className="icon-action" title={t('support.reports.view')} onClick={() => navigate('/questions')}>
             <Eye size={16} />
@@ -211,13 +228,13 @@ export default function SupportPage() {
           <button type="button" className="icon-action" title={t('support.reports.fix')} onClick={() => navigate('/questions')}>
             <Wrench size={16} />
           </button>
-          <button type="button" className="icon-action" title={t('support.reports.ignore')} onClick={() => ignoreReport(row.original.id)}>
+          <button type="button" className="icon-action" title="À venir" disabled>
             <EyeOff size={16} />
           </button>
         </div>
       ),
     },
-  ], [t, navigate, ignoreReport]);
+  ], [t, navigate]);
 
   const kpiItems = [
     { value: kpi?.open, label: t('support.kpi.open') },
@@ -232,15 +249,20 @@ export default function SupportPage() {
 
   return (
     <>
+      {/* Module Support encore mocké côté backend → avertissement explicite pour que
+          l'opérateur ne prenne aucune donnée/action pour réelle. */}
+      <div className="banner" role="status">
+        <AlertTriangle size={16} /> Module Support en développement — les données affichées sont fictives.
+      </div>
       <PageHeader
         title={t('support.title')}
         description={t('support.subtitle')}
         actions={(
           <>
-            <button type="button" className="btn btn-ghost-soft" onClick={() => notify.info(t('support.export'))}>
+            <button type="button" className="btn btn-ghost-soft" onClick={exportReportsCsv}>
               {t('support.export')}
             </button>
-            <button type="button" className="btn btn-ghost-soft" onClick={() => notify.success(t('support.markAllRead'))}>
+            <button type="button" className="btn btn-ghost-soft" disabled title="À venir">
               {t('support.markAllRead')}
             </button>
           </>

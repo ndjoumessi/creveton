@@ -6,6 +6,7 @@ import {
   MoreVertical, Users, Check, Clock, Mail, MailCheck, MailX, RefreshCw,
 } from 'lucide-react';
 import teamService from '../services/team.service';
+import usersService from '../services/users.service';
 import { useApiData } from '../hooks/useApiData';
 import { useAuthStore } from '../store/authStore';
 import {
@@ -106,7 +107,7 @@ function PermissionPills({ role }) {
 }
 
 /* ─────────────── Menu contextuel d'une ligne ─────────────── */
-function RowMenu({ member, canManage = false, onView, onEditRole, onPermissions, onReset, onToggleSuspend, onDelete }) {
+function RowMenu({ member, canManage = false, onView, onEditRole, onPermissions, onReset, onDelete }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const active = isActive(member.status);
@@ -133,8 +134,8 @@ function RowMenu({ member, canManage = false, onView, onEditRole, onPermissions,
               <>
                 <button type="button" onClick={() => { close(); onEditRole(member); }}><ShieldCheck size={14} /> {t('team.actions.editRole')}</button>
                 <button type="button" onClick={() => { close(); onReset(member); }}><KeyRound size={14} /> {t('team.actions.resetPassword')}</button>
-                <button type="button" onClick={() => { close(); onToggleSuspend(member); }}>
-                  {active ? <UserX size={14} /> : <UserCheck size={14} />} {active ? t('team.actions.suspend') : t('team.actions.reactivate')}
+                <button type="button" className="team-soon" disabled title="À venir">
+                  {active ? <UserX size={14} /> : <UserCheck size={14} />} {active ? t('team.actions.suspend') : t('team.actions.reactivate')} <span className="team-soon-tag">À venir</span>
                 </button>
                 <button type="button" className="danger" onClick={() => { close(); onDelete(member); }}><Trash2 size={14} /> {t('team.actions.delete')}</button>
               </>
@@ -698,19 +699,19 @@ export default function TeamPage() {
 
   const openPermissions = (m) => { setSelected(m); setTab('permissions'); };
 
-  const doReset = (m) => {
-    // Pas d'endpoint reset dédié dans team.service : on confirme l'envoi du lien.
-    void m;
-    notify.success(t('team.actions.resetPassword'));
+  const doReset = async (m) => {
+    // Un membre d'équipe EST un user → POST /admin/users/:id/reset-password (envoie
+    // un code de réinitialisation). notify uniquement sur succès réel de l'API.
+    try {
+      await usersService.resetPassword(m.id);
+      notify.success(t('users.notify.resetSent'));
+    } catch {
+      notify.error(t('users.notify.resetFailed'));
+    }
   };
 
-  const doToggleSuspend = (m) => {
-    // Le service n'expose pas de (dé)suspension : mise à jour optimiste + rafraîchissement.
-    const nextStatus = isActive(m.status) ? 'suspended' : 'active';
-    setSelected((s) => (s && s.id === m.id ? { ...s, status: nextStatus } : s));
-    notify.success(isActive(m.status) ? t('team.actions.suspend') : t('team.actions.reactivate'));
-    refreshAll();
-  };
+  // (Dé)suspension d'un membre d'équipe : aucun endpoint dédié, et pas de
+  // réactivation côté backend → bouton désactivé « À venir » dans RowMenu.
 
   const confirmDelete = async () => {
     if (!deleteFor) return;
@@ -799,7 +800,6 @@ export default function TeamPage() {
                           onEditRole={setRoleFor}
                           onPermissions={openPermissions}
                           onReset={doReset}
-                          onToggleSuspend={doToggleSuspend}
                           onDelete={setDeleteFor}
                         />
                       </div>
