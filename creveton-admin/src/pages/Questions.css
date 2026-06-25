@@ -1187,3 +1187,41 @@
 /* Selected/expanded row: base + hover fixed together (no resting/hover inversion). */
 [data-theme="dark"] .q-row-on { background: var(--surface-2); }
 [data-theme="dark"] .q-table tbody tr.q-row-on:hover { background: var(--bg-mute); }
+
+/* ── Dark-mode semantic badge tints (hue-preserving: light pill/surface → dark hue tint + light text) ── */
+/* Green pills / tags / buttons */
+[data-theme="dark"] .q-level-beginner { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .q-verdict-balanced { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .q-field-role { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .q-tag { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .q-dist-tag.ok { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .q-lang-badge--both { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .q-bi-badge--ok { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .q-translate-btn { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .q-bilingual-toggle { background: rgba(42,138,79,0.18); color: var(--green300); }
+/* Green correct-answer surfaces */
+[data-theme="dark"] .q-opt-row.is-correct { background: rgba(42,138,79,0.12); }
+[data-theme="dark"] .q-expand-opt.correct { background: rgba(42,138,79,0.12); color: var(--green300); }
+[data-theme="dark"] .q-compare-balanced { background: rgba(42,138,79,0.12); color: var(--green300); }
+[data-theme="dark"] .q-bi-opt.is-correct { background: rgba(42,138,79,0.12); }
+[data-theme="dark"] .q-opt-view-row.is-correct { background: rgba(42,138,79,0.12); }
+/* Gold pills / panels */
+[data-theme="dark"] .q-level-intermediate { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .q-lang-badge--en { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .q-btn-sync { background: rgba(212,160,23,0.14); color: var(--gold400); }
+[data-theme="dark"] .import-compare-sim { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .q-ai-panel { background: rgba(212,160,23,0.08); }
+/* Red pills */
+[data-theme="dark"] .q-level-expert { background: rgba(231,76,60,0.18); color: #fca5a5; }
+[data-theme="dark"] .q-verdict-hard { background: rgba(231,76,60,0.18); color: #fca5a5; }
+[data-theme="dark"] .q-kanban-tag-rejected { background: rgba(231,76,60,0.18); color: #fca5a5; }
+[data-theme="dark"] .q-compare-hard { background: rgba(231,76,60,0.18); color: #fca5a5; }
+/* Red surfaces / banners */
+[data-theme="dark"] .q-banner-reject { background: rgba(231,76,60,0.10); border-color: rgba(231,76,60,0.35); color: #fca5a5; }
+[data-theme="dark"] .import-rejects .err { background: rgba(231,76,60,0.10); color: #fca5a5; }
+[data-theme="dark"] .import-compare-reject .import-compare-sim { background: rgba(231,76,60,0.16); color: #fca5a5; }
+[data-theme="dark"] .q-kanban-card.is-rejected { background: rgba(231,76,60,0.08); border-color: rgba(231,76,60,0.35); }
+[data-theme="dark"] .q-mp-opt.wrong { background: rgba(231,76,60,0.12); color: #fca5a5; }
+/* Blue */
+[data-theme="dark"] .q-verdict-easy { background: rgba(59,130,246,0.18); color: #93c5fd; }
+[data-theme="dark"] .q-compare-easy { background: rgba(59,130,246,0.18); color: #93c5fd; }

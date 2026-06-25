@@ -112,3 +112,6 @@
 /* ── Dark-mode base surface overrides (neutral light → dark track) ── */
 [data-theme="dark"] .tour-players-bar { background: var(--bg-mute); }
 [data-theme="dark"] .tour-detail-fill { background: var(--bg-mute); }
+
+/* ── Dark-mode semantic badge tint (hue-preserving) ── */
+[data-theme="dark"] .tour-badge-free { background: rgba(42,138,79,0.18); color: var(--green300); }

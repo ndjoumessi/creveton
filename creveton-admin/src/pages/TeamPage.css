@@ -183,3 +183,10 @@
 /* ── Dark-mode hover overrides (light hardcoded → dark surface/tint) ── */
 [data-theme="dark"] .team-menu button:hover { background: var(--surface-2); }
 [data-theme="dark"] .team-menu button.danger:hover { background: rgba(231, 76, 60, 0.16); }
+
+/* ── Dark-mode semantic badge tints (hue-preserving) ── */
+[data-theme="dark"] .team-role-gold { background: rgba(212,160,23,0.16); border-color: rgba(212,160,23,0.35); color: var(--gold400); }
+[data-theme="dark"] .team-role-blue { background: rgba(59,130,246,0.18); border-color: rgba(59,130,246,0.35); color: #93c5fd; }
+[data-theme="dark"] .team-perm-locked { background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); color: var(--gold400); }
+[data-theme="dark"] .team-invite-exp { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .team-invite-exp.urgent, [data-theme="dark"] .team-invite-exp.expired { background: rgba(231,76,60,0.18); color: #fca5a5; }

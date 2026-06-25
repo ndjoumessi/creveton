@@ -331,3 +331,11 @@
 
 /* ── Dark-mode base surface overrides (neutral light → dark track) ── */
 [data-theme="dark"] .dash-pool-bar { background: var(--bg-mute); }
+
+/* ── Dark-mode semantic badge tints (hue-preserving) ── */
+[data-theme="dark"] .dash-live { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .dash-kpi2--green .dash-kpi2-ic { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .dash-kpi2--gold .dash-kpi2-ic { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .dash-kpi2--blue .dash-kpi2-ic { background: rgba(59,130,246,0.18); color: #93c5fd; }
+[data-theme="dark"] .dash-kpi2--violet .dash-kpi2-ic { background: rgba(139,92,246,0.18); color: #c4b5fd; }
+[data-theme="dark"] .dash-sound.is-on { background: rgba(42,138,79,0.18); color: var(--green300); }

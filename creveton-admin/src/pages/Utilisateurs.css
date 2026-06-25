@@ -278,3 +278,13 @@
 
 /* ── Dark-mode base surface override (neutral light → dark surface) ── */
 [data-theme="dark"] .u-chart { background: var(--surface-2); }
+
+/* ── Dark-mode semantic badge tints (hue-preserving) ── */
+[data-theme="dark"] .u-role-super { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .u-role-mod { background: rgba(59,130,246,0.18); color: #93c5fd; }
+[data-theme="dark"] .u-foot-danger { background: rgba(231,76,60,0.08); border-color: rgba(231,76,60,0.35); }
+[data-theme="dark"] .u-suspension { background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); color: var(--gold400); }
+/* Score traffic-light scale: hue-preserving tints keep green/amber/red meaning. */
+[data-theme="dark"] .u-mark-good { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .u-mark-bad { background: rgba(231,76,60,0.18); color: #fca5a5; }
+[data-theme="dark"] .u-mark-mid { background: rgba(212,160,23,0.16); color: var(--gold400); }

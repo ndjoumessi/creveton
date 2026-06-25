@@ -579,3 +579,13 @@ table.data tbody tr:last-child td { border-bottom: none; }
 [data-theme="dark"] .step .num { background: var(--surface-2); }
 [data-theme="dark"] .cmdk-kbd, [data-theme="dark"] .cmdk-trigger kbd { background: var(--bg-mute); }
 [data-theme="dark"] .cmdk-ico { background: var(--surface-2); }
+
+/* ── Dark-mode semantic badge tints (hue-preserving: light pill/surface → dark hue tint + light text) ── */
+[data-theme="dark"] .kpi-icon.green { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .kpi-icon.gold { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .kpi-icon.blue { background: rgba(59,130,246,0.18); color: #93c5fd; }
+[data-theme="dark"] .kpi-icon.violet { background: rgba(139,92,246,0.18); color: #c4b5fd; }
+[data-theme="dark"] .badge-level { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .opt-review.correct { background: rgba(42,138,79,0.12); color: var(--green300); }
+[data-theme="dark"] .opt-review.wrong { background: rgba(231,76,60,0.12); color: #fca5a5; }
+[data-theme="dark"] .danger-zone { background: rgba(231,76,60,0.08); border-color: rgba(231,76,60,0.35); }

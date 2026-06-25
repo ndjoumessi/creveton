@@ -133,3 +133,8 @@
 .set-theme-preview.is-dark .stp-sidebar { background: #071009; }
 .set-theme-preview.is-dark .stp-header { background: #0d150d; }
 .set-theme-preview.is-dark .stp-cards > span { background: #111a11; border-color: #1e2e1e; border-top-color: var(--gold); }
+
+/* ── Dark-mode semantic badge tints (hue-preserving) ── */
+[data-theme="dark"] .set-session-cur { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .set-verified { background: rgba(42,138,79,0.18); color: var(--green300); }
+[data-theme="dark"] .set-flag-demo { background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); }

@@ -126,3 +126,6 @@
 
 /* ── Dark-mode base surface override (neutral gray → dark surface) ── */
 [data-theme="dark"] .roles-tone-gray .roles-card-head { background: var(--surface-2); }
+
+/* ── Dark-mode semantic badge tint (hue-preserving) ── */
+[data-theme="dark"] .roles-pill-on { background: rgba(42,138,79,0.18); color: var(--green300); }

@@ -441,3 +441,9 @@
 
 /* ── Dark-mode base surface override (neutral light → dark track) ── */
 [data-theme="dark"] .ses-bar { background: var(--bg-mute); }
+
+/* ── Dark-mode semantic badge tints (hue-preserving) ── */
+[data-theme="dark"] .ses-ans-badge--ko { background: rgba(231,76,60,0.18); color: #fca5a5; }
+[data-theme="dark"] .ses-ans-badge--skip { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .ses-ans-bonus { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .ses-cheat { background: rgba(231,76,60,0.10); border-color: rgba(231,76,60,0.35); }

@@ -463,3 +463,6 @@
 
 /* ── Dark-mode hover overrides (light hardcoded → dark border) ── */
 [data-theme="dark"] .sup-tab:hover { border-color: var(--border-green); }
+
+/* ── Dark-mode semantic badge tints (hue-preserving) ── */
+[data-theme="dark"] .sup-count-badge--hot { background: rgba(231,76,60,0.18); border-color: rgba(231,76,60,0.35); color: #fca5a5; }
