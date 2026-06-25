@@ -217,7 +217,7 @@
 .u-xp-bar { height: 12px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
 .u-xp-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2a8a4f, #d4a017); transition: width 600ms ease; }
 .u-xp-hint { margin-top: 8px; font-size: 13px; color: var(--muted); }
-.u-next-reward { background: #fdf8ec; border-left: 3px solid var(--gold); border-radius: 10px; padding: 11px 14px; font-size: 13.5px; color: #7a5d10; }
+.u-next-reward { background: var(--cream); border-left: 3px solid var(--gold); border-radius: 10px; padding: 11px 14px; font-size: 13.5px; color: var(--muted); }
 
 .u-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .u-stat { background: var(--surface-2, #f8faf8); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }

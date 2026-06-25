@@ -797,7 +797,7 @@
 .q-tl-dot-green { background: var(--green500) !important; }
 .q-tl-dot-red { background: var(--red) !important; }
 .q-tl-dot-blue { background: #3b82f6 !important; }
-.q-tl-reason { font-size: 12.5px; color: #6b5b2a; background: var(--cream); border-left: 2px solid var(--gold); border-radius: 0 6px 6px 0; padding: 6px 9px; margin-top: 6px; font-style: italic; }
+.q-tl-reason { font-size: 12.5px; color: var(--muted); background: var(--cream); border-left: 2px solid var(--gold); border-radius: 0 6px 6px 0; padding: 6px 9px; margin-top: 6px; font-style: italic; }
 .q-tl-diff { margin-top: 7px; display: flex; flex-direction: column; gap: 5px; }
 .q-tl-diff-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
 .q-tl-diff-field { font-weight: 600; color: var(--ink); min-width: 72px; }
