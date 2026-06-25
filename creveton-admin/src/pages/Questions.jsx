@@ -1319,7 +1319,7 @@ export default function Questions() {
   const [actionBusy, setActionBusy] = useState(false);
   // Vue (table/kanban), densité, panneau stats, lignes dépliées, édition inline.
   const [view, setView] = useState('table');
-  const [density, setDensity] = useState('normal');
+  const [density, setDensity] = useState('compact');
   const [showStats, setShowStats] = useState(false);
   const [expanded, setExpanded] = useState(() => new Set());
   const [editing, setEditing] = useState(null); // { id, field }
