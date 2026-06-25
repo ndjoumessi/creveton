@@ -494,6 +494,16 @@
       "removeMessage": "L'image sera retirée de cette question. Action irréversible.",
       "hasBadge": "Cette question a une image",
       "dropTitle": "Glisser une image ici ou cliquer pour parcourir"
+    },
+    "corrector": {
+      "button": "✨ Améliorer",
+      "loading": "Correction en cours...",
+      "suggestion": "Suggestion",
+      "accept": "Accepter",
+      "ignore": "Ignorer",
+      "noChange": "Aucune correction nécessaire",
+      "error": "Le correcteur est temporairement indisponible.",
+      "errorNetwork": "Erreur de connexion. Réessayez."
     }
   },
   "users": {

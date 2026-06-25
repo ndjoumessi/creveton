@@ -75,6 +75,14 @@ export function deleteImage(id) {
   return api.delete(`/admin/questions/${id}/image`).then((r) => r.data);
 }
 
+/**
+ * POST /admin/questions/improve-text — correcteur IA via proxy backend (la clé
+ * Anthropic reste côté serveur, jamais dans le frontend). → { suggestion, changed }.
+ */
+export function improveText({ text, lang = 'fr', type = 'statement' }) {
+  return api.post('/admin/questions/improve-text', { text, lang, type }).then((r) => r.data);
+}
+
 /** POST /admin/questions/force-sync (push silencieux). */
 export function forceSync(questionIds) {
   return withMock(
@@ -109,6 +117,6 @@ export function questionHistory(id) {
 
 export default {
   list, create, update, transition, remove, importCsv, forceSync,
-  uploadImage, deleteImage,
+  uploadImage, deleteImage, improveText,
   globalStats, questionStats, questionHistory,
 };

@@ -494,6 +494,16 @@
       "removeMessage": "The image will be removed from this question. This cannot be undone.",
       "hasBadge": "This question has an image",
       "dropTitle": "Drag an image here or click to browse"
+    },
+    "corrector": {
+      "button": "✨ Improve",
+      "loading": "Correcting...",
+      "suggestion": "Suggestion",
+      "accept": "Accept",
+      "ignore": "Ignore",
+      "noChange": "No correction needed",
+      "error": "Corrector temporarily unavailable.",
+      "errorNetwork": "Connection error. Try again."
     }
   },
   "users": {

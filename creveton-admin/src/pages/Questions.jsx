@@ -315,6 +315,68 @@ function ImportModal({ open, onClose, onDone }) {
   );
 }
 
+/* ---------- Correcteur linguistique IA (proxy backend) ---------- */
+// AI corrector calls backend proxy — no Anthropic key needed in frontend.
+/**
+ * Hook correcteur IA pour un champ texte. Renvoie { button, panel } à insérer
+ * (bouton au-dessus du textarea, panneau de suggestion en dessous). L'appel passe
+ * par le proxy backend `/admin/questions/improve-text` (la clé Anthropic reste
+ * côté serveur). `kind` = 'statement' | 'explanation'.
+ */
+function useCorrector(text, kind, onAccept) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const [suggestion, setSuggestion] = useState(null);
+  const [err, setErr] = useState(null);
+
+  const run = async () => {
+    if (!text.trim()) return;
+    setErr(null); setSuggestion(null); setLoading(true);
+    try {
+      // Le correcteur passe par le proxy backend → aucune clé Anthropic dans le frontend.
+      const res = await questionsService.improveText({ text, lang: 'fr', type: kind });
+      setSuggestion((res?.suggestion || '').trim());
+    } catch (e) {
+      // Pas de réponse serveur (réseau coupé) → message « réseau » ; sinon erreur API.
+      setErr(e?.response ? 'api' : 'network');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const noChange = suggestion != null && suggestion.trim() === text.trim();
+  const button = (
+    <button type="button" className="q-ai-btn" disabled={loading || !text.trim()} onClick={run}>
+      {loading
+        ? <><span className="q-ai-spin" /> {t('questions.corrector.loading')}</>
+        : <>✨ {t('questions.corrector.button')}</>}
+    </button>
+  );
+  const panel = (err || suggestion != null) ? (
+    <div className="q-ai-panel">
+      {err ? (
+        <div className="q-ai-error">{t(err === 'network' ? 'questions.corrector.errorNetwork' : 'questions.corrector.error')}</div>
+      ) : noChange ? (
+        <div className="q-ai-nochange">✓ {t('questions.corrector.noChange')}</div>
+      ) : (
+        <>
+          <div className="q-ai-panel-label">{t('questions.corrector.suggestion')}</div>
+          <div className="q-ai-suggestion">{suggestion}</div>
+          <div className="q-ai-actions">
+            <button type="button" className="btn btn-success btn-sm" onClick={() => { onAccept(suggestion); setSuggestion(null); }}>
+              {t('questions.corrector.accept')}
+            </button>
+            <button type="button" className="btn btn-ghost-soft btn-sm" onClick={() => setSuggestion(null)}>
+              {t('questions.corrector.ignore')}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  ) : null;
+  return { button, panel };
+}
+
 /* ---------- Modal de création par étapes + preview live ---------- */
 const STEP_META = [
   { icon: FileText, key: 'step1' },
@@ -372,6 +434,10 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
     setImagePreview((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
     setImageFile(file);
   };
+
+  // Correcteurs IA (énoncé + explication) — bouton ✨ + panneau de suggestion.
+  const stmtAi = useCorrector(textFr, 'statement', setTextFr);
+  const explAi = useCorrector(explanation, 'explanation', setExplanation);
 
   const reset = () => {
     setStep(0); setTextFr(''); setOpts(['', '', '', '']); setCorrect(0);
@@ -458,15 +524,21 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
           {step === 0 && (
             <>
               <div className="field">
-                <label>{t('questions.modal.statement')}</label>
+                <div className="q-field-head">
+                  <label>{t('questions.modal.statement')}</label>
+                  {stmtAi.button}
+                </div>
                 <textarea
                   ref={taRef}
                   className="textarea q-grow"
                   rows={4}
+                  spellCheck="true"
+                  lang="fr"
                   placeholder={t('questions.placeholder.statement')}
                   value={textFr}
                   onChange={(e) => { setTextFr(e.target.value); autoGrow(e.target); }}
                 />
+                {stmtAi.panel}
                 <div className={`char-count ${textOver ? 'over' : textFr.length > 270 ? 'warn' : ''}`}>{textFr.length} / {MAX_TEXT}</div>
                 <div className={`valid-hint ${textOk && !textOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
                   {textOk && !textOver
@@ -474,15 +546,26 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                     : <><AlertCircle size={13} /> {textOver ? t('questions.validation.statementTooLong', { max: MAX_TEXT }) : t('questions.validation.statementTooShort')}</>}
                 </div>
               </div>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label>{t('questions.modal.explanation')} <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span></label>
+              <div className="field">
+                <div className="q-field-head">
+                  <label>{t('questions.modal.explanation')} <span className="q-opt-label">{t('questions.modal.explanationOptional')}</span></label>
+                  {explAi.button}
+                </div>
                 <textarea
                   className="textarea"
                   rows={3}
+                  spellCheck="true"
+                  lang="fr"
                   placeholder={t('questions.placeholder.explanationCreate')}
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
                 />
+                {explAi.panel}
+              </div>
+              {/* Image = contenu (déplacée depuis Métadonnées) : énoncé + image ensemble. */}
+              <div className="field" style={{ marginBottom: 0 }}>
+                <label>🖼 {t('questions.image.label')}</label>
+                <ImageDropzone previewUrl={imagePreview} onSelect={pickImage} onClear={clearImage} height={150} />
               </div>
             </>
           )}
@@ -544,10 +627,6 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
                     ))}
                   </div>
                 )}
-              </div>
-              <div className="field">
-                <label>🖼 {t('questions.image.label')}</label>
-                <ImageDropzone previewUrl={imagePreview} onSelect={pickImage} onClear={clearImage} height={150} />
               </div>
               {canCreate ? (
                 <div className="q-ready-pill"><Check size={14} /> {t('questions.validation.readyToSave')}</div>

@@ -65,6 +65,9 @@ const ERROR_CODES = {
   SMS_PROVIDER_UNAVAILABLE: { http: 503, message: 'Service SMS temporairement indisponible.' },
   PAYMENT_PROVIDER_UNAVAILABLE: { http: 503, message: 'Service de paiement temporairement indisponible.' },
   EMAIL_SEND_FAILED: { http: 503, message: "L'envoi de l'email a échoué, réessayez plus tard." },
+  AI_NOT_CONFIGURED: { http: 503, message: 'Correcteur IA non configuré (clé absente).' },
+  AI_TIMEOUT: { http: 503, message: 'Le correcteur IA a expiré, réessayez.' },
+  AI_UNAVAILABLE: { http: 503, message: 'Le correcteur IA est temporairement indisponible.' },
 };
 
 module.exports = ERROR_CODES;

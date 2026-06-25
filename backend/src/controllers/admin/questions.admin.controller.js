@@ -6,6 +6,7 @@ const { ok, created, noContent } = require('../../utils/response');
 const questionService = require('../../services/questionService');
 const questionModel = require('../../models/question.model');
 const questionMediaService = require('../../services/questionMediaService');
+const aiCorrectorService = require('../../services/aiCorrectorService');
 const importService = require('../../services/importService');
 const pushService = require('../../services/pushService');
 const userModel = require('../../models/user.model');
@@ -69,6 +70,13 @@ const uploadImage = asyncHandler(async (req, res) => {
   });
   await questionModel.setMedia(req.params.id, url, publicId);
   return ok(res, { media_url: url });
+});
+
+/** POST /admin/questions/improve-text — correcteur IA (proxy Anthropic serveur). */
+const improveText = asyncHandler(async (req, res) => {
+  const { text, lang, type } = req.body;
+  const suggestion = await aiCorrectorService.improveText({ text, lang, type });
+  return ok(res, { suggestion, changed: suggestion !== text });
 });
 
 /** DELETE /admin/questions/:id/image — supprime l'asset Cloudinary + colonnes. */
@@ -136,4 +144,4 @@ const forceSync = asyncHandler(async (req, res) => {
   return res.status(202).json({ pushed: result.pushed, devices_targeted: devices });
 });
 
-module.exports = { list, get, create, update, transition, remove, uploadImage, deleteImage, importCsv, forceSync, globalStats, stats, history };
+module.exports = { list, get, create, update, transition, remove, uploadImage, deleteImage, improveText, importCsv, forceSync, globalStats, stats, history };

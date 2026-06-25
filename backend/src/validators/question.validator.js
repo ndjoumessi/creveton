@@ -82,4 +82,11 @@ const adminList = Joi.object({
   cursor: Joi.string().optional(),
 });
 
-module.exports = { list, delta, all, adminCreate, adminUpdate, adminTransition, forceSync, adminList };
+/** POST /admin/questions/improve-text — correcteur IA */
+const improveText = Joi.object({
+  text: Joi.string().min(3).max(600).required(),
+  lang: Joi.string().valid('fr', 'en').default('fr'),
+  type: Joi.string().valid('statement', 'explanation').default('statement'),
+});
+
+module.exports = { list, delta, all, adminCreate, adminUpdate, adminTransition, forceSync, adminList, improveText };

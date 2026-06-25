@@ -931,12 +931,70 @@
 /* Compteur de caractères : ambre dès 271 (alerte avant la limite) */
 .char-count.warn { color: var(--gold); font-weight: 600; }
 
-/* Aperçu modale : image au-dessus de l'énoncé */
+/* Aperçu modale : image TOUJOURS au-dessus de l'énoncé, ratio 16/9 */
 .mp-img {
   display: block;
   width: 100%;
-  max-height: 120px;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: 10px;
-  margin: 10px 0;
+  border-radius: 8px;
+  margin: 10px 0 12px;
 }
+
+/* En-tête de champ : libellé à gauche, bouton ✨ correcteur à droite */
+.q-field-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.q-field-head label { margin: 0; }
+
+/* Bouton correcteur IA — pastille or */
+.q-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 20px;
+  background: var(--gold);
+  color: var(--green900);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.q-ai-btn:hover:not(:disabled) { filter: brightness(1.06); }
+.q-ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.q-ai-spin {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(11, 46, 26, 0.3);
+  border-top-color: var(--green900);
+  border-radius: 50%;
+  animation: q-ai-rotate 0.7s linear infinite;
+}
+@keyframes q-ai-rotate { to { transform: rotate(360deg); } }
+
+/* Panneau de suggestion (sous le textarea) — fond or clair, slide-down */
+.q-ai-panel {
+  margin-top: 8px;
+  padding: 16px;
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  background: #fef9ee;
+  animation: q-ai-slidedown 0.3s ease;
+}
+@keyframes q-ai-slidedown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.q-ai-panel-label {
+  font-family: 'Space Grotesk';
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #a16207;
+  margin-bottom: 8px;
+}
+.q-ai-suggestion { font-size: 14px; line-height: 1.5; color: var(--ink); white-space: pre-wrap; }
+.q-ai-actions { display: flex; gap: 8px; margin-top: 12px; }
+.q-ai-nochange { font-size: 13.5px; font-weight: 600; color: var(--green500); }
+.q-ai-error { font-size: 13px; color: var(--red); }
