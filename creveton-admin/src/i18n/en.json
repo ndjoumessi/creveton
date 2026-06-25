@@ -521,6 +521,7 @@
       "statementFr": "Statement (FR)",
       "explanationEn": "Explanation (EN)",
       "fullExplanationEn": "Full explanation (EN)",
+      "management": "Bilingual management (FR + EN)",
       "frOnly": "FR only",
       "frEn": "FR + EN"
     }

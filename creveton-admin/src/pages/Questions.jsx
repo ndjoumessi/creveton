@@ -602,7 +602,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill }) {
             <>
               <div className="field">
                 <div className="q-field-head">
-                  <label>{t('questions.modal.statement')}</label>
+                  <label>{t('questions.bilingual.statementFr')}</label>
                   {stmtAi.button}
                 </div>
                 <textarea
@@ -1371,6 +1371,8 @@ export default function Questions() {
   const [testPick, setTestPick] = useState(null);
   // Traduction IA d'une question existante (drawer) : 'en' | 'fr' en cours, ou null.
   const [translatingDetail, setTranslatingDetail] = useState(null);
+  // Section « Gestion bilingue » du drawer : repliée par défaut (réinit à l'ouverture).
+  const [bilingualOpen, setBilingualOpen] = useState(false);
 
   const { data, loading, refetch } = useApiData(
     () => questionsService.list(filters),
@@ -1491,7 +1493,7 @@ export default function Questions() {
   const startDuplicate = (q) => { setPrefill(q); setDetail(null); setCreating(true); };
   const closeCreate = () => { setCreating(false); setPrefill(null); };
 
-  const openDetail = (q) => { setTab('overview'); setTestPick(null); setPreviewNight(false); setDetail(q); };
+  const openDetail = (q) => { setTab('overview'); setTestPick(null); setPreviewNight(false); setBilingualOpen(false); setDetail(q); };
 
   // --- Dépliage de ligne + édition inline (thème / niveau) ---
   const toggleExpand = (id) => setExpanded((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -2096,38 +2098,16 @@ export default function Questions() {
                   <div className="q-section-label">{t('questions.misc.statementRaw')}</div>
                   <textarea className="textarea q-raw" readOnly value={displayText || ''} rows={3} />
 
-                  {/* ÉNONCÉ (EN) — texte traduit, ou état « non traduit » + bouton. */}
-                  <div className="q-section-label q-section-label--bi">
-                    {t('questions.bilingual.statementEn')}
-                    {detail.text_en
-                      ? <span className="q-bi-badge q-bi-badge--ok">FR+EN</span>
-                      : <span className="q-bi-badge q-bi-badge--missing">{t('questions.bilingual.notTranslated')}</span>}
-                  </div>
-                  {detail.text_en ? (
-                    <textarea className="textarea q-raw" readOnly value={detail.text_en} rows={3} />
-                  ) : (
-                    <button
-                      type="button"
-                      className="q-translate-btn"
-                      disabled={!detail.text_fr || translatingDetail === 'en'}
-                      onClick={() => doTranslateDetail(detail, 'en')}
-                    >
-                      {translatingDetail === 'en'
-                        ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
-                        : <>🌐 {t('questions.bilingual.translateToEn')}</>}
-                    </button>
-                  )}
-
-                  {/* Options FR / EN côte à côte (petite police). */}
+                  {/* OPTIONS — langue active uniquement (le FR|EN côte à côte vit dans
+                      la section « Gestion bilingue » repliable plus bas). */}
                   {opts.length > 0 && (
                     <>
                       <div className="q-section-label">{t('questions.modal.options')}</div>
-                      <div className="q-bi-opts">
+                      <div className="q-opt-view">
                         {opts.map((o, i) => (
-                          <div className={`q-bi-opt ${i === correctIdx ? 'is-correct' : ''}`} key={`${detail.id}-bi-${i}`}>
+                          <div className={`q-opt-view-row ${i === correctIdx ? 'is-correct' : ''}`} key={`${detail.id}-ov-${i}`}>
                             <span className="q-bi-letter">{LETTERS[i]}</span>
-                            <span className="q-bi-fr">{o.text}</span>
-                            <span className={`q-bi-en ${o.text_en ? '' : 'q-bi-en--missing'}`}>{o.text_en || t('questions.bilingual.notTranslated')}</span>
+                            <span className="q-opt-view-text">{displayOption(o)}</span>
                           </div>
                         ))}
                       </div>
@@ -2138,32 +2118,6 @@ export default function Questions() {
                     <>
                       <div className="q-section-label">{t('questions.misc.fullExplanation')}</div>
                       <div className="explain">{displayExplanation}</div>
-                    </>
-                  )}
-
-                  {/* EXPLICATION (EN) — traduite (amber box) ou « non traduit » + bouton. */}
-                  {(detail.explanation || detail.explanation_en) && (
-                    <>
-                      <div className="q-section-label q-section-label--bi">
-                        {t('questions.bilingual.fullExplanationEn')}
-                        {detail.explanation_en
-                          ? <span className="q-bi-badge q-bi-badge--ok">EN</span>
-                          : <span className="q-bi-badge q-bi-badge--missing">{t('questions.bilingual.notTranslated')}</span>}
-                      </div>
-                      {detail.explanation_en ? (
-                        <div className="explain">{detail.explanation_en}</div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="q-translate-btn"
-                          disabled={!detail.explanation || translatingDetail === 'en'}
-                          onClick={() => doTranslateDetail(detail, 'en')}
-                        >
-                          {translatingDetail === 'en'
-                            ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
-                            : <>🌐 {t('questions.bilingual.translateToEn')}</>}
-                        </button>
-                      )}
                     </>
                   )}
 
@@ -2192,6 +2146,87 @@ export default function Questions() {
                       <div className="q-source">{detail.source}</div>
                     </>
                   )}
+
+                  {/* 🌐 GESTION BILINGUE — repliable (réduit le scroll par défaut). */}
+                  <div className="q-bilingual-mgmt">
+                    <button
+                      type="button"
+                      className="q-bilingual-toggle"
+                      aria-expanded={bilingualOpen}
+                      onClick={() => setBilingualOpen((v) => !v)}
+                    >
+                      <span>🌐 {t('questions.bilingual.management')}</span>
+                      <ChevronRight size={16} className={`q-bilingual-chevron ${bilingualOpen ? 'open' : ''}`} />
+                    </button>
+
+                    {bilingualOpen && (
+                      <div className="q-bilingual-body">
+                        {/* ÉNONCÉ (EN) — texte traduit, ou « non traduit » + bouton. */}
+                        <div className="q-section-label q-section-label--bi">
+                          {t('questions.bilingual.statementEn')}
+                          {detail.text_en
+                            ? <span className="q-bi-badge q-bi-badge--ok">FR+EN</span>
+                            : <span className="q-bi-badge q-bi-badge--missing">{t('questions.bilingual.notTranslated')}</span>}
+                        </div>
+                        {detail.text_en ? (
+                          <textarea className="textarea q-raw" readOnly value={detail.text_en} rows={3} />
+                        ) : (
+                          <button
+                            type="button"
+                            className="q-translate-btn"
+                            disabled={!detail.text_fr || translatingDetail === 'en'}
+                            onClick={() => doTranslateDetail(detail, 'en')}
+                          >
+                            {translatingDetail === 'en'
+                              ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
+                              : <>🌐 {t('questions.bilingual.translateToEn')}</>}
+                          </button>
+                        )}
+
+                        {/* Options FR / EN côte à côte (petite police). */}
+                        {opts.length > 0 && (
+                          <>
+                            <div className="q-section-label">{t('questions.modal.options')}</div>
+                            <div className="q-bi-opts">
+                              {opts.map((o, i) => (
+                                <div className={`q-bi-opt ${i === correctIdx ? 'is-correct' : ''}`} key={`${detail.id}-bi-${i}`}>
+                                  <span className="q-bi-letter">{LETTERS[i]}</span>
+                                  <span className="q-bi-fr">{o.text}</span>
+                                  <span className={`q-bi-en ${o.text_en ? '' : 'q-bi-en--missing'}`}>{o.text_en || t('questions.bilingual.notTranslated')}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+
+                        {/* EXPLICATION (EN) — masquée si identique au FR (Fix 1). */}
+                        {(detail.explanation || detail.explanation_en) && detail.explanation_en !== detail.explanation && (
+                          <>
+                            <div className="q-section-label q-section-label--bi">
+                              {t('questions.bilingual.fullExplanationEn')}
+                              {detail.explanation_en
+                                ? <span className="q-bi-badge q-bi-badge--ok">EN</span>
+                                : <span className="q-bi-badge q-bi-badge--missing">{t('questions.bilingual.notTranslated')}</span>}
+                            </div>
+                            {detail.explanation_en ? (
+                              <div className="explain">{detail.explanation_en}</div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="q-translate-btn"
+                                disabled={!detail.explanation || translatingDetail === 'en'}
+                                onClick={() => doTranslateDetail(detail, 'en')}
+                              >
+                                {translatingDetail === 'en'
+                                  ? <><span className="q-ai-spin" /> {t('questions.bilingual.translating')}</>
+                                  : <>🌐 {t('questions.bilingual.translateToEn')}</>}
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
