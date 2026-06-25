@@ -5,6 +5,8 @@
 import { create } from 'zustand';
 import { sessions as sessionsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
+import { useNetworkStore } from './networkStore';
+import { useOfflineQueue } from './offlineQueue';
 
 const initial = {
   mode: 'normal', // normal | tournament | challenge
@@ -108,6 +110,16 @@ export const useGameStore = create((set, get) => ({
     if (__DEV__) {
       console.log('[sessions/submit] payload:', JSON.stringify(payload, null, 2));
     }
+
+    // Hors ligne : on met la partie en file (rejouée au retour du réseau) sans
+    // appeler l'API. Pas de score serveur → ResultsScreen affiche l'état
+    // « sauvegardé hors ligne ».
+    if (!useNetworkStore.getState().isOnline) {
+      useOfflineQueue.getState().addSession(payload);
+      set({ submitting: false });
+      return { ok: true, queued: true };
+    }
+
     try {
       const result = await sessionsApi.submit(payload);
       if (__DEV__) {
@@ -149,6 +161,13 @@ export const useGameStore = create((set, get) => ({
       const err = parseApiError(e);
       if (__DEV__) {
         console.log('[sessions/submit] error:', err.code, err.message);
+      }
+      // Échec réseau/timeout malgré un état « en ligne » → on met en file plutôt
+      // que de perdre la partie (sera rejouée au prochain retour réseau).
+      if (err.code === 'NETWORK_ERROR' || err.code === 'TIMEOUT') {
+        useOfflineQueue.getState().addSession(payload);
+        set({ submitting: false });
+        return { ok: true, queued: true };
       }
       set({ submitting: false, error: err.message });
       return { ok: false, error: err };

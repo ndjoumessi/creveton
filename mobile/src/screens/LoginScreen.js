@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Logo, AppButton, AuthField } from '../components';
 import { useAuthStore } from '../store/authStore';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { isValidEmail } from '../utils/validation';
 import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
@@ -28,6 +29,7 @@ export default function LoginScreen({ navigation }) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const login = useAuthStore((s) => s.login);
   const loading = useAuthStore((s) => s.loading);
+  const { isOnline } = useNetworkStatus();
 
   // Valeurs en ref : aucune mise à jour d'état à la frappe (anti-reset).
   const values = useRef({ email: '', password: '' });
@@ -38,6 +40,10 @@ export default function LoginScreen({ navigation }) {
 
   const onSubmit = async () => {
     setError(null);
+    if (!isOnline) {
+      setError(t('offline.loginRequired'));
+      return;
+    }
     const email = values.current.email.trim().toLowerCase();
     const password = values.current.password;
     if (!isValidEmail(email) || !password) {
@@ -94,6 +100,7 @@ export default function LoginScreen({ navigation }) {
             rightToggle={{ active: showPassword, onToggle: () => setShowPassword((v) => !v) }}
           />
 
+          {!isOnline ? <Text style={styles.offline}>📶 {t('offline.loginRequired')}</Text> : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <AppButton
@@ -101,6 +108,7 @@ export default function LoginScreen({ navigation }) {
             variant="primary"
             size="lg"
             loading={loading}
+            disabled={!isOnline}
             onPress={onSubmit}
             style={styles.submit}
           />
@@ -149,6 +157,14 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.red400,
     marginBottom: spacing.md,
     marginTop: -spacing.sm,
+  },
+  offline: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    marginBottom: spacing.md,
+    marginTop: -spacing.sm,
+    textAlign: 'center',
   },
   submit: { marginTop: spacing.sm },
   linkRow: { alignItems: 'center', marginTop: spacing.xl },

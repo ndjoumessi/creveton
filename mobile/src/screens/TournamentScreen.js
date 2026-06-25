@@ -22,6 +22,7 @@ import { tournaments as tournamentsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { fonts, fontSizes, radius, spacing, themeAccent, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { formatDateTime } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
@@ -56,6 +57,7 @@ export default function TournamentScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t: tr } = useTranslation();
+  const { isOnline } = useNetworkStatus();
   const toast = useToast();
   const navigation = useNavigation();
   const [tab, setTab] = useState('active');
@@ -156,7 +158,12 @@ export default function TournamentScreen() {
 
       {/* Corps clair */}
       <View style={styles.body}>
-        {loading ? (
+        {!isOnline ? (
+          <View style={styles.offlineBox}>
+            <Text style={styles.offlineEmoji}>🏆</Text>
+            <Heading style={styles.offlineTitle}>{tr('offline.tournaments')}</Heading>
+          </View>
+        ) : loading ? (
           <View style={styles.loading}>
             {[0, 1, 2].map((i) => (
               <Skeleton key={i} height={150} radius={radius.lg} style={styles.skeleton} />
@@ -407,6 +414,9 @@ const makeStyles = (colors) => StyleSheet.create({
   body: { flex: 1, backgroundColor: colors.cream },
   loading: { padding: spacing.lg, gap: spacing.md },
   skeleton: { marginBottom: spacing.xs },
+  offlineBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
+  offlineEmoji: { fontSize: 48 },
+  offlineTitle: { textAlign: 'center', color: colors.textMuted },
 
   list: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
 

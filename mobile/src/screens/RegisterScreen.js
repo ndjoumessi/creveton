@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Logo, AppButton, AuthField } from '../components';
 import { useAuthStore } from '../store/authStore';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import {
   normalizePhone,
   isValidName,
@@ -48,6 +49,7 @@ export default function RegisterScreen({ navigation }) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const register = useAuthStore((s) => s.register);
   const loading = useAuthStore((s) => s.loading);
+  const { isOnline } = useNetworkStatus();
 
   const values = useRef({
     name: '',
@@ -98,6 +100,10 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const onSubmit = async () => {
+    if (!isOnline) {
+      setErr({ _global: t('offline.loginRequired') });
+      return;
+    }
     const phone = normalizePhone(`+237${values.current.phone9}`);
     const payload = {
       name: values.current.name.trim(),
@@ -245,6 +251,7 @@ export default function RegisterScreen({ navigation }) {
             </>
           ) : null}
 
+          {isLast && !isOnline ? <Text style={styles.err}>📶 {t('offline.loginRequired')}</Text> : null}
           {errors._global ? <Text style={styles.err}>{errors._global}</Text> : null}
 
           <AppButton
@@ -252,6 +259,7 @@ export default function RegisterScreen({ navigation }) {
             variant="primary"
             size="lg"
             loading={loading && isLast}
+            disabled={isLast && !isOnline}
             onPress={onNext}
             style={styles.submit}
           />

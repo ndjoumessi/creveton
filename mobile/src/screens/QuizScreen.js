@@ -181,7 +181,7 @@ export default function QuizScreen({ navigation }) {
     if (isTimed) fillRemainingSkipped();
     setSubmitting(true);
     const res = await submit();
-    navigation.replace('Results', { ok: res.ok, error: res.error });
+    navigation.replace('Results', { ok: res.ok, error: res.error, queued: res.queued });
   }, [clearTimers, isTimed, fillRemainingSkipped, submit, navigation]);
 
   // Avance — idempotent (tap + timeout ne déclenchent qu'une fois).

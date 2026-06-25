@@ -64,7 +64,7 @@ function optionText(options, idx, lang) {
 
 export default function ResultsScreen({ route, navigation }) {
   const { t } = useTranslation();
-  const { ok, error } = route.params || {};
+  const { ok, error, queued } = route.params || {};
   const [replaying, setReplaying] = useState(false);
   // On fige le résultat affiché : « Rejouer » réinitialise le store (startGame)
   // avant de naviguer ; sans ça, l'écran clignoterait en erreur le temps du replace.
@@ -137,6 +137,21 @@ export default function ResultsScreen({ route, navigation }) {
   useEffect(() => {
     if (valid) refreshProfile();
   }, [valid, refreshProfile]);
+
+  // Partie jouée hors ligne : pas de score serveur. On confirme la sauvegarde
+  // locale (rejouée automatiquement au retour de la connexion).
+  if (queued) {
+    return (
+      <ErrorScreen
+        dark
+        emoji="📶"
+        title={t('offline.savedOffline')}
+        message={t('offline.savedOfflineMessage')}
+        onRetry={goHome}
+        retryLabel={t('results.home')}
+      />
+    );
+  }
 
   if (!valid) {
     return (

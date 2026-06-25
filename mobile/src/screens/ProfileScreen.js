@@ -33,6 +33,7 @@ import { setLanguage } from '../i18n';
 import { SEXES } from '../constants/config';
 import { fonts, fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { formatFcfa, levelProgress, avatarUri } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
@@ -133,6 +134,7 @@ export default function ProfileScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const toast = useToast();
+  const { isOnline } = useNetworkStatus();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
@@ -406,6 +408,10 @@ export default function ProfileScreen() {
           style={styles.avatarWrap}
           onPress={() => {
             hapticLight();
+            if (!isOnline) {
+              toast.show({ type: 'info', message: t('offline.avatarDisabled') });
+              return;
+            }
             setAvatarSheet(true);
           }}
           disabled={uploadingAvatar}
@@ -594,7 +600,12 @@ export default function ProfileScreen() {
             icon="🔑"
             iconBg="#dbeafe"
             label={t('profile.rows.changePassword')}
-            onPress={() => toast.show({ type: 'info', message: t('profile.changePasswordSoon') })}
+            value={!isOnline ? t('offline.banner') : undefined}
+            valueMuted={!isOnline}
+            onPress={() => toast.show({
+              type: 'info',
+              message: isOnline ? t('profile.changePasswordSoon') : t('offline.banner'),
+            })}
             isLast
           />
         </Section>

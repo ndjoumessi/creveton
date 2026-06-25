@@ -31,6 +31,8 @@ import {
   stopSyncLifecycle,
 } from './src/services/sync';
 import { usePushNotifications } from './src/hooks/usePushNotifications';
+import OfflineBanner from './src/components/OfflineBanner';
+import NetworkWatcher from './src/components/NetworkWatcher';
 import { colors } from './src/constants/theme';
 
 // Garde le splash natif visible pendant l'initialisation.
@@ -84,11 +86,13 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ToastProvider>
+        <NetworkWatcher />
         <View
           style={{ flex: 1, backgroundColor: colors.cream }}
           onLayout={onLayoutRootView}
         >
           <AppNavigator />
+          <OfflineBanner />
         </View>
       </ToastProvider>
     </SafeAreaProvider>

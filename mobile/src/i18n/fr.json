@@ -576,5 +576,16 @@
       "accepted": "Challenge accepté",
       "soon": "Bientôt disponible"
     }
+  },
+  "offline": {
+    "banner": "Mode hors connexion",
+    "tournaments": "Tournois disponibles en ligne uniquement",
+    "challenges": "Les défis nécessitent une connexion",
+    "loginRequired": "Une connexion est requise pour créer un compte",
+    "syncedSessions": "{{count}} résultat(s) synchronisé(s)",
+    "pendingSessions": "{{count}} résultat(s) en attente",
+    "savedOffline": "Résultats sauvegardés hors ligne",
+    "savedOfflineMessage": "Ta partie sera envoyée automatiquement dès le retour de la connexion.",
+    "avatarDisabled": "Modification photo disponible en ligne"
   }
 }

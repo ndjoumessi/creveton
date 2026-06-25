@@ -14,6 +14,7 @@ import {
 import Svg, { Path, Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { Screen, Avatar, AppButton, Body, Skeleton } from '../components';
+import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
 import { THEMES } from '../constants/config';
@@ -291,6 +292,7 @@ export default function StatsScreen({ navigation }) {
               {user?.name || t('profile.misc.defaultName')}
             </Text>
             <Body color={colors.gold400}>{t('stats.misc.headerLevel', { level })}</Body>
+            <PendingSyncBadge style={styles.pendingSync} />
           </View>
         </View>
         <View style={styles.xpRow}>
@@ -698,6 +700,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   headerInfo: { flex: 1 },
+  pendingSync: { marginTop: spacing.xs },
   headerName: {
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.xl,

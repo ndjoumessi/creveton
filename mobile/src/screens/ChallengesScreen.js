@@ -37,6 +37,7 @@ import { useGameStore } from '../store/gameStore';
 import { levelForXp } from '../utils/format';
 import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { hapticLight } from '../utils/haptics';
 
 // ─── Données de démonstration (TODO: brancher GET /challenges?status=…) ──────────
@@ -60,6 +61,7 @@ export default function ChallengesScreen({ navigation }) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors, isDark), [colors, isDark]);
   const { t } = useTranslation();
+  const { isOnline } = useNetworkStatus();
   const toast = useToast();
   const startGame = useGameStore((s) => s.startGame);
 
@@ -122,7 +124,7 @@ export default function ChallengesScreen({ navigation }) {
     setSheetOpen(true);
   };
   const renderItem = ({ item }) => {
-    if (tab === 'received') return <ReceivedCard t={t} item={item} onAccept={acceptChallenge} onDecline={declineChallenge} />;
+    if (tab === 'received') return <ReceivedCard t={t} item={item} onAccept={acceptChallenge} onDecline={declineChallenge} disabled={!isOnline} />;
     if (tab === 'sent') return <SentCard t={t} item={item} onCancel={cancelSent} />;
     return <CompletedCard t={t} item={item} />;
   };
@@ -164,6 +166,12 @@ export default function ChallengesScreen({ navigation }) {
 
       {/* Corps clair */}
       <View style={styles.body}>
+        {/* Bannière hors-ligne : les défis nécessitent une connexion. */}
+        {!isOnline ? (
+          <View style={styles.offlineBanner}>
+            <Text style={styles.offlineBannerText}>⚔️ {t('offline.challenges')}</Text>
+          </View>
+        ) : null}
         {/* Bannière honnêteté : ces listes sont des données de démonstration. */}
         <View style={styles.demoBanner}>
           <Text style={styles.demoBannerText}>ⓘ {t('challengesHub.demoBanner')}</Text>
@@ -179,12 +187,14 @@ export default function ChallengesScreen({ navigation }) {
         />
       </View>
 
-      {/* FAB — nouveau défi (ouvre le bottom sheet) */}
+      {/* FAB — nouveau défi (ouvre le bottom sheet). Désactivé hors ligne. */}
       <Pressable
-        style={styles.fab}
-        onPress={openSheet}
+        style={[styles.fab, !isOnline && styles.fabDisabled]}
+        onPress={isOnline ? openSheet : undefined}
+        disabled={!isOnline}
         hitSlop={8}
         accessibilityRole="button"
+        accessibilityState={{ disabled: !isOnline }}
         accessibilityLabel={t('challengesHub.launchCta')}
       >
         <Text style={styles.fabIcon}>+</Text>
@@ -311,7 +321,7 @@ function OpponentRow({ t, name, xp, theme, questions, right }) {
   );
 }
 
-function ReceivedCard({ t, item, onAccept, onDecline }) {
+function ReceivedCard({ t, item, onAccept, onDecline, disabled = false }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
@@ -321,8 +331,8 @@ function ReceivedCard({ t, item, onAccept, onDecline }) {
         {t('challengesHub.card.sentAgo', { ago: item.sentAgo })}
       </Body>
       <View style={styles.cardActions}>
-        <AppButton variant="ghost" size="sm" title={t('challengesHub.actions.decline')} onPress={() => onDecline(item)} style={styles.actionGhost} />
-        <AppButton variant="primary" size="sm" title={t('challengesHub.actions.accept')} onPress={() => onAccept(item)} style={styles.actionPrimary} />
+        <AppButton variant="ghost" size="sm" title={t('challengesHub.actions.decline')} disabled={disabled} onPress={() => onDecline(item)} style={styles.actionGhost} />
+        <AppButton variant="primary" size="sm" title={t('challengesHub.actions.accept')} disabled={disabled} onPress={() => onAccept(item)} style={styles.actionPrimary} />
       </View>
     </AppCard>
   );
@@ -424,6 +434,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     zIndex: 20,
     ...shadow.gold,
   },
+  fabDisabled: { opacity: 0.45 },
   fabIcon: { fontFamily: fonts.titleBold, fontSize: 30, color: colors.textOnDark, marginTop: -2 },
   demoBanner: {
     marginHorizontal: spacing.lg,
@@ -436,6 +447,17 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   demoBannerText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.gold500 },
+  offlineBanner: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    backgroundColor: colors.goldVeil,
+    borderWidth: 1,
+    borderColor: colors.goldVeilBorder,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  offlineBannerText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, color: colors.green900 },
   listContent: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
 
   card: { ...shadow.card },

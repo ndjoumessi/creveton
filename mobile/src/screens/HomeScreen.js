@@ -27,6 +27,7 @@ import {
   LevelBadge,
   Skeleton,
 } from '../components';
+import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
 import { useLeaderboardStore } from '../store/leaderboardStore';
 import { useStatsStore } from '../store/statsStore';
@@ -262,6 +263,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.levelWrap}>
               <LevelBadge level={user?.level ?? 1} xp={user?.total_xp ?? 0} />
             </View>
+            <PendingSyncBadge style={styles.pendingSync} />
           </View>
           <View style={styles.headerRight}>
             <Pressable
@@ -557,6 +559,7 @@ const makeStyles = (colors) => StyleSheet.create({
     marginTop: spacing.xs,
   },
   levelWrap: { marginTop: spacing.sm },
+  pendingSync: { marginTop: spacing.sm },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
 
   // Corps
