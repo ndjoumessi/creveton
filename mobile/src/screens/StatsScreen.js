@@ -424,7 +424,8 @@ function StatsTab({ stats, history, loading, onPlay }) {
         {KPI.map((k) => (
           <View key={k.label} style={styles.kpiCard}>
             <View style={[styles.kpiIcon, { backgroundColor: k.bg }]}>
-              {typeof k.icon === 'function' ? (
+              {/* Icône Lucide = composant forwardRef (typeof 'object') ; emoji = chaîne. */}
+              {typeof k.icon !== 'string' ? (
                 <Icon icon={k.icon} size={24} color={colors.textDark} />
               ) : (
                 <Text style={styles.kpiIconText}>{k.icon}</Text>

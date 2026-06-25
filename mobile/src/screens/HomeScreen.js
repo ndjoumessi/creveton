@@ -87,7 +87,9 @@ function StatCard({ icon, iconBg, value, valueColor, label, sub }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   // `icon` est soit un composant Lucide (UI), soit une chaîne emoji (contenu/brand).
-  const isLucide = typeof icon === 'function';
+  // Les icônes Lucide sont des composants forwardRef → typeof === 'object', PAS
+  // 'function'. On discrimine donc sur la chaîne (emoji) vs tout le reste (composant).
+  const isLucide = typeof icon !== 'string';
   return (
     <View style={styles.statCard}>
       <View style={[styles.statIcon, { backgroundColor: iconBg }]}>

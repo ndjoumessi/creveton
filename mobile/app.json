@@ -69,7 +69,8 @@
           "cameraPermission": "Creveton accède à l'appareil photo pour prendre une photo de profil.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "extra": {
       "eas": {
