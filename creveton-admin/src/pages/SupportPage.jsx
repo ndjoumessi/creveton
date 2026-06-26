@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send, ExternalLink, AlertTriangle,
+  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send, ExternalLink,
 } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis,
@@ -89,19 +89,31 @@ export default function SupportPage() {
 
   const { data: kpi, loading: kpiLoading } = useApiData(fetchKpi, []);
   const { data: stats, loading: statsLoading } = useApiData(fetchStats, []);
-  const { data: reportsData, loading: reportsLoading } = useApiData(fetchReports, []);
+  const { data: reportsData, loading: reportsLoading, refetch: refetchReports } = useApiData(fetchReports, []);
 
   const status = TABS.find((x) => x.key === tab)?.status ?? null;
 
   // Charge les tickets du statut actif (les onglets « reports » n'en chargent pas).
   const loadTickets = useCallback(() => {
-    if (!status) { setTicketsLoading(false); return; }
+    if (!status) { setTicketsLoading(false); return Promise.resolve(); }
     setTicketsLoading(true);
-    supportService.listTickets({ status })
+    return supportService.listTickets({ status })
       .then((r) => setTickets((r && r.data) || []))
       .catch(() => notify.error(t('common.error')))
       .finally(() => setTicketsLoading(false));
   }, [status, t]);
+
+  // Le détail (messages) d'un ticket ne vient que de GET /tickets/:id. On le
+  // fusionne dans la liste pour que le drawer (qui lit `selected` depuis la
+  // liste) affiche le fil sans changer sa structure.
+  const mergeDetail = useCallback(async (id) => {
+    try {
+      const detail = await supportService.getTicket(id);
+      setTickets((prev) => prev.map((tk) => (tk.id === id ? { ...tk, ...detail } : tk)));
+    } catch {
+      notify.error(t('common.error'));
+    }
+  }, [t]);
 
   useEffect(() => { loadTickets(); }, [loadTickets]);
 
@@ -139,16 +151,24 @@ export default function SupportPage() {
     if (!selected) return;
     const body = reply.trim();
     if (!body) return;
+    const id = selected.id;
     try {
-      await supportService.reply(selected.id, body, { resolve });
+      await supportService.reply(id, body, { resolve });
       notify.success(resolve ? t('support.notify.resolved') : t('support.notify.replied'));
       setReply('');
-      loadTickets();
-      if (resolve) closeDrawer();
+      if (resolve) {
+        closeDrawer();
+        loadTickets();
+      } else {
+        // Le ticket peut quitter l'onglet (open → in_progress) ; sinon on restaure
+        // le fil de messages que la liste ne porte pas.
+        await loadTickets();
+        await mergeDetail(id);
+      }
     } catch {
       notify.error(t('common.error'));
     }
-  }, [selected, reply, t, loadTickets, closeDrawer]);
+  }, [selected, reply, t, loadTickets, mergeDetail, closeDrawer]);
 
   const changeStatus = useCallback(async (id, next, msgKey) => {
     try {
@@ -162,6 +182,17 @@ export default function SupportPage() {
   }, [t, loadTickets, closeDrawer]);
 
   // ── Actions signalements ──
+  // Ignore un signalement (PATCH status='ignored') puis rafraîchit la liste.
+  const ignoreReport = useCallback(async (id) => {
+    try {
+      await supportService.updateReportStatus(id, 'ignored');
+      notify.success(t('support.notify.statusChanged'));
+      refetchReports();
+    } catch {
+      notify.error(t('common.error'));
+    }
+  }, [t, refetchReports]);
+
   // Export CSV RÉEL des signalements déjà chargés côté client (pas d'endpoint
   // backend Support). Blob + lien <a download> éphémère → succès réel.
   const exportReportsCsv = useCallback(() => {
@@ -220,7 +251,7 @@ export default function SupportPage() {
     },
     {
       id: 'actions', header: t('support.reports.columns.actions'), enableSorting: false,
-      cell: () => (
+      cell: (c) => (
         <div className="sup-row-actions">
           <button type="button" className="icon-action" title={t('support.reports.view')} onClick={() => navigate('/questions')}>
             <Eye size={16} />
@@ -228,13 +259,13 @@ export default function SupportPage() {
           <button type="button" className="icon-action" title={t('support.reports.fix')} onClick={() => navigate('/questions')}>
             <Wrench size={16} />
           </button>
-          <button type="button" className="icon-action" title="À venir" disabled>
+          <button type="button" className="icon-action" title="Ignorer le signalement" onClick={() => ignoreReport(c.row.original.id)}>
             <EyeOff size={16} />
           </button>
         </div>
       ),
     },
-  ], [t, navigate]);
+  ], [t, navigate, ignoreReport]);
 
   const kpiItems = [
     { value: kpi?.open, label: t('support.kpi.open') },
@@ -249,11 +280,6 @@ export default function SupportPage() {
 
   return (
     <>
-      {/* Module Support encore mocké côté backend → avertissement explicite pour que
-          l'opérateur ne prenne aucune donnée/action pour réelle. */}
-      <div className="banner" role="status">
-        <AlertTriangle size={16} /> Module Support en développement — les données affichées sont fictives.
-      </div>
       <PageHeader
         title={t('support.title')}
         description={t('support.subtitle')}
@@ -341,7 +367,7 @@ export default function SupportPage() {
               type="button"
               className="sup-card"
               key={tk.id}
-              onClick={() => { setSelectedId(tk.id); setReply(''); }}
+              onClick={() => { setSelectedId(tk.id); setReply(''); mergeDetail(tk.id); }}
             >
               <div className="sup-card-head">
                 <span className={`sup-prio sup-prio--${tk.priority}`}>
@@ -457,12 +483,8 @@ export default function SupportPage() {
                 <Avatar name={selected.player?.name} size="lg" />
                 <div>
                   <div className="sup-dpname">{selected.player?.name || '—'}</div>
-                  <div className="sup-dpmeta">
-                    {selected.player?.ville ? `${selected.player.ville} · ` : ''}
-                    {t('support.ticket.level', { n: selected.player?.level ?? '—' })}
-                    {' · '}
-                    {t('support.ticket.playedGames', { count: selected.player?.sessions_played ?? 0 })}
-                  </div>
+                  {/* ville/level/parties non renvoyés par le backend → omis (cf. service). */}
+                  {selected.player?.ville && <div className="sup-dpmeta">{selected.player.ville}</div>}
                 </div>
               </div>
             </div>
