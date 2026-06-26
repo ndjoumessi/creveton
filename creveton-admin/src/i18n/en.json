@@ -1931,14 +1931,39 @@
     }
   },
   "acceptInvite": {
+    "eyebrow": "Team invitation",
+    "headlineA": "Join the team that",
+    "headlineEm": "pilots.",
+    "headlineB": "",
+    "sub": "Your invitation unlocks the cockpit.",
     "title": "Join the team",
     "subtitle": "Set your password to activate your account.",
+    "formTitle": "Create my account",
+    "inviteTitle": "Invitation received",
+    "inviteText": "This invitation link expires 72 h after it is sent.",
+    "tokenLabel": "Invitation token",
+    "inviteNote": "Your role and access are set by this invitation.",
+    "roles": {
+      "superAdmin": "Super admin",
+      "superAdminDesc": "Full access: team, roles and finances.",
+      "admin": "Admin",
+      "adminDesc": "Runs content, tournaments and players.",
+      "moderator": "Moderator",
+      "moderatorDesc": "Moderates questions and games."
+    },
+    "stepper": {
+      "step1": "Invitation",
+      "step2": "Password",
+      "step3": "Confirmation"
+    },
     "missingToken": "Invalid or incomplete invitation link.",
     "password": "Password",
     "confirm": "Confirm password",
     "submit": "Activate my account",
     "loading": "Activating…",
     "success": "Account activated. Redirecting to sign in…",
+    "loginText": "Already have an account?",
+    "loginLink": "Sign in",
     "validation": {
       "passwordRequired": "Password required.",
       "passwordPolicy": "At least 8 characters, including 1 uppercase and 1 digit.",

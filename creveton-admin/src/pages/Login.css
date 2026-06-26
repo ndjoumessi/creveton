@@ -333,6 +333,22 @@
   color: #9ca3af;
 }
 
+/* Le panneau crème est une surface à palette fixe : on force les champs
+   design-system (.field/.input/.pwd-eye) en clair, indépendamment du thème
+   global de la console — sinon inputs sombres + labels délavés sur le crème. */
+.lp-right .field label { color: #0b2e1a; }
+.lp-right .input {
+  background: #fff;
+  border-color: #d1d9d1;
+  color: #0b2e1a;
+}
+.lp-right .input::placeholder { color: #9ca3af; }
+.lp-right .input:focus {
+  border-color: #2a8a4f;
+  box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.12);
+}
+.lp-right .pwd-eye { color: #6b7280; }
+
 /* ════════════ Responsive (≤ 768px) ════════════ */
 @media (max-width: 768px) {
   .lp-shell { flex-direction: column; }

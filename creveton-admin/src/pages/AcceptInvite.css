@@ -1,0 +1,412 @@
+/* AcceptInvite — « Cockpit Émeraude » split-screen inversé (42/58).
+   Gauche : green900 + losanges + contexte d'invitation. Droite : cream + formulaire.
+   Mêmes valeurs que Login.css (couleurs, fonts, animation losanges, champs). */
+
+.rg-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ════════════ Panneau gauche (contexte) ════════════ */
+.rg-left {
+  flex: 0 0 42%;
+  background: #0b2e1a;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 48px 52px;
+}
+.rg-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.rg-diamond {
+  fill: #fdf6e9;
+  opacity: 0.05;
+  animation: rg-pulse 4s ease-in-out infinite;
+}
+.rg-diamond:nth-child(2n) { animation-delay: 0.8s; }
+.rg-diamond:nth-child(3n) { animation-delay: 1.6s; }
+.rg-diamond:nth-child(5n) { animation-delay: 2.4s; }
+@keyframes rg-pulse {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.08; }
+}
+
+.rg-brand {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.rg-brand-logo {
+  width: 44px;
+  height: 44px;
+  background: #d4a017;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #0b2e1a;
+}
+.rg-brand-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  color: #fdf6e9;
+}
+.rg-brand-tag {
+  font-size: 11px;
+  color: rgba(253, 246, 233, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.rg-left-body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 0 32px;
+}
+.rg-eyebrow {
+  font-size: 11px;
+  color: #d4a017;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+.rg-headline {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: clamp(30px, 3.2vw, 46px);
+  color: #fdf6e9;
+  letter-spacing: -1.4px;
+  line-height: 1.07;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+.rg-headline em { color: #d4a017; font-style: normal; }
+.rg-headline-sub {
+  font-size: 15px;
+  color: rgba(253, 246, 233, 0.5);
+  line-height: 1.6;
+  max-width: 340px;
+  margin: 0 0 32px;
+}
+
+/* Invite box (or) */
+.rg-invite-box {
+  display: flex;
+  gap: 13px;
+  background: rgba(212, 160, 23, 0.08);
+  border: 1px solid rgba(212, 160, 23, 0.2);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 28px;
+}
+.rg-invite-ic {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(212, 160, 23, 0.15);
+  color: #d4a017;
+}
+.rg-invite-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #fdf6e9;
+  margin-bottom: 3px;
+}
+.rg-invite-text {
+  font-size: 13px;
+  color: rgba(253, 246, 233, 0.55);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Liste des rôles (informative) */
+.rg-roles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rg-role { display: flex; align-items: flex-start; gap: 11px; }
+.rg-role-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+}
+.rg-role-dot--green { background: #5eca84; }
+.rg-role-dot--gold { background: #d4a017; }
+.rg-role-dot--muted { background: rgba(253, 246, 233, 0.35); }
+.rg-role-name {
+  display: block;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #fdf6e9;
+}
+.rg-role-desc {
+  display: block;
+  font-size: 12.5px;
+  color: rgba(253, 246, 233, 0.45);
+  line-height: 1.45;
+}
+
+.rg-left-footer {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rg-pills { display: flex; gap: 8px; }
+.rg-pill {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+}
+.rg-pill-a { background: rgba(212, 160, 23, 0.16); color: #d4a017; }
+.rg-pill-b { background: rgba(42, 138, 79, 0.22); color: #5eca84; }
+.rg-pill-c { background: rgba(253, 246, 233, 0.1); color: rgba(253, 246, 233, 0.7); }
+.rg-pill-d { background: rgba(253, 246, 233, 0.06); color: rgba(253, 246, 233, 0.45); }
+.rg-footer-copy { font-size: 12px; color: rgba(253, 246, 233, 0.25); }
+
+/* ════════════ Panneau droit (formulaire) ════════════ */
+.rg-right {
+  flex: 1;
+  background: #fdf6e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 52px;
+}
+.rg-form { width: 100%; max-width: 400px; }
+.rg-form-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #0b2e1a;
+  letter-spacing: -0.6px;
+  margin: 0 0 6px;
+}
+.rg-form-sub {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 28px;
+}
+
+/* Stepper */
+.rg-stepper {
+  list-style: none;
+  margin: 0 0 26px;
+  padding: 0;
+  display: flex;
+}
+.rg-step {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+.rg-step-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  z-index: 2;
+}
+.rg-step-label { font-size: 11.5px; font-weight: 500; }
+.rg-step-line {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 100%;
+  height: 1px;
+  z-index: 1;
+}
+.rg-step--done .rg-step-circle { background: #2a8a4f; color: #fff; }
+.rg-step--done .rg-step-label { color: #2a8a4f; }
+.rg-step--done .rg-step-line { background: #2a8a4f; }
+.rg-step--active .rg-step-circle { background: #0b2e1a; color: #fdf6e9; }
+.rg-step--active .rg-step-label { color: #0b2e1a; }
+.rg-step--active .rg-step-line { background: #e5e7e0; }
+.rg-step--inactive .rg-step-circle { background: #e5e7e0; color: #9ca3af; }
+.rg-step--inactive .rg-step-label { color: #9ca3af; }
+.rg-step--inactive .rg-step-line { background: #e5e7e0; }
+
+/* Bannière invitation (vert) */
+.rg-invite-banner {
+  background: rgba(42, 138, 79, 0.06);
+  border: 1px solid rgba(42, 138, 79, 0.2);
+  border-radius: 10px;
+  padding: 13px 15px;
+  margin-bottom: 20px;
+}
+.rg-invite-banner-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.rg-invite-banner-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+.rg-invite-banner-token {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #1a5230;
+  letter-spacing: 0.3px;
+}
+.rg-invite-banner-note {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.45;
+  margin: 7px 0 0;
+}
+
+/* CTA principal (= lp-submit) */
+.rg-submit {
+  width: 100%;
+  height: 48px;
+  background: #0b2e1a;
+  border: 0;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: #fdf6e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.15s ease;
+}
+.rg-submit:hover { background: #163d25; }
+.rg-submit:active { transform: scale(0.985); }
+.rg-submit:disabled { opacity: 0.7; cursor: default; }
+.rg-arrow { transition: transform 0.15s ease; }
+.rg-submit:hover .rg-arrow { transform: translateX(3px); }
+
+/* États token manquant / succès */
+.rg-alert {
+  background: rgba(231, 76, 60, 0.07);
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+}
+.rg-alert-text { margin: 0 0 10px; font-size: 14px; color: #b91c1c; }
+.rg-alert-link {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #2a8a4f;
+  text-decoration: none;
+}
+.rg-alert-link:hover { text-decoration: underline; }
+.rg-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: rgba(42, 138, 79, 0.08);
+  border: 1px solid rgba(42, 138, 79, 0.22);
+  border-radius: 12px;
+  padding: 28px 20px;
+  text-align: center;
+}
+.rg-success-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #2a8a4f;
+  color: #fff;
+}
+.rg-success-text { margin: 0; font-size: 14px; color: #1a5230; }
+
+/* Footer du formulaire */
+.rg-form-footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #e9ede9;
+  text-align: center;
+  font-size: 13.5px;
+  color: #6b7280;
+}
+.rg-login-link {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  color: #2a8a4f;
+  text-decoration: none;
+}
+.rg-login-link:hover { text-decoration: underline; }
+
+/* Le panneau crème est une surface à palette fixe : on force les champs
+   design-system (.field/.input/.pwd-eye) en clair, indépendamment du thème
+   global de la console — sinon inputs sombres + labels délavés sur le crème. */
+.rg-right .field label { color: #0b2e1a; }
+.rg-right .input {
+  background: #fff;
+  border-color: #d1d9d1;
+  color: #0b2e1a;
+}
+.rg-right .input::placeholder { color: #9ca3af; }
+.rg-right .input:focus {
+  border-color: #2a8a4f;
+  box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.12);
+}
+.rg-right .pwd-eye { color: #6b7280; }
+
+/* ════════════ Responsive (≤ 768px) ════════════ */
+@media (max-width: 768px) {
+  .rg-shell { flex-direction: column; }
+  .rg-left { display: none; }
+  .rg-right { padding: 40px 28px; }
+}

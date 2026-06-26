@@ -1931,14 +1931,39 @@
     }
   },
   "acceptInvite": {
+    "eyebrow": "Invitation équipe",
+    "headlineA": "Rejoins l’équipe",
+    "headlineEm": "qui pilote.",
+    "headlineB": "",
+    "sub": "Ton invitation te donne accès au cockpit.",
     "title": "Rejoindre l’équipe",
     "subtitle": "Définissez votre mot de passe pour activer votre compte.",
+    "formTitle": "Créer mon compte",
+    "inviteTitle": "Invitation reçue",
+    "inviteText": "Ce lien d’invitation expire 72 h après son envoi.",
+    "tokenLabel": "Jeton d’invitation",
+    "inviteNote": "Ton rôle et tes accès sont définis par cette invitation.",
+    "roles": {
+      "superAdmin": "Super admin",
+      "superAdminDesc": "Accès total : équipe, rôles et finances.",
+      "admin": "Admin",
+      "adminDesc": "Pilote contenu, tournois et joueurs.",
+      "moderator": "Modérateur",
+      "moderatorDesc": "Modère questions et parties."
+    },
+    "stepper": {
+      "step1": "Invitation",
+      "step2": "Mot de passe",
+      "step3": "Confirmation"
+    },
     "missingToken": "Lien d'invitation invalide ou incomplet.",
     "password": "Mot de passe",
     "confirm": "Confirmer le mot de passe",
     "submit": "Activer mon compte",
     "loading": "Activation…",
     "success": "Compte activé. Redirection vers la connexion…",
+    "loginText": "Déjà un compte ?",
+    "loginLink": "Se connecter",
     "validation": {
       "passwordRequired": "Mot de passe requis.",
       "passwordPolicy": "8 caractères minimum, dont 1 majuscule et 1 chiffre.",
