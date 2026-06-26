@@ -9,6 +9,7 @@ import {
   Tooltip, PieChart, Pie, Cell,
 } from 'recharts';
 import supportService from '../services/support.service';
+import * as teamService from '../services/team.service';
 import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
 import { num, dateFr, dateTimeFr } from '../utils/format';
@@ -76,6 +77,9 @@ function TicketsTooltip({ active, payload, label, t }) {
 const fetchKpi = () => supportService.kpi();
 const fetchStats = () => supportService.stats();
 const fetchReports = () => supportService.listReports();
+// Membres assignables (admin/moderator). GET /admin/team est réservé aux admins
+// → pour un modérateur l'appel échoue : on retombe sur la saisie libre d'UUID.
+const fetchMembers = () => teamService.list({});
 
 export default function SupportPage() {
   const { t } = useTranslation();
@@ -90,6 +94,7 @@ export default function SupportPage() {
   const { data: kpi, loading: kpiLoading } = useApiData(fetchKpi, []);
   const { data: stats, loading: statsLoading } = useApiData(fetchStats, []);
   const { data: reportsData, loading: reportsLoading, refetch: refetchReports } = useApiData(fetchReports, []);
+  const { data: membersData } = useApiData(fetchMembers, []);
 
   const status = TABS.find((x) => x.key === tab)?.status ?? null;
 
@@ -123,6 +128,18 @@ export default function SupportPage() {
   );
 
   const reports = useMemo(() => (reportsData && reportsData.data) || [], [reportsData]);
+
+  // Membres assignables ; vide si l'endpoint a échoué (modérateur) → saisie libre.
+  const members = useMemo(() => (membersData && membersData.data) || [], [membersData]);
+  // `assigned_to` est tronqué (8 car. + …) côté service : on retrouve l'id complet
+  // du membre par préfixe pour pré-sélectionner le <select> ('' = non assigné).
+  const currentAssigneeId = useMemo(() => {
+    const a = selected?.assigned_to;
+    if (!a) return '';
+    const prefix = String(a).replace(/…$/, '');
+    const m = members.find((x) => String(x.id).startsWith(prefix));
+    return m ? m.id : '';
+  }, [selected, members]);
 
   // Graphes (réels, dérivés de stats()).
   const daily = useMemo(
@@ -180,6 +197,19 @@ export default function SupportPage() {
       notify.error(t('common.error'));
     }
   }, [t, loadTickets, closeDrawer]);
+
+  // Assignation : uuid d'un membre ou null (« Non assigné »). Le drawer reste
+  // ouvert → on rafraîchit la liste puis le détail (assigned_to + fil).
+  const assign = useCallback(async (id, assignedTo) => {
+    try {
+      await supportService.assignTicket(id, assignedTo);
+      notify.success('Assignation mise à jour');
+      await loadTickets();
+      await mergeDetail(id);
+    } catch {
+      notify.error(t('common.error'));
+    }
+  }, [t, loadTickets, mergeDetail]);
 
   // ── Actions signalements ──
   // Ignore un signalement (PATCH status='ignored') puis rafraîchit la liste.
@@ -476,7 +506,27 @@ export default function SupportPage() {
                 <span className={`sup-dprio sup-dprio--${selected.priority}`}>{t(`support.priorities.${selected.priority}`)}</span>
                 <span className="sup-dassign">
                   {t('support.ticket.assignedTo')}{': '}
-                  <strong>{selected.assigned_to || t('support.ticket.unassigned')}</strong>
+                  {members.length > 0 ? (
+                    <select
+                      value={currentAssigneeId}
+                      onChange={(e) => assign(selected.id, e.target.value || null)}
+                      style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 6, padding: '2px 6px', fontSize: 13, fontFamily: 'inherit' }}
+                    >
+                      <option value="" style={{ color: '#111' }}>{t('support.ticket.unassigned')}</option>
+                      {members.map((m) => (
+                        <option key={m.id} value={m.id} style={{ color: '#111' }}>{m.name || m.id}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      defaultValue=""
+                      placeholder="UUID du membre"
+                      title={selected.assigned_to ? `${t('support.ticket.assignedTo')}: ${selected.assigned_to}` : t('support.ticket.unassigned')}
+                      onBlur={(e) => { const v = e.target.value.trim(); if (v) assign(selected.id, v); }}
+                      style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 6, padding: '2px 6px', fontSize: 13, width: 180 }}
+                    />
+                  )}
                 </span>
               </div>
               <div className="sup-dplayer">
