@@ -49,15 +49,10 @@
 .rg-brand-logo {
   width: 44px;
   height: 44px;
-  background: #d4a017;
   border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 18px;
-  color: #0b2e1a;
+  object-fit: cover;
+  background: #fdf6e9;
+  display: block;
 }
 .rg-brand-name {
   font-family: 'Space Grotesk', sans-serif;

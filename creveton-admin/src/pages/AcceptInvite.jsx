@@ -88,7 +88,7 @@ export default function AcceptInvite() {
         </svg>
 
         <div className="rg-brand">
-          <span className="rg-brand-logo">C</span>
+          <img className="rg-brand-logo" src="/logo.png" alt="Creveton" />
           <div>
             <div className="rg-brand-name">Creveton</div>
             <div className="rg-brand-tag">{t('login.brandTag')}</div>

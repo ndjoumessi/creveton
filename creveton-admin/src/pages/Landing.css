@@ -71,17 +71,12 @@
 }
 .land-nav-brand { display: flex; align-items: center; gap: 12px; }
 .land-nav-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 36px;
   height: 36px;
-  background: #d4a017;
+  background: #fdf6e9;
   border-radius: 8px;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  color: #0b2e1a;
+  object-fit: cover;
 }
 .land-nav-name {
   font-family: 'Space Grotesk', system-ui, sans-serif;

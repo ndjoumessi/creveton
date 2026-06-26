@@ -122,7 +122,7 @@ export default function Landing() {
 
         <nav className="land-nav">
           <div className="land-nav-brand">
-            <span className="land-nav-logo">C</span>
+            <img className="land-nav-logo" src="/logo.png" alt="Creveton" />
             <span className="land-nav-name">Creveton</span>
           </div>
           <div className="land-nav-links">
@@ -323,7 +323,7 @@ export default function Landing() {
       <footer className="land-footer">
         <div className="land-container land-footer-inner">
           <div className="land-footer-brand">
-            <span className="land-nav-logo">C</span>
+            <img className="land-nav-logo" src="/logo.png" alt="Creveton" />
             <span className="land-nav-name">Creveton</span>
             <p className="land-footer-copy">
               © 2026 Creveton · {t('landing.footer.country')} · {t('landing.footer.rights')}

@@ -91,7 +91,7 @@ export default function Login() {
         </svg>
 
         <div className="lp-brand">
-          <span className="lp-brand-logo">C</span>
+          <img className="lp-brand-logo" src="/logo.png" alt="Creveton" />
           <div>
             <div className="lp-brand-name">{t('login.title')}</div>
             <div className="lp-brand-tag">{t('login.brandTag')}</div>
