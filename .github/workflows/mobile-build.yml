@@ -63,5 +63,4 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build URL
-        run: |
-          echo "Build lancé sur EAS — consulte https://expo.dev/accounts/ndjoumessi/projects/creveton/builds"
+        run: echo "✅ Build lancé — https://expo.dev/accounts/ndjoumessi/projects/creveton/builds"
