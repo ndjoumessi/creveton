@@ -129,10 +129,10 @@
 .set-theme-preview .stp-cards { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; }
 .set-theme-preview .stp-cards > span { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; border-top: 3px solid var(--gold); }
 /* Variante sombre de l'aperçu (indépendante du thème courant). */
-.set-theme-preview.is-dark { background: #0b1e12; }
+.set-theme-preview.is-dark { background: #122b1a; }
 .set-theme-preview.is-dark .stp-sidebar { background: #071009; }
 .set-theme-preview.is-dark .stp-header { background: #0d150d; }
-.set-theme-preview.is-dark .stp-cards > span { background: #0f2416; border-color: #1a3320; border-top-color: var(--gold); }
+.set-theme-preview.is-dark .stp-cards > span { background: #17341f; border-color: #234a2c; border-top-color: var(--gold); }
 
 /* ── Dark-mode semantic badge tints (hue-preserving) ── */
 [data-theme="dark"] .set-session-cur { background: rgba(42,138,79,0.18); color: var(--green300); }
