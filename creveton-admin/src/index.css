@@ -49,6 +49,10 @@
   /* Transitions */
   --t-fast: 150ms ease;
   --t-modal: 200ms ease;
+  /* Interlignes */
+  --line-height-body: 1.6;
+  --line-height-compact: 1.4;
+  --line-height-heading: 1.15;
   font-family: 'Space Grotesk', system-ui, sans-serif;
 }
 
@@ -57,6 +61,7 @@
    (vert, or, rouge) restent identiques. La majeure partie de l'UI s'assombrit
    automatiquement via ces variables. ── */
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #122b1a;
   --surface: #17341f;
   --surface-2: #1c3c25;
@@ -107,9 +112,10 @@ body {
   color: var(--text);
   font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 14px;
+  line-height: var(--line-height-body);
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3, h4, .font-heading { font-family: 'Outfit', system-ui, sans-serif; color: var(--ink); }
+h1, h2, h3, h4, .font-heading { font-family: 'Outfit', system-ui, sans-serif; color: var(--ink); line-height: var(--line-height-heading); }
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 input, select, textarea { font-family: inherit; }
@@ -163,7 +169,7 @@ input, select, textarea { font-family: inherit; }
 .header-btn { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; color: rgba(255, 255, 255, 0.7); font-family: 'Space Grotesk'; font-weight: 500; font-size: 13.5px; padding: 7px 10px; border-radius: 8px; transition: color var(--t-fast), background var(--t-fast); }
 .header-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
 .lang-toggle { display: inline-flex; gap: 2px; background: rgba(255, 255, 255, 0.06); border-radius: var(--radius-pill); padding: 3px; }
-.lang-toggle button { padding: 5px 12px; font-size: 12px; font-weight: 600; background: transparent; border: none; color: rgba(255, 255, 255, 0.55); border-radius: var(--radius-pill); transition: var(--t-fast); }
+.lang-toggle button { padding: 5px 12px; font-size: 12px; font-weight: 600; background: transparent; border: none; color: rgba(253, 246, 233, 0.65); border-radius: var(--radius-pill); transition: var(--t-fast); }
 .lang-toggle button.active { background: rgba(255, 255, 255, 0.12); color: #fff; }
 .header-theme-btn { width: 34px; height: 34px; flex: none; border-radius: 9px; border: 1px solid var(--green700); background: transparent; color: rgba(255, 255, 255, 0.8); display: grid; place-items: center; cursor: pointer; transition: var(--t-fast); }
 .header-theme-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
@@ -173,7 +179,7 @@ input, select, textarea { font-family: inherit; }
 /* ===================== Buttons ===================== */
 .btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 9px 15px; border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13.5px; transition: all var(--t-fast); }
 .btn:hover { background: #f9fafb; border-color: #d1d5db; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 .btn-primary, .btn-creveton { background: var(--green900); border-color: var(--green900); color: var(--gold); }
 .btn-primary:hover, .btn-creveton:hover { background: #143d23; border-color: #143d23; }
 .btn-success { background: var(--green500); border-color: var(--green500); color: #fff; }
@@ -191,7 +197,7 @@ input, select, textarea { font-family: inherit; }
 .btn-sm { padding: 6px 11px; font-size: 12.5px; border-radius: var(--radius-sm); }
 .btn-lg { padding: 13px 24px; font-size: 15px; border-radius: var(--radius-pill); }
 .btn-block { width: 100%; justify-content: center; }
-.icon-btn { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: all var(--t-fast); }
+.icon-btn { display: grid; place-items: center; width: 36px; height: 36px; min-width: 44px; min-height: 44px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: all var(--t-fast); }
 .icon-btn:hover { background: #f9fafb; color: var(--ink); border-color: #d1d5db; }
 .icon-action { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--muted); transition: all var(--t-fast); }
 .icon-action:hover { background: #f3f4f6; color: var(--ink); }
@@ -253,7 +259,7 @@ input, select, textarea { font-family: inherit; }
 
 /* ===================== Tables ===================== */
 .table-wrap { overflow-x: auto; }
-table.data { width: 100%; border-collapse: collapse; font-size: 14px; color: var(--text); }
+table.data { width: 100%; border-collapse: collapse; font-size: 14px; color: var(--text); line-height: var(--line-height-compact); }
 table.data th { text-align: left; color: var(--muted); font-family: 'Space Grotesk'; font-weight: 600; font-size: 12px; letter-spacing: 0.4px; text-transform: uppercase; padding: 13px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; user-select: none; background: var(--surface-2); }
 table.data th.sortable { cursor: pointer; }
 table.data th.sortable:hover { color: var(--ink); }
