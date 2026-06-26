@@ -4,7 +4,7 @@
 // dont les valeurs vivent dans un ref → la frappe ne réinitialise jamais le
 // formulaire quand le clavier s'ouvre.
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { isValidEmail } from '../utils/validation';
+import { getLastEmail } from '../services/storage';
 import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
@@ -35,10 +36,27 @@ export default function LoginScreen({ navigation }) {
 
   // Valeurs en ref : aucune mise à jour d'état à la frappe (anti-reset).
   const values = useRef({ email: '', password: '' });
+  const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
+
+  // Pré-remplit l'email avec le dernier connecté. Le champ est non contrôlé
+  // (defaultValue posé une fois au montage, avant la lecture async) → on pousse
+  // la valeur impérativement via setNativeProps + on alimente le ref des valeurs
+  // (onChangeText ne se déclenche que sur saisie utilisateur).
+  useEffect(() => {
+    let active = true;
+    getLastEmail().then((email) => {
+      if (!active || !email || values.current.email) return;
+      values.current.email = email;
+      emailRef.current?.setNativeProps({ text: email });
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const onSubmit = async () => {
     setError(null);
@@ -78,6 +96,7 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
 
           <AuthField
+            ref={emailRef}
             label={t('auth.email')}
             defaultValue=""
             onChangeText={(t) => (values.current.email = t)}
@@ -144,6 +163,8 @@ const makeStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: radius.xxl,
     padding: 28,
+    borderWidth: 1,
+    borderColor: colors.border,
     ...shadow.floating,
   },
   title: {

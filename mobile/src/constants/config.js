@@ -8,11 +8,14 @@ export const SOCKET_URL =
   process.env.EXPO_PUBLIC_SOCKET_URL ||
   API_URL.replace(/\/api\/v1\/?$/, '');
 
-// Clés AsyncStorage
+// Clés de stockage. Les tokens auth (accessToken/refreshToken) vivent dans
+// SecureStore (chiffré) ; tout le reste — y compris `user` (objet profil
+// potentiellement > 2 Ko, au-delà de la limite SecureStore) — dans AsyncStorage.
 export const STORAGE_KEYS = {
   accessToken: 'crv.access_token',
   refreshToken: 'crv.refresh_token',
   user: 'crv.user',
+  lastEmail: 'crv.last_email', // dernier email connecté (pré-remplissage Login) — non sensible
   lastSyncAt: 'crv.last_sync_at',
   // URL de l'API utilisée lors du dernier sync — sert à invalider le cache de
   // questions si l'on change d'environnement (ex. local → staging).

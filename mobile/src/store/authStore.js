@@ -12,6 +12,7 @@ import {
   clearStoredUser,
   getAccessToken,
   getRefreshToken,
+  setLastEmail,
 } from '../services/storage';
 
 export const useAuthStore = create((set, get) => ({
@@ -82,6 +83,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const data = await authApi.login(email, password);
       await get()._applySession(data);
+      await setLastEmail(email); // pré-remplissage du champ au prochain lancement
       set({ loading: false });
       return { ok: true };
     } catch (e) {
