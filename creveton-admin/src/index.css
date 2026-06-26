@@ -57,13 +57,13 @@
    (vert, or, rouge) restent identiques. La majeure partie de l'UI s'assombrit
    automatiquement via ces variables. ── */
 [data-theme="dark"] {
-  --bg: #0a0f0a;
-  --surface: #111a11;
-  --surface-2: #162016;
+  --bg: #0b1e12;
+  --surface: #0f2416;
+  --surface-2: #142a1a;
   --bg-input: #1a261a;
   --bg-mute: #1b2e1b;
-  --border: #1e2e1e;
-  --border-green: #25402a;
+  --border: #1a3320;
+  --border-green: #224530;
   --text: #a5d6a7;
   --ink: #e8f5e9;
   --muted: #81c784;
