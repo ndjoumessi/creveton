@@ -128,7 +128,7 @@ export default function Privacy() {
         <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-              <span style={{ width: 40, height: 40, background: '#d4a017', borderRadius: 10, display: 'grid', placeItems: 'center', fontFamily: SG, fontWeight: 700, fontSize: 18, color: '#0b2e1a' }}>C</span>
+              <img src="/logo.png" alt="Creveton" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover' }} />
               <span style={{ fontFamily: SG, fontWeight: 600, fontSize: 20, color: '#fdf6e9' }}>Creveton</span>
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
