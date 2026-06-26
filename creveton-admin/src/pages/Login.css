@@ -206,7 +206,7 @@
   margin: 0 0 36px;
 }
 
-/* Ligne « se souvenir » + « mot de passe oublié » */
+/* Ligne « se souvenir de moi » */
 .lp-form-row {
   display: flex;
   align-items: center;
@@ -228,16 +228,6 @@
   accent-color: #2a8a4f;
   cursor: pointer;
 }
-.lp-forgot {
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  font-size: 13.5px;
-  color: #2a8a4f;
-  font-weight: 500;
-}
-.lp-forgot:hover { text-decoration: underline; }
 
 /* CTA principal */
 .lp-submit {
@@ -269,39 +259,6 @@
   color: #e74c3c;
   font-size: 13.5px;
   font-weight: 500;
-}
-
-/* Séparateur + SSO */
-.lp-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 22px 0;
-}
-.lp-divider-line {
-  flex: 1;
-  height: 1px;
-  background: #e5e7e5;
-}
-.lp-divider-or {
-  font-size: 12px;
-  color: #9ca3af;
-}
-.lp-sso {
-  width: 100%;
-  height: 44px;
-  border: 1.5px solid #d1d9d1;
-  border-radius: 10px;
-  background: transparent;
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
-  color: #374151;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-.lp-sso:hover {
-  border-color: #2a8a4f;
-  background: rgba(42, 138, 79, 0.04);
 }
 
 /* Footer du formulaire (retour accueil + version) */
