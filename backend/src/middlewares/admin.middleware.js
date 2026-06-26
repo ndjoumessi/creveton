@@ -55,6 +55,12 @@ const PERMISSIONS = {
 
   'team:read': 'admin',
   'team:manage': 'super_admin',
+
+  // Support joueurs (tickets + signalements de questions). Lecture = moderator ;
+  // actions (réponse, changement de statut) = admin ; (ré)assignation = admin.
+  'support:read': 'moderator',
+  'support:manage': 'admin',
+  'support:assign': 'admin',
 };
 
 /**
