@@ -418,6 +418,31 @@ export default function Dashboard() {
     };
   }, [sessions]);
 
+  // ─── Stickiness DAU/MAU : actifs 24 h vs reste des actifs 30 j (donut) ───
+  // L'endpoint /admin/analytics renvoie dau, mau et dau_mau_ratio (fraction 0–1).
+  // null si mau = 0 → état vide (rien à tracer), distinct d'un vrai 0/0.
+  const daumau = useMemo(() => {
+    if (!analytics) return null;
+    const mau = Number(analytics.mau);
+    const dauRaw = Number(analytics.dau);
+    if (!Number.isFinite(mau) || mau <= 0) return null;
+    const dau = Math.max(0, Math.min(Number.isFinite(dauRaw) ? dauRaw : 0, mau));
+    const inactive = mau - dau;
+    const ratio =
+      typeof analytics.dau_mau_ratio === 'number' ? analytics.dau_mau_ratio : dau / mau;
+    const ratioPct = Math.round(ratio * 100);
+    return {
+      dau,
+      mau,
+      inactive,
+      ratioPct,
+      slices: [
+        { key: 'active', label: t('dashboard.daumau.active'), value: dau, color: '#2a8a4f' },
+        { key: 'inactive', label: t('dashboard.daumau.inactive'), value: inactive, color: '#9ca3af' },
+      ],
+    };
+  }, [analytics, t]);
+
   // ─── Santé du contenu : pool par thème (max pour échelle des barres) ───
   const poolMax = useMemo(() => {
     if (!contentHealth) return 0;
@@ -955,6 +980,65 @@ export default function Dashboard() {
                     <span className="dash-donut-leg-count">{num(s.count)}</span>
                   </li>
                 ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Stickiness DAU/MAU — actifs 24 h vs reste des actifs 30 j (donut) */}
+        <div className="card card-pad">
+          <div className="dash-card-head">
+            <div>
+              <h3 className="card-title">{t('dashboard.daumau.title')}</h3>
+              <p className="card-sub">{t('dashboard.daumau.sub')}</p>
+            </div>
+            <Activity size={18} color="#2a8a4f" aria-hidden="true" />
+          </div>
+          {!daumau ? (
+            <div className="dash-empty">
+              <Activity size={26} color="#9ca3af" />
+              <span className="dash-empty-title">{t('dashboard.daumau.emptyTitle')}</span>
+              <span>{t('dashboard.daumau.emptySub')}</span>
+            </div>
+          ) : (
+            <div className="dash-donut-wrap">
+              <div className="dash-donut">
+                <ResponsiveContainer width={160} height={160}>
+                  <PieChart>
+                    <Pie
+                      data={daumau.slices}
+                      dataKey="value"
+                      nameKey="label"
+                      innerRadius={48}
+                      outerRadius={72}
+                      paddingAngle={2}
+                      stroke="none"
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      {daumau.slices.map((s) => <Cell key={s.key} fill={s.color} />)}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`${num(value)} ${t('dashboard.daumau.usersLabel')}`, name]} contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontFamily: 'Space Grotesk', fontSize: 13 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="dash-donut-center">
+                  <span className="dash-donut-num">{daumau.ratioPct} %</span>
+                  <span className="dash-donut-lbl">{num(daumau.dau)} / {num(daumau.mau)}</span>
+                </div>
+              </div>
+              <ul className="dash-donut-legend">
+                <li>
+                  <span className="dash-legend-sw" style={{ background: '#2a8a4f' }} />
+                  <span className="dash-donut-leg-label">{t('dashboard.daumau.active')}</span>
+                  <span className="dash-donut-leg-pct">{daumau.ratioPct}%</span>
+                  <span className="dash-donut-leg-count">{num(daumau.dau)}</span>
+                </li>
+                <li>
+                  <span className="dash-legend-sw" style={{ background: '#9ca3af' }} />
+                  <span className="dash-donut-leg-label">{t('dashboard.daumau.inactive')}</span>
+                  <span className="dash-donut-leg-pct">{100 - daumau.ratioPct}%</span>
+                  <span className="dash-donut-leg-count">{num(daumau.inactive)}</span>
+                </li>
               </ul>
             </div>
           )}
