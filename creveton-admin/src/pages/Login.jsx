@@ -166,7 +166,6 @@ export default function Login() {
               />
               <span>{t('login.rememberMe')}</span>
             </label>
-            <button type="button" className="lp-forgot">{t('login.forgot')}</button>
           </div>
 
           <button className="lp-submit" type="submit" disabled={submitting}>
@@ -179,15 +178,6 @@ export default function Login() {
               la console admin n'embarque pas de détection réseau (à la différence
               du Login mobile). */}
           {error && <p className="lp-error" role="alert">{error}</p>}
-
-          <div className="lp-divider">
-            <span className="lp-divider-line" />
-            <span className="lp-divider-or">{t('login.dividerOr')}</span>
-            <span className="lp-divider-line" />
-          </div>
-
-          {/* SSO — placeholder statique pour l'instant. */}
-          <button type="button" className="lp-sso">{t('login.sso')}</button>
 
           <div className="lp-form-footer">
             <Link to="/" className="lp-back">{t('login.backHome')}</Link>
