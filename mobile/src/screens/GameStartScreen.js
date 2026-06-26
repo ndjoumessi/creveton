@@ -174,7 +174,7 @@ export default function GameStartScreen({ navigation, route }) {
   };
 
   return (
-    <Screen scroll>
+    <Screen scroll edges={['top']}>
       <View style={styles.header}>
         <Pressable
           onPress={() => navigation.navigate('Home')}

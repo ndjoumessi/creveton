@@ -39,6 +39,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen, Avatar, AppButton, useToast } from '../components';
 import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
@@ -151,6 +152,7 @@ export default function ProfileScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const toast = useToast();
+  const insets = useSafeAreaInsets();
   const { isOnline } = useNetworkStatus();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -418,7 +420,16 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.flexRoot}>
-      <Screen dark={false} scroll padded={false} refreshing={refreshing} onRefresh={onRefresh}>
+      <Screen
+        dark={false}
+        scroll
+        padded={false}
+        edges={['top']}
+        topInsetColor={colors.green900}
+        statusBarStyle="light-content"
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+      >
       {/* A. Header */}
       <View style={styles.header}>
         <Pressable
@@ -646,7 +657,7 @@ export default function ProfileScreen() {
       {/* Action sheet — photo de profil */}
       <Modal visible={avatarSheet} transparent animationType="slide" onRequestClose={() => setAvatarSheet(false)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setAvatarSheet(false)} />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: spacing.xxl + insets.bottom }]}>
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>{t('profile.avatar.sheetTitle')}</Text>
           <Pressable style={styles.actionRow} onPress={() => pickAvatar('camera')}>
@@ -672,7 +683,13 @@ export default function ProfileScreen() {
             style={[StyleSheet.absoluteFill, styles.sheetBackdrop, { opacity: editAnim }]}
             onPress={closeEdit}
           />
-          <Animated.View style={[styles.editSheet, { transform: [{ translateY: editTranslateY }] }]}>
+          <Animated.View
+            style={[
+              styles.editSheet,
+              { paddingBottom: spacing.lg + insets.bottom },
+              { transform: [{ translateY: editTranslateY }] },
+            ]}
+          >
             {/* A. Header : drag handle + titre + ✕ */}
             <View style={styles.sheetHandle} />
             <View style={styles.sheetTitleRow}>

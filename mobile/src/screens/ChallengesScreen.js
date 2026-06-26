@@ -20,6 +20,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Swords } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../components/Icon';
 import {
   Screen,
@@ -63,6 +64,7 @@ export default function ChallengesScreen({ navigation }) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors, isDark), [colors, isDark]);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { isOnline } = useNetworkStatus();
   const toast = useToast();
   const startGame = useGameStore((s) => s.startGame);
@@ -132,7 +134,7 @@ export default function ChallengesScreen({ navigation }) {
   };
 
   return (
-    <Screen dark padded={false}>
+    <Screen dark padded={false} edges={['top']}>
       {/* En-tête sombre */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -209,7 +211,7 @@ export default function ChallengesScreen({ navigation }) {
       {/* Bottom sheet — Nouveau challenge */}
       <Modal visible={sheetOpen} transparent animationType="slide" onRequestClose={() => setSheetOpen(false)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setSheetOpen(false)} />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: spacing.xxl + insets.bottom }]}>
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>{t('challengesHub.sheet.title')}</Text>
 

@@ -127,7 +127,7 @@ export default function TournamentScreen() {
   };
 
   return (
-    <Screen dark padded={false}>
+    <Screen dark padded={false} edges={['top']}>
       {/* En-tête sombre */}
       <View style={styles.header}>
         <Title color={colors.textOnDark}>{tr('tournaments.title')}</Title>

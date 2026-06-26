@@ -284,7 +284,16 @@ export default function StatsScreen({ navigation }) {
   const loadingStats = histLoading && history === null;
 
   return (
-    <Screen dark={false} scroll padded={false} refreshing={refreshing} onRefresh={onRefresh}>
+    <Screen
+      dark={false}
+      scroll
+      padded={false}
+      edges={['top']}
+      topInsetColor={colors.green900}
+      statusBarStyle="light-content"
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+    >
       {/* Header sombre */}
       <View style={styles.header}>
         <View style={styles.headerRow}>

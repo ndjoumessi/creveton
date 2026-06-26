@@ -21,15 +21,28 @@ export default function Screen({
   refreshing = false,
   onRefresh = null,
   edges = ['top', 'bottom'],
+  statusBarStyle = null,
+  topInsetColor = null,
   style,
   contentStyle,
 }) {
   const { colors, isDark } = useTheme();
   const bg = dark ? colors.green900 : colors.cream;
+  // En-tête sombre sur corps clair (Stats/Profile) : on peint le fond racine —
+  // donc la zone d'inset top sous la status bar — en `topInsetColor` (green900)
+  // pour éviter une bande crème au-dessus du bandeau vert, puis on repeint le
+  // corps en `bg` par-dessus. Sinon le fond racine = `bg` (comportement actuel).
+  const rootBg = topInsetColor || bg;
+  const bodyBg = topInsetColor ? { backgroundColor: bg } : null;
   const Content = scroll ? ScrollView : View;
   const contentProps = scroll
     ? {
-        contentContainerStyle: [padded && styles.padded, contentStyle],
+        contentContainerStyle: [
+          padded && styles.padded,
+          topInsetColor && styles.bodyFill,
+          bodyBg,
+          contentStyle,
+        ],
         showsVerticalScrollIndicator: false,
         keyboardShouldPersistTaps: 'handled',
         refreshControl: onRefresh ? (
@@ -41,11 +54,11 @@ export default function Screen({
           />
         ) : undefined,
       }
-    : { style: [styles.flex, padded && styles.padded, contentStyle] };
+    : { style: [styles.flex, padded && styles.padded, bodyBg, contentStyle] };
 
   return (
-    <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: bg }, style]}>
-      <StatusBar barStyle={dark || isDark ? 'light-content' : 'dark-content'} />
+    <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: rootBg }, style]}>
+      <StatusBar barStyle={statusBarStyle || (dark || isDark ? 'light-content' : 'dark-content')} />
       <Content {...contentProps}>{children}</Content>
     </SafeAreaView>
   );
@@ -54,4 +67,5 @@ export default function Screen({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   padded: { padding: spacing.lg },
+  bodyFill: { flexGrow: 1 },
 });
