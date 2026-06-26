@@ -1333,6 +1333,17 @@
   "login": {
     "title": "Creveton",
     "subtitle": "Connectez-vous pour accéder au tableau de bord",
+    "brandTag": "Cockpit Émeraude",
+    "eyebrow": "Console d'administration",
+    "headlineA": "Le jeu,",
+    "headlineEm": "précision",
+    "headlineB": "",
+    "heroSub": "La console qui orchestre questions, tournois et joueurs à travers le Cameroun.",
+    "formTitle": "Connexion",
+    "cta": "Accéder au cockpit",
+    "forgot": "Mot de passe oublié ?",
+    "dividerOr": "ou",
+    "sso": "Connexion SSO entreprise",
     "welcome": "Bienvenue sur Cockpit Émeraude",
     "leftTagline": "La plateforme quiz",
     "leftQuote": "Engagez votre communauté.",
@@ -1359,9 +1370,9 @@
     },
     "backHome": "← Retour à l’accueil",
     "stats": {
-      "users": "Utilisateurs",
-      "games": "Parties",
-      "themes": "Thèmes"
+      "questions": "Questions",
+      "themes": "Thèmes actifs",
+      "levels": "Niveaux"
     }
   },
   "landing": {

@@ -1333,6 +1333,17 @@
   "login": {
     "title": "Creveton",
     "subtitle": "Sign in to access the dashboard",
+    "brandTag": "Emerald Cockpit",
+    "eyebrow": "Admin console",
+    "headlineA": "The game,",
+    "headlineEm": "precision",
+    "headlineB": "",
+    "heroSub": "The console that orchestrates questions, tournaments and players across Cameroon.",
+    "formTitle": "Sign in",
+    "cta": "Enter the cockpit",
+    "forgot": "Forgot password?",
+    "dividerOr": "or",
+    "sso": "Enterprise SSO",
     "welcome": "Welcome to the Emerald Cockpit",
     "leftTagline": "The quiz platform",
     "leftQuote": "Engage your community.",
@@ -1359,9 +1370,9 @@
     },
     "backHome": "← Back to home",
     "stats": {
-      "users": "Users",
-      "games": "Games",
-      "themes": "Themes"
+      "questions": "Questions",
+      "themes": "Active themes",
+      "levels": "Levels"
     }
   },
   "landing": {

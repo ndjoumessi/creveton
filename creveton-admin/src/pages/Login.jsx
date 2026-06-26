@@ -2,13 +2,30 @@ import { useForm } from 'react-hook-form';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LogIn, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { notify } from '../components/Toast';
 import PasswordInput from '../components/PasswordInput';
-import Logo from '../components/Logo';
 import { USE_MOCKS } from '../services/api';
 import './Login.css';
+
+// Lattice de losanges (décor animé du panneau gauche). Coordonnées pré-calculées
+// une fois ; l'animation de pulsation vit dans Login.css (.lp-diamond + @keyframes).
+const DIAMONDS = (() => {
+  const out = [];
+  const SP = 88;
+  const R = 27;
+  const COLS = 8;
+  const ROWS = 8;
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      const cx = col * SP + (row % 2 ? SP / 2 : 0);
+      const cy = row * SP;
+      out.push({ cx, cy, r: R });
+    }
+  }
+  return out;
+})();
 
 export default function Login() {
   const { t } = useTranslation();
@@ -60,42 +77,68 @@ export default function Login() {
   };
 
   return (
-    <div className="login-split">
-      {/* Panneau marque (masqué < 768px) — contenu centré verticalement */}
-      <aside className="login-aside">
-        <div className="login-aside-top">
-          <Logo size={80} />
-          <span className="login-brand">{t('login.title')}</span>
-          <p className="login-tagline">{t('login.leftTagline')}</p>
+    <div className="lp-shell">
+      {/* ─────────── Panneau gauche (marque) ─────────── */}
+      <div className="lp-left">
+        <svg className="lp-quiz-grid" viewBox="0 0 704 704" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          {DIAMONDS.map((d, i) => (
+            <path
+              key={i}
+              className="lp-diamond"
+              d={`M ${d.cx} ${d.cy - d.r} L ${d.cx + d.r} ${d.cy} L ${d.cx} ${d.cy + d.r} L ${d.cx - d.r} ${d.cy} Z`}
+            />
+          ))}
+        </svg>
+
+        <div className="lp-brand">
+          <span className="lp-brand-logo">C</span>
+          <div>
+            <div className="lp-brand-name">{t('login.title')}</div>
+            <div className="lp-brand-tag">{t('login.brandTag')}</div>
+          </div>
         </div>
 
-        <ul className="login-stats" aria-hidden="true">
-          <li>
-            <strong>500+</strong>
-            <span>{t('login.stats.users')}</span>
-          </li>
-          <li>
-            <strong>1k+</strong>
-            <span>{t('login.stats.games')}</span>
-          </li>
-          <li>
-            <strong>6</strong>
-            <span>{t('login.stats.themes')}</span>
-          </li>
-        </ul>
+        <div className="lp-left-body">
+          <div className="lp-eyebrow">{t('login.eyebrow')}</div>
+          <h1 className="lp-headline">
+            {t('login.headlineA')} <em>{t('login.headlineEm')}</em> {t('login.headlineB')}
+          </h1>
+          <p className="lp-headline-sub">{t('login.heroSub')}</p>
 
-        <div className="login-aside-bottom">
-          <p className="login-quote">{t('login.leftQuote')}</p>
-          <span className="login-version">v1.0</span>
+          <div className="lp-stats" aria-hidden="true">
+            <div className="lp-stat">
+              <div className="lp-stat-num">180<span>+</span></div>
+              <div className="lp-stat-label">{t('login.stats.questions')}</div>
+            </div>
+            <div className="lp-stat-div" />
+            <div className="lp-stat">
+              <div className="lp-stat-num">15</div>
+              <div className="lp-stat-label">{t('login.stats.themes')}</div>
+            </div>
+            <div className="lp-stat-div" />
+            <div className="lp-stat">
+              <div className="lp-stat-num">3</div>
+              <div className="lp-stat-label">{t('login.stats.levels')}</div>
+            </div>
+          </div>
         </div>
-      </aside>
 
-      {/* Panneau formulaire */}
-      <main className="login-main">
-        <Link to="/" className="login-back-link">{t('login.backHome')}</Link>
-        <form onSubmit={handleSubmit(onSubmit)} className="login-form">
-          <h1 className="login-welcome">{t('login.welcome')}</h1>
-          <p className="login-subtitle">{t('login.subtitle')}</p>
+        <div className="lp-left-footer">
+          <div className="lp-pills" aria-hidden="true">
+            <span className="lp-pill lp-pill-a">A</span>
+            <span className="lp-pill lp-pill-b">B</span>
+            <span className="lp-pill lp-pill-c">C</span>
+            <span className="lp-pill lp-pill-d">D</span>
+          </div>
+          <span className="lp-footer-copy">© 2026 Creveton</span>
+        </div>
+      </div>
+
+      {/* ─────────── Panneau droit (formulaire) ─────────── */}
+      <div className="lp-right">
+        <form onSubmit={handleSubmit(onSubmit)} className="lp-form">
+          <h2 className="lp-form-title">{t('login.formTitle')}</h2>
+          <p className="lp-form-sub">{t('login.subtitle')}</p>
 
           <div className="field">
             <label>{t('login.email')}</label>
@@ -114,25 +157,46 @@ export default function Login() {
             {errors.password && <span className="field-error">{errors.password.message}</span>}
           </div>
 
-          <label className="login-remember">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            <span>{t('login.rememberMe')}</span>
-          </label>
+          <div className="lp-form-row">
+            <label className="lp-remember">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <span>{t('login.rememberMe')}</span>
+            </label>
+            <button type="button" className="lp-forgot">{t('login.forgot')}</button>
+          </div>
 
-          <button className="btn btn-gold btn-block" type="submit" disabled={submitting} style={{ padding: '11px 16px' }}>
-            {submitting ? <Loader2 size={17} className="spin" /> : <LogIn size={17} />}
-            {submitting ? t('login.loading') : t('login.submit')}
+          <button className="lp-submit" type="submit" disabled={submitting}>
+            {submitting && <Loader2 size={17} className="spin" />}
+            <span>{submitting ? t('login.loading') : t('login.cta')}</span>
+            {!submitting && <ArrowRight size={17} className="lp-arrow" />}
           </button>
 
-          {error && <p className="login-error" role="alert">{error}</p>}
+          {/* Erreur inline (entre le bouton et la suite). Pas de bloc « offline » :
+              la console admin n'embarque pas de détection réseau (à la différence
+              du Login mobile). */}
+          {error && <p className="lp-error" role="alert">{error}</p>}
 
-          {USE_MOCKS && <p className="login-demo">{t('login.misc.demoBanner')}</p>}
+          <div className="lp-divider">
+            <span className="lp-divider-line" />
+            <span className="lp-divider-or">{t('login.dividerOr')}</span>
+            <span className="lp-divider-line" />
+          </div>
+
+          {/* SSO — placeholder statique pour l'instant. */}
+          <button type="button" className="lp-sso">{t('login.sso')}</button>
+
+          <div className="lp-form-footer">
+            <Link to="/" className="lp-back">{t('login.backHome')}</Link>
+            <span className="lp-version">v1.0</span>
+          </div>
+
+          {USE_MOCKS && <p className="lp-demo">{t('login.misc.demoBanner')}</p>}
         </form>
-      </main>
+      </div>
     </div>
   );
 }
