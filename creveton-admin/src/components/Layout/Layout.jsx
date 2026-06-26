@@ -20,6 +20,7 @@ export default function Layout() {
 
   return (
     <div className="app-shell">
+      <a href="#main-content" className="skip-link">Aller au contenu principal</a>
       <Sidebar />
       <div className="app-main">
         {maintenance && (
@@ -29,7 +30,7 @@ export default function Layout() {
           </div>
         )}
         <Header />
-        <main className="app-content">
+        <main className="app-content" id="main-content" tabIndex={-1}>
           {/* Boundary par page : une erreur de rendu n'affiche jamais un écran
               blanc, et la clé route réinitialise l'état à chaque navigation. */}
           <ErrorBoundary key={pathname}>
