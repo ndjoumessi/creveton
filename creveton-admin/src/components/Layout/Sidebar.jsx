@@ -4,6 +4,7 @@ import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Setting
 import dashboardService from '../../services/dashboard.service';
 import { useApiData } from '../../hooks/useApiData';
 import { useAuthStore } from '../../store/authStore';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import Logo from '../Logo';
 
 const NAV = [
@@ -46,9 +47,11 @@ const NAV = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ mobileNavOpen = false, onCloseMobileNav }) {
   const { t } = useTranslation();
   const role = useAuthStore((s) => s.role)();
+  // Focus trap + Échap + restauration du focus quand le drawer mobile est ouvert.
+  const trapRef = useFocusTrap(mobileNavOpen, onCloseMobileNav);
   // Compteur de questions en attente pour le badge de notification.
   const { data } = useApiData(() => dashboardService.overview().catch(() => null), [], { pollMs: 60000 });
   const pending = data?.pending_questions?.length || 0;
@@ -62,8 +65,8 @@ export default function Sidebar() {
     .filter((section) => section.items.length > 0);
 
   return (
-    <aside className="sidebar">
-      <Link to="/dashboard" className="sidebar-brand" aria-label="Tableau de bord Creveton">
+    <aside id="main-sidebar" ref={trapRef} className={`sidebar${mobileNavOpen ? ' is-open' : ''}`}>
+      <Link to="/dashboard" className="sidebar-brand" aria-label="Tableau de bord Creveton" onClick={onCloseMobileNav}>
         <Logo size={40} className="sidebar-logo-svg" />
         <span className="sidebar-brand-name">Creveton</span>
       </Link>
@@ -74,7 +77,7 @@ export default function Sidebar() {
             {section.items.map(({ to, labelKey, icon: Icon, end, badgeKey }) => {
               const label = t(labelKey);
               return (
-                <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={label}>
+                <NavLink key={to} to={to} end={end} onClick={onCloseMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={label}>
                   <Icon className="nav-icon" size={18} />
                   <span className="nav-label">{label}</span>
                   {badgeKey === 'pending' && pending > 0 && <span className="nav-badge">{pending}</span>}

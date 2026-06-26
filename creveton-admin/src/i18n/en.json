@@ -1,5 +1,7 @@
 {
   "nav": {
+    "open": "Open menu",
+    "close": "Close menu",
     "dashboard": "Dashboard",
     "leaderboard": "Leaderboard",
     "questions": "Questions",

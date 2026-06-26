@@ -1,5 +1,7 @@
 {
   "nav": {
+    "open": "Ouvrir le menu",
+    "close": "Fermer le menu",
     "dashboard": "Tableau de bord",
     "leaderboard": "Classement",
     "questions": "Questions",

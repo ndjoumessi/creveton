@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, LogOut, Command, Moon, Sun } from 'lucide-react';
+import { RefreshCw, LogOut, Command, Moon, Sun, Menu, X } from 'lucide-react';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import useThemeStore from '../../store/themeStore';
@@ -19,7 +19,7 @@ const TITLE_KEYS = {
   '/settings': 'nav.settings',
 };
 
-export default function Header() {
+export default function Header({ mobileNavOpen, onToggleMobileNav }) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -51,6 +51,16 @@ export default function Header() {
 
   return (
     <header className="header">
+      <button
+        className="hamburger-btn"
+        onClick={onToggleMobileNav}
+        aria-label={mobileNavOpen ? t('nav.close') : t('nav.open')}
+        aria-expanded={mobileNavOpen}
+        aria-controls="main-sidebar"
+      >
+        {mobileNavOpen ? <X size={22} /> : <Menu size={22} />}
+      </button>
+
       <div className="breadcrumb">
         <Link to="/dashboard" className="crumb-muted" title={t('header.a11y.console')}>{t('header.console')}</Link>
         <span className="crumb-sep">/</span>
