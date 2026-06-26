@@ -1376,8 +1376,18 @@
     }
   },
   "landing": {
+    "nav": {
+      "features": "Features",
+      "themes": "Themes",
+      "about": "About",
+      "download": "Download"
+    },
     "hero": {
       "tagline": "Quiz. Competition. Cameroon. 🇨🇲",
+      "eyebrow": "Quiz · Competition · Cameroon",
+      "headlineA": "The quiz that thrills",
+      "headlineEm": "Cameroon",
+      "headlineB": "",
       "subtitle": "Cameroon's competitive quiz",
       "download": "Download the app",
       "adminAccess": "Access the admin console →",
@@ -1385,10 +1395,16 @@
     },
     "stats": {
       "questions": "Questions",
-      "players": "Players",
-      "games": "Games played"
+      "themes": "Themes",
+      "levels": "Levels"
+    },
+    "mockup": {
+      "question": "What is Cameroon's political capital?",
+      "qNum": "Question 3/10",
+      "score": "Score"
     },
     "features": {
+      "eyebrow": "Built for you",
       "title": "Why Creveton?",
       "quiz": "Timed quiz",
       "quizDesc": "Questions about Cameroonian culture",
@@ -1398,6 +1414,7 @@
       "leaderboardDesc": "Climb the national ranking"
     },
     "howItWorks": {
+      "eyebrow": "Simple and fast",
       "title": "How it works",
       "step1": "Sign up",
       "step1Desc": "Create your account in 30 seconds",
@@ -1407,17 +1424,29 @@
       "step3Desc": "XP, badges and tournaments await you"
     },
     "themes": {
+      "eyebrow": "Explore",
       "title": "4 themes, hundreds of questions",
-      "questions": "questions"
+      "questions": "questions",
+      "geography": "Geography",
+      "culture": "Culture",
+      "history": "History",
+      "industry": "Industry"
     },
     "testimonials": {
-      "title": "What they think"
+      "eyebrow": "They love it",
+      "title": "What they think",
+      "quote1": "I play every evening! The questions are well crafted and the competition is addictive.",
+      "quote2": "Finally a 100% Cameroonian quiz. I learn so much about my country while having fun.",
+      "quote3": "The tournament mode is brilliant. Facing my friends live has become a weekend ritual."
     },
     "cta": {
+      "eyebrow": "Join the game",
       "title": "Ready to play?",
+      "sub": "Download Creveton and climb the national ranking.",
       "button": "Download for free"
     },
     "footer": {
+      "country": "Cameroon",
       "legal": "Legal notice",
       "privacy": "Privacy",
       "contact": "Contact",

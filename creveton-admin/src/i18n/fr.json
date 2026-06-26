@@ -1376,8 +1376,18 @@
     }
   },
   "landing": {
+    "nav": {
+      "features": "Fonctionnalités",
+      "themes": "Thèmes",
+      "about": "À propos",
+      "download": "Télécharger"
+    },
     "hero": {
       "tagline": "Quiz. Compétition. Cameroun. 🇨🇲",
+      "eyebrow": "Quiz · Compétition · Cameroun",
+      "headlineA": "Le quiz qui fait vibrer le",
+      "headlineEm": "Cameroun",
+      "headlineB": "",
       "subtitle": "Le quiz compétitif du Cameroun",
       "download": "Télécharger l'app",
       "adminAccess": "Accéder à la console admin →",
@@ -1385,10 +1395,16 @@
     },
     "stats": {
       "questions": "Questions",
-      "players": "Joueurs",
-      "games": "Parties jouées"
+      "themes": "Thèmes",
+      "levels": "Niveaux"
+    },
+    "mockup": {
+      "question": "Quelle est la capitale politique du Cameroun ?",
+      "qNum": "Question 3/10",
+      "score": "Score"
     },
     "features": {
+      "eyebrow": "Pensé pour vous",
       "title": "Pourquoi Creveton ?",
       "quiz": "Quiz chronométré",
       "quizDesc": "Questions sur la culture camerounaise",
@@ -1398,6 +1414,7 @@
       "leaderboardDesc": "Grimpez dans le classement national"
     },
     "howItWorks": {
+      "eyebrow": "Simple et rapide",
       "title": "Comment ça marche",
       "step1": "Inscris-toi",
       "step1Desc": "Crée ton compte en 30 secondes",
@@ -1407,17 +1424,29 @@
       "step3Desc": "XP, badges et tournois t'attendent"
     },
     "themes": {
+      "eyebrow": "Explore",
       "title": "4 thèmes, des centaines de questions",
-      "questions": "questions"
+      "questions": "questions",
+      "geography": "Géographie",
+      "culture": "Culture",
+      "history": "Histoire",
+      "industry": "Industrie"
     },
     "testimonials": {
-      "title": "Ce qu'ils en pensent"
+      "eyebrow": "Ils adorent",
+      "title": "Ce qu'ils en pensent",
+      "quote1": "Je joue chaque soir ! Les questions sont bien pensées et la compétition est addictive.",
+      "quote2": "Enfin un quiz 100 % camerounais. J'apprends plein de choses sur mon pays en m'amusant.",
+      "quote3": "Le mode tournoi est génial. Affronter mes amis en direct, c'est devenu un rituel du week-end."
     },
     "cta": {
+      "eyebrow": "Rejoins la partie",
       "title": "Prêt à jouer ?",
+      "sub": "Télécharge Creveton et grimpe dans le classement national.",
       "button": "Télécharger gratuitement"
     },
     "footer": {
+      "country": "Cameroun",
       "legal": "Mentions légales",
       "privacy": "Confidentialité",
       "contact": "Contact",
