@@ -15,9 +15,12 @@ API REST + WebSocket de **Creveton**, application de quiz mobile compétitif
 | Base de données | PostgreSQL (`pg`) |
 | Cache / temps réel / rate limit | Redis (`ioredis`) |
 | Temps réel | Socket.io |
-| Auth | JWT (access 1 h / refresh 30 j) + bcrypt |
+| Auth | JWT (access 1 h / refresh 30 j) + `bcryptjs` |
 | Validation | Joi |
 | SMS / OTP | Twilio |
+| E-mail (invitations…) | Resend |
+| Médias (avatars, images de questions) | Cloudinary |
+| Traduction IA FR↔EN (questions) | Anthropic (gardée par `ANTHROPIC_API_KEY`) |
 | Paiements (plus tard, derrière flag) | Orange Money · MTN MoMo · Campay |
 
 ## Démarrage
@@ -52,12 +55,12 @@ Le serveur écoute par défaut sur `http://localhost:4000`, API montée sous
 ```
 backend/
 ├── src/
-│   ├── config/        # env, database (pg), redis, logger, multer
-│   ├── controllers/   # logique de requête/réponse par domaine
+│   ├── config/        # env, database (pg), redis, logger, multer, cloudinary
+│   ├── controllers/   # contrôleurs fins (asyncHandler), un par domaine
 │   ├── middlewares/   # auth, rôles, validation, rate limit, feature flags, erreurs
-│   ├── models/        # accès données PostgreSQL (à implémenter)
-│   ├── routes/        # définition des routes, montées sous /api/v1
-│   ├── services/      # logique métier (scoring, OTP, SMS, paiements…)
+│   ├── models/        # accès données PostgreSQL (SQL) + migrations + migrate.js
+│   ├── routes/        # définition des routes, montées sous /api/v1 (+ routes/admin)
+│   ├── services/      # logique métier (scoring, OTP, SMS, e-mail, avatars, IA…)
 │   ├── sockets/       # couche temps réel Socket.io (tournois)
 │   ├── utils/         # ApiError, codes d'erreur, JWT, helpers
 │   ├── validators/    # schémas Joi
@@ -74,18 +77,17 @@ backend/
 - **JSON `snake_case`** en entrée/sortie ; horodatages **ISO 8601 UTC** ; identifiants **UUID v4**.
 - **Montants** entiers en **FCFA** (XAF, sans sous-unité).
 - **Modèle d'erreur unique** : `{ error: { code, message, details?, request_id } }` (voir `src/utils/errorCodes.js`).
-- **Anti-triche questions** : `correct_index` / `explanation` ne sont **jamais** exposés par `GET /questions` ; révélés uniquement par `POST /sessions/submit`.
+- **Anti-triche questions** : `correct_index` / `explanation` / `explanation_en` ne sont **jamais** exposés par la vue joueur (`GET /questions`) ; révélés uniquement après réponse, via `POST /sessions/answer` (feedback immédiat, mode `normal`) et le `review[]` de `POST /sessions/submit`.
 - **Scoring serveur-authoritative** : voir `src/services/scoreService.js`.
+- **XP & niveaux (1–5)** : `userModel.creditSessionXp` est l'unique point d'écriture de `total_xp` (recalcul du niveau en SQL). Bandes `[0, 200, 500, 1200, 3000]`.
+- **Bilingue FR/EN** : `text_fr` (NOT NULL, source de vérité) + `text_en` / `options[].text_en` / `explanation_en`. Auto-traduction IA fire-and-forget (gardée par `ANTHROPIC_API_KEY`) après création/édition/import.
+- **Médias sur Cloudinary** : avatars et images de questions, jamais sur le disque local (conteneur éphémère).
 - **Feature flag** `tournaments.paid.enabled` (défaut `false`) : toute la couche paiement renvoie `403 FEATURE_DISABLED` tant qu'il est inactif.
 
 ## État d'implémentation
 
-Le câblage complet (routes, middlewares, validation, erreurs, sockets, scoring)
-est en place. Les contrôleurs dépendant de la persistance renvoient
-`501 NOT_IMPLEMENTED` en attendant la couche modèles + migrations DB
-(voir `src/models/README.md`). Déjà fonctionnels :
-
-- `GET /health` (vérifie DB + Redis)
-- Validation Joi de toutes les entrées
-- Authentification JWT + contrôle de rôle
-- Service de scoring (`scoreService`) + service OTP (`otpService`)
+L'API est **fonctionnelle de bout en bout** : auth (OTP/JWT/rôles), questions (CRUD admin,
+import CSV, traduction IA, delta sync), sessions notées, tournois temps réel, défis,
+classement, wallet, support, équipes/invitations, analytics et dashboard. La couche modèles
+PostgreSQL (`src/models/*.model.js`) et les migrations (`src/models/migrations/`, lancées via
+`migrate.js`) sont en place. `GET /health` vérifie DB + Redis.

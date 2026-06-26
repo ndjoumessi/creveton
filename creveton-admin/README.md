@@ -13,7 +13,8 @@ Consomme l'API backend (`../backend`, REST + JWT). Réf. design : CDC §3 / §9 
 - **recharts** (graphiques : barres, anneau, courbes, sparklines)
 - **@tanstack/react-table** (tables triables/paginées)
 - **react-hook-form** (formulaires)
-- **zustand** (état global : auth + UI)
+- **zustand** (état global : auth + UI + thème)
+- **i18next** / **react-i18next** (bilingue FR/EN)
 - **lucide-react** (icônes) · **react-hot-toast** (notifications)
 - **papaparse** (CSV) · **date-fns** (dates)
 - Design system maison : `src/constants/theme.js` + `src/index.css` (charte vert foncé / or, polices Outfit + Space Grotesk).
@@ -50,17 +51,24 @@ refus d'authentification). Un build de production n'active jamais les mocks.
 ```
 src/
   main.jsx              Point d'entrée (Router + Toaster)
-  App.jsx              Routes (publique /login + routes protégées)
-  index.css            Design system global (charte CDC §9)
+  App.jsx              Routes (publiques /, /landing, /login + routes protégées)
+  index.css            Design system global (charte « Cockpit Émeraude »)
   constants/           theme.js (couleurs/statuts), enums.js
-  services/            api.js (axios+JWT) + auth/questions/users/tournaments/analytics/transactions
-  store/               authStore.js (session/rôle), uiStore.js (sidebar/langue)
+  i18n/                Configuration i18next + traductions FR/EN
+  services/            api.js (axios+JWT) + auth, questions, users, tournaments,
+                       leaderboard, sessions, finances, analytics, dashboard,
+                       settings, support, team, health
+  store/               authStore (session/rôle), uiStore (langue/maintenance),
+                       themeStore
   hooks/               useApiData.js (fetch + refresh + polling)
-  components/          KPICard, DataTable, StatusBadge, Modal, Drawer, Toast,
-                       LoadingSpinner, EmptyState, PageHeader, PrivateRoute,
+  components/          KpiCard, DataTable, StatusBadge, ThemeBadge, Modal, Drawer,
+                       Toast, Avatar, AvatarUpload, CommandPalette (⌘K), Gauge,
+                       Sparkline, Skeleton, EmptyState, ErrorBoundary, PageHeader,
+                       PasswordInput, FilterSelect, ScrollToTop, Logo, PrivateRoute,
                        Layout/ (Sidebar, Header, Layout)
-  pages/               Login, Dashboard, Questions, Utilisateurs, Tournois,
-                       Analytics, Transactions, ComingSoon
+  pages/               Landing, Login, Dashboard, Questions, Utilisateurs, Tournois
+                       (+ TournoiDetail), Classement, Parties, Finances, Parametres,
+                       Privacy, AcceptInvite, RolesPage, SupportPage, TeamPage
   mocks/               Données de démonstration (FCFA réalistes)
   utils/               format.js (FCFA, dates, %)
 ```
@@ -86,13 +94,16 @@ axios rafraîchit l'access token sur `401` et redirige vers `/login` si le refre
 
 | Page | Endpoints backend |
 |---|---|
-| Dashboard | (agrégats — mock en attendant un endpoint dédié) |
-| Questions | `/admin/questions` CRUD · `/transition` · `/import` · `/force-sync` |
+| Dashboard | `/admin/dashboard` (KPIs agrégés) |
+| Questions | `/admin/questions` CRUD · `/transition` · `/import` · `/translate` · `/force-sync` |
 | Utilisateurs | `/admin/users` · suspend / ban / reset-password / delete |
 | Tournois | `/admin/tournaments` create/start/cancel/payout |
-| Analytics | `/admin/analytics` |
-| Transactions | (mock — pas d'endpoint admin dédié pour l'instant) |
+| Classement | `/admin/leaderboard` (route front `/classement`) |
+| Parties | `/admin/sessions` |
+| Finances | `/admin/transactions` · `/admin/analytics/finances` |
+| Support / Équipe / Rôles | `/admin/support` · `/admin/team` (invitations) · rôles & permissions |
+| Paramètres | `/admin/settings` (dont mode maintenance) |
 
-> Certains écrans (Dashboard agrégé, Transactions admin, liste admin des tournois)
-> n'ont pas encore d'endpoint backend dédié : ils s'appuient sur `src/mocks/` et
-> basculeront automatiquement sur les données réelles dès que les endpoints existeront.
+> Restitution honnête des données (charte produit) : un écran sans endpoint dédié
+> n'affiche pas de chiffres factices. Le repli `src/mocks/` n'existe qu'en dev sous
+> `VITE_USE_MOCKS=true` (jamais en production).
