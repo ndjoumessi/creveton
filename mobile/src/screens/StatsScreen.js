@@ -12,13 +12,14 @@ import {
   Dimensions,
 } from 'react-native';
 import Svg, { Path, Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
-import { BarChart2, Trophy, Target, TrendingUp } from 'lucide-react-native';
+import { BarChart2, Trophy, Target, TrendingUp, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Avatar, AppButton, Body, Skeleton } from '../components';
+import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen } from '../components';
 import Icon from '../components/Icon';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { THEMES } from '../constants/config';
 import {
   colors,
@@ -243,11 +244,13 @@ export default function StatsScreen({ navigation }) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  const { isOffline } = useNetworkStatus();
 
   const history = useStatsStore((s) => s.history);
   const stats = useStatsStore((s) => s.stats);
   const histLoading = useStatsStore((s) => s.histLoading);
   const loadHistory = useStatsStore((s) => s.loadHistory);
+  const error = useStatsStore((s) => s.error);
 
   const leaderboard = useStatsStore((s) => s.leaderboard);
   const myRank = useStatsStore((s) => s.myRank);
@@ -346,6 +349,9 @@ export default function StatsScreen({ navigation }) {
             stats={stats}
             history={history}
             loading={loadingStats}
+            error={error}
+            isOffline={isOffline}
+            onRetry={() => loadHistory()}
             onPlay={() => navigation.navigate('Play')}
           />
         ) : (
@@ -354,6 +360,9 @@ export default function StatsScreen({ navigation }) {
             myRank={myRank}
             totalPlayers={totalPlayers}
             loading={lbLoading}
+            error={error}
+            isOffline={isOffline}
+            onRetry={() => loadLeaderboard({ scope: 'global', currentUserId: user?.id })}
             currentUserId={user?.id}
             onPlay={() => navigation.navigate('Play')}
           />
@@ -363,8 +372,35 @@ export default function StatsScreen({ navigation }) {
   );
 }
 
+// Bloc d'échec de chargement (réseau/serveur) — distinct de l'état vide
+// « nouveau joueur ». Hors-ligne → WifiOff + invite ; en ligne → message serveur.
+// Réutilise ErrorScreen inline (même composant que le pattern Tournaments).
+function LoadIssue({ isOffline, error, onRetry }) {
+  const { t } = useTranslation();
+  return isOffline ? (
+    <ErrorScreen
+      inline
+      dark={false}
+      icon={WifiOff}
+      title={t('offline.title')}
+      message={t('offline.message')}
+      onRetry={onRetry}
+      retryLabel={t('common.retry')}
+    />
+  ) : (
+    <ErrorScreen
+      inline
+      dark={false}
+      title={t('common.error')}
+      message={error}
+      onRetry={onRetry}
+      retryLabel={t('common.retry')}
+    />
+  );
+}
+
 // ── Onglet Mes stats ───────────────────────────────────────────────────────
-function StatsTab({ stats, history, loading, onPlay }) {
+function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -382,7 +418,14 @@ function StatsTab({ stats, history, loading, onPlay }) {
     );
   }
 
-  // État vide : aucune partie jouée.
+  // Échec réseau/serveur : un loadHistory raté remet `history` à [] (pas null) →
+  // sans ce garde, l'écran afficherait l'état vide « nouveau joueur ». `error`
+  // (ou hors-ligne) est le discriminant.
+  if ((!history || history.length === 0) && (isOffline || error)) {
+    return <LoadIssue isOffline={isOffline} error={error} onRetry={onRetry} />;
+  }
+
+  // État vide LÉGITIME : nouveau joueur, aucune partie (online, sans erreur).
   if (history && history.length === 0) {
     return (
       <View style={styles.empty}>
@@ -570,7 +613,7 @@ function HistoryRow({ game }) {
 }
 
 // ── Onglet Classement ──────────────────────────────────────────────────────
-function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay }) {
+function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetry, currentUserId, onPlay }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -589,6 +632,12 @@ function RankTab({ data, myRank, totalPlayers, loading, currentUserId, onPlay })
         ))}
       </View>
     );
+  }
+
+  // Échec réseau/serveur (≠ classement réellement vide) : on n'écrase l'état
+  // vide légitime que si hors-ligne ou erreur de chargement.
+  if (data.length === 0 && (isOffline || error)) {
+    return <LoadIssue isOffline={isOffline} error={error} onRetry={onRetry} />;
   }
 
   if (data.length === 0) {

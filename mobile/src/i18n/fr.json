@@ -586,6 +586,8 @@
     "pendingSessions": "{{count}} résultat(s) en attente",
     "savedOffline": "Résultats sauvegardés hors ligne",
     "savedOfflineMessage": "Ta partie sera envoyée automatiquement dès le retour de la connexion.",
-    "avatarDisabled": "Modification photo disponible en ligne"
+    "avatarDisabled": "Modification photo disponible en ligne",
+    "title": "Pas de connexion",
+    "message": "Vérifie ta connexion internet, puis réessaie."
   }
 }

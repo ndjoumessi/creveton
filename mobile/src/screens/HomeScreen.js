@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { HelpCircle, Target, TrendingUp } from 'lucide-react-native';
+import { HelpCircle, Target, TrendingUp, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '../components/Icon';
@@ -28,6 +28,7 @@ import {
   ThemeBadge,
   LevelBadge,
   Skeleton,
+  ErrorScreen,
 } from '../components';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -44,6 +45,7 @@ import {
   shadow,
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import {
   formatDateTime,
   themeLabel,
@@ -198,15 +200,18 @@ export default function HomeScreen({ navigation }) {
   // En-têtes de section : vert clair (green300) en sombre — lisibles sur la page
   // sombre ; vert profond (green900) en clair, inchangé.
   const sectionColor = isDark ? colors.green300 : colors.green900;
+  const { isOffline } = useNetworkStatus();
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const loadLeaderboard = useLeaderboardStore((s) => s.load);
   const top = useLeaderboardStore((s) => s.data);
+  const lbError = useLeaderboardStore((s) => s.error);
 
   const history = useStatsStore((s) => s.history);
   const stats = useStatsStore((s) => s.stats);
   const histLoading = useStatsStore((s) => s.histLoading);
   const loadHistory = useStatsStore((s) => s.loadHistory);
+  const statsError = useStatsStore((s) => s.error);
 
   const [activeTournaments, setActiveTournaments] = useState([]);
   const [tournLoading, setTournLoading] = useState(true);
@@ -248,6 +253,15 @@ export default function HomeScreen({ navigation }) {
   const streakMax = stats.totalGames > 0 ? stats.maxStreak : null;
   const loadingStats = histLoading && history === null;
   const recent = (history || []).slice(0, 3);
+
+  // Aucune donnée dynamique chargée (parties, classement, tournois) ET cause =
+  // réseau/serveur (hors-ligne ou erreur de fetch). On distingue ce cas de
+  // l'état « nouveau joueur » (en ligne, sans erreur) pour ne pas afficher un
+  // tableau de bord de zéros trompeur. Le cache présent → on affiche normalement.
+  const loadError = statsError || lbError;
+  const dataEmpty =
+    !(history && history.length) && !(top && top.length) && !activeTournaments.length;
+  const blockingIssue = dataEmpty && (isOffline || !!loadError);
 
   return (
     <SafeAreaView edges={['top']} style={styles.root}>
@@ -346,6 +360,31 @@ export default function HomeScreen({ navigation }) {
             />
           </LinearGradient>
 
+          {/* Données dynamiques : remplacées par un bloc hors-ligne / erreur quand
+              rien n'a pu être chargé (≠ nouveau joueur). Sinon affichage normal. */}
+          {blockingIssue ? (
+            isOffline ? (
+              <ErrorScreen
+                inline
+                dark={false}
+                icon={WifiOff}
+                title={t('offline.title')}
+                message={t('offline.message')}
+                onRetry={loadAll}
+                retryLabel={t('common.retry')}
+              />
+            ) : (
+              <ErrorScreen
+                inline
+                dark={false}
+                title={t('common.error')}
+                message={loadError}
+                onRetry={loadAll}
+                retryLabel={t('common.retry')}
+              />
+            )
+          ) : (
+            <>
           {/* Mes stats rapides */}
           <View style={styles.sectionHeaderTight}>
             <Heading color={sectionColor}>{t('home.myStats.title')}</Heading>
@@ -542,6 +581,8 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Stats')}
             style={styles.lbButton}
           />
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

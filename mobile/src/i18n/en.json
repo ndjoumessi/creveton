@@ -586,6 +586,8 @@
     "pendingSessions": "{{count}} result(s) pending",
     "savedOffline": "Results saved offline",
     "savedOfflineMessage": "Your game will be sent automatically once the connection is back.",
-    "avatarDisabled": "Photo update available online"
+    "avatarDisabled": "Photo update available online",
+    "title": "You're offline",
+    "message": "Check your internet connection, then try again."
   }
 }

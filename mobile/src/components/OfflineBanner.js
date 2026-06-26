@@ -20,18 +20,22 @@ export default function OfflineBanner() {
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
   const isOnline = useNetworkStore((s) => s.isOnline);
+  const isInternetReachable = useNetworkStore((s) => s.isInternetReachable);
   const [dismissed, setDismissed] = useState(false);
   const [mounted, setMounted] = useState(false); // garde la vue montée le temps du slide-up
   const total = BAR_HEIGHT + insets.top;
   const slide = useRef(new Animated.Value(-total)).current; // caché par défaut
 
-  const visible = !isOnline && !dismissed;
+  // Hors-ligne « effectif » : déconnecté OU connecté sans Internet joignable
+  // (portail captif). `null` = inconnu → joignable (pas de faux hors-ligne).
+  const offline = !isOnline || isInternetReachable === false;
+  const visible = offline && !dismissed;
 
   // Réinitialise le « dismiss » dès qu'on repasse en ligne (réapparaîtra à la
   // prochaine coupure).
   useEffect(() => {
-    if (isOnline) setDismissed(false);
-  }, [isOnline]);
+    if (!offline) setDismissed(false);
+  }, [offline]);
 
   useEffect(() => {
     if (visible) setMounted(true);
