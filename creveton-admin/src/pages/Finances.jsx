@@ -6,7 +6,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from 'recharts';
 import {
-  Download, Wallet, ArrowDownLeft, ArrowUpRight, Clock, Eye, Check, X, Lock, Loader2, Search,
+  Download, Wallet, ArrowDownLeft, ArrowUpRight, Clock, Eye, Check, X, Lock, Loader2, Search, AlertTriangle,
 } from 'lucide-react';
 import financesService from '../services/finances.service';
 import { useApiData } from '../hooks/useApiData';
@@ -20,6 +20,7 @@ import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import KpiCard from '../components/KpiCard';
 import StatusBadge from '../components/StatusBadge';
+import EmptyState from '../components/EmptyState';
 import { notify } from '../components/Toast';
 import './Finances.css';
 
@@ -63,12 +64,13 @@ export default function Finances() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [selectedTx, setSelectedTx] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null); // { tx, kind: 'approve' | 'reject' }
+  const [rejectReason, setRejectReason] = useState(''); // motif de rejet (envoyé au backend)
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState(''); // recherche par référence (filtre client)
   const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
 
-  const { data: summary, loading: summaryLoading, refetch: refetchSummary } = useApiData(() => financesService.summary(), []);
+  const { data: summary, loading: summaryLoading, error: summaryError, refetch: refetchSummary } = useApiData(() => financesService.summary(), []);
   const { data: dailyData } = useApiData(() => financesService.daily(30), []);
   const { data: txData, loading: txLoading, refetch: refetchTx } = useApiData(
     () => financesService.transactions({
@@ -116,10 +118,11 @@ export default function Finances() {
         await financesService.validate(tx.id);
         notify.success(t('finances.notify.validated'));
       } else {
-        await financesService.reject(tx.id, confirmAction.reason);
+        await financesService.reject(tx.id, rejectReason.trim() || undefined);
         notify.success(t('finances.notify.rejected'));
       }
       setConfirmAction(null);
+      setRejectReason('');
       refetchAll();
     } catch {
       notify.error(t('finances.notify.actionFailed'));
@@ -279,6 +282,15 @@ export default function Finances() {
       )}
 
       {/* KPIs */}
+      {summaryError ? (
+        <div className="fin-section">
+          <EmptyState
+            icon={AlertTriangle}
+            title={t('common.error')}
+            action={<button type="button" className="btn" onClick={refetchSummary}>{t('common.retry')}</button>}
+          />
+        </div>
+      ) : (
       <div className="grid grid-kpi fin-section">
         <KpiCard
           icon={<Wallet size={22} />} tone="green"
@@ -308,6 +320,7 @@ export default function Finances() {
           value={summaryLoading ? '—' : (s.pending?.count ?? 0)}
         />
       </div>
+      )}
 
       {/* Graphique volume journalier (30 j) */}
       <div className="card card-pad fin-section">
@@ -408,11 +421,11 @@ export default function Finances() {
       {/* Confirmation approuver / rejeter */}
       <Modal
         open={!!confirmAction}
-        onClose={() => (busy ? null : setConfirmAction(null))}
+        onClose={() => (busy ? null : (setConfirmAction(null), setRejectReason('')))}
         title={confirmAction ? t(`finances.confirm.${confirmAction.kind}Title`) : ''}
         footer={confirmAction && (
           <>
-            <button className="btn" onClick={() => setConfirmAction(null)} disabled={busy}>{t('common.cancel')}</button>
+            <button className="btn" onClick={() => { setConfirmAction(null); setRejectReason(''); }} disabled={busy}>{t('common.cancel')}</button>
             <button
               className={`btn ${confirmAction.kind === 'approve' ? 'btn-primary' : 'btn-danger'}`}
               onClick={runConfirm}
@@ -424,12 +437,27 @@ export default function Finances() {
         )}
       >
         {confirmAction && (
-          <p style={{ margin: 0 }}>
-            {t(`finances.confirm.${confirmAction.kind}Body`, {
-              amount: fcfa(confirmAction.tx.amount),
-              name: confirmAction.tx.user_name,
-            })}
-          </p>
+          <>
+            <p style={{ margin: 0 }}>
+              {t(`finances.confirm.${confirmAction.kind}Body`, {
+                amount: fcfa(confirmAction.tx.amount),
+                name: confirmAction.tx.user_name,
+              })}
+            </p>
+            {confirmAction.kind === 'reject' && (
+              <div className="field" style={{ marginBottom: 0, marginTop: 14 }}>
+                <label>{t('finances.confirm.reasonLabel')}</label>
+                <textarea
+                  className="textarea"
+                  rows={3}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder={t('finances.confirm.reasonPlaceholder')}
+                  disabled={busy}
+                />
+              </div>
+            )}
+          </>
         )}
       </Modal>
     </>

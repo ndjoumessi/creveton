@@ -120,7 +120,7 @@ export default function Parties() {
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const { data, loading } = useApiData(
+  const { data, loading, error, refetch } = useApiData(
     () => sessionsService.list(filters),
     [filters.theme, filters.level, filters.q],
   );
@@ -433,13 +433,21 @@ export default function Parties() {
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filtered}
-        loading={loading}
-        onRowClick={setSelected}
-        emptyMessage={t('common.noData')}
-      />
+      {error ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('common.error')}
+          action={<button type="button" className="btn" onClick={refetch}>{t('common.retry')}</button>}
+        />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={filtered}
+          loading={loading}
+          onRowClick={setSelected}
+          emptyMessage={t('common.noData')}
+        />
+      )}
 
       <Drawer
         open={Boolean(selected)}

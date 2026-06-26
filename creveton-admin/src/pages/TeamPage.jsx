@@ -17,6 +17,7 @@ import { dateFr, dateTimeFr } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import Drawer from '../components/Drawer';
 import Modal from '../components/Modal';
+import DataTable from '../components/DataTable';
 import Avatar from '../components/Avatar';
 import { SkeletonTable } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
@@ -584,6 +585,62 @@ function InviteStatusBadge({ status }) {
 
 function PendingInvitations({ invitations, loading, canManage, onResend, resendingId }) {
   const { t } = useTranslation();
+
+  // Colonnes DataTable (tri désactivé : on conserve l'ordre serveur).
+  const invColumns = [
+    {
+      accessorKey: 'email', header: t('team.invitations.email'), enableSorting: false,
+      cell: (c) => <span className="cell-strong">{c.getValue()}</span>,
+    },
+    {
+      accessorKey: 'name', header: t('team.invitations.name'), enableSorting: false,
+      cell: (c) => c.getValue() || '—',
+    },
+    {
+      accessorKey: 'role', header: t('team.invitations.role'), enableSorting: false,
+      cell: (c) => <RoleBadge role={c.getValue()} />,
+    },
+    {
+      accessorKey: 'status', header: t('team.invitations.statusCol'), enableSorting: false,
+      cell: (c) => <InviteStatusBadge status={c.getValue()} />,
+    },
+    {
+      id: 'sent', header: t('team.invitations.sent'), enableSorting: false,
+      cell: ({ row }) => {
+        const inv = row.original;
+        return inv.email_sent ? (
+          <span className="team-status team-st-active" title={t('team.invitations.sentYes')}>
+            <MailCheck size={14} /> {t('team.invitations.sentYes')}
+          </span>
+        ) : (
+          <span className="team-status team-st-susp" title={inv.email_error || t('team.invitations.sentNo')}>
+            <MailX size={14} /> {t('team.invitations.sentNo')}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: 'expires_at', header: t('team.invitations.expires'), enableSorting: false,
+      cell: (c) => <span className="team-muted-cell">{dateTimeFr(c.getValue())}</span>,
+    },
+    {
+      id: 'actions', header: t('team.columns.actions'), enableSorting: false,
+      cell: ({ row }) => {
+        const inv = row.original;
+        return inv.status === 'pending' ? (
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost-soft"
+            disabled={resendingId === inv.id}
+            onClick={() => onResend(inv)}
+          >
+            <RefreshCw size={14} /> {t('team.invitations.resend')}
+          </button>
+        ) : null;
+      },
+    },
+  ];
+
   if (!canManage) return null;
 
   return (
@@ -597,57 +654,7 @@ function PendingInvitations({ invitations, loading, canManage, onResend, resendi
       ) : !invitations.length ? (
         <div className="card"><EmptyState icon={Mail} title={t('team.invitations.emptyTitle')} message={t('team.invitations.emptyMessage')} /></div>
       ) : (
-        <div className="card team-table-card">
-          <div className="table-wrap">
-            <table className="data team-table">
-              <thead>
-                <tr>
-                  <th>{t('team.invitations.email')}</th>
-                  <th>{t('team.invitations.name')}</th>
-                  <th>{t('team.invitations.role')}</th>
-                  <th>{t('team.invitations.statusCol')}</th>
-                  <th>{t('team.invitations.sent')}</th>
-                  <th>{t('team.invitations.expires')}</th>
-                  <th aria-label={t('team.columns.actions')} />
-                </tr>
-              </thead>
-              <tbody>
-                {invitations.map((inv) => (
-                  <tr key={inv.id}>
-                    <td><span className="cell-strong">{inv.email}</span></td>
-                    <td>{inv.name || '—'}</td>
-                    <td><RoleBadge role={inv.role} /></td>
-                    <td><InviteStatusBadge status={inv.status} /></td>
-                    <td>
-                      {inv.email_sent ? (
-                        <span className="team-status team-st-active" title={t('team.invitations.sentYes')}>
-                          <MailCheck size={14} /> {t('team.invitations.sentYes')}
-                        </span>
-                      ) : (
-                        <span className="team-status team-st-susp" title={inv.email_error || t('team.invitations.sentNo')}>
-                          <MailX size={14} /> {t('team.invitations.sentNo')}
-                        </span>
-                      )}
-                    </td>
-                    <td><span className="team-muted-cell">{dateTimeFr(inv.expires_at)}</span></td>
-                    <td>
-                      {inv.status === 'pending' && (
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-ghost-soft"
-                          disabled={resendingId === inv.id}
-                          onClick={() => onResend(inv)}
-                        >
-                          <RefreshCw size={14} /> {t('team.invitations.resend')}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable columns={invColumns} data={invitations} emptyMessage={t('team.invitations.emptyMessage')} />
       )}
     </section>
   );
@@ -726,6 +733,73 @@ export default function TeamPage() {
     }
   };
 
+  // Colonnes DataTable des membres (tri désactivé : ordre serveur préservé ;
+  // clic ligne → openMember via onRowClick ; la cellule actions stoppe la
+  // propagation pour ne pas déclencher l'ouverture de la fiche).
+  const memberColumns = [
+    {
+      id: 'member', header: t('team.columns.member'), enableSorting: false,
+      cell: ({ row }) => {
+        const m = row.original;
+        return (
+          <div className="team-cell-member">
+            <Avatar name={m.name} size="sm" />
+            <div className="team-id">
+              <span className="cell-strong team-id-name">{m.name}</span>
+              <span className="list-sub team-id-mail">{m.email}</span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'role', header: t('team.columns.role'), enableSorting: false,
+      cell: (c) => <RoleBadge role={c.getValue()} />,
+    },
+    {
+      id: 'permissions', header: t('team.columns.permissions'), enableSorting: false,
+      cell: ({ row }) => <PermissionPills role={row.original.role} />,
+    },
+    {
+      accessorKey: 'status', header: t('team.columns.status'), enableSorting: false,
+      cell: (c) => <StatusDot status={c.getValue()} />,
+    },
+    {
+      id: 'lastActivity', header: t('team.columns.lastActivity'), enableSorting: false,
+      cell: ({ row }) => {
+        const m = row.original;
+        if (m.last_active_at) return <span className="team-muted-cell">{dateTimeFr(m.last_active_at)}</span>;
+        const exp = inviteExpiry(m.created_at);
+        if (!exp) return <span className="team-muted-cell">—</span>;
+        if (exp.expired) return <span className="team-invite-exp expired"><Clock size={12} /> {t('team.invite.expired', 'Invitation expirée')}</span>;
+        return <span className={`team-invite-exp ${exp.urgent ? 'urgent' : ''}`}><Clock size={12} /> {t('team.invite.expiresIn', { time: exp.label, defaultValue: 'Expire dans {{time}}' })}</span>;
+      },
+    },
+    {
+      accessorKey: 'created_at', header: t('team.columns.joinedAt'), enableSorting: false,
+      cell: (c) => <span className="team-muted-cell">{dateFr(c.getValue())}</span>,
+    },
+    {
+      id: 'actions', header: t('team.columns.actions'), enableSorting: false,
+      cell: ({ row }) => {
+        const m = row.original;
+        return (
+          <div className="team-actions" onClick={(e) => e.stopPropagation()}>
+            <RowMenu
+              member={m}
+              canManage={canManage(m)}
+              onView={openMember}
+              onEditRole={setRoleFor}
+              onPermissions={openPermissions}
+              onReset={doReset}
+              onDelete={setDeleteFor}
+            />
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <>
       <PageHeader
@@ -751,65 +825,12 @@ export default function TeamPage() {
       ) : !members.length ? (
         <div className="card"><EmptyState icon={Users} title={t('team.empty.title')} message={t('team.empty.message')} /></div>
       ) : (
-        <div className="card team-table-card">
-          <div className="table-wrap">
-            <table className="data team-table">
-              <thead>
-                <tr>
-                  <th>{t('team.columns.member')}</th>
-                  <th>{t('team.columns.role')}</th>
-                  <th>{t('team.columns.permissions')}</th>
-                  <th>{t('team.columns.status')}</th>
-                  <th>{t('team.columns.lastActivity')}</th>
-                  <th>{t('team.columns.joinedAt')}</th>
-                  <th aria-label={t('team.columns.actions')} />
-                </tr>
-              </thead>
-              <tbody>
-                {members.map((m) => (
-                  <tr key={m.id} className="team-row" onClick={() => openMember(m)}>
-                    <td>
-                      <div className="team-cell-member">
-                        <Avatar name={m.name} size="sm" />
-                        <div className="team-id">
-                          <span className="cell-strong team-id-name">{m.name}</span>
-                          <span className="list-sub team-id-mail">{m.email}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td><RoleBadge role={m.role} /></td>
-                    <td><PermissionPills role={m.role} /></td>
-                    <td><StatusDot status={m.status} /></td>
-                    <td>
-                      {m.last_active_at ? (
-                        <span className="team-muted-cell">{dateTimeFr(m.last_active_at)}</span>
-                      ) : (() => {
-                        const exp = inviteExpiry(m.created_at);
-                        if (!exp) return <span className="team-muted-cell">—</span>;
-                        if (exp.expired) return <span className="team-invite-exp expired"><Clock size={12} /> {t('team.invite.expired', 'Invitation expirée')}</span>;
-                        return <span className={`team-invite-exp ${exp.urgent ? 'urgent' : ''}`}><Clock size={12} /> {t('team.invite.expiresIn', { time: exp.label, defaultValue: 'Expire dans {{time}}' })}</span>;
-                      })()}
-                    </td>
-                    <td><span className="team-muted-cell">{dateFr(m.created_at)}</span></td>
-                    <td>
-                      <div className="team-actions" onClick={(e) => e.stopPropagation()}>
-                        <RowMenu
-                          member={m}
-                          canManage={canManage(m)}
-                          onView={openMember}
-                          onEditRole={setRoleFor}
-                          onPermissions={openPermissions}
-                          onReset={doReset}
-                          onDelete={setDeleteFor}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable
+          columns={memberColumns}
+          data={members}
+          onRowClick={openMember}
+          emptyMessage={t('team.empty.message')}
+        />
       )}
 
       {/* Invitations en attente (audit) — super_admin uniquement */}

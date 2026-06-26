@@ -1862,7 +1862,9 @@
       "approveTitle": "Approuver le retrait",
       "approveBody": "Confirmer l’approbation du retrait de {{amount}} pour {{name}} ? Le paiement sera déclenché.",
       "rejectTitle": "Rejeter le retrait",
-      "rejectBody": "Confirmer le rejet du retrait de {{amount}} pour {{name}} ?"
+      "rejectBody": "Confirmer le rejet du retrait de {{amount}} pour {{name}} ?",
+      "reasonLabel": "Motif du rejet (optionnel)",
+      "reasonPlaceholder": "Ex. justificatif KYC manquant, incohérence de montant…"
     },
     "notify": {
       "validated": "Transaction validée",

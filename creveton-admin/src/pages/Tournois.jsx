@@ -14,6 +14,7 @@ import { themeBadgeColors, themeLabels, tournamentStatusColors } from '../consta
 import { num, fcfa, dateFr, tournamentStart } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
+import DataTable from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import { Skeleton } from '../components/Skeleton';
 import { notify } from '../components/Toast';
@@ -369,6 +370,58 @@ export default function Tournois() {
     finally { setSubmitting(false); }
   };
 
+  // Colonnes de la vue « liste » (DataTable du design-system). Tri désactivé :
+  // l'ordre serveur (par date/état) est préservé comme dans l'ancienne table brute.
+  const listColumns = [
+    {
+      accessorKey: 'name', header: t('tournaments.table.name'), enableSorting: false,
+      cell: (c) => <span className="cell-strong">{c.getValue()}</span>,
+    },
+    {
+      id: 'type', header: t('tournaments.table.type'), enableSorting: false,
+      cell: ({ row }) => (Number(row.original.entry_fee) > 0 ? t('tournaments.card.paid') : t('tournaments.card.free')),
+    },
+    {
+      id: 'theme', header: t('tournaments.table.theme'), enableSorting: false,
+      cell: ({ row }) => t(`questions.themes.${row.original.theme}`, themeLabels[row.original.theme] || row.original.theme || '—'),
+    },
+    {
+      id: 'players', header: t('tournaments.table.players'), enableSorting: false,
+      cell: ({ row }) => `${num(row.original.registered_players || 0)}${row.original.max_players ? ` / ${row.original.max_players}` : ''}`,
+    },
+    {
+      accessorKey: 'status', header: t('tournaments.table.status'), enableSorting: false,
+      cell: (c) => <StatusBadge status={c.getValue()} />,
+    },
+    {
+      id: 'rewards', header: t('tournaments.table.rewards'), enableSorting: false,
+      cell: ({ row }) => (Number(row.original.entry_fee) > 0 ? fcfa(row.original.prize_pool) : t('tournaments.table.xpReward')),
+    },
+    {
+      accessorKey: 'starts_at', header: t('tournaments.table.date'), enableSorting: false,
+      cell: (c) => <span className="muted">{c.getValue() ? dateFr(c.getValue()) : '—'}</span>,
+    },
+    {
+      id: 'actions', header: t('tournaments.table.actions'), enableSorting: false,
+      cell: ({ row }) => {
+        const tour = row.original;
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            {(tour.status === 'scheduled' || tour.status === 'open') && (
+              <div className="row nowrap" style={{ gap: 6 }}>
+                <button className="btn btn-sm btn-success" onClick={() => doStart(tour)} aria-label={t('tournaments.actions.start')}><Play size={13} /></button>
+                <button className="btn btn-sm btn-danger-ghost" onClick={() => doCancel(tour)} aria-label={t('tournaments.actions.cancel')}><X size={13} /></button>
+              </div>
+            )}
+            {tour.status !== 'scheduled' && tour.status !== 'open' && (
+              <button className="btn btn-sm btn-ghost" onClick={() => openDetail(tour)} aria-label={t('tournaments.actions.detail')}><Eye size={13} /></button>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <>
       <PageHeader
@@ -431,35 +484,12 @@ export default function Tournois() {
       ) : tournaments.length === 0 ? (
         <div className="card"><EmptyState icon={Trophy} title={t('tournaments.empty.title')} message={t('tournaments.empty.message')} action={<button className="btn btn-primary" onClick={() => setCreating(true)}><Plus size={16} /> {t('tournaments.actions.createShort')}</button>} /></div>
       ) : (
-        <div className="card table-wrap">
-          <table className="data">
-            <thead><tr><th>{t('tournaments.table.name')}</th><th>{t('tournaments.table.type')}</th><th>{t('tournaments.table.theme')}</th><th>{t('tournaments.table.players')}</th><th>{t('tournaments.table.status')}</th><th>{t('tournaments.table.rewards')}</th><th>{t('tournaments.table.date')}</th><th>{t('tournaments.table.actions')}</th></tr></thead>
-            <tbody>
-              {tournaments.map((tour) => (
-                <tr key={tour.id} className="clickable" onClick={() => openDetail(tour)}>
-                  <td className="cell-strong">{tour.name}</td>
-                  <td>{Number(tour.entry_fee) > 0 ? t('tournaments.card.paid') : t('tournaments.card.free')}</td>
-                  <td>{t(`questions.themes.${tour.theme}`, themeLabels[tour.theme] || tour.theme || '—')}</td>
-                  <td>{num(tour.registered_players || 0)}{tour.max_players ? ` / ${tour.max_players}` : ''}</td>
-                  <td><StatusBadge status={tour.status} /></td>
-                  <td>{Number(tour.entry_fee) > 0 ? fcfa(tour.prize_pool) : t('tournaments.table.xpReward')}</td>
-                  <td className="muted">{tour.starts_at ? dateFr(tour.starts_at) : '—'}</td>
-                  <td onClick={(e) => e.stopPropagation()}>
-                    {(tour.status === 'scheduled' || tour.status === 'open') && (
-                      <div className="row nowrap" style={{ gap: 6 }}>
-                        <button className="btn btn-sm btn-success" onClick={() => doStart(tour)} aria-label={t('tournaments.actions.start')}><Play size={13} /></button>
-                        <button className="btn btn-sm btn-danger-ghost" onClick={() => doCancel(tour)} aria-label={t('tournaments.actions.cancel')}><X size={13} /></button>
-                      </div>
-                    )}
-                    {tour.status !== 'scheduled' && tour.status !== 'open' && (
-                      <button className="btn btn-sm btn-ghost" onClick={() => openDetail(tour)} aria-label={t('tournaments.actions.detail')}><Eye size={13} /></button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={listColumns}
+          data={tournaments}
+          onRowClick={openDetail}
+          emptyMessage={t('tournaments.empty.message')}
+        />
       )}
 
       <CreateModal open={creating} onClose={() => setCreating(false)} onCreate={create} submitting={submitting} />

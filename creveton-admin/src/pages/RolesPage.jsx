@@ -224,7 +224,7 @@ export default function RolesPage() {
         </div>
       ) : error ? (
         <EmptyState icon={ShieldAlert} title={t('roles.notify.failed')} action={
-          <button type="button" className="btn" onClick={refetch}>{t('roles.modal.cancel')}</button>
+          <button type="button" className="btn" onClick={refetch}>{t('common.retry')}</button>
         } />
       ) : (
         <div className="roles-grid">

@@ -222,16 +222,16 @@ const MEDAL = ['#d4a017', '#9aa3ad', '#b27a44']; // or, argent, bronze
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Ligne d'un service système (carte sombre). */
-function SysLine({ icon, label, latency, stateLabel }) {
+function SysLine({ icon, label, latency, stateLabel, down }) {
   return (
     <div className="dash-sys-line">
       <span className="dash-sys-ic">{icon}</span>
       <span className="dash-sys-name">{label}</span>
       <span className="dash-sys-state">
-        <span className="dash-sys-dot" />
+        <span className="dash-sys-dot" style={down ? { background: 'var(--red)' } : undefined} />
         {stateLabel}
       </span>
-      {latency != null && <span className="dash-sys-ms">{latency} ms</span>}
+      {!down && latency != null && <span className="dash-sys-ms">{latency} ms</span>}
     </div>
   );
 }
@@ -288,7 +288,7 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading, refetch } = useApiData(fetchAll, [], { pollMs: 30000 });
-  const { data: health } = useApiData(fetchHealthTimed, [], { pollMs: 30000 });
+  const { data: health, error: healthError } = useApiData(fetchHealthTimed, [], { pollMs: 30000 });
   const { data: top, loading: loadingTop } = useApiData(fetchTop, [], { pollMs: 60000 });
 
   const [period, setPeriod] = useState('7d');
@@ -479,6 +479,10 @@ export default function Dashboard() {
   }
 
   const apiLatency = health && typeof health._latencyMs === 'number' ? health._latencyMs : null;
+  // Statut système dérivé du SEUL appel /health : s'il échoue (ou n'a jamais
+  // abouti), on n'a aucune confirmation d'opérabilité → « Indisponible » partout.
+  const sysDown = !!healthError || !health;
+  const sysStateLabel = t(sysDown ? 'dashboard.system.down' : 'dashboard.system.operational');
 
   return (
     <>
@@ -648,9 +652,9 @@ export default function Dashboard() {
           <h3 className="card-title">{t('dashboard.misc.systemTitle')}</h3>
           <p className="card-sub" style={{ marginBottom: 6 }}>{t('dashboard.misc.systemSub')}</p>
           <div className="dash-sys-lines">
-            <SysLine icon={<Server size={15} />} label={t('dashboard.system.api')} latency={apiLatency} stateLabel={t('dashboard.system.operational')} />
-            <SysLine icon={<Database size={15} />} label={t('dashboard.system.database')} stateLabel={t('dashboard.system.operational')} />
-            <SysLine icon={<Zap size={15} />} label={t('dashboard.system.redis')} stateLabel={t('dashboard.system.operational')} />
+            <SysLine icon={<Server size={15} />} label={t('dashboard.system.api')} latency={apiLatency} stateLabel={sysStateLabel} down={sysDown} />
+            <SysLine icon={<Database size={15} />} label={t('dashboard.system.database')} stateLabel={sysStateLabel} down={sysDown} />
+            <SysLine icon={<Zap size={15} />} label={t('dashboard.system.redis')} stateLabel={sysStateLabel} down={sysDown} />
           </div>
           <div className="dash-sys-foot">
             <div className="dash-sys-frow">

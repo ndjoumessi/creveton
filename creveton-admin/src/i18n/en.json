@@ -1862,7 +1862,9 @@
       "approveTitle": "Approve withdrawal",
       "approveBody": "Confirm approval of the {{amount}} withdrawal for {{name}}? The payout will be triggered.",
       "rejectTitle": "Reject withdrawal",
-      "rejectBody": "Confirm rejection of the {{amount}} withdrawal for {{name}}?"
+      "rejectBody": "Confirm rejection of the {{amount}} withdrawal for {{name}}?",
+      "reasonLabel": "Rejection reason (optional)",
+      "reasonPlaceholder": "E.g. missing KYC proof, amount mismatch…"
     },
     "notify": {
       "validated": "Transaction validated",

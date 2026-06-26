@@ -1,7 +1,7 @@
 import './Classement.css';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trophy, Globe, Target, CalendarDays, CalendarRange } from 'lucide-react';
+import { Trophy, Globe, Target, CalendarDays, CalendarRange, AlertTriangle } from 'lucide-react';
 import { Icon } from '../components/Icon';
 import leaderboardService from '../services/leaderboard.service';
 import { useApiData } from '../hooks/useApiData';
@@ -111,7 +111,7 @@ export default function Classement() {
   const [scope, setScope] = useState('global');
   const [theme, setTheme] = useState(THEME_KEYS[0]);
 
-  const { data, loading } = useApiData(
+  const { data, loading, error, refetch } = useApiData(
     () => leaderboardService.get({ scope, theme: scope === 'theme' ? theme : undefined }),
     [scope, theme],
   );
@@ -180,7 +180,13 @@ export default function Classement() {
         </div>
       )}
 
-      {loading ? (
+      {error ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('common.error')}
+          action={<button type="button" className="btn" onClick={refetch}>{t('common.retry')}</button>}
+        />
+      ) : loading ? (
         <>
           <div className="lb-podium-skel">
             <Skeleton h={208} r={20} />
