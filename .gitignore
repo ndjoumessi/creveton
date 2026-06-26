@@ -17,3 +17,5 @@ coverage/
 # .impeccable/live/config.json) mais pas l'état runtime du mode live.
 .impeccable/live/*
 !.impeccable/live/config.json
+# Cache runtime du hook impeccable (par session, local) — éparpillé dans les sous-dossiers.
+**/.impeccable/hook.cache.json
