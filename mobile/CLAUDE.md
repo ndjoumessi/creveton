@@ -34,14 +34,15 @@ Pas de simulateur dispo ici : valider via `expo export` (build) + `expo start --
 - `services/`
   - `api.js` — client axios + 3 intercepteurs : injection Bearer, refresh auto sur 401 (single-flight), retry exponentiel sur 503. `parseApiError`, `setOnAuthExpired`.
   - `endpoints.js` — appels groupés par domaine (auth, questions, sessions, leaderboard, tournaments, challenges, users, wallet).
-  - `database.js` — cache SQLite des questions (vue joueur ; `correct_index`/`explanation` présents **en mode normal uniquement**).
-  - `sync.js` — delta sync CDC §2.8 (snapshot au 1er lancement, puis `/questions/delta`), non bloquant ; `handleForceSync` (push silencieux).
+  - `database.js` — cache SQLite des questions (vue joueur ; bilingue `text`/`text_en` + options `text_en` ; `correct_index`/`explanation`/`explanation_en` présents **en mode normal uniquement**). Migration douce (ALTER TABLE … ADD COLUMN) au démarrage.
+  - `sync.js` — delta sync CDC §2.8 (snapshot complet au 1er lancement via `/questions/all`, puis `/questions/delta`), non bloquant ; `handleForceSync` (push silencieux).
   - `notifications.js`, `socket.js`.
-- `store/` — `authStore`, `questionsStore`, `gameStore`, `leaderboardStore` (zustand).
-- `components/` — bibliothèque : `AppButton`, `AppInput`, `AuthField`, `AppCard`, `Avatar`, `Logo`, `ThemeBadge`, `LevelBadge`, `CircularTimer`, `ProgressDots`, `Confetti`, `MiniLineChart`, `LoadingScreen`, `ErrorScreen`, `Skeleton`, `Toast`/`useToast`, typographie (`Title/Heading/Body/Label`), `Screen`. Tout est ré-exporté par `components/index.js`.
+- `store/` — `authStore`, `questionsStore`, `gameStore`, `leaderboardStore`, `networkStore` (état réseau), `offlineQueue` (parties jouées hors ligne, persistée AsyncStorage) (zustand).
+- `components/` — bibliothèque : `AppButton`, `AppInput`, `AuthField`, `AppCard`, `Avatar`, `Logo`, `ThemeBadge`, `LevelBadge`, `CircularTimer`, `ProgressDots`, `Confetti`, `MiniLineChart`, `LoadingScreen`, `ErrorScreen`, `Skeleton`, `Toast`/`useToast`, `OfflineBanner`, `NetworkWatcher`, `PendingSyncBadge`, typographie (`Title/Heading/Body/Label`), `Screen`. Tout est ré-exporté par `components/index.js`.
 - `navigation/` — `AppNavigator` (AuthStack si non authentifié, sinon MainStack) → `AuthStack` (Splash/Register/OTP/Login), `MainStack` (Tabs + Quiz/Results/Challenge), `BottomTabs` (Accueil/Jouer/Tournois/Stats/Profil).
 - `screens/` — 12 écrans.
-- `utils/` — `format.js` (FCFA, dates fr, **courbe XP**), `validation.js`, `haptics.js`.
+- `hooks/` — `usePushNotifications`, `useTheme`, `useTournamentSocket`, `useNetworkStatus` (lit `networkStore`).
+- `utils/` — `format.js` (FCFA, dates fr, **courbe XP**), `validation.js`, `haptics.js`, `i18n.js` (`getQuestionText`/`getOptionText`/`normalizeLang` — localisation du contenu des questions).
 
 ## Conventions & règles à respecter
 
@@ -54,6 +55,26 @@ Pas de simulateur dispo ici : valider via `expo export` (build) + `expo start --
 - **Formulaires & clavier** : pour les écrans avec inputs (Login/Register), utiliser `AuthField` (label statique, champ non contrôlé via ref) + `KeyboardAvoidingView` (padding iOS / height Android), **sans ScrollView** — évite le reset du formulaire à l'ouverture du clavier.
 - **Listes** : `FlatList` (pas `ScrollView`) pour les listes de données.
 - **Honnêteté des données** : ne pas afficher de données factices. Un élément sans endpoint (badge « NOUVEAU », tendance classement, record) ne s'affiche que si la donnée réelle existe (ou est marqué placeholder en commentaire).
+- **Hors ligne** : `@react-native-community/netinfo`. **Un seul** listener (`NetworkWatcher`, monté dans `App` sous le `ToastProvider`) alimente `networkStore` ; les écrans lisent via `useNetworkStatus()`. Les parties jouées hors ligne (ou sur échec réseau) sont mises en file dans `offlineQueue` puis **rejouées** via `/sessions/submit` au retour de connexion (toast récap). `OfflineBanner` (overlay haut, slide) + `PendingSyncBadge` (Accueil/Stats). **Dégradation gracieuse** (jamais de crash) : Tournois/Défis désactivés, Login/Register bloqués hors ligne, avatar/mot de passe désactivés dans Profil. `ResultsScreen` affiche « sauvegardé hors ligne » quand la partie est mise en file.
+- **Bilingue FR/EN (contenu)** : localiser énoncés/options via `utils/i18n.js` (`getQuestionText`/`getOptionText`, repli FR **toujours** — jamais de texte vide). Le cache porte `text`/`text_en` + options `text_en`. L'explication localisée vient du **serveur** (feedback `/sessions/answer` `explanation_en`, `review[].explanation_en`), pas du cache (anti-triche). `QuizScreen`/`ResultsScreen` recalculent l'affichage selon `i18n.language` (bascule à chaud).
+
+## Branding assets (NE PAS écraser)
+
+- `icon.png` (1024×1024) : logo Creveton (cœur camerounais) centré sur fond `#0b2e1a` green900.
+- `adaptive-icon.png` (1024×1024) : même traitement, zone de sécurité Android ~66 %.
+- `splash-icon.png` : logo centré sur green900.
+- Source : `mobile/assets/logo.png` (416×416, vrai PNG RGBA).
+- ⚠️ Si `generate-assets.js` existe ou est régénéré, il peut produire l'ancien design
+  (tile « C » doré) — vérifier avant de committer.
+
+## Build local APK (quand EAS cloud quota épuisé)
+
+- EAS Free : 30 builds Android/mois, reset le 1er.
+- Bug `npx EINVALIDTAGNAME` : npm < 10.9 — fix : `npm install -g npm@latest`.
+- `ANDROID_HOME` requis : `export ANDROID_HOME=~/Library/Android/sdk`.
+- Commande : `cd mobile && eas build --local --platform android --profile preview`.
+- APK sorti dans `mobile/build-<TIMESTAMP>.apk` (~81–85 Mo).
+- Skill dédié installé : `expo-eas-local-build`.
 
 ## Références
 

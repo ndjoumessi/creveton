@@ -77,6 +77,25 @@ régénérer avec `/impeccable document`.
   Cloudinary + colonne. Config : `config/cloudinary.js` lit `CLOUDINARY_CLOUD_NAME/
   API_KEY/API_SECRET` (+ `CLOUDINARY_UPLOAD_PRESET`) depuis l'env — à définir aussi sur
   Railway. Côté mobile, `avatar_url` est une URL HTTPS absolue (rendue telle quelle).
+- **Bilingue FR/EN & traduction IA** (questions) : colonnes `text_fr` (**NOT NULL**, source
+  de vérité), `text_en`, `options[].text_en`, `explanation`, `explanation_en`
+  (migration `020_explanation_en.sql`). `toPlayerView` expose `text_fr`/`text_en`/`text`
+  (= FR, rétro-compat) + options `{ index, text, text_fr, text_en }` — mais **JAMAIS**
+  `explanation`/`explanation_en` (anti-triche, comme `correct_index`). L'explication EN
+  transite, comme l'explication FR, par `/sessions/answer` et le `review[]` de
+  `/sessions/submit` (révélation post-réponse). `src/services/aiCorrectorService.js` :
+  `improveText({ text, lang, type, action })` — `action='correct'|'translate'` ; en
+  traduction `lang` = langue **cible** (`'en'` = FR→EN, `'fr'` = EN→FR) ; les guillemets
+  encadrants de la réponse IA sont retirés. `autoTranslate(id, sourceLang)` traduit énoncé +
+  options + explication en un appel JSON et écrit via `questionModel.applyTranslation`
+  (bump `version` pour le delta sync, `success_rate` **préservé**). Auto-traduction
+  **fire-and-forget** après `create`/`update` admin et après chaque ligne importée (CSV),
+  gardée par `ANTHROPIC_API_KEY`. Endpoint **bloquant** `POST /admin/questions/:id/translate`
+  (`{ target_lang }`) pour le bouton « Traduire » (réutilise la permission
+  `questions:update` — `questions:manage` n'existe pas). Scripts de batch idempotents
+  (lots de 30) : `backend/scripts/translate-questions-en.js` (énoncés+options) et
+  `translate-explanations-en.js` ; sur staging via `DATABASE_URL="…" node …` (TCP proxy
+  Railway, proxy supprimé immédiatement après).
 
 ## Frontend (`creveton-admin/`) — conventions
 
@@ -103,7 +122,22 @@ régénérer avec `/impeccable document`.
 - **CSS** : le design system vit dans `src/index.css` (ne pas le modifier pour du
   spécifique). Chaque page peut avoir un `src/pages/<Page>.css` à classes **préfixées**
   (`.dash-…`, `.u-…`, etc.) importé en tête — pas de collision, pas d'édition partagée.
+- **Éditeur bilingue questions** (`src/pages/Questions.jsx`, modale partagée
+  création/édition/duplication) : champs FR/EN (énoncé, options, explication) **réordonnés
+  selon `i18n.language`** — le champ de la langue active est *primaire* (badge « Principal »
+  + saisi), l'autre *secondaire* (tag « optionnelle » + bouton 🌐 qui le traduit depuis le
+  primaire). `✨` = correcteur, `🌐` = traduction (`questionsService.improveText` /
+  `translateQuestion`). `text_fr` reste **requis** ; en mode EN, « Suivant » auto-traduit
+  EN→FR si le FR est vide. **Édition = `PATCH /admin/questions/:id`** (state `editingId` →
+  `update()` + mise à jour locale via `setData`, pas de refetch) ; **création/duplication =
+  `POST`** ; le suffixe « (Copie) » n'est ajouté **qu'à la duplication**. L'aperçu mobile et
+  le drawer (section « Gestion bilingue » repliable) suivent aussi `i18n.language`.
 - **ESLint propre + `npm run build` qui passe** sont obligatoires avant commit.
+- **Logo admin (Cockpit Émeraude)** : les 4 tiles « C » monogramme ont été remplacés par
+  `<img src="/logo.png">` — `Login.jsx`, `Landing.jsx` (×2 : nav + footer), `AcceptInvite.jsx`.
+  `creveton-admin/public/logo.png` : vrai PNG 416×416 (était un JPEG mislabeled).
+  `creveton-admin/public/favicon.png` : idem, re-encodé en vrai PNG. CSS : tile or → tile
+  image, `object-fit: cover`, fond crème (cream backing).
 
 ## Git
 
