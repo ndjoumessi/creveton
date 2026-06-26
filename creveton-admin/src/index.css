@@ -129,6 +129,9 @@ input, select, textarea { font-family: inherit; }
 
 /* ===================== Sidebar ===================== */
 .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w); background: var(--bg-sidebar); display: flex; flex-direction: column; z-index: 30; }
+/* En dark, la sidebar réchauffée se confond avec le fond de page : un filet vert
+   la redétache (mode clair inchangé — séparation déjà naturelle). */
+[data-theme="dark"] .sidebar { border-right: 1px solid var(--border-green); }
 .sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: var(--header-h); border-bottom: 1px solid var(--green700); }
 /* Le carré or EST le logo — pas de fond vert */
 .sidebar-logo { width: 38px; height: 38px; border-radius: 10px; background: var(--gold); display: grid; place-items: center; color: var(--green900); font-family: 'Outfit'; font-weight: 800; font-size: 21px; flex: none; box-shadow: var(--shadow-gold); }
