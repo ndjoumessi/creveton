@@ -340,7 +340,7 @@ export default function Landing() {
 
           <nav className="land-footer-links" aria-label={t('landing.a11y.legalLinks')}>
             <a href="#">{t('landing.footer.legal')}</a>
-            <a href="#">{t('landing.footer.privacy')}</a>
+            <Link to="/privacy">{t('landing.footer.privacy')}</Link>
             <a href="#">{t('landing.footer.contact')}</a>
           </nav>
         </div>

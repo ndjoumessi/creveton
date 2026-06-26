@@ -4,6 +4,7 @@
     "slug": "creveton",
     "version": "1.0.0",
     "owner": "ndjoumessi",
+    "privacy_policy_url": "https://creveton-admin-staging.up.railway.app/privacy",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "creveton",
