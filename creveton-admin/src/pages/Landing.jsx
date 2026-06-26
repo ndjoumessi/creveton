@@ -129,22 +129,23 @@ export default function Landing() {
             <a className="land-nav-link" href="#features">{t('landing.nav.features')}</a>
             <a className="land-nav-link" href="#themes">{t('landing.nav.themes')}</a>
             <a className="land-nav-link" href="#about">{t('landing.nav.about')}</a>
-            <div className="land-lang">
-              <button
-                type="button"
-                className={`land-lang-btn${lang === 'fr' ? ' active' : ''}`}
-                onClick={() => setLang('fr')}
-              >
-                FR
-              </button>
-              <button
-                type="button"
-                className={`land-lang-btn${lang === 'en' ? ' active' : ''}`}
-                onClick={() => setLang('en')}
-              >
-                EN
-              </button>
-            </div>
+          </div>
+          {/* Switcher autonome — hors .land-nav-links pour rester visible < 768px. */}
+          <div className="land-lang-switch">
+            <button
+              type="button"
+              className={`land-lang-btn${lang === 'fr' ? ' active' : ''}`}
+              onClick={() => setLang('fr')}
+            >
+              FR
+            </button>
+            <button
+              type="button"
+              className={`land-lang-btn${lang === 'en' ? ' active' : ''}`}
+              onClick={() => setLang('en')}
+            >
+              EN
+            </button>
           </div>
           <a className="land-nav-cta" href="#">{t('landing.nav.download')}</a>
         </nav>

@@ -110,12 +110,11 @@
 }
 .land-nav-cta:hover { background: #e8b830; }
 
-/* Switcher de langue (autonome, dans la nav) */
-.land-lang {
-  display: inline-flex;
+/* Switcher de langue — autonome, hors .land-nav-links pour rester visible < 768px. */
+.land-lang-switch {
+  display: flex;
   align-items: center;
-  gap: 2px;
-  margin-left: 4px;
+  gap: 4px;
 }
 .land-lang-btn {
   background: none;
