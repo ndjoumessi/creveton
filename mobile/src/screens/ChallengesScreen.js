@@ -181,7 +181,13 @@ export default function ChallengesScreen({ navigation }) {
     hapticLight();
     try {
       const res = await challenges.accept(item.challenge_id);
-      startGame({ mode: 'challenge', theme: item.theme, level: item.level, questions: res.questions || [] });
+      startGame({
+        mode: 'challenge',
+        challengeId: res.challenge_id || item.challenge_id,
+        theme: item.theme,
+        level: item.level,
+        questions: res.questions || [],
+      });
       // Le défi quitte l'onglet « Reçus » une fois accepté.
       setData((d) => ({
         ...d,
@@ -198,7 +204,7 @@ export default function ChallengesScreen({ navigation }) {
     try {
       const opponentId = opponent === 'friend' ? selectedFriend?.id ?? null : null;
       const res = await challenges.create({ opponent_id: opponentId, theme, level, stake: 0 });
-      startGame({ mode: 'challenge', theme, level, questions: res.questions || [] });
+      startGame({ mode: 'challenge', challengeId: res.challenge_id, theme, level, questions: res.questions || [] });
       setLaunching(false);
       resetSheet();
       navigation.navigate('Quiz');
