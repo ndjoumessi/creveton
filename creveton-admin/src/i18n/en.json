@@ -861,7 +861,8 @@
       "liveFollow": "Live tracking",
       "detail": "Details",
       "createShort": "Create",
-      "validateResults": "Validate results"
+      "validateResults": "Validate results",
+      "remove": "Remove"
     },
     "modal": {
       "title": "Create a tournament",
@@ -945,7 +946,16 @@
       "noParticipantsMessage": "No one has registered for this tournament yet.",
       "player": "Player",
       "city": "City",
-      "gain": "Payout"
+      "gain": "Payout",
+      "addParticipant": "Enroll a player",
+      "searchPlaceholder": "Search for a player...",
+      "enroll": "Enroll",
+      "participantAdded": "Player enrolled successfully",
+      "participantRemoved": "Participant removed",
+      "removeTitle": "Remove this participant?",
+      "removeBody": "Remove {{name}} from this tournament?",
+      "actions": "Actions",
+      "noResults": "No player found"
     },
     "notification": "just joined",
     "types": {

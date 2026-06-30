@@ -122,6 +122,25 @@
 /* Bannière info discrète (mode gratuit). */
 .tour-banner-info { align-items: center; }
 
+/* ── Inscription manuelle (TournoiDetail) ── */
+.tour-add-section { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.tour-add-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 10px; }
+.tour-search-wrap { position: relative; }
+.tour-search-input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-md, 8px); background: var(--surface); color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
+.tour-search-input:focus { border-color: var(--green500, #2a8a4f); }
+.tour-search-input:disabled { opacity: 0.5; cursor: not-allowed; }
+.tour-search-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 4px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md, 8px); box-shadow: var(--shadow-lg); z-index: 50; overflow: hidden; }
+.tour-search-result { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; transition: background 0.1s; }
+.tour-search-result:hover { background: var(--bg-mute); }
+.tour-search-result-name { font-weight: 600; font-size: 13.5px; color: var(--ink); flex: 1; }
+.tour-search-result-level { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.tour-search-empty { padding: 10px 12px; font-size: 13px; color: var(--muted); text-align: center; }
+.tour-selected-user { display: flex; align-items: center; gap: 10px; background: var(--bg-mute); border: 1px solid var(--border); border-radius: var(--radius-md, 8px); padding: 8px 12px; }
+.tour-selected-name { font-weight: 600; font-size: 13.5px; color: var(--ink); flex: 1; }
+.tour-selected-level { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.tour-selected-clear { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1; padding: 0 4px; }
+.tour-selected-clear:hover { color: var(--ink); }
+
 /* ── Dark-mode base surface overrides (neutral light → dark track) ── */
 [data-theme="dark"] .tour-players-bar { background: var(--bg-mute); }
 [data-theme="dark"] .tour-detail-fill { background: var(--bg-mute); }

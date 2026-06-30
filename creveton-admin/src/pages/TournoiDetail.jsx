@@ -1,5 +1,5 @@
 import './Tournois.css';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Icon } from '../components/Icon';
 import tournamentsService from '../services/tournaments.service';
+import { list as searchUsers } from '../services/users.service';
 import { useApiData } from '../hooks/useApiData';
 import { themeBadgeColors, themeLabels, tournamentStatusColors } from '../constants/theme';
 import { num, fcfa, dateFr, pct } from '../utils/format';
@@ -42,10 +43,57 @@ export default function TournoiDetail() {
   const stats = data?.stats || null;
   const podium = useMemo(() => participants.slice(0, 3), [participants]);
   const isClosed = tour && ['closed', 'paid'].includes(tour.status);
+  const canAdd = tour && !['cancelled', 'paid'].includes(tour.status);
+  const canRemove = tour && ['open', 'scheduled'].includes(tour.status);
 
-  // Confirmation explicite avant toute action sensible (démarrer / annuler / payout).
+  // Confirmation explicite avant toute action sensible (démarrer / annuler / payout / retrait).
   const [confirm, setConfirm] = useState(null); // { fn, label, title, body, confirmLabel, danger }
   const [busy, setBusy] = useState(false);
+
+  // Recherche + inscription manuelle de joueur.
+  const [searchQ, setSearchQ] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const searchDebounce = useRef(null);
+
+  useEffect(() => {
+    if (!searchQ || searchQ.length < 2) { setSearchResults([]); return undefined; }
+    let active = true;
+    clearTimeout(searchDebounce.current);
+    searchDebounce.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const result = await searchUsers({ q: searchQ, limit: 8, status: 'active' });
+        if (active) setSearchResults(result?.data || []);
+      } catch { /* silent */ } finally {
+        if (active) setSearching(false);
+      }
+    }, 300);
+    return () => { active = false; clearTimeout(searchDebounce.current); };
+  }, [searchQ]);
+
+  const clearSearch = useCallback(() => {
+    setSearchQ('');
+    setSearchResults([]);
+    setSelectedUser(null);
+  }, []);
+
+  const handleAddParticipant = useCallback(async () => {
+    if (!selectedUser || adding) return;
+    setAdding(true);
+    try {
+      await tournamentsService.addParticipant(id, selectedUser.id);
+      notify.success(t('tournaments.detail.participantAdded'));
+      clearSearch();
+      refetch();
+    } catch (e) {
+      notify.error(e?.response?.data?.error?.message || t('tournaments.notify.actionFailed'));
+    } finally {
+      setAdding(false);
+    }
+  }, [selectedUser, adding, id, t, clearSearch, refetch]);
 
   const runConfirm = async () => {
     if (!confirm) return;
@@ -153,12 +201,71 @@ export default function TournoiDetail() {
             <p className="card-sub">{tour.status === 'running' ? t('tournaments.detail.autoRefresh') : t('tournaments.detail.registeredHere')}</p>
           </div>
         </div>
+
+        {/* Inscription manuelle */}
+        {canAdd && (
+          <div className="tour-add-section" style={{ marginTop: 16 }}>
+            <p className="tour-add-title">{t('tournaments.detail.addParticipant')}</p>
+            {selectedUser ? (
+              <div className="tour-selected-user">
+                <Avatar name={selectedUser.name} size="sm" />
+                <span className="tour-selected-name">{selectedUser.name}</span>
+                <span className="tour-selected-level">Niv. {selectedUser.level}</span>
+                <button className="tour-selected-clear" onClick={clearSearch}>✕</button>
+                <button className="btn btn-primary btn-sm" onClick={handleAddParticipant} disabled={adding}>
+                  {adding ? '…' : t('tournaments.detail.enroll')}
+                </button>
+              </div>
+            ) : (
+              <div className="tour-search-wrap">
+                <input
+                  className="tour-search-input"
+                  type="text"
+                  placeholder={t('tournaments.detail.searchPlaceholder')}
+                  value={searchQ}
+                  onChange={(e) => { setSearchQ(e.target.value); }}
+                />
+                {searchQ.length >= 2 && !searching && searchResults.length === 0 && (
+                  <div className="tour-search-dropdown">
+                    <div className="tour-search-empty">{t('tournaments.detail.noResults')}</div>
+                  </div>
+                )}
+                {searchResults.length > 0 && (
+                  <div className="tour-search-dropdown">
+                    {searchResults.map((u) => (
+                      <div
+                        key={u.id}
+                        className="tour-search-result"
+                        onClick={() => { setSelectedUser(u); setSearchQ(''); setSearchResults([]); }}
+                      >
+                        <Avatar name={u.name} size="sm" />
+                        <span className="tour-search-result-name">{u.name}</span>
+                        <span className="tour-search-result-level">Niv. {u.level}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {participants.length === 0 ? (
           <EmptyState icon={Users} title={t('tournaments.detail.noParticipantsTitle')} message={t('tournaments.detail.noParticipantsMessage')} />
         ) : (
           <div className="table-wrap" style={{ marginTop: 8 }}>
             <table className="data">
-              <thead><tr><th>{t('tournaments.detail.rank')}</th><th>{t('tournaments.detail.player')}</th><th>{t('tournaments.detail.city')}</th><th>{t('tournaments.detail.score')}</th>{isClosed && <th>{t('tournaments.detail.gain')}</th>}<th>{t('tournaments.detail.registeredAt')}</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>{t('tournaments.detail.rank')}</th>
+                  <th>{t('tournaments.detail.player')}</th>
+                  <th>{t('tournaments.detail.city')}</th>
+                  <th>{t('tournaments.detail.score')}</th>
+                  {isClosed && <th>{t('tournaments.detail.gain')}</th>}
+                  <th>{t('tournaments.detail.registeredAt')}</th>
+                  {canRemove && <th>{t('tournaments.detail.actions')}</th>}
+                </tr>
+              </thead>
               <tbody>
                 {participants.map((p) => (
                   <tr key={p.id}>
@@ -168,6 +275,23 @@ export default function TournoiDetail() {
                     <td className="cell-strong">{num(p.score)}</td>
                     {isClosed && <td>{p.payout > 0 ? fcfa(p.payout) : '—'}</td>}
                     <td className="muted">{dateFr(p.joined_at)}</td>
+                    {canRemove && (
+                      <td>
+                        <button
+                          className="btn btn-sm btn-danger-ghost"
+                          onClick={() => setConfirm({
+                            fn: () => tournamentsService.removeParticipant(id, p.user_id),
+                            label: t('tournaments.detail.participantRemoved'),
+                            title: t('tournaments.detail.removeTitle'),
+                            body: t('tournaments.detail.removeBody', { name: p.name }),
+                            confirmLabel: t('tournaments.actions.remove'),
+                            danger: true,
+                          })}
+                        >
+                          {t('tournaments.actions.remove')}
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

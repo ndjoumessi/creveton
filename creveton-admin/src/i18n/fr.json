@@ -861,7 +861,8 @@
       "liveFollow": "Suivi live",
       "detail": "Détail",
       "createShort": "Créer",
-      "validateResults": "Valider les résultats"
+      "validateResults": "Valider les résultats",
+      "remove": "Retirer"
     },
     "modal": {
       "title": "Créer un tournoi",
@@ -945,7 +946,16 @@
       "noParticipantsMessage": "Personne ne s’est encore inscrit à ce tournoi.",
       "player": "Joueur",
       "city": "Ville",
-      "gain": "Gain"
+      "gain": "Gain",
+      "addParticipant": "Inscrire un joueur",
+      "searchPlaceholder": "Rechercher un joueur...",
+      "enroll": "Inscrire",
+      "participantAdded": "Joueur inscrit avec succès",
+      "participantRemoved": "Participant retiré",
+      "removeTitle": "Retirer ce participant ?",
+      "removeBody": "Retirer {{name}} de ce tournoi ?",
+      "actions": "Actions",
+      "noResults": "Aucun joueur trouvé"
     },
     "notification": "vient de rejoindre",
     "types": {

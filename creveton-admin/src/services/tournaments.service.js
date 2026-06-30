@@ -33,4 +33,18 @@ export function payout(id) {
   return withMock(() => api.post(`/admin/tournaments/${id}/payout`).then((r) => r.data), () => ({ tournament: { id, status: 'paid' }, results: [] }));
 }
 
-export default { list, detail, create, start, cancel, payout };
+export function addParticipant(tournamentId, userId) {
+  return withMock(
+    () => api.post(`/admin/tournaments/${tournamentId}/participants`, { user_id: userId }).then((r) => r.data),
+    () => ({ tournament_id: tournamentId, user_id: userId, score: 0 }),
+  );
+}
+
+export function removeParticipant(tournamentId, userId) {
+  return withMock(
+    () => api.delete(`/admin/tournaments/${tournamentId}/participants/${userId}`).then((r) => r.data),
+    () => ({ tournament_id: tournamentId, user_id: userId }),
+  );
+}
+
+export default { list, detail, create, start, cancel, payout, addParticipant, removeParticipant };
