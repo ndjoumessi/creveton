@@ -121,6 +121,14 @@ t('flux complet : challenger gagne → completed + winner + bonus XP', async () 
   expect(s2.body.score_challenger).toBeGreaterThan(s2.body.score_opponent);
   expect(s2.body.winner_id).toBe(challenger.id);
   expect(s2.body.xp_bonus).toBeGreaterThan(0);
+  // Réponse complétée auto-suffisante côté joueur soumettant (opponent ici, perdant) :
+  // son propre score + l'XP + l'issue du duel, sans avoir à connaître son camp.
+  expect(s2.body.your_score).toBe(s2.body.score_opponent);
+  expect(s2.body.opponent_score).toBe(s2.body.score_challenger);
+  expect(s2.body.won).toBe(false);
+  expect(typeof s2.body.xp_earned).toBe('number');
+  expect(s2.body.total_questions).toBe(10);
+  expect(typeof s2.body.correct_count).toBe('number');
 
   // le bonus est crédité au gagnant en base
   const { rows } = await H.db.query('SELECT total_xp FROM users WHERE id = $1', [challenger.id]);

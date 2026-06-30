@@ -143,6 +143,8 @@ async function submit({ userId, challengeId, answers }) {
       status: apiStatus(updated),
       your_score: result.score,
       xp_earned: result.xp_earned,
+      total_questions: result.total_questions,
+      correct_count: result.correct_count,
       review: result.review,
     };
   }
@@ -181,9 +183,21 @@ async function submit({ userId, challengeId, answers }) {
     })
     .catch(() => {});
 
+  // Score de l'adversaire du point de vue du joueur qui vient de soumettre, et
+  // issue du duel (won = null → égalité). On expose AUSSI `your_score`/`xp_earned`
+  // (comme la branche « en attente ») pour que le client ait toujours son propre
+  // score, même quand sa soumission est celle qui clôt le défi.
+  const opponentScore = side === 'challenger' ? final.score_opponent : final.score_challenger;
+  const won = winnerId ? winnerId === userId : null;
   return {
     challenge_id: final.id,
     status: 'completed',
+    your_score: result.score,
+    xp_earned: result.xp_earned,
+    total_questions: result.total_questions,
+    correct_count: result.correct_count,
+    opponent_score: opponentScore,
+    won,
     score_challenger: final.score_challenger,
     score_opponent: final.score_opponent,
     winner_id: winnerId,
