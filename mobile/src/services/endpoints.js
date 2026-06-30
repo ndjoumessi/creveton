@@ -61,9 +61,14 @@ export const tournaments = {
 
 // --- Challenges (API §9) -------------------------------------------------
 export const challenges = {
+  // Liste paginée des défis du joueur par onglet (received | sent | completed).
+  // → { data: [{ challenge_id, status, theme, level, opponent, your_score, … }], page }
+  list: (params) => api.get('/challenges', { params }).then((r) => r.data),
   create: (payload) =>
     api.post('/challenges/create', payload).then((r) => r.data),
   accept: (id) => api.post(`/challenges/${id}/accept`).then((r) => r.data),
+  // Refuse un défi reçu (destinataire uniquement, pending → declined).
+  decline: (id) => api.delete(`/challenges/${id}/decline`).then((r) => r.data),
   submit: (id, payload) =>
     api.post(`/challenges/${id}/submit`, payload).then((r) => r.data),
 };
@@ -72,6 +77,8 @@ export const challenges = {
 export const users = {
   me: () => api.get('/users/me').then((r) => r.data),
   update: (payload) => api.patch('/users/me', payload).then((r) => r.data),
+  // Annuaire joueurs (cible d'un défi) : q ≥ 2 caractères → [{ id, name, level, … }].
+  search: (params) => api.get('/users/search', { params }).then((r) => r.data),
   history: (params) =>
     api.get('/users/me/history', { params }).then((r) => r.data),
   transactions: (params) =>
