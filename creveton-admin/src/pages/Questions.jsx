@@ -114,10 +114,9 @@ function formatDate(date, lang, withTime = false) {
 function StatusDot({ status }) {
   const { t } = useTranslation();
   const known = Boolean(questionStatusColors[status]);
-  const cfg = questionStatusColors[status] || { bg: '#f3f4f6', fg: '#6b7280' };
   return (
-    <span className="q-status-badge" style={{ background: cfg.bg, color: cfg.fg }}>
-      <span className="q-status-pip" style={{ background: cfg.fg }} />
+    <span className={`q-status-badge q-status-badge--${status || 'unknown'}`}>
+      <span className="q-status-pip" />
       {known ? t(`questions.statuses.${status}`, status) : t('questions.statuses.unknown')}
     </span>
   );

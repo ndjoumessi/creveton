@@ -965,7 +965,14 @@
   font-weight: 600;
   white-space: nowrap;
 }
-.q-status-pip { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.q-status-pip { width: 7px; height: 7px; border-radius: 50%; flex: none; background: currentColor; }
+/* Statuts — valeurs light (remplacent les inline styles de StatusDot). */
+.q-status-badge--draft        { background: #f3f4f6; color: #6b7280; }
+.q-status-badge--pending_review { background: #fef3c7; color: #a16207; }
+.q-status-badge--approved     { background: #dcfce7; color: #15803d; }
+.q-status-badge--rejected     { background: #fee2e2; color: #dc2626; }
+.q-status-badge--archived     { background: #e5e7eb; color: #4b5563; }
+.q-status-badge--unknown      { background: #f3f4f6; color: #6b7280; }
 
 /* Survol de ligne — repère visuel */
 .q-table tbody tr:hover { background: var(--bg-mute); }
@@ -1254,6 +1261,13 @@
 [data-theme="dark"] .q-bi-en { color: var(--green300); }
 [data-theme="dark"] .q-stats-insight { color: var(--gold400); background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); }
 [data-theme="dark"] .explain { color: var(--gold); background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); }
+/* Statuts question — dark mode (hue-preserving). */
+[data-theme="dark"] .q-status-badge--draft        { background: rgba(107,114,128,0.18); color: var(--muted); }
+[data-theme="dark"] .q-status-badge--pending_review { background: rgba(212,160,23,0.16); color: var(--gold400); }
+[data-theme="dark"] .q-status-badge--approved     { background: rgba(42,138,79,0.18);   color: var(--green300); }
+[data-theme="dark"] .q-status-badge--rejected     { background: rgba(231,76,60,0.18);   color: #f87171; }
+[data-theme="dark"] .q-status-badge--archived     { background: rgba(107,114,128,0.18); color: var(--muted); }
+[data-theme="dark"] .q-status-badge--unknown      { background: rgba(107,114,128,0.18); color: var(--muted); }
 /* Overlays sur image : voile/boutons blancs (texte --ink clair) → scrim sombre lisible. */
 [data-theme="dark"] .q-img-box .btn-light { background: rgba(0,0,0,0.55); color: #fff; }
 [data-theme="dark"] .q-img-busy { background: rgba(0,0,0,0.62); color: #fff; }
