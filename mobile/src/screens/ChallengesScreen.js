@@ -153,9 +153,9 @@ export default function ChallengesScreen({ navigation }) {
   const declineChallenge = (item) => {
     Alert.alert(
       t('challengesHub.actions.decline'),
-      t('challengesHub.confirmDecline', 'Refuser ce défi ?'),
+      t('challengesHub.confirmDecline'),
       [
-        { text: t('common.cancel', 'Annuler'), style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('challengesHub.actions.decline'),
           style: 'destructive',
@@ -238,7 +238,7 @@ export default function ChallengesScreen({ navigation }) {
         <View style={styles.stateBox}>
           <Text style={styles.stateText}>{st.error}</Text>
           <Pressable onPress={() => fetchTab(tab)} hitSlop={8}>
-            <Text style={styles.retryLink}>{t('common.retry', 'Réessayer')}</Text>
+            <Text style={styles.retryLink}>{t('common.retry')}</Text>
           </Pressable>
         </View>
       );
@@ -405,7 +405,7 @@ export default function ChallengesScreen({ navigation }) {
               accessibilityState={{ selected: opponent === 'friend' }}
             >
               <Text style={[styles.oppChipText, opponent === 'friend' && styles.oppChipTextActive]} numberOfLines={1}>
-                {t('challengesHub.sheet.friend', '👤 Un ami')}
+                {t('challengesHub.sheet.friend')}
               </Text>
             </Pressable>
           </View>
@@ -421,11 +421,11 @@ export default function ChallengesScreen({ navigation }) {
                     setQuery('');
                   }}
                   accessibilityRole="button"
-                  accessibilityLabel={t('challengesHub.sheet.changeFriend', 'Changer d’adversaire')}
+                  accessibilityLabel={t('challengesHub.sheet.changeFriend')}
                 >
                   <Avatar name={selectedFriend.name} size={32} uri={selectedFriend.avatar_url} />
                   <Text style={styles.selectedFriendName} numberOfLines={1}>{selectedFriend.name}</Text>
-                  <Text style={styles.selectedFriendChange}>{t('common.close', '×')}</Text>
+                  <Text style={styles.selectedFriendChange}>{t('common.close')}</Text>
                 </Pressable>
               ) : (
                 <>
@@ -442,7 +442,7 @@ export default function ChallengesScreen({ navigation }) {
                     <ActivityIndicator style={styles.searchSpinner} color={colors.green500} />
                   ) : null}
                   {!searching && query.trim().length >= 2 && searchResults.length === 0 ? (
-                    <Text style={styles.searchEmpty}>{t('challengesHub.sheet.noResults', 'Aucun joueur trouvé')}</Text>
+                    <Text style={styles.searchEmpty}>{t('challengesHub.sheet.noResults')}</Text>
                   ) : null}
                   {searchResults.map((u) => (
                     <Pressable
@@ -456,7 +456,7 @@ export default function ChallengesScreen({ navigation }) {
                     >
                       <Avatar name={u.name} size={32} uri={u.avatar_url} />
                       <Text style={styles.resultName} numberOfLines={1}>{u.name}</Text>
-                      <Text style={styles.resultLevel}>{t('common.level', 'Niveau')} {u.level}</Text>
+                      <Text style={styles.resultLevel}>{t('common.level')} {u.level}</Text>
                     </Pressable>
                   ))}
                 </>
