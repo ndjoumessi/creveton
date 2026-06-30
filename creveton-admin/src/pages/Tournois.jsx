@@ -447,7 +447,6 @@ export default function Tournois() {
       <div className="tour-banner tour-banner-info">
         <Lock size={16} />
         <span className="tour-banner-title">{t('tournaments.banner.freeMode', 'Mode gratuit — tournois payants désactivés')}</span>
-        <span className="tour-banner-cdc">{t('tournaments.banner.cdc', 'CDC §2.4')}</span>
       </div>
 
       {/* Panneau statistiques */}

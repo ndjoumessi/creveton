@@ -190,3 +190,7 @@
 [data-theme="dark"] .team-perm-locked { background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); color: var(--gold400); }
 [data-theme="dark"] .team-invite-exp { background: rgba(212,160,23,0.16); color: var(--gold400); }
 [data-theme="dark"] .team-invite-exp.urgent, [data-theme="dark"] .team-invite-exp.expired { background: rgba(231,76,60,0.18); color: #fca5a5; }
+/* Carte de rôle sélectionnée : fond clair hardcodé (#f0f7f0) → tint vert (le nom est --ink, clair en dark). */
+[data-theme="dark"] .team-role-choice.on { background: rgba(42,138,79,0.12); border-color: var(--green500); }
+/* Badge rôle vert : aligné sur gold/blue (tint hue-preserving). */
+[data-theme="dark"] .team-role-green { background: rgba(42,138,79,0.18); border-color: rgba(42,138,79,0.35); color: var(--green300); }

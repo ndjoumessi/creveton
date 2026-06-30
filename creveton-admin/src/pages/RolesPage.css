@@ -129,3 +129,5 @@
 
 /* ── Dark-mode semantic badge tint (hue-preserving) ── */
 [data-theme="dark"] .roles-pill-on { background: rgba(42,138,79,0.18); color: var(--green300); }
+/* Liste « ce que le rôle peut faire » : green700 → clair sur surface-2 sombre. */
+[data-theme="dark"] .roles-summary li { color: var(--green300); }

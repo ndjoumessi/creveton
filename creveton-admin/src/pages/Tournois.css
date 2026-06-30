@@ -15,7 +15,6 @@
 .tour-banner-prog-bar { flex: 1; max-width: 240px; height: 6px; background: rgba(212,160,23,0.2); border-radius: 999px; overflow: hidden; }
 .tour-banner-prog-bar > span { display: block; height: 100%; background: var(--gold); border-radius: 999px; }
 .tour-banner-prog-lbl { font-size: 12px; font-weight: 600; }
-.tour-banner-cdc { flex: none; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12px; background: rgba(212,160,23,0.2); padding: 3px 10px; border-radius: 999px; }
 
 /* ── Strip de stats ── */
 .tour-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 20px; }
@@ -24,7 +23,7 @@
 .tour-stats-item + .tour-stats-item { border-left: 1px solid var(--border); }
 .tour-stats-item .n { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 26px; color: var(--ink); font-variant-numeric: tabular-nums; }
 .tour-stats-item .l { font-size: 12.5px; color: var(--muted); }
-@media (max-width: 760px) { .tour-stats { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
+@media (max-width: 760px) { .tour-stats { grid-template-columns: repeat(2, 1fr); gap: 14px; } .tour-stats-item:nth-child(2n+1) { border-left: none; padding-left: 0; } }
 
 /* ── Toolbar + switch vue ── */
 .tour-toolbar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
@@ -115,3 +114,9 @@
 
 /* ── Dark-mode semantic badge tint (hue-preserving) ── */
 [data-theme="dark"] .tour-badge-free { background: rgba(42,138,79,0.18); color: var(--green300); }
+
+/* ── Dark-mode : textes verts de marque des cartes tournoi → tons clairs sur surface sombre ── */
+[data-theme="dark"] .tour-card-name { color: var(--ink); }
+[data-theme="dark"] .tour-card-rewards { color: var(--green300); }
+[data-theme="dark"] .tour-view-btn.is-active { color: var(--ink); }
+[data-theme="dark"] .tour-create { color: var(--gold); }

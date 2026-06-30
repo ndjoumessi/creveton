@@ -26,6 +26,8 @@ import i18n from '../i18n';
 import { parseISO, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { num, dateFr, pct, tournamentStart } from '../utils/format';
+import { chartTheme } from '../utils/chartTheme';
+import useThemeStore from '../store/themeStore';
 import { themeLabels, themeBadgeColors, levelLabels } from '../constants/theme';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
@@ -287,6 +289,7 @@ function DashboardSkeleton() {
 export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const ct = chartTheme(useThemeStore((s) => s.isDark));
   const { data, loading, refetch } = useApiData(fetchAll, [], { pollMs: 30000 });
   const { data: health, error: healthError } = useApiData(fetchHealthTimed, [], { pollMs: 30000 });
   const { data: top, loading: loadingTop } = useApiData(fetchTop, [], { pollMs: 60000 });
@@ -838,18 +841,18 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={220}>
               {chartType === 'bar' ? (
                 <BarChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#eef1ee" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: '#e5e7eb' }} minTickGap={16} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ fill: 'rgba(42,138,79,0.06)' }} />
                   <Bar dataKey="inscriptions" fill="#2a8a4f" radius={[4, 4, 0, 0]} maxBarSize={26} />
                   <Bar dataKey="parties" fill="#d4a017" radius={[4, 4, 0, 0]} maxBarSize={26} />
                 </BarChart>
               ) : chartType === 'line' ? (
                 <LineChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#eef1ee" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: '#e5e7eb' }} minTickGap={16} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
                   <Line type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
                   <Line type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
@@ -866,9 +869,9 @@ export default function Dashboard() {
                       <stop offset="100%" stopColor="#d4a017" stopOpacity={0.01} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#eef1ee" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: '#e5e7eb' }} minTickGap={16} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
                   <Area type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2} fill="url(#dashGradSignups)" dot={false} activeDot={{ r: 4 }} />
                   <Area type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2} fill="url(#dashGradGames)" dot={false} activeDot={{ r: 4 }} />
@@ -963,7 +966,7 @@ export default function Dashboard() {
                     >
                       {themeDist.slices.map((s) => <Cell key={s.theme} fill={s.color} />)}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [`${num(value)} ${t('dashboard.misc.gamesLabel')}`, name]} contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontFamily: 'Space Grotesk', fontSize: 13 }} />
+                    <Tooltip formatter={(value, name) => [`${num(value)} ${t('dashboard.misc.gamesLabel')}`, name]} {...ct.tooltip} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="dash-donut-center">
@@ -1018,7 +1021,7 @@ export default function Dashboard() {
                     >
                       {daumau.slices.map((s) => <Cell key={s.key} fill={s.color} />)}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [`${num(value)} ${t('dashboard.daumau.usersLabel')}`, name]} contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontFamily: 'Space Grotesk', fontSize: 13 }} />
+                    <Tooltip formatter={(value, name) => [`${num(value)} ${t('dashboard.daumau.usersLabel')}`, name]} {...ct.tooltip} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="dash-donut-center">

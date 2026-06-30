@@ -288,3 +288,26 @@
 [data-theme="dark"] .u-mark-good { background: rgba(42,138,79,0.18); color: var(--green300); }
 [data-theme="dark"] .u-mark-bad { background: rgba(231,76,60,0.18); color: #fca5a5; }
 [data-theme="dark"] .u-mark-mid { background: rgba(212,160,23,0.16); color: var(--gold400); }
+/* % perf par thème : vert quasi-noir (#0b2e1a) → clair sur surface sombre. */
+[data-theme="dark"] .u-theme-pct { color: var(--ink); }
+/* Badge rôle admin : aligné sur super/mod (tint vert hue-preserving). */
+[data-theme="dark"] .u-role-admin { background: rgba(42,138,79,0.18); color: var(--green300); }
+/* Heatmap : en nuit, échelle « plus = plus clair » (le pas haut #0b2e1a serait invisible). */
+[data-theme="dark"] .u-heat-0 { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .u-heat-1 { background: rgba(42,138,79,0.35); }
+[data-theme="dark"] .u-heat-2 { background: var(--green500); }
+[data-theme="dark"] .u-heat-3 { background: var(--green300); }
+
+/* ─────────────── Responsive ─────────────── */
+@media (max-width: 760px) {
+  .u-banner { grid-template-columns: repeat(2, 1fr); row-gap: 18px; }
+  .u-banner-item:nth-child(2n) { border-right: none; }
+  .u-filters-selects { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 720px) {
+  .u-kv { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .u-banner, .u-filters-selects { grid-template-columns: 1fr; }
+  .u-banner-item { border-right: none; }
+}

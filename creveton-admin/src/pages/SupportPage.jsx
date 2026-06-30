@@ -13,6 +13,8 @@ import * as teamService from '../services/team.service';
 import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
 import { num, dateFr, dateTimeFr } from '../utils/format';
+import { chartTheme } from '../utils/chartTheme';
+import useThemeStore from '../store/themeStore';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import Avatar from '../components/Avatar';
@@ -84,6 +86,7 @@ const fetchMembers = () => teamService.list({});
 export default function SupportPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const ct = chartTheme(useThemeStore((s) => s.isDark));
 
   const [tab, setTab] = useState('open');
   const [tickets, setTickets] = useState([]);
@@ -446,9 +449,9 @@ export default function SupportPage() {
                     <stop offset="100%" stopColor="#2a8a4f" stopOpacity={0.01} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef1ee" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: '#e5e7eb' }} minTickGap={16} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#6b7280', fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
+                <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
                 <Tooltip content={<TicketsTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
                 <Area type="monotone" dataKey="tickets" stroke="#2a8a4f" strokeWidth={2} fill="url(#supGradTickets)" dot={false} activeDot={{ r: 4 }} />
               </AreaChart>
@@ -471,7 +474,7 @@ export default function SupportPage() {
                   </Pie>
                   <Tooltip
                     formatter={(value, name) => [num(value), name]}
-                    contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontFamily: 'Space Grotesk', fontSize: 13 }}
+                    {...ct.tooltip}
                   />
                 </PieChart>
               </ResponsiveContainer>

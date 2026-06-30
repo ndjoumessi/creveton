@@ -24,6 +24,7 @@
 .set-strength-seg.s4 { background: var(--green500); }
 .set-strength-label { font-size: 12.5px; font-weight: 600; color: var(--muted); min-width: 70px; text-align: right; }
 .set-rules { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+@media (max-width: 480px) { .set-rules { grid-template-columns: 1fr; } }
 .set-rules li { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
 .set-rules li svg { color: #cbd5e1; }
 .set-rules li.ok { color: var(--green700); }
@@ -43,7 +44,6 @@
 .set-flag-locked { background: rgba(212, 160, 23, 0.05); border-color: rgba(212, 160, 23, 0.35); }
 .set-flag-demo { background: #fffbeb; border-color: #fde68a; }
 .set-flag-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); display: flex; align-items: center; gap: 10px; }
-.set-flag-badge { font-size: 11px; font-weight: 700; color: #8a6a12; background: rgba(212,160,23,0.15); padding: 2px 8px; border-radius: 999px; cursor: help; }
 .set-flag-desc { color: var(--muted); font-size: 13px; margin: 5px 0 0; }
 .set-flag-status { color: #8a6a12; font-size: 12px; margin: 6px 0 0; font-weight: 500; }
 .switch.is-disabled { opacity: 0.5; }
@@ -138,3 +138,43 @@
 [data-theme="dark"] .set-session-cur { background: rgba(42,138,79,0.18); color: var(--green300); }
 [data-theme="dark"] .set-verified { background: rgba(42,138,79,0.18); color: var(--green300); }
 [data-theme="dark"] .set-flag-demo { background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); }
+
+/* ── Dark-mode : valeurs de compte (EMAIL/RÔLE/MEMBRE DEPUIS) & titres (green900) → --ink ── */
+[data-theme="dark"] .set-acc-name { color: var(--ink); }
+[data-theme="dark"] .set-kv dd { color: var(--ink); }
+[data-theme="dark"] .set-acc-edit-title { color: var(--ink); }
+/* Note ambre sur cream (cream→#15220f en dark) : tint or lisible. */
+[data-theme="dark"] .set-note { color: var(--gold); background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); }
+/* Sessions : icône vert-foncé → vert-clair ; règles mdp cochées ; badges or hardcodés. */
+[data-theme="dark"] .set-session-ic { color: var(--green300); }
+[data-theme="dark"] .set-rules li.ok { color: var(--green300); }
+[data-theme="dark"] .badge-gold-soft { background: rgba(212,160,23,0.18); color: var(--gold); }
+[data-theme="dark"] .set-flag-status { color: var(--gold); }
+/* À propos : liens --green700 → --green300. */
+[data-theme="dark"] .set-about-links a { color: var(--green300); }
+[data-theme="dark"] .set-about-links a:hover { color: var(--green500); }
+
+/* ── Responsive (mobile) ── */
+@media (max-width: 900px) {
+  .settings-layout { gap: 16px; }
+}
+@media (max-width: 600px) {
+  .settings-layout { gap: 12px; }
+  /* Réduire le padding des cartes uniquement dans la page settings */
+  .settings-layout .card-pad { padding: 14px 16px; }
+  /* Nav → onglets horizontaux scrollables (7 items = ~280px vertical sinon) */
+  .settings-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 4px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .settings-nav::-webkit-scrollbar { display: none; }
+  .settings-nav button {
+    white-space: nowrap;
+    flex: none;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}

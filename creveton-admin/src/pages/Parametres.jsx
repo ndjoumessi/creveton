@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   User, Shield, ToggleLeft, Bell, Settings as Cog, Plug, Info,
   Save, Check, Monitor, Database, Zap, Server, Download,
-  RefreshCw, LogOut, KeyRound, AlertTriangle, Globe, Sun, Moon, Lock,
+  RefreshCw, LogOut, KeyRound, AlertTriangle, Globe, Sun, Moon,
 } from 'lucide-react';
 import { Icon } from '../components/Icon';
 import settingsService from '../services/settings.service';
@@ -410,7 +410,6 @@ function FlagsSection({ setMaintenance }) {
           <div className="set-flag-main">
             <div className="set-flag-title">
               {flag.label}
-              {flag.locked && <span className="set-flag-badge" title={t('settings.flags.cdcTitle')}><Icon icon={Lock} size={16} /> CDC §6</span>}
             </div>
             <p className="set-flag-desc">{flag.description}</p>
             {flag.locked && <p className="set-flag-status">{t('settings.flags.lockedStatus')}</p>}

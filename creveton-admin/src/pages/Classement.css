@@ -354,3 +354,12 @@
   .lb-slot-2 { order: 2; }
   .lb-slot-3 { order: 3; }
 }
+
+/* ── Dark-mode : les verts de marque (green900/700) et l'ambre ne flippent pas →
+   tons clairs sur surfaces sombres pour rester lisibles. ── */
+[data-theme="dark"] .lb-me-label { color: var(--gold); }
+[data-theme="dark"] .lb-me-value { color: var(--ink); }
+[data-theme="dark"] .lb-podium-name:not(.lb-name-light) { color: var(--ink); }
+[data-theme="dark"] .lb-player-name { color: var(--ink); }
+[data-theme="dark"] .lb-score { color: var(--green300); }
+[data-theme="dark"] .lb-you-badge { color: var(--gold400); }

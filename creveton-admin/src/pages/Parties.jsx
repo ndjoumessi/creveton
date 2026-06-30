@@ -12,6 +12,8 @@ import sessionsService from '../services/sessions.service';
 import dashboardService from '../services/dashboard.service';
 import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
+import { chartTheme } from '../utils/chartTheme';
+import useThemeStore from '../store/themeStore';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
 import { themeLabels, levelLabels, themeBadgeColors } from '../constants/theme';
 import { num, pct, dateFr, dateTimeFr } from '../utils/format';
@@ -112,6 +114,7 @@ function isSuspicious(answers) {
 export default function Parties() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const ct = chartTheme(useThemeStore((s) => s.isDark));
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [period, setPeriod] = useState('');
   const [selected, setSelected] = useState(null);
@@ -354,6 +357,7 @@ export default function Parties() {
                     {themeData.map((d) => <Cell key={d.theme} fill={d.color} />)}
                   </Pie>
                   <RTooltip
+                    {...ct.tooltip}
                     formatter={(value, name) => [t('sessions.misc.gamesCount', { count: value, value: num(value) }), name]}
                   />
                 </PieChart>
@@ -382,13 +386,14 @@ export default function Parties() {
               <BarChart data={levelData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                 <XAxis
                   dataKey="label" tickLine={false} axisLine={false}
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                  tick={{ fontSize: 12, fill: ct.axisText }}
                 />
                 <YAxis
                   tickLine={false} axisLine={false}
-                  tick={{ fontSize: 11, fill: '#9ca3af' }} width={42}
+                  tick={{ fontSize: 11, fill: ct.axisText }} width={42}
                 />
                 <RTooltip
+                  {...ct.tooltip}
                   cursor={{ fill: 'rgba(0,0,0,0.04)' }}
                   formatter={(value) => [`${num(value)} ${t('common.pts')}`, t('sessions.kpi.avgScore')]}
                 />
