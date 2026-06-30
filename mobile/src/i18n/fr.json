@@ -527,6 +527,7 @@
     "activeCount": "{{count}} actif(s)",
     "launchCta": "Lancer un défi",
     "new": "Nouveau",
+    "confirmDecline": "Refuser ce défi ?",
     "demoBanner": "Données de démonstration — liste à brancher",
     "tabs": {
       "received": "Reçus",
@@ -567,6 +568,9 @@
       "searchPlaceholder": "Rechercher un ami…",
       "searchSoon": "Recherche d’amis bientôt disponible — adversaire aléatoire pour l’instant.",
       "randomOpponent": "🎲 Adversaire aléatoire",
+      "friend": "👤 Un ami",
+      "changeFriend": "Changer d’adversaire",
+      "noResults": "Aucun joueur trouvé",
       "friendSoon": "👤 Inviter un ami (bientôt)",
       "launch": "🎯 Lancer le défi"
     },

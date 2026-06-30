@@ -527,6 +527,7 @@
     "activeCount": "{{count}} active",
     "launchCta": "Start a challenge",
     "new": "New",
+    "confirmDecline": "Decline this challenge?",
     "demoBanner": "Demo data — list endpoint pending",
     "tabs": {
       "received": "Received",
@@ -567,6 +568,9 @@
       "searchPlaceholder": "Search a friend…",
       "searchSoon": "Friend search coming soon — random opponent for now.",
       "randomOpponent": "🎲 Random opponent",
+      "friend": "👤 A friend",
+      "changeFriend": "Change opponent",
+      "noResults": "No player found",
       "friendSoon": "👤 Invite a friend (soon)",
       "launch": "🎯 Start the challenge"
     },
