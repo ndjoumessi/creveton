@@ -289,6 +289,50 @@ t('DELETE /challenges/:id/decline par le challenger → 403 FORBIDDEN', async ()
   expect(r.body.error.code).toBe('FORBIDDEN');
 });
 
+// ─── DELETE /challenges/:id (annulation par l'émetteur) ─────────────────────
+
+t('DELETE /challenges/:id → 200 (challenger) + retiré de sent', async () => {
+  const { ctok, opponent } = await setup();
+  const id = await createPending(ctok, opponent);
+
+  const r = await request(app)
+    .delete(`/api/v1/challenges/${id}`)
+    .set('Authorization', `Bearer ${ctok}`);
+  expect(r.status).toBe(200);
+  expect(r.body.status).toBe('cancelled');
+
+  const sent = await request(app).get('/api/v1/challenges?status=sent').set('Authorization', `Bearer ${ctok}`);
+  expect(sent.body.data).toHaveLength(0);
+});
+
+t('DELETE /challenges/:id par l\'opponent → 403 FORBIDDEN', async () => {
+  const { ctok, otok, opponent } = await setup();
+  const id = await createPending(ctok, opponent);
+
+  const r = await request(app)
+    .delete(`/api/v1/challenges/${id}`)
+    .set('Authorization', `Bearer ${otok}`);
+  expect(r.status).toBe(403);
+  expect(r.body.error.code).toBe('FORBIDDEN');
+});
+
+t('DELETE /challenges/:id sur un défi non-pending → 400 VALIDATION_ERROR', async () => {
+  const { ctok, otok, opponent } = await setup();
+  // Défi accepté (status accepted) → plus annulable.
+  const c = await request(app)
+    .post('/api/v1/challenges/create')
+    .set('Authorization', `Bearer ${ctok}`)
+    .send({ opponent_id: opponent.id, theme: 'geographie', level: 'beginner' });
+  const id = c.body.challenge_id;
+  await request(app).post(`/api/v1/challenges/${id}/accept`).set('Authorization', `Bearer ${otok}`);
+
+  const r = await request(app)
+    .delete(`/api/v1/challenges/${id}`)
+    .set('Authorization', `Bearer ${ctok}`);
+  expect(r.status).toBe(400);
+  expect(r.body.error.code).toBe('VALIDATION_ERROR');
+});
+
 // ─── GET /users/search ──────────────────────────────────────────────────────
 
 t('GET /users/search?q=Nel → 200, trouve le joueur (sans données sensibles)', async () => {

@@ -57,4 +57,10 @@ const decline = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
-module.exports = { create, accept, submit, get, list, decline };
+/** DELETE /challenges/:id → 200 (l'émetteur annule un défi en attente) */
+const cancel = asyncHandler(async (req, res) => {
+  const result = await challengeService.cancel({ userId: req.user.id, challengeId: req.params.id });
+  return ok(res, result);
+});
+
+module.exports = { create, accept, submit, get, list, decline, cancel };

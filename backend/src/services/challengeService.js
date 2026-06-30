@@ -261,6 +261,20 @@ async function decline({ userId, challengeId }) {
   return { challenge_id: updated.id, status: 'declined' };
 }
 
+/** DELETE /challenges/:id — l'émetteur annule un défi qu'il a envoyé (encore en attente). */
+async function cancel({ userId, challengeId }) {
+  const ch = await challengeModel.findById(challengeId);
+  if (!ch) throw new ApiError('CHALLENGE_NOT_FOUND');
+  if (ch.challenger_id !== userId) {
+    throw new ApiError('FORBIDDEN', { message: "Seul l'émetteur peut annuler ce défi." });
+  }
+  if (ch.status !== 'pending') {
+    throw new ApiError('VALIDATION_ERROR', { message: 'Ce défi ne peut plus être annulé.' });
+  }
+  const updated = await challengeModel.setStatus(challengeId, 'cancelled');
+  return { challenge_id: updated.id, status: 'cancelled' };
+}
+
 /** GET /challenges/:id — détail (réservé aux participants, sans solutions). */
 async function get({ userId, challengeId }) {
   const ch = await challengeModel.findById(challengeId);
@@ -282,4 +296,4 @@ async function get({ userId, challengeId }) {
   };
 }
 
-module.exports = { create, accept, submit, get, list, decline, apiStatus, CHALLENGE_QUESTIONS };
+module.exports = { create, accept, submit, get, list, decline, cancel, apiStatus, CHALLENGE_QUESTIONS };
