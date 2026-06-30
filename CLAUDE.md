@@ -29,6 +29,10 @@ tâche d'interface (console admin) :
 - **`.impeccable/design.json`** — sidecar (rampes tonales, ombres, motion, snippets de
   composants) consommé par `/impeccable live`.
 
+On versionne le contexte de design (`design.json`, `.impeccable/live/config.json`) **mais pas**
+l'état runtime : les caches `**/.impeccable/hook.cache.json` (par session, éparpillés dans les
+sous-dossiers) sont gitignorés.
+
 **Avant toute modification d'UI dans `creveton-admin/`**, lire `DESIGN.md`. Règles clés :
 l'or ≤ 10 % de l'écran (CTA primaire, nav active, récompenses) ; tout chiffre important en
 Outfit ≥ 700 ; surfaces plates (bordure 1px, ombre légère), profondeur réservée aux
@@ -62,6 +66,29 @@ régénérer avec `/impeccable document`.
 - **Score** : `src/services/scoreService.js` (module pur, testable) — `computeSession`,
   `basePoints(level)`, `speedBonus(base, elapsedMs)`. Base : beginner 50 / intermediate 75 /
   expert 100 ; bonus vitesse +50 % si `elapsed_ms ≤ 5000`.
+- **Défis 1v1 (`src/services/challengeService.js`, spec §9)** : les deux joueurs répondent
+  au **même set figé** (`question_ids` + `seed`) ; le vainqueur reçoit **+25 % d'XP**.
+  Colonne `opponent_id` (NULL = matchmaking aléatoire). Statut « métier » exposé (dérivé,
+  indépendant du label DB) : `awaiting_challenger_play` / `awaiting_opponent_play` / `completed`.
+  Routes (toutes sous `authenticate`) :
+  · `POST /challenges/create` — le challenger reçoit le set, joue en premier.
+  · `POST /challenges/:id/accept` — l'adversaire récupère le **même** set.
+  · `POST /challenges/:id/submit` — score serveur (même `scoreService.computeSession` que
+    `/sessions/submit`, niveau **stocké** sur le défi). Réponse **auto-suffisante côté
+    soumettant** dans les deux branches : `your_score`, `xp_earned`, `total_questions`,
+    `correct_count` ; en `completed` ajoute `opponent_score`, `won` (true/false/`null`=égalité),
+    `score_challenger`/`score_opponent`/`winner_id`/`xp_bonus`.
+  · `GET /challenges?status=received|sent|completed&page=&limit=` — liste paginée pour les
+    onglets mobile ; joint l'adversaire (`opponent {id,name,avatar_url,level}`). `received` =
+    `opponent_id = moi AND pending` ; `sent` = `challenger_id = moi AND pending` ; `completed` =
+    participant des deux côtés. (Filtres SQL qualifiés `c.` — `users.status` ambigu après le JOIN.)
+  · `DELETE /challenges/:id/decline` — **destinataire** refuse (`pending → declined`, 403/400/404).
+  · `DELETE /challenges/:id` — **émetteur** annule (`pending → cancelled`, 403/400/404).
+  Tests d'intégration : `backend/tests/challenges.test.js`.
+- **Annuaire joueurs** : `GET /users/search?q=&limit=` (`userModel.search`) — `name`/`phone`
+  ILIKE, exclut soi-même + comptes non `active`/supprimés, projection réduite
+  (`id,name,avatar_url,level,total_xp` — jamais `phone`/`email`), `q` ≥ 2 caractères (sinon 400),
+  limit défaut 10 / max 20. Sert à cibler un ami pour un défi côté mobile.
 - **Anti-triche** : `/sessions/submit` ≥ 3 réponses < 500 ms (`scoreService.CHEAT_MIN_MS`)
   → `CHEAT_DETECTED`, **sauf en `blitz`/`marathon`** (cadence rapide voulue ; garde-fou =
   timer global 62 s) ; `/sessions/answer` (feedback immédiat, mode `normal` only) une
@@ -133,9 +160,9 @@ régénérer avec `/impeccable document`.
   `POST`** ; le suffixe « (Copie) » n'est ajouté **qu'à la duplication**. L'aperçu mobile et
   le drawer (section « Gestion bilingue » repliable) suivent aussi `i18n.language`.
 - **ESLint propre + `npm run build` qui passe** sont obligatoires avant commit.
-- **Logo admin (Cockpit Émeraude)** : les 4 tiles « C » monogramme ont été remplacés par
-  `<img src="/logo.png">` — `Login.jsx`, `Landing.jsx` (×2 : nav + footer), `AcceptInvite.jsx`.
-  `creveton-admin/public/logo.png` : vrai PNG 416×416 (était un JPEG mislabeled).
+- **Logo admin (Cockpit Émeraude)** : les 5 tiles « C » monogramme ont été remplacés par
+  `<img src="/logo.png">` — `Login.jsx`, `Landing.jsx` (×2 : nav + footer), `AcceptInvite.jsx`,
+  `Privacy.jsx` (header). `creveton-admin/public/logo.png` : vrai PNG 416×416 (était un JPEG mislabeled).
   `creveton-admin/public/favicon.png` : idem, re-encodé en vrai PNG. CSS : tile or → tile
   image, `object-fit: cover`, fond crème (cream backing).
 
