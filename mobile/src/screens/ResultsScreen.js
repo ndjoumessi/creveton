@@ -91,6 +91,13 @@ export default function ResultsScreen({ route, navigation }) {
     navigation.navigate('Tabs', { screen: 'Home' });
   };
 
+  // Défi : retour au hub « Défis » (pas de « Rejouer » — on ne reduelle pas le
+  // même défi, et drawForMode ne sait pas tirer un set de défi).
+  const goChallenges = () => {
+    reset();
+    navigation.navigate('Tabs', { screen: 'Challenges' });
+  };
+
   // « Rejouer » = relancer immédiatement une partie avec les MÊMES réglages
   // (mode/theme/level de la partie précédente), en tirant de NOUVELLES questions
   // — même flux que l'écran « Jouer ». Repli sur l'écran de sélection si le
@@ -187,12 +194,13 @@ export default function ResultsScreen({ route, navigation }) {
       mode={modeRef.current}
       onReplay={replay}
       onHome={goHome}
+      onBackToChallenges={goChallenges}
       replaying={replaying}
     />
   );
 }
 
-function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) {
+function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChallenges, replaying }) {
   const { t, i18n } = useTranslation();
   const lang = normalizeLang(i18n.language);
   const total = result.total_questions || 0;
@@ -202,6 +210,17 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
   const modeBadge = mode === 'blitz' ? `⚡ ${t('gameStart.modes.blitz.name')}`
     : mode === 'marathon' ? `🏃 ${t('gameStart.modes.marathon.name')}`
       : null;
+
+  // Défi 1v1 : issue du duel (le serveur renvoie le statut + scores des deux camps).
+  const isChallenge = mode === 'challenge';
+  const duelCompleted = isChallenge && result.status === 'completed';
+  const duelWon = result.won; // true | false | null (égalité) — défini en completed
+  const duelEmoji = duelWon == null ? '🤝' : duelWon ? '🏆' : '💔';
+  const duelLabel = duelWon == null
+    ? t('challengesHub.result.draw')
+    : duelWon
+      ? t('challengesHub.result.win')
+      : t('challengesHub.result.loss');
 
   // Cartes du récap expandables au tap (une carte = une question).
   const [openRows, setOpenRows] = useState({});
@@ -423,6 +442,23 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
         <Stat value={avgSeconds} label={t('results.avgTime')} />
       </View>
 
+      {/* ISSUE DU DUEL (défi) — résultat final si les deux ont joué, sinon attente */}
+      {isChallenge ? (
+        <View style={styles.duelBanner}>
+          {duelCompleted ? (
+            <>
+              <Text style={styles.duelEmoji}>{duelEmoji}</Text>
+              <Text style={styles.duelLabel}>{duelLabel}</Text>
+              <Text style={styles.duelScore}>
+                {result.your_score ?? 0} {t('challengesHub.card.vs')} {result.opponent_score ?? 0}
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.duelWaiting}>⏳ {t('challengesHub.card.waiting')}</Text>
+          )}
+        </View>
+      ) : null}
+
       {/* RÉCAP */}
       <Heading color={colors.cream} style={styles.sectionTitle}>
         {t('results.recap')}
@@ -558,7 +594,13 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, replaying }) 
 
       {/* ACTIONS */}
       <View style={styles.actions}>
-        {isMixed ? (
+        {isChallenge ? (
+          <>
+            <AppButton title={t('results.share')} variant="ghost" onPress={onShare} fullWidth />
+            <AppButton title={t('results.backToChallenges')} variant="primary" onPress={onBackToChallenges} fullWidth />
+            <AppButton title={t('results.home')} variant="outlineGold" onPress={onHome} fullWidth />
+          </>
+        ) : isMixed ? (
           <>
             <AppButton
               title={t('results.replay')}
@@ -723,6 +765,22 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.gold500,
   },
+
+  // Bandeau issue du duel (défi 1v1).
+  duelBanner: {
+    alignItems: 'center',
+    gap: spacing.xxs,
+    marginBottom: spacing.xl,
+    paddingVertical: spacing.lg,
+    borderRadius: radius.xl,
+    backgroundColor: colors.goldVeil,
+    borderWidth: 1,
+    borderColor: colors.goldVeilBorder,
+  },
+  duelEmoji: { fontSize: 40 },
+  duelLabel: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.gold400 },
+  duelScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.white },
+  duelWaiting: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textOnDarkMuted },
 
   themeBonus: {
     marginTop: spacing.lg,

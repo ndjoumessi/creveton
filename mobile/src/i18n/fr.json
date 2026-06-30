@@ -212,6 +212,7 @@
     "newRecord": "🏆 Nouveau record !",
     "replay": "Rejouer",
     "home": "Retour à l'accueil",
+    "backToChallenges": "Retour aux défis",
     "share": "Partager 📤",
     "shareMessage": "J'ai scoré {{score}} pts sur Creveton ! 🇨🇲 Quiz. Compétition. Cameroun.",
     "correct_label": "Correct",

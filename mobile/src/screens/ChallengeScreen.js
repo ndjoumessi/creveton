@@ -50,7 +50,7 @@ export default function ChallengeScreen({ navigation }) {
         level,
         stake: 0,
       });
-      startGame({ mode: 'challenge', theme, level, questions: res.questions || [] });
+      startGame({ mode: 'challenge', challengeId: res.challenge_id, theme, level, questions: res.questions || [] });
       setLaunching(false);
       navigation.replace('Quiz');
     } catch (e) {

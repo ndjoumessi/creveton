@@ -212,6 +212,7 @@
     "newRecord": "🏆 New record!",
     "replay": "Play again",
     "home": "Back to home",
+    "backToChallenges": "Back to challenges",
     "share": "Share 📤",
     "shareMessage": "I scored {{score}} pts on Creveton! 🇨🇲 Quiz. Competition. Cameroon.",
     "correct_label": "Correct",

@@ -3,13 +3,41 @@
 // soumission (timer serveur-authoritative, anti-triche — API §6).
 
 import { create } from 'zustand';
-import { sessions as sessionsApi } from '../services/endpoints';
+import { sessions as sessionsApi, challenges as challengesApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { useNetworkStore } from './networkStore';
 import { useOfflineQueue } from './offlineQueue';
 
+// Enrichit la réponse de score (sessions OU challenges) avec le TEXTE des
+// questions/options jouées (le serveur ne renvoie que des index) et le temps
+// moyen par réponse — calculé localement. Source : les questions en mémoire,
+// exactement ce qui a été affiché. Une question absente reste sans options.
+function enrichResult(result, answers, questions) {
+  const qById = new Map(questions.map((q) => [q.id, q]));
+  const enriched = Array.isArray(result.review)
+    ? {
+        ...result,
+        review: result.review.map((item) => {
+          const q = qById.get(item.question_id);
+          return q
+            ? { ...item, question_text: q.text, question_text_en: q.text_en || null, options: q.options || [] }
+            : item;
+        }),
+      }
+    : result;
+
+  const timed = answers.filter((a) => typeof a.elapsed_ms === 'number' && !a.skipped);
+  const avgMs = timed.length
+    ? Math.round(timed.reduce((s, a) => s + a.elapsed_ms, 0) / timed.length)
+    : null;
+  return typeof enriched.avg_time_ms === 'number' || avgMs == null
+    ? enriched
+    : { ...enriched, avg_time_ms: avgMs };
+}
+
 const initial = {
   mode: 'normal', // normal | tournament | challenge
+  challengeId: null, // défini en mode challenge → submit vers /challenges/:id/submit
   theme: null,
   level: null,
   questions: [],
@@ -32,10 +60,12 @@ export const useGameStore = create((set, get) => ({
   ...initial,
 
   // Démarre une nouvelle partie avec un set de questions déjà tiré.
-  startGame: ({ mode = 'normal', theme, level, questions }) => {
+  // `challengeId` (mode challenge) → la soumission ira vers /challenges/:id/submit.
+  startGame: ({ mode = 'normal', challengeId = null, theme, level, questions }) => {
     set({
       ...initial,
       mode,
+      challengeId,
       theme,
       level,
       questions: questions || [],
@@ -95,7 +125,7 @@ export const useGameStore = create((set, get) => ({
 
   // Soumet la partie au serveur ; stocke le résultat officiel.
   submit: async () => {
-    const { mode, theme, level, startedAt, answers, sessionId } = get();
+    const { mode, challengeId, theme, level, startedAt, answers, sessionId } = get();
     set({ submitting: true, error: null });
     const payload = {
       mode,
@@ -105,6 +135,35 @@ export const useGameStore = create((set, get) => ({
       session_id: sessionId || undefined,
       answers,
     };
+
+    // ── Défi 1v1 : soumission vers /challenges/:id/submit (score serveur, gagnant,
+    // bonus XP). Pas de file hors-ligne : la file rejoue vers /sessions/submit, ce
+    // qui serait invalide pour un défi → on exige la connexion (échec explicite).
+    if (mode === 'challenge' && challengeId) {
+      if (!useNetworkStore.getState().isOnline) {
+        const err = { code: 'NETWORK_ERROR', message: 'Connexion requise pour valider un défi.' };
+        set({ submitting: false, error: err.message });
+        return { ok: false, error: err };
+      }
+      try {
+        const res = await challengesApi.submit(challengeId, payload);
+        if (__DEV__) {
+          console.log('[challenges/submit] response:', JSON.stringify(res, null, 2));
+        }
+        // Le défi expose `your_score` ; ResultsScreen lit `score` → on normalise.
+        const merged = enrichResult({ ...res, score: res.your_score }, answers, get().questions);
+        set({ result: merged, submitting: false });
+        return { ok: true, result: merged };
+      } catch (e) {
+        const err = parseApiError(e);
+        if (__DEV__) {
+          console.log('[challenges/submit] error:', err.code, err.message);
+        }
+        set({ submitting: false, error: err.message });
+        return { ok: false, error: err };
+      }
+    }
+
     // Logs de diagnostic (dev only) : confirme l'envoi du POST, le payload (les
     // question_ids doivent être des UUID valides du backend ciblé) et la réponse.
     if (__DEV__) {
@@ -125,36 +184,7 @@ export const useGameStore = create((set, get) => ({
       if (__DEV__) {
         console.log('[sessions/submit] response:', JSON.stringify(result, null, 2));
       }
-      // Enrichit review[] avec le TEXTE des questions/options jouées : le serveur
-      // ne renvoie que les index (correct_index/your_index). Les questions jouées
-      // sont déjà en mémoire (tirées du cache local) avec leur texte + options →
-      // source idéale (exactement ce qui a été affiché, sans relire SQLite). Une
-      // question absente reste sans options (l'écran n'affichera que l'explication).
-      const qById = new Map(get().questions.map((q) => [q.id, q]));
-      const enriched = Array.isArray(result.review)
-        ? {
-            ...result,
-            review: result.review.map((item) => {
-              const q = qById.get(item.question_id);
-              // On porte les DEUX langues (FR + EN) pour que le récap se localise
-              // selon i18n.language (ResultsScreen). Les options portent déjà text_en.
-              return q
-                ? { ...item, question_text: q.text, question_text_en: q.text_en || null, options: q.options || [] }
-                : item;
-            }),
-          }
-        : result;
-
-      // Temps moyen par réponse — calculé localement (les `answers` portent
-      // toujours `elapsed_ms`, contrairement au review[] de l'API qui peut l'omettre).
-      // On ne le recalcule pas si l'API le fournit déjà.
-      const timed = answers.filter((a) => typeof a.elapsed_ms === 'number' && !a.skipped);
-      const avgMs = timed.length
-        ? Math.round(timed.reduce((s, a) => s + a.elapsed_ms, 0) / timed.length)
-        : null;
-      const merged = (typeof enriched.avg_time_ms === 'number' || avgMs == null)
-        ? enriched
-        : { ...enriched, avg_time_ms: avgMs };
+      const merged = enrichResult(result, answers, get().questions);
       set({ result: merged, submitting: false });
       return { ok: true, result: merged };
     } catch (e) {
