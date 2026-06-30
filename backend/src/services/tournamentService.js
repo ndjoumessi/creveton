@@ -3,6 +3,7 @@
 const env = require('../config/env');
 const ApiError = require('../utils/ApiError');
 const tournamentModel = require('../models/tournament.model');
+const userModel = require('../models/user.model');
 
 /**
  * Logique des tournois côté admin (réf. spec §8/§12).
@@ -193,4 +194,45 @@ async function payout(id) {
   }
 }
 
-module.exports = { create, joinTournament, listAll, getDetail, start, cancel, payout, MIN_PLAYERS_TO_START, PRIZE_SPLIT };
+/** POST /admin/tournaments/:id/participants — inscrire manuellement un joueur. */
+async function adminAddParticipant(tournamentId, userId) {
+  const t = await tournamentModel.findById(tournamentId);
+  if (!t || t.deleted_at) throw new ApiError('TOURNAMENT_NOT_FOUND');
+  if (['cancelled', 'paid'].includes(t.status)) {
+    throw new ApiError('VALIDATION_ERROR', { message: `Impossible d'inscrire un joueur dans un tournoi ${t.status}.` });
+  }
+  const user = await userModel.findById(userId);
+  if (!user || user.deleted_at) throw new ApiError('USER_NOT_FOUND');
+  const existing = await tournamentModel.findParticipant(tournamentId, userId);
+  if (existing) throw new ApiError('ALREADY_REGISTERED');
+  if (t.max_players != null) {
+    const count = await tournamentModel.countParticipants(tournamentId);
+    if (count >= t.max_players) throw new ApiError('TOURNAMENT_FULL');
+  }
+  await tournamentModel.addParticipant(tournamentId, userId);
+  return {
+    tournament_id: tournamentId,
+    user_id: userId,
+    name: user.name,
+    avatar_url: user.avatar_url ?? null,
+    level: user.level,
+    score: 0,
+    rank: null,
+    payout: 0,
+    joined_at: new Date().toISOString(),
+  };
+}
+
+/** DELETE /admin/tournaments/:id/participants/:user_id — retirer un participant. */
+async function adminRemoveParticipant(tournamentId, userId) {
+  const t = await tournamentModel.findById(tournamentId);
+  if (!t || t.deleted_at) throw new ApiError('TOURNAMENT_NOT_FOUND');
+  if (['running', 'closed', 'paid'].includes(t.status)) {
+    throw new ApiError('FORBIDDEN', { message: "Impossible de retirer un participant d'un tournoi en cours ou terminé." });
+  }
+  const removed = await tournamentModel.removeParticipant(tournamentId, userId);
+  if (!removed) throw new ApiError('USER_NOT_FOUND', { message: 'Participant introuvable dans ce tournoi.' });
+  return { tournament_id: tournamentId, user_id: userId };
+}
+
+module.exports = { create, joinTournament, listAll, getDetail, start, cancel, payout, adminAddParticipant, adminRemoveParticipant, MIN_PLAYERS_TO_START, PRIZE_SPLIT };

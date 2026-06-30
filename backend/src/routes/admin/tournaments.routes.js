@@ -15,5 +15,7 @@ router.post('/', requirePermission('tournaments:manage'), validate(schemas.admin
 router.post('/:id/start', requirePermission('tournaments:manage'), ctrl.start);
 router.post('/:id/cancel', requirePermission('tournaments:manage'), ctrl.cancel);
 router.post('/:id/payout', requirePermission('tournaments:manage'), ctrl.payout);
+router.post('/:id/participants', requirePermission('tournaments:manage'), validate(schemas.adminAddParticipant), ctrl.addParticipant);
+router.delete('/:id/participants/:user_id', requirePermission('tournaments:manage'), ctrl.removeParticipant);
 
 module.exports = router;

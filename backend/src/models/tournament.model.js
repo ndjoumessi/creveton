@@ -70,7 +70,7 @@ async function findAll() {
 async function participantsDetailed(id) {
   const { rows } = await db.query(
     `SELECT p.id, p.user_id, p.score, p.rank, p.payout, p.joined_at,
-            u.name, u.ville, u.level
+            u.name, u.ville, u.level, u.avatar_url
        FROM tournament_participants p
        JOIN users u ON u.id = p.user_id
       WHERE p.tournament_id = $1
@@ -83,11 +83,30 @@ async function participantsDetailed(id) {
     name: r.name,
     ville: r.ville ?? null,
     level: r.level,
+    avatar_url: r.avatar_url ?? null,
     score: r.score,
     rank: r.rank ?? i + 1,
     payout: r.payout != null ? Number(r.payout) : 0,
     joined_at: r.joined_at,
   }));
+}
+
+/** Vérifie si un joueur est déjà inscrit à un tournoi. */
+async function findParticipant(tournamentId, userId) {
+  const { rows } = await db.query(
+    'SELECT * FROM tournament_participants WHERE tournament_id = $1 AND user_id = $2',
+    [tournamentId, userId]
+  );
+  return rows[0] || null;
+}
+
+/** Retire un joueur d'un tournoi. Retourne la ligne supprimée ou null. */
+async function removeParticipant(tournamentId, userId) {
+  const { rows } = await db.query(
+    'DELETE FROM tournament_participants WHERE tournament_id = $1 AND user_id = $2 RETURNING *',
+    [tournamentId, userId]
+  );
+  return rows[0] || null;
 }
 
 /**
@@ -170,6 +189,8 @@ module.exports = {
   findAll,
   participantsDetailed,
   addParticipant,
+  findParticipant,
+  removeParticipant,
   countParticipants,
   setStatus,
   participantUserIds,

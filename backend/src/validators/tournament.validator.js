@@ -43,4 +43,9 @@ const adminCreate = Joi.object({
   starts_at: Joi.date().iso().required(),
 });
 
-module.exports = { list, start, join, adminCreate };
+/** POST /admin/tournaments/:id/participants */
+const adminAddParticipant = Joi.object({
+  user_id: Joi.string().uuid().required(),
+});
+
+module.exports = { list, start, join, adminCreate, adminAddParticipant };

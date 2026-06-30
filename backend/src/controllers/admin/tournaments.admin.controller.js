@@ -44,4 +44,16 @@ const payout = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
-module.exports = { list, detail, create, start, cancel, payout };
+/** POST /admin/tournaments/:id/participants */
+const addParticipant = asyncHandler(async (req, res) => {
+  const result = await tournamentService.adminAddParticipant(req.params.id, req.body.user_id);
+  return created(res, result);
+});
+
+/** DELETE /admin/tournaments/:id/participants/:user_id */
+const removeParticipant = asyncHandler(async (req, res) => {
+  const result = await tournamentService.adminRemoveParticipant(req.params.id, req.params.user_id);
+  return ok(res, result);
+});
+
+module.exports = { list, detail, create, start, cancel, payout, addParticipant, removeParticipant };
