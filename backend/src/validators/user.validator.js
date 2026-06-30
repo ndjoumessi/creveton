@@ -33,6 +33,12 @@ const referralInvite = Joi.object({
   lang: Joi.string().valid(...LANGS).default('fr'),
 });
 
+/** GET /users/search?q=&limit= — annuaire joueurs (q ≥ 2 caractères). */
+const search = Joi.object({
+  q: Joi.string().trim().min(2).max(100).required(),
+  limit: Joi.number().integer().min(1).max(20).default(10),
+});
+
 /** Pagination générique (historique, transactions). */
 const pagination = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(20),
@@ -104,6 +110,7 @@ const adminLeaderboard = Joi.object({
 module.exports = {
   updateMe,
   referralInvite,
+  search,
   pagination,
   adminList,
   adminSuspend,

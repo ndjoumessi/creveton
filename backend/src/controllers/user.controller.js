@@ -80,6 +80,15 @@ module.exports = {
     });
     return ok(res, result);
   }),
+  // GET /users/search?q=&limit= — annuaire joueurs (cible d'un défi côté mobile).
+  search: asyncHandler(async (req, res) => {
+    const rows = await userModel.search({
+      userId: req.user.id,
+      q: req.query.q,
+      limit: req.query.limit,
+    });
+    return ok(res, { data: rows });
+  }),
   // POST /users/me/referral/invite — envoie un email de parrainage à un ami.
   referralInvite: asyncHandler(async (req, res) => {
     const result = await referralService.inviteFriend({

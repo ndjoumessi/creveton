@@ -121,6 +121,43 @@ async function listByUser(userId, { status = null } = {}) {
   return rows;
 }
 
+/**
+ * Liste paginée des défis d'un joueur pour l'onglet « Défis » mobile.
+ * Filtre `kind` :
+ *   - received  : défis reçus en attente (opponent_id = moi, status pending)
+ *   - sent      : défis envoyés en attente (challenger_id = moi, status pending)
+ *   - completed : défis terminés où je participe (status completed)
+ * Joint l'« autre » joueur (l'adversaire de mon point de vue) pour l'avatar +
+ * le nom. Renvoie `limit + 1` lignes pour détecter la page suivante (has_more).
+ */
+async function listForUser(userId, { kind, limit = 20, offset = 0 } = {}) {
+  // Colonnes qualifiées `c.` : `users` possède aussi une colonne `status` après
+  // le JOIN → la référence non qualifiée serait ambiguë.
+  let filter;
+  if (kind === 'received') filter = "c.opponent_id = $1 AND c.status = 'pending'";
+  else if (kind === 'sent') filter = "c.challenger_id = $1 AND c.status = 'pending'";
+  else filter = "(c.challenger_id = $1 OR c.opponent_id = $1) AND c.status = 'completed'";
+
+  // L'« autre » joueur dépend du camp : si je suis le challenger → opponent_id,
+  // sinon → challenger_id.
+  const otherId = 'CASE WHEN c.challenger_id = $1 THEN c.opponent_id ELSE c.challenger_id END';
+  const { rows } = await db.query(
+    `SELECT c.*,
+        ${otherId} AS other_id,
+        u.name AS other_name,
+        u.avatar_url AS other_avatar_url,
+        u.level AS other_level
+       FROM challenges c
+       LEFT JOIN users u ON u.id = (${otherId})
+      WHERE ${filter}
+      ORDER BY c.created_at DESC
+      LIMIT $2 OFFSET $3`,
+    [userId, limit + 1, offset]
+  );
+  const hasMore = rows.length > limit;
+  return { rows: hasMore ? rows.slice(0, limit) : rows, hasMore };
+}
+
 module.exports = {
   toView,
   create,
@@ -130,4 +167,5 @@ module.exports = {
   recordScore,
   finalize,
   listByUser,
+  listForUser,
 };

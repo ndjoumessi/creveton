@@ -343,6 +343,34 @@ async function findManyByIds(ids) {
   return ids.map((id) => byId.get(id)).filter(Boolean);
 }
 
+/**
+ * Recherche de joueurs (annuaire mobile pour cibler un défi). Filtre sur le nom
+ * ou le téléphone (ILIKE), exclut le joueur courant et les comptes non actifs
+ * (suspendus/bannis) ou supprimés. Projection publique réduite (pas de hash,
+ * email ni téléphone exposés).
+ * @returns {Promise<object[]>} { id, name, avatar_url, level, total_xp }
+ */
+async function search({ userId, q, limit = 10 }) {
+  const { rows } = await db.query(
+    `SELECT id, name, avatar_url, level, total_xp
+       FROM users
+      WHERE deleted_at IS NULL
+        AND status = 'active'
+        AND id <> $1
+        AND (name ILIKE $2 OR phone ILIKE $2)
+      ORDER BY name ASC
+      LIMIT $3`,
+    [userId, `%${q}%`, limit]
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    avatar_url: r.avatar_url ?? null,
+    level: r.level,
+    total_xp: r.total_xp,
+  }));
+}
+
 // Bandes d'XP cumulées → niveau joueur (1–5). Source de vérité du recalcul de
 // niveau après tout gain d'XP (Novice/Apprenti/Joueur/Expert/Champion).
 const XP_LEVELS = [0, 200, 500, 1200, 3000];
@@ -433,6 +461,7 @@ module.exports = {
   setPassword,
   setAvatar,
   clearAvatar,
+  search,
   generateUniqueReferralCode,
   // admin
   listAdmin,

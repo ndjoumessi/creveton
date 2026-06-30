@@ -12,6 +12,7 @@ const router = express.Router();
 
 router.use(authenticate);
 
+router.get('/search', validate(schemas.search, 'query'), ctrl.search);
 router.get('/me', ctrl.me);
 router.patch('/me', validate(schemas.updateMe), ctrl.updateMe);
 router.post('/me/avatar', avatarUpload.single('avatar'), ctrl.uploadAvatar);

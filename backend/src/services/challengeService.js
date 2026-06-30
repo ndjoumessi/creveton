@@ -192,6 +192,61 @@ async function submit({ userId, challengeId, answers }) {
   };
 }
 
+/** Vue « liste » d'un défi du point de vue de `userId` (onglet Défis mobile). */
+function toListView(row, userId) {
+  const side = sideOf(row, userId);
+  const yourScore = side === 'challenger' ? row.score_challenger : row.score_opponent;
+  const opponentScore = side === 'challenger' ? row.score_opponent : row.score_challenger;
+  return {
+    challenge_id: row.id,
+    status: apiStatus(row),
+    theme: row.theme,
+    level: row.level,
+    stake: Number(row.stake),
+    created_at: row.created_at,
+    played_at: row.played_at ?? null,
+    // Adversaire du point de vue du joueur courant (NULL si matchmaking ouvert).
+    opponent: row.other_id
+      ? {
+          id: row.other_id,
+          name: row.other_name,
+          avatar_url: row.other_avatar_url ?? null,
+          level: row.other_level ?? null,
+        }
+      : null,
+    your_score: yourScore ?? null,
+    opponent_score: opponentScore ?? null,
+    won: row.status === 'completed' ? (row.winner_id ? row.winner_id === userId : null) : null,
+  };
+}
+
+/**
+ * GET /challenges?status=received|sent|completed — liste paginée (page/limit)
+ * des défis du joueur connecté pour l'onglet « Défis » mobile.
+ */
+async function list({ userId, status, page = 1, limit = 20 }) {
+  const offset = (page - 1) * limit;
+  const { rows, hasMore } = await challengeModel.listForUser(userId, { kind: status, limit, offset });
+  return {
+    data: rows.map((r) => toListView(r, userId)),
+    page: { page, limit, has_more: hasMore },
+  };
+}
+
+/** DELETE /challenges/:id/decline — le destinataire refuse un défi en attente. */
+async function decline({ userId, challengeId }) {
+  const ch = await challengeModel.findById(challengeId);
+  if (!ch) throw new ApiError('CHALLENGE_NOT_FOUND');
+  if (ch.opponent_id !== userId) {
+    throw new ApiError('FORBIDDEN', { message: 'Seul le destinataire peut décliner ce défi.' });
+  }
+  if (ch.status !== 'pending') {
+    throw new ApiError('VALIDATION_ERROR', { message: 'Ce défi ne peut plus être décliné.' });
+  }
+  const updated = await challengeModel.setStatus(challengeId, 'declined');
+  return { challenge_id: updated.id, status: 'declined' };
+}
+
 /** GET /challenges/:id — détail (réservé aux participants, sans solutions). */
 async function get({ userId, challengeId }) {
   const ch = await challengeModel.findById(challengeId);
@@ -213,4 +268,4 @@ async function get({ userId, challengeId }) {
   };
 }
 
-module.exports = { create, accept, submit, get, apiStatus, CHALLENGE_QUESTIONS };
+module.exports = { create, accept, submit, get, list, decline, apiStatus, CHALLENGE_QUESTIONS };

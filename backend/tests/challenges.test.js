@@ -184,3 +184,129 @@ t('challenge inconnu → 404 CHALLENGE_NOT_FOUND', async () => {
   expect(r.status).toBe(404);
   expect(r.body.error.code).toBe('CHALLENGE_NOT_FOUND');
 });
+
+/** Crée un défi pending de challenger → opponent et renvoie son id. */
+async function createPending(ctok, opponent) {
+  const c = await request(app)
+    .post('/api/v1/challenges/create')
+    .set('Authorization', `Bearer ${ctok}`)
+    .send({ opponent_id: opponent.id, theme: 'geographie', level: 'beginner' });
+  return c.body.challenge_id;
+}
+
+// ─── GET /challenges?status= (onglets Défis) ────────────────────────────────
+
+t('GET /challenges?status=received → 200, défi reçu + infos adversaire', async () => {
+  const { ctok, otok, challenger, opponent } = await setup();
+  await createPending(ctok, opponent);
+
+  const r = await request(app)
+    .get('/api/v1/challenges?status=received')
+    .set('Authorization', `Bearer ${otok}`);
+  expect(r.status).toBe(200);
+  expect(r.body.data).toHaveLength(1);
+  expect(r.body.data[0].status).toBe('awaiting_challenger_play');
+  // L'adversaire affiché côté opponent = le challenger.
+  expect(r.body.data[0].opponent.id).toBe(challenger.id);
+  expect(r.body.data[0].opponent.name).toBe(challenger.name);
+  expect(r.body.page).toEqual({ page: 1, limit: 20, has_more: false });
+});
+
+t('GET /challenges?status=sent → 200, défi envoyé', async () => {
+  const { ctok, opponent } = await setup();
+  await createPending(ctok, opponent);
+
+  const r = await request(app)
+    .get('/api/v1/challenges?status=sent')
+    .set('Authorization', `Bearer ${ctok}`);
+  expect(r.status).toBe(200);
+  expect(r.body.data).toHaveLength(1);
+  expect(r.body.data[0].opponent.id).toBe(opponent.id);
+});
+
+t('GET /challenges?status=completed → 200, score + résultat', async () => {
+  const { ctok, otok, opponent } = await setup();
+  const c = await request(app)
+    .post('/api/v1/challenges/create')
+    .set('Authorization', `Bearer ${ctok}`)
+    .send({ opponent_id: opponent.id, theme: 'geographie', level: 'beginner' });
+  const id = c.body.challenge_id;
+  const questions = c.body.questions;
+  await request(app).post(`/api/v1/challenges/${id}/submit`).set('Authorization', `Bearer ${ctok}`).send(submitBody(questions, 1.0));
+  await request(app).post(`/api/v1/challenges/${id}/submit`).set('Authorization', `Bearer ${otok}`).send(submitBody(questions, 0.5));
+
+  // Onglet « received » ne doit plus contenir le défi terminé.
+  const recv = await request(app).get('/api/v1/challenges?status=received').set('Authorization', `Bearer ${otok}`);
+  expect(recv.body.data).toHaveLength(0);
+
+  const r = await request(app).get('/api/v1/challenges?status=completed').set('Authorization', `Bearer ${ctok}`);
+  expect(r.status).toBe(200);
+  expect(r.body.data).toHaveLength(1);
+  expect(r.body.data[0].status).toBe('completed');
+  expect(r.body.data[0].your_score).toBeGreaterThan(r.body.data[0].opponent_score);
+  expect(r.body.data[0].won).toBe(true);
+});
+
+t('GET /challenges sans status → 400 VALIDATION_ERROR', async () => {
+  const { ctok } = await setup();
+  const r = await request(app).get('/api/v1/challenges').set('Authorization', `Bearer ${ctok}`);
+  expect(r.status).toBe(400);
+  expect(r.body.error.code).toBe('VALIDATION_ERROR');
+});
+
+// ─── DELETE /challenges/:id/decline ─────────────────────────────────────────
+
+t('DELETE /challenges/:id/decline → 200 (destinataire) + retiré de received', async () => {
+  const { ctok, otok, opponent } = await setup();
+  const id = await createPending(ctok, opponent);
+
+  const r = await request(app)
+    .delete(`/api/v1/challenges/${id}/decline`)
+    .set('Authorization', `Bearer ${otok}`);
+  expect(r.status).toBe(200);
+  expect(r.body.status).toBe('declined');
+
+  const recv = await request(app).get('/api/v1/challenges?status=received').set('Authorization', `Bearer ${otok}`);
+  expect(recv.body.data).toHaveLength(0);
+});
+
+t('DELETE /challenges/:id/decline par le challenger → 403 FORBIDDEN', async () => {
+  const { ctok, opponent } = await setup();
+  const id = await createPending(ctok, opponent);
+
+  const r = await request(app)
+    .delete(`/api/v1/challenges/${id}/decline`)
+    .set('Authorization', `Bearer ${ctok}`);
+  expect(r.status).toBe(403);
+  expect(r.body.error.code).toBe('FORBIDDEN');
+});
+
+// ─── GET /users/search ──────────────────────────────────────────────────────
+
+t('GET /users/search?q=Nel → 200, trouve le joueur (sans données sensibles)', async () => {
+  const searcher = await H.createUser({ role: 'player', phone: '+237690000010' });
+  const target = await H.createUser({ role: 'player', phone: '+237690000011', name: 'Nelson Test' });
+
+  const r = await request(app)
+    .get('/api/v1/users/search?q=Nel')
+    .set('Authorization', `Bearer ${H.tokenFor(searcher)}`);
+  expect(r.status).toBe(200);
+  const hit = r.body.data.find((u) => u.id === target.id);
+  expect(hit).toBeTruthy();
+  expect(hit.name).toBe('Nelson Test');
+  expect(hit).toHaveProperty('level');
+  expect(hit).toHaveProperty('total_xp');
+  expect(hit).not.toHaveProperty('phone');
+  expect(hit).not.toHaveProperty('email');
+  // On ne se retourne jamais soi-même.
+  expect(r.body.data.some((u) => u.id === searcher.id)).toBe(false);
+});
+
+t('GET /users/search?q=N → 400 VALIDATION_ERROR (trop court)', async () => {
+  const searcher = await H.createUser({ role: 'player', phone: '+237690000012' });
+  const r = await request(app)
+    .get('/api/v1/users/search?q=N')
+    .set('Authorization', `Bearer ${H.tokenFor(searcher)}`);
+  expect(r.status).toBe(400);
+  expect(r.body.error.code).toBe('VALIDATION_ERROR');
+});

@@ -34,10 +34,27 @@ const submit = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
+/** GET /challenges?status=received|sent|completed → 200 { data, page } */
+const list = asyncHandler(async (req, res) => {
+  const result = await challengeService.list({
+    userId: req.user.id,
+    status: req.query.status,
+    page: req.query.page,
+    limit: req.query.limit,
+  });
+  return ok(res, result);
+});
+
 /** GET /challenges/:id → 200 (détail, réservé aux participants) */
 const get = asyncHandler(async (req, res) => {
   const result = await challengeService.get({ userId: req.user.id, challengeId: req.params.id });
   return ok(res, result);
 });
 
-module.exports = { create, accept, submit, get };
+/** DELETE /challenges/:id/decline → 200 (le destinataire refuse un défi en attente) */
+const decline = asyncHandler(async (req, res) => {
+  const result = await challengeService.decline({ userId: req.user.id, challengeId: req.params.id });
+  return ok(res, result);
+});
+
+module.exports = { create, accept, submit, get, list, decline };
