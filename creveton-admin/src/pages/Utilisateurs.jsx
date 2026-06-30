@@ -188,9 +188,8 @@ function StatusDot({ status }) {
 
 function LevelPill({ level }) {
   const { t } = useTranslation();
-  const m = levelMeta(level);
   return (
-    <span className="u-level-pill" style={{ background: m.bg, color: m.color }}>
+    <span className={`u-level-pill u-level--${level}`}>
       {t('users.misc.levelShort', { level })} {t(`users.levels.${level}`)}
     </span>
   );
@@ -282,7 +281,7 @@ function ProgressionTab({ user, sessions, loading }) {
   return (
     <div className="stack" style={{ gap: 24 }}>
       <div className="u-level-hero">
-        <div className="u-level-medal" style={{ background: m.bg, color: m.color }}>{m.icon}</div>
+        <div className={`u-level-medal u-level--${user.level}`}>{m.icon}</div>
         <div className="u-level-hero-title">{t('users.drawer.level')} {user.level} — {t(`users.levels.${user.level}`)}</div>
       </div>
 
@@ -339,7 +338,7 @@ function ProgressionTab({ user, sessions, loading }) {
               return (
                 <div className="u-theme-row" key={tp.key}>
                   <span className="u-theme-name">{cfg.icon} {cfg.label}</span>
-                  <span className="u-theme-track"><span className="u-theme-fill" style={{ width: `${tp.rate}%`, background: cfg.fg }} /></span>
+                  <span className="u-theme-track"><span className={`u-theme-fill u-theme-fill--${tp.key}`} style={{ width: `${tp.rate}%` }} /></span>
                   <span className="u-theme-pct">{tp.rate}%</span>
                 </div>
               );
@@ -391,7 +390,7 @@ function HistoriqueTab({ sessions, loading }) {
         const rate = total ? correct / total : 0;
         const mark = rate > 0.7 ? ['✓', 'good'] : rate < 0.5 ? ['✗', 'bad'] : ['○', 'mid'];
         return (
-          <div className="u-hist-card" key={g.id} style={{ borderLeftColor: cfg.fg }}>
+          <div className={`u-hist-card u-hist-card--${g.theme || 'unknown'}`} key={g.id}>
             <div className="u-hist-top">
               <span className="u-hist-theme">{cfg.icon} {cfg.label} · {levelLabels[g.level] || g.level}</span>
               <span className={`u-hist-mark u-mark-${mark[1]}`}>{mark[0]} {correct}/{total}</span>
@@ -791,7 +790,7 @@ export default function Utilisateurs() {
         return (
           <div className="u-levelcell">
             <LevelPill level={u.level} />
-            <span className="u-xp-mini"><span style={{ width: `${prog.pct}%`, background: levelMeta(u.level).color }} /></span>
+            <span className="u-xp-mini"><span className={`u-level-bar--${u.level}`} style={{ width: `${prog.pct}%` }} /></span>
             <span className="u-xp-mini-label">{num(u.total_xp)}{prog.max ? '' : ` / ${num(prog.end)}`} XP</span>
           </div>
         );

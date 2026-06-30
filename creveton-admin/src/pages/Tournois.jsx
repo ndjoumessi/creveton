@@ -60,8 +60,8 @@ function StatusBadge({ status }) {
   const cfg = tournamentStatusColors[status] || { fg: '#6b7280', label: status };
   const label = t(`tournaments.statuses.${status}`, cfg.label);
   return (
-    <span className={`tour-status ${status === 'running' ? 'is-live' : ''}`} style={{ color: cfg.fg, background: '#fff' }}>
-      <span className="tour-status-dot" style={{ background: cfg.fg }} />
+    <span className={`tour-status tour-status--${status || 'unknown'} ${status === 'running' ? 'is-live' : ''}`}>
+      <span className="tour-status-dot" />
       {status === 'running' ? t('tournaments.statuses.running') : label}
     </span>
   );
@@ -95,7 +95,7 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
         <div className="tour-card-name">{tour.name || t('tournaments.card.placeholderName')}</div>
         <div className="tour-card-badges">
           <span className="tour-badge tour-badge-free">{Number(tour.entry_fee) > 0 ? t('tournaments.card.paid') : t('tournaments.card.free')}</span>
-          {tour.theme && <span className="tour-badge" style={{ background: themeBadgeColors[tour.theme]?.bg, color: themeBadgeColors[tour.theme]?.fg }}>{t(`questions.themes.${tour.theme}`, themeLabels[tour.theme] || tour.theme)}</span>}
+          {tour.theme && <span className={`tour-badge tour-theme--${tour.theme}`}>{t(`questions.themes.${tour.theme}`, themeLabels[tour.theme] || tour.theme)}</span>}
           {tour.format && <span className="tour-badge tour-badge-soft">{t('tournaments.card.formatBadge', { q: tour.format.questions, s: tour.format.time_per_q_s })}</span>}
         </div>
 

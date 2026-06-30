@@ -209,6 +209,18 @@
 /* Onglet Progression */
 .u-level-hero { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 .u-level-medal { width: 80px; height: 80px; border-radius: 22px; display: grid; place-items: center; font-size: 38px; }
+/* Niveaux 1–5 — bg + couleur par niveau (remplace inline styles LevelPill + medal). */
+.u-level--1 { background: #f3f4f6; color: #6b7280; }
+.u-level--2 { background: #e6f0ff; color: #3b82f6; }
+.u-level--3 { background: #dcfce7; color: #2a8a4f; }
+.u-level--4 { background: #fff4e0; color: #f59e0b; }
+.u-level--5 { background: #fdf6e3; color: #d4a017; }
+/* Barre XP mini (largeur = inline %, fond = couleur niveau). */
+.u-level-bar--1 { background: #6b7280; }
+.u-level-bar--2 { background: #3b82f6; }
+.u-level-bar--3 { background: #2a8a4f; }
+.u-level-bar--4 { background: #f59e0b; }
+.u-level-bar--5 { background: #d4a017; }
 .u-level-hero-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 24px; color: var(--ink); }
 
 .u-xp-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
@@ -235,6 +247,22 @@
 /* Onglet Historique */
 .u-hist-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
 .u-hist-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid #ccc; border-radius: 12px; padding: 12px 14px; }
+/* Fill thème progression (bg = fg thème, largeur = inline %). */
+.u-theme-fill--culture    { background: #8b5cf6; }
+.u-theme-fill--geographie { background: #3b82f6; }
+.u-theme-fill--histoire   { background: #f59e0b; }
+.u-theme-fill--industrie  { background: #10b981; }
+.u-theme-fill--sport      { background: #e74c3c; }
+.u-theme-fill--science    { background: #0891b2; }
+.u-theme-fill--unknown    { background: #6b7280; }
+/* Carte historique — bordure gauche par thème. */
+.u-hist-card--culture    { border-left-color: #8b5cf6; }
+.u-hist-card--geographie { border-left-color: #3b82f6; }
+.u-hist-card--histoire   { border-left-color: #f59e0b; }
+.u-hist-card--industrie  { border-left-color: #10b981; }
+.u-hist-card--sport      { border-left-color: #e74c3c; }
+.u-hist-card--science    { border-left-color: #0891b2; }
+.u-hist-card--unknown    { border-left-color: #6b7280; }
 .u-hist-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
 .u-hist-theme { font-weight: 600; font-size: 13.5px; color: var(--ink); }
 .u-hist-mark { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
@@ -292,6 +320,12 @@
 [data-theme="dark"] .u-theme-pct { color: var(--ink); }
 /* Badge rôle admin : aligné sur super/mod (tint vert hue-preserving). */
 [data-theme="dark"] .u-role-admin { background: rgba(42,138,79,0.18); color: var(--green300); }
+/* Niveaux dark mode (hue-preserving). */
+[data-theme="dark"] .u-level--1 { background: rgba(107,114,128,0.18); color: var(--muted); }
+[data-theme="dark"] .u-level--2 { background: rgba(59,130,246,0.18);  color: #93c5fd; }
+[data-theme="dark"] .u-level--3 { background: rgba(42,138,79,0.18);   color: var(--green300); }
+[data-theme="dark"] .u-level--4 { background: rgba(245,158,11,0.18);  color: var(--gold400); }
+[data-theme="dark"] .u-level--5 { background: rgba(212,160,23,0.18);  color: var(--gold); }
 /* Heatmap : en nuit, échelle « plus = plus clair » (le pas haut #0b2e1a serait invisible). */
 [data-theme="dark"] .u-heat-0 { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .u-heat-1 { background: rgba(42,138,79,0.35); }

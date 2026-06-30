@@ -42,9 +42,23 @@
 .tour-card-head { height: 80px; display: flex; align-items: center; justify-content: center; position: relative; }
 .tour-card-emoji { font-size: 40px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
 .tour-status { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; padding: 4px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
-.tour-status-dot { width: 7px; height: 7px; border-radius: 50%; }
+.tour-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .tour-status.is-live { animation: tourPulse 1.6s infinite; }
 .tour-status.is-live .tour-status-dot { animation: tourPulse 1.2s infinite; }
+/* Statut badge — couleur par statut (remplace inline styles). */
+.tour-status--scheduled, .tour-status--unknown { color: #6b7280; background: #fff; }
+.tour-status--open      { color: #2563eb; background: #fff; }
+.tour-status--running   { color: #15803d; background: #fff; }
+.tour-status--closed    { color: #b45309; background: #fff; }
+.tour-status--paid      { color: #b8860b; background: #fff; }
+.tour-status--cancelled { color: #dc2626; background: #fff; }
+/* Thème badge — couleur par thème (remplace inline styles). */
+.tour-theme--culture    { background: #f3edff; color: #8b5cf6; }
+.tour-theme--geographie { background: #e6f0ff; color: #3b82f6; }
+.tour-theme--histoire   { background: #fff4e0; color: #f59e0b; }
+.tour-theme--industrie  { background: #e3fbef; color: #10b981; }
+.tour-theme--sport      { background: #fdeceb; color: #e74c3c; }
+.tour-theme--science    { background: #e6fafc; color: #0891b2; }
 @keyframes tourPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 
 .tour-card-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
@@ -120,3 +134,18 @@
 [data-theme="dark"] .tour-card-rewards { color: var(--green300); }
 [data-theme="dark"] .tour-view-btn.is-active { color: var(--ink); }
 [data-theme="dark"] .tour-create { color: var(--gold); }
+/* tour-status dark : fond blanc → rgba sur gradient sombre. */
+[data-theme="dark"] .tour-status--scheduled,
+[data-theme="dark"] .tour-status--unknown   { background: rgba(107,114,128,0.25); color: #d1d5db; }
+[data-theme="dark"] .tour-status--open      { background: rgba(37,99,235,0.25);   color: #93c5fd; }
+[data-theme="dark"] .tour-status--running   { background: rgba(42,138,79,0.25);   color: var(--green300); }
+[data-theme="dark"] .tour-status--closed    { background: rgba(180,83,9,0.25);    color: var(--gold400); }
+[data-theme="dark"] .tour-status--paid      { background: rgba(212,160,23,0.25);  color: var(--gold); }
+[data-theme="dark"] .tour-status--cancelled { background: rgba(220,38,38,0.25);   color: #f87171; }
+/* tour-theme badge dark. */
+[data-theme="dark"] .tour-theme--culture    { background: rgba(139,92,246,0.18);  color: #c4b5fd; }
+[data-theme="dark"] .tour-theme--geographie { background: rgba(59,130,246,0.18);  color: #93c5fd; }
+[data-theme="dark"] .tour-theme--histoire   { background: rgba(245,158,11,0.18);  color: var(--gold400); }
+[data-theme="dark"] .tour-theme--industrie  { background: rgba(16,185,129,0.18);  color: #6ee7b7; }
+[data-theme="dark"] .tour-theme--sport      { background: rgba(231,76,60,0.18);   color: #f87171; }
+[data-theme="dark"] .tour-theme--science    { background: rgba(8,145,178,0.18);   color: #67e8f9; }
