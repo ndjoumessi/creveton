@@ -529,6 +529,7 @@
     "launchCta": "Lancer un défi",
     "new": "Nouveau",
     "confirmDecline": "Refuser ce défi ?",
+    "confirmCancel": "Annuler ce défi ?",
     "demoBanner": "Données de démonstration — liste à brancher",
     "tabs": {
       "received": "Reçus",

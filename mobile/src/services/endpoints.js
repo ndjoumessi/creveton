@@ -69,6 +69,8 @@ export const challenges = {
   accept: (id) => api.post(`/challenges/${id}/accept`).then((r) => r.data),
   // Refuse un défi reçu (destinataire uniquement, pending → declined).
   decline: (id) => api.delete(`/challenges/${id}/decline`).then((r) => r.data),
+  // Annule un défi envoyé (émetteur uniquement, pending → cancelled).
+  cancel: (id) => api.delete(`/challenges/${id}`).then((r) => r.data),
   submit: (id, payload) =>
     api.post(`/challenges/${id}/submit`, payload).then((r) => r.data),
 };

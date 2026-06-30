@@ -529,6 +529,7 @@
     "launchCta": "Start a challenge",
     "new": "New",
     "confirmDecline": "Decline this challenge?",
+    "confirmCancel": "Cancel this challenge?",
     "demoBanner": "Demo data — list endpoint pending",
     "tabs": {
       "received": "Received",

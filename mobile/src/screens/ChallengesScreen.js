@@ -5,11 +5,8 @@
 //   - GET /challenges?status=received|sent|completed  → listes des onglets
 //   - POST /challenges/:id/accept                      → accepter + jouer
 //   - DELETE /challenges/:id/decline                   → refuser (destinataire)
+//   - DELETE /challenges/:id                           → annuler (émetteur)
 //   - GET /users/search?q=                             → cibler un ami précis
-//
-// Note : il n'existe pas (encore) d'endpoint d'ANNULATION d'un défi envoyé
-// (DELETE /challenges/:id côté challenger) — l'action « Annuler » de l'onglet
-// Envoyés reste donc non branchée. (TODO backend : annulation côté émetteur.)
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -177,6 +174,33 @@ export default function ChallengesScreen({ navigation }) {
     );
   };
 
+  const cancelSent = (item) => {
+    Alert.alert(
+      t('challengesHub.actions.cancel'),
+      t('challengesHub.confirmCancel'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('challengesHub.actions.cancel'),
+          style: 'destructive',
+          onPress: async () => {
+            hapticLight();
+            try {
+              await challenges.cancel(item.challenge_id);
+              setData((d) => ({
+                ...d,
+                sent: d.sent.filter((c) => c.challenge_id !== item.challenge_id),
+              }));
+              toast.show({ type: 'info', message: t('challengesHub.notify.cancelled') });
+            } catch (e) {
+              toast.show({ type: 'error', message: parseApiError(e).message });
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const acceptChallenge = async (item) => {
     hapticLight();
     try {
@@ -226,7 +250,7 @@ export default function ChallengesScreen({ navigation }) {
 
   const renderItem = ({ item }) => {
     if (tab === 'received') return <ReceivedCard t={t} item={item} onAccept={acceptChallenge} onDecline={declineChallenge} disabled={!isOnline} />;
-    if (tab === 'sent') return <SentCard t={t} item={item} />;
+    if (tab === 'sent') return <SentCard t={t} item={item} onCancel={cancelSent} disabled={!isOnline} />;
     return <CompletedCard t={t} item={item} />;
   };
 
@@ -530,7 +554,7 @@ function ReceivedCard({ t, item, onAccept, onDecline, disabled = false }) {
   );
 }
 
-function SentCard({ t, item }) {
+function SentCard({ t, item, onCancel, disabled = false }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const name = item.opponent?.name || t('challengesHub.sheet.randomOpponent');
@@ -544,6 +568,12 @@ function SentCard({ t, item }) {
         <Text style={styles.sentWaiting}>
           {item.your_score != null ? '· ' : ''}{t('challengesHub.card.waiting')}
         </Text>
+        <View style={styles.sentSpacer} />
+        <Pressable onPress={() => onCancel(item)} disabled={disabled} hitSlop={8}>
+          <Text style={[styles.cancelLink, disabled && styles.cancelLinkDisabled]}>
+            {t('challengesHub.actions.cancel')}
+          </Text>
+        </Pressable>
       </View>
     </AppCard>
   );
@@ -674,6 +704,9 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
 
   sentFooter: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.md, flexWrap: 'wrap' },
   sentScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.textDark },
+  sentSpacer: { flex: 1 },
+  cancelLink: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, color: colors.red600 },
+  cancelLinkDisabled: { opacity: 0.4 },
   sentWaiting: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
 
   completedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
