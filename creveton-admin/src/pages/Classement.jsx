@@ -21,17 +21,6 @@ const SCOPES = [
 ];
 
 // Niveaux joueur 1..5 — couleur + libellé (sens doublé : jamais la teinte seule).
-const LEVEL_STYLES = {
-  1: { bg: '#f3f4f6', fg: '#6b7280' },
-  2: { bg: '#e6f0ff', fg: '#3b82f6' },
-  3: { bg: '#e3fbef', fg: '#10b981' },
-  4: { bg: '#fff4e0', fg: '#a16207' },
-  5: { bg: '#f3edff', fg: '#8b5cf6' },
-};
-
-function levelStyle(level) {
-  return LEVEL_STYLES[level] || LEVEL_STYLES[1];
-}
 
 /* Couronne du champion (sway animé en CSS). */
 function CrownSvg() {
@@ -234,7 +223,6 @@ export default function Classement() {
                 <tbody>
                   {rest.map((p) => {
                     const isMe = me && p.rank === me.rank;
-                    const lvl = levelStyle(p.level);
                     return (
                       <tr key={p.user_id || p.rank} className={isMe ? 'lb-row-me' : ''}>
                         <td>
@@ -255,7 +243,7 @@ export default function Classement() {
                         <td className="lb-td-city">{p.ville || '—'}</td>
                         <td className="lb-td-level">
                           {p.level != null ? (
-                            <span className="lb-level-badge" style={{ background: lvl.bg, color: lvl.fg }}>
+                            <span className={`lb-level-badge lb-level--${p.level}`}>
                               {t('common.level')} {p.level}
                             </span>
                           ) : '—'}
