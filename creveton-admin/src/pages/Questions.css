@@ -1253,6 +1253,7 @@
 [data-theme="dark"] .q-view-btn.is-active { color: var(--ink); }
 [data-theme="dark"] .q-bi-en { color: var(--green300); }
 [data-theme="dark"] .q-stats-insight { color: var(--gold400); background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); }
+[data-theme="dark"] .explain { color: var(--gold); background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); }
 /* Overlays sur image : voile/boutons blancs (texte --ink clair) → scrim sombre lisible. */
 [data-theme="dark"] .q-img-box .btn-light { background: rgba(0,0,0,0.55); color: #fff; }
 [data-theme="dark"] .q-img-busy { background: rgba(0,0,0,0.62); color: #fff; }
