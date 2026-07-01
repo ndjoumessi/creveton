@@ -93,14 +93,14 @@ function formatDuration(seconds) {
 function scoreColor(score) {
   if (score > 800) return 'var(--gold)';
   if (score >= 400) return 'var(--green500)';
-  return '#9ca3af';
+  return 'var(--muted)';
 }
 
 /** Couleur de la mini-barre de réussite : < 50 % rouge, 50–70 % or, > 70 % vert. */
 function ratioColor(ratio) {
   if (ratio > 0.7) return 'var(--green500)';
   if (ratio >= 0.5) return 'var(--gold)';
-  return '#dc2626';
+  return 'var(--red)';
 }
 
 const ratioOf = (correct, total) => (total ? Math.min(1, correct / total) : 0);

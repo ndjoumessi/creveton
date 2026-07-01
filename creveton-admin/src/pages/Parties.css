@@ -3,7 +3,7 @@
 /* ── Bande KPI sombre ─────────────────────────────────────────────── */
 .ses-kpi-band {
   background: var(--green900);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   padding: 22px 26px;
   display: grid;
@@ -132,11 +132,11 @@
   font-size: 13px;
   transition: all var(--t-fast, 150ms);
 }
-.ses-pill:hover { border-color: #d1d5db; color: var(--ink); }
+.ses-pill:hover { border-color: var(--border-green); color: var(--ink); }
 .ses-pill.active {
   background: var(--green900);
   border-color: var(--green900);
-  color: #fff;
+  color: var(--gold);
 }
 
 /* ── Table ────────────────────────────────────────────────────────── */
@@ -171,7 +171,7 @@
   width: 60px;
   height: 4px;
   border-radius: 999px;
-  background: #e8efe9;
+  background: rgba(42, 138, 79, 0.10);
   overflow: hidden;
 }
 .ses-bar > span {
@@ -321,15 +321,13 @@
 }
 .ses-ans {
   border: 1px solid var(--border);
-  border-left: 3px solid var(--muted);
   border-radius: var(--radius-sm);
-  padding: 11px 13px 11px 14px;
+  padding: 11px 13px;
   background: var(--surface);
 }
-/* Barre d'accent gauche colorée par résultat (demande explicite). */
-.ses-ans--ok { border-left-color: var(--green500); background: rgba(42, 138, 79, 0.06); }
-.ses-ans--ko { border-left-color: var(--red); background: rgba(231, 76, 60, 0.06); }
-.ses-ans--skip { border-left-color: var(--muted); background: transparent; }
+.ses-ans--ok { border-color: var(--green500); background: rgba(42, 138, 79, 0.06); }
+.ses-ans--ko { border-color: var(--red); background: rgba(231, 76, 60, 0.06); }
+.ses-ans--skip { background: transparent; }
 .ses-ans-head {
   display: flex;
   align-items: flex-start;
@@ -342,7 +340,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: rgba(0, 0, 0, 0.06);
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
@@ -356,14 +354,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 12px;
 }
-.ses-ans-badge--ok { background: #dcfce7; color: #15803d; }
-.ses-ans-badge--ko { background: #fee2e2; color: #dc2626; }
-.ses-ans-badge--skip { background: #fef9c3; color: #92711a; }
+.ses-ans-badge--ok { background: rgba(42, 138, 79, 0.12); color: var(--green500); }
+.ses-ans-badge--ko { background: rgba(231, 76, 60, 0.12); color: var(--red); }
+.ses-ans-badge--skip { background: rgba(212, 160, 23, 0.12); color: #8a6d12; }
 .ses-ans-q {
   flex: 1;
   min-width: 0;
@@ -403,10 +401,10 @@
   font-size: 12.5px;
 }
 .ses-ans-line svg { flex: none; }
-.ses-ans-line--ok { color: #15803d; }
-.ses-ans-line--ko { color: #b91c1c; }
-.ses-ans-line--good { color: #15803d; }
-.ses-ans-line--skip { color: #92711a; font-style: italic; }
+.ses-ans-line--ok { color: var(--green500); }
+.ses-ans-line--ko { color: var(--red); }
+.ses-ans-line--good { color: var(--green500); }
+.ses-ans-line--skip { color: #8a6d12; font-style: italic; }
 .ses-ans-bonus {
   display: inline-flex;
   align-items: center;
@@ -414,7 +412,7 @@
   margin-top: 3px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #fcf3da;
+  background: rgba(212, 160, 23, 0.10);
   color: var(--gold);
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
