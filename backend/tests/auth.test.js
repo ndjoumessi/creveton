@@ -137,6 +137,9 @@ t('change-password valide → 200 { changed: true }', async () => {
     .send({ current_password: 'KnownPass1', new_password: 'NewPass2' });
   expect(r.status).toBe(200);
   expect(r.body.changed).toBe(true);
+  // Le nouveau hash est bien persisté en base.
+  const { rows } = await H.db.query('SELECT password_hash FROM users WHERE id = $1', [user.id]);
+  expect(await bcrypt.compare('NewPass2', rows[0].password_hash)).toBe(true);
 });
 
 t('change-password mauvais actuel → 400 INVALID_CURRENT_PASSWORD', async () => {

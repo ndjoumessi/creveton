@@ -2,13 +2,13 @@
 
 const H = require('./helpers/integration');
 const request = require('supertest');
-const bcrypt = require('bcryptjs');
 const app = require('../src/app');
 
 /**
  * Tests d'intégration des endpoints d'enrichissement console :
- * /auth/change-password, /admin/users/:id/message, analytics (série journalière),
- * dashboard (online_now + success_rate). Postgres + Redis réels.
+ * /admin/users/:id/message, analytics (série journalière), dashboard
+ * (online_now + success_rate), /health. Postgres + Redis réels.
+ * (Les tests /auth/change-password vivent dans auth.test.js.)
  */
 
 let ready = false;
@@ -20,45 +20,6 @@ const t = (name, fn) =>
   test(name, async () => { if (!ready) { console.warn(`[skip] ${name}`); return; } await fn(); });
 
 const P = '/api/v1';
-
-/** Crée un joueur avec email + mot de passe connu. */
-async function userWithPassword(password = 'OldPass123', email = 'pwd@creveton.cm') {
-  const user = await H.createUser({ role: 'player' });
-  const hash = await bcrypt.hash(password, 12);
-  await H.db.query('UPDATE users SET password_hash = $2, email = $3 WHERE id = $1', [user.id, hash, email]);
-  return { ...user, email };
-}
-
-t('POST /auth/change-password : change le mot de passe (mot de passe actuel OK)', async () => {
-  const user = await userWithPassword();
-  const r = await request(app).post(`${P}/auth/change-password`)
-    .set('Authorization', `Bearer ${H.tokenFor(user)}`)
-    .send({ current_password: 'OldPass123', new_password: 'NewPass456' });
-  expect(r.status).toBe(200);
-  expect(r.body.changed).toBe(true);
-  const { rows } = await H.db.query('SELECT password_hash FROM users WHERE id = $1', [user.id]);
-  expect(await bcrypt.compare('NewPass456', rows[0].password_hash)).toBe(true);
-});
-
-t('POST /auth/change-password : mauvais mot de passe actuel → 400', async () => {
-  const user = await userWithPassword();
-  const r = await request(app).post(`${P}/auth/change-password`)
-    .set('Authorization', `Bearer ${H.tokenFor(user)}`)
-    .send({ current_password: 'Wrong000', new_password: 'NewPass456' });
-  // 400 (et non 401) : l'utilisateur est authentifié ; un mauvais mot de passe
-  // ACTUEL est une erreur d'entrée, pas d'auth. En 401, l'intercepteur mobile
-  // tenterait un refresh + retry parasites.
-  expect(r.status).toBe(400);
-  expect(r.body.error.code).toBe('INVALID_CURRENT_PASSWORD');
-});
-
-t('POST /auth/change-password : nouveau identique à l’ancien → 400', async () => {
-  const user = await userWithPassword();
-  const r = await request(app).post(`${P}/auth/change-password`)
-    .set('Authorization', `Bearer ${H.tokenFor(user)}`)
-    .send({ current_password: 'OldPass123', new_password: 'OldPass123' });
-  expect(r.status).toBe(400);
-});
 
 t('POST /admin/users/:id/message : accuse réception (admin)', async () => {
   const admin = await H.createUser({ role: 'admin', phone: '+237690000060' });
