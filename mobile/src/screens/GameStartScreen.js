@@ -19,7 +19,7 @@ import {
 } from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
 import { useGameStore } from '../store/gameStore';
-import { themeGradients, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { themeGradients, fonts, fontSizes, radius, spacing, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { themeLabel, levelLabel } from '../utils/format';
 import { hapticMedium } from '../utils/haptics';
@@ -399,7 +399,7 @@ const makeStyles = (colors) => StyleSheet.create({
   levels: { flexDirection: 'row', gap: spacing.sm },
   levelPill: {
     flex: 1,
-    height: 46,
+    minHeight: MIN_TOUCH,
     borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.border,

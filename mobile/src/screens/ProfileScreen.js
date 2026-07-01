@@ -16,6 +16,7 @@ import {
   ScrollView,
   TextInput,
   BackHandler,
+  Alert,
   useWindowDimensions,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -40,7 +41,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Screen, Avatar, AppButton, useToast } from '../components';
+import { Screen, Avatar, AppButton, XpBar, useToast } from '../components';
 import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
@@ -75,21 +76,6 @@ function deriveBadges(level, t) {
     unlocked: level >= b.min,
     req: t('profile.badges.lockedByLevel', { min: b.min }),
   }));
-}
-
-function XpBar({ pct, height = 4 }) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const fill = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(fill, { toValue: pct, duration: motion.enter, useNativeDriver: false }).start();
-  }, [fill, pct]);
-  const width = fill.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  return (
-    <View style={[styles.xpTrack, { height, borderRadius: height / 2 }]}>
-      <Animated.View style={[styles.xpFill, { width, borderRadius: height / 2 }]} />
-    </View>
-  );
 }
 
 /** Stat compacte de la rangée du header. `valueColor` met en valeur (rang/taux). */
@@ -464,7 +450,7 @@ export default function ProfileScreen() {
           {`${t('profile.misc.level', { level })} — ${t(`profile.levelNames.${level}`)}`}
         </Text>
         <View style={styles.headerXpWrap}>
-          <XpBar pct={progress.pct} />
+          <XpBar current={progress.current} max={progress.needed} height={4} />
         </View>
       </View>
 
@@ -492,6 +478,9 @@ export default function ProfileScreen() {
 
       <View style={styles.body}>
         {/* C. MON COMPTE */}
+        {/* Pastilles d'icônes : pastels clairs FIXES (vert/bleu/jaune/rouge/indigo/violet).
+            Volontairement en dur — les tokens successBg/errorBg flippent foncé en dark,
+            rendant l'icône green900 invisible. TODO: ajouter token (pastels de pastille). */}
         <Section title={t('profile.sections.account')}>
           <SettingRow icon={User} iconBg="#e8f5ed" label={t('profile.fields.name')} value={user?.name} onPress={openEdit} />
           <SettingRow icon={Mail} iconBg="#dbeafe" label={t('profile.fields.email')} value={user?.email} valueMuted />
@@ -537,7 +526,7 @@ export default function ProfileScreen() {
                   value={isDark}
                   onValueChange={toggleTheme}
                   trackColor={{ false: colors.borderInput, true: colors.green700 }}
-                  thumbColor={isDark ? colors.gold500 : '#ffffff'}
+                  thumbColor={isDark ? colors.gold500 : colors.white}
                 />
                 <Icon icon={Moon} size={13} color={colors.textMuted} />
               </View>
@@ -552,7 +541,7 @@ export default function ProfileScreen() {
                 value={notifEnabled}
                 onValueChange={toggleNotif}
                 trackColor={{ false: colors.borderInput, true: colors.green500 }}
-                thumbColor="#ffffff"
+                thumbColor={colors.white}
               />
             }
           />
@@ -650,7 +639,12 @@ export default function ProfileScreen() {
           title={t('profile.logout')}
           fullWidth
           style={styles.logout}
-          onPress={logout}
+          onPress={() =>
+            Alert.alert(t('profile.logoutTitle'), t('profile.logoutMessage'), [
+              { text: t('common.cancel'), style: 'cancel' },
+              { text: t('profile.logout'), style: 'destructive', onPress: logout },
+            ])
+          }
         />
       </View>
 
@@ -798,7 +792,7 @@ const makeStyles = (colors) => StyleSheet.create({
   avatarOverlay: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 55,
-    backgroundColor: 'rgba(11,46,26,0.55)',
+    backgroundColor: colors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -818,8 +812,6 @@ const makeStyles = (colors) => StyleSheet.create({
   headerName: { fontFamily: fonts.titleExtraBold, fontSize: 24, color: colors.textOnDark, marginTop: spacing.xs },
   headerLevel: { fontFamily: fonts.bodySemiBold, fontSize: 14, color: colors.gold400 },
   headerXpWrap: { width: '100%', paddingHorizontal: spacing.xl, marginTop: spacing.md },
-  xpTrack: { width: '100%', backgroundColor: 'rgba(255,255,255,0.2)', overflow: 'hidden' },
-  xpFill: { height: '100%', backgroundColor: colors.gold400 },
 
   // B. Stats row
   statsRow: {
@@ -838,10 +830,10 @@ const makeStyles = (colors) => StyleSheet.create({
     top: '15%',
     height: '70%',
     width: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: colors.borderOnDark,
   },
   profStatValue: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textOnDark },
-  profStatLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: 'rgba(255,255,255,0.6)' },
+  profStatLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textOnDarkMuted },
 
   body: { padding: spacing.lg },
 

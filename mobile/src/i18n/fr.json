@@ -428,6 +428,8 @@
     "invite": "Inviter un ami",
     "inviteMessage": "Rejoins-moi sur Creveton ! Code : {{code}} 🇨🇲",
     "logout": "Se déconnecter",
+    "logoutTitle": "Se déconnecter ?",
+    "logoutMessage": "Tu seras redirigé vers l'écran de connexion.",
     "editModal": {
       "title": "Modifier le profil",
       "name": "Nom",

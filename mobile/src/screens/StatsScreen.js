@@ -14,7 +14,7 @@ import {
 import Svg, { Path, Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { BarChart2, Trophy, Target, TrendingUp, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen } from '../components';
+import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, XpBar } from '../components';
 import Icon from '../components/Icon';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -28,7 +28,7 @@ import {
   radius,
   spacing,
   shadow,
-  motion,
+  MIN_TOUCH,
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { themeEmoji, themeLabel, levelLabel, timeAgo, levelProgress, avatarUri } from '../utils/format';
@@ -62,11 +62,13 @@ const WIN_W = Dimensions.get('window').width;
 const CHART_W = WIN_W - spacing.lg * 2 - spacing.md * 2;
 const CHART_H = 140;
 
-function rateColor(pct, c = colors) {
+function rateColor(pct, c = colors, isDark = false) {
   if (pct === null || pct === undefined) return c.textDark;
-  if (pct >= 70) return c.green500; // vert
-  if (pct >= 40) return c.gold500; // ambre (≈ orange)
-  return c.red400; // rouge
+  // green500 (#2a8a4f) tombe à ~2:1 sur la carte KPI sombre (colors.white →
+  // #162a1e en dark) → en dark on prend green300, lisible sur fond sombre.
+  if (pct >= 70) return isDark ? c.green300 : c.green500; // vert
+  if (pct >= 40) return c.gold500; // ambre (≈ orange) — lisible sur les deux fonds
+  return c.red400; // rouge — lisible sur les deux fonds
 }
 
 // Accent (bordure gauche historique) par mode de jeu.
@@ -218,26 +220,6 @@ function ThemeBar({ pct }) {
   );
 }
 
-// ── Barre d'XP du header ───────────────────────────────────────────────────
-function XpBar({ pct }) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const fill = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(fill, {
-      toValue: pct,
-      duration: motion.enter,
-      useNativeDriver: false,
-    }).start();
-  }, [fill, pct]);
-  const width = fill.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  return (
-    <View style={styles.xpTrack}>
-      <Animated.View style={[styles.xpFill, { width }]} />
-    </View>
-  );
-}
-
 export default function StatsScreen({ navigation }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -310,7 +292,7 @@ export default function StatsScreen({ navigation }) {
           </View>
         </View>
         <View style={styles.xpRow}>
-          <XpBar pct={progress.pct} />
+          <XpBar current={progress.current} max={progress.needed} />
           <View style={styles.xpLabels}>
             <Text style={styles.xpLabel}>{fmt(progress.current)} {t('common.xp')}</Text>
             <Text style={styles.xpLabel}>
@@ -402,7 +384,7 @@ function LoadIssue({ isOffline, error, onRetry }) {
 // ── Onglet Mes stats ───────────────────────────────────────────────────────
 function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay }) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   if (loading) {
     return (
@@ -447,14 +429,16 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay }
       icon: '⭐',
       bg: '#fef9c3',
       value: fmt(stats.avgScore),
-      color: stats.avgScore > 500 ? colors.gold500 : colors.green900,
+      // Valeur en couleur de texte thème-aware : green900 ne flippe pas et
+      // disparaissait sur la carte KPI sombre (colors.white → #162a1e en dark).
+      color: colors.textDark,
       label: t('stats.kpi.avgScore'),
     },
     {
       icon: TrendingUp,
       bg: '#dbeafe',
       value: `${stats.successRate}%`,
-      color: rateColor(stats.successRate, colors),
+      color: rateColor(stats.successRate, colors, isDark),
       label: t('stats.kpi.successRate'),
     },
     {
@@ -782,13 +766,6 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: 2,
   },
   xpRow: { marginTop: spacing.lg, gap: spacing.xs },
-  xpTrack: {
-    height: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.borderOnDark,
-    overflow: 'hidden',
-  },
-  xpFill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.gold400 },
   xpLabels: { flexDirection: 'row', justifyContent: 'space-between' },
   xpLabel: {
     fontFamily: fonts.bodyMedium,
@@ -806,7 +783,8 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   tab: {
     flex: 1,
-    height: 40,
+    minHeight: MIN_TOUCH, // cible tactile ≥44/48 (était height: 40)
+    paddingVertical: spacing.xs,
     flexDirection: 'row',
     gap: 6,
     borderRadius: radius.pill,
@@ -903,7 +881,7 @@ const makeStyles = (colors) => StyleSheet.create({
   themeRowFirst: { borderTopWidth: 0, marginTop: 0, paddingTop: 0 },
   themeHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   themeLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textBody },
-  themeLabelMuted: { color: colors.textFaint },
+  themeLabelMuted: { color: colors.textMuted },
   themeMeta: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
   barTrack: {
     height: 6,
@@ -1046,7 +1024,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 28,
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.lg,
-    color: colors.textFaint,
+    color: colors.textDark,
     textAlign: 'center',
   },
   rankAvatarSkel: {},

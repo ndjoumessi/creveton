@@ -130,6 +130,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fonts.titleRegular,
     fontSize: fontSizes.xs,
-    color: 'rgba(255,255,255,0.38)',
+    color: colors.textOnDarkFaint,
   },
 });

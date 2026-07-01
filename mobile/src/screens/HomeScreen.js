@@ -81,7 +81,7 @@ const fmtNum = (n) => Number(n || 0).toLocaleString('fr-FR');
 function rateColor(pct, colors) {
   if (pct === null || pct === undefined) return colors.textDark;
   if (pct > 70) return colors.green500;
-  if (pct >= 50) return colors.gold500;
+  if (pct >= 50) return colors.green700;
   return colors.red400;
 }
 
@@ -199,7 +199,10 @@ export default function HomeScreen({ navigation }) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   // En-têtes de section : vert clair (green300) en sombre — lisibles sur la page
   // sombre ; vert profond (green900) en clair, inchangé.
-  const sectionColor = isDark ? colors.green300 : colors.green900;
+  // Titres de section : couleur de titre standard (thème-aware) — textDark vire
+  // clair en dark. NB: en dark, un vert vif (green300) se lisait comme un titre
+  // « en vert » plutôt que comme un simple intitulé de section.
+  const sectionColor = colors.textDark;
   const { isOffline } = useNetworkStatus();
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
@@ -406,7 +409,7 @@ export default function HomeScreen({ navigation }) {
                   icon="⭐"
                   iconBg={ICON_BG.avg}
                   value={fmtNum(stats.avgScore)}
-                  valueColor={stats.avgScore > 500 ? colors.gold500 : colors.green900}
+                  valueColor={stats.avgScore > 500 ? colors.green700 : colors.green900}
                   label={t('home.myStats.avgScore')}
                   sub={stats.totalGames > 0 ? t('home.misc.outOfGames', { count: stats.totalGames }) : null}
                 />
@@ -829,7 +832,7 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.green700,
     marginTop: 2,
   },
-  podiumScoreFirst: { color: colors.gold500, fontSize: fontSizes.lg },
+  podiumScoreFirst: { color: colors.green700, fontSize: fontSizes.lg },
   podiumGap: { marginTop: spacing.sm },
   lbButton: { marginTop: spacing.lg },
 });

@@ -30,7 +30,7 @@ import {
   isValidPassword,
 } from '../utils/validation';
 import { SEXES, LANGS } from '../constants/config';
-import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 const STEPS = [
@@ -387,12 +387,12 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: spacing.lg,
   },
   selectText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textDark },
-  selectPlaceholder: { color: colors.textFaint },
+  selectPlaceholder: { color: colors.textMuted },
   chevron: { fontSize: fontSizes.base, color: colors.textMuted },
   pills: { flexDirection: 'row', gap: spacing.sm },
   pill: {
     flex: 1,
-    height: 44,
+    minHeight: MIN_TOUCH,
     borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.borderInput,

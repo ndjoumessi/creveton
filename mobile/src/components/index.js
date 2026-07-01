@@ -33,3 +33,4 @@ export { default as CircularTimer } from './CircularTimer';
 // Visualisations / effets
 export { default as Confetti } from './Confetti';
 export { default as MiniLineChart } from './MiniLineChart';
+export { default as XpBar } from './XpBar';

@@ -23,7 +23,7 @@ import { useAuthStore } from '../store/authStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { isValidEmail } from '../utils/validation';
 import { getLastEmail } from '../services/storage';
-import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 export default function LoginScreen({ navigation }) {
@@ -201,7 +201,13 @@ const makeStyles = (colors) => StyleSheet.create({
     textAlign: 'center',
   },
   submit: { marginTop: spacing.sm },
-  linkRow: { alignItems: 'center', marginTop: spacing.xl },
+  linkRow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.xl,
+    minHeight: MIN_TOUCH,
+    paddingVertical: spacing.sm,
+  },
   linkText: {
     fontFamily: fonts.bodyRegular,
     fontSize: fontSizes.md,
