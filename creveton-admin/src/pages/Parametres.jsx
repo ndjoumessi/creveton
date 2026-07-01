@@ -212,7 +212,7 @@ function AccountSection({ user, lang, setLang }) {
             {TIMEZONES.map((z) => <option key={z} value={z}>{TZ_LABELS[z]}</option>)}
           </select>
         </div>
-        <div className="field">
+        <div className="field set-span">
           <label>{t('settings.account.interfaceLang')}</label>
           <div className="set-pill-row">
             <button type="button" className={`set-choice ${formLang === 'fr' ? 'is-active' : ''}`} onClick={() => setFormLang('fr')}>🇫🇷 Français</button>

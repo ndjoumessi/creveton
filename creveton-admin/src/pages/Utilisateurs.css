@@ -146,50 +146,66 @@
 .u-menu button.danger { color: #dc2626; }
 .u-menu button.danger:hover { background: #fef2f2; }
 
-/* ─────────────── Drawer : header sombre ─────────────── */
+/* ─────────────── Drawer : hero header (Cockpit Émeraude) ─────────────── */
 .u-drawer-head {
-  background: #0b2e1a;
-  border-radius: 16px;
+  position: relative;
+  background: linear-gradient(135deg, #0b2e1a 0%, #1a4a2e 100%);
+  border-radius: var(--radius-lg);
   padding: 24px;
   margin-bottom: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(11, 46, 26, 0.28);
 }
-.u-dh-top { display: flex; align-items: flex-start; gap: 16px; }
-.u-dh-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
-.u-dh-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 22px; color: #fff; line-height: 1.1; }
-.u-dh-badges { display: flex; flex-wrap: wrap; gap: 8px; }
-.u-dh-badges .u-status { color: rgba(255, 255, 255, 0.85); }
-.u-dh-contact { display: flex; flex-wrap: wrap; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+.u-dh-top { display: flex; align-items: center; gap: 16px; }
+/* Anneau or 2px autour de l'avatar (suit le rayon circulaire du composant). */
+.u-dh-top .avatar-c { box-shadow: 0 0 0 2px var(--gold); flex: none; }
+.u-dh-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.u-dh-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; }
+.u-dh-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Sur le hero vert profond, badges et statut passent en blanc translucide —
+   lisibles dans les deux thèmes (le hero est vert dans light ET dark). */
+.u-dh-badges .u-status { color: rgba(255, 255, 255, 0.9); }
+.u-dh-badges .u-role-badge { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.u-dh-contact { display: flex; flex-wrap: wrap; gap: 8px; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: rgba(255, 255, 255, 0.7); }
 
-.u-dh-metrics { display: flex; gap: 0; margin: 20px 0 16px; }
-.u-dh-metrics > div { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 2px; border-right: 1px solid rgba(255, 255, 255, 0.18); }
+.u-dh-metrics {
+  display: flex;
+  gap: 0;
+  margin: 20px 0 18px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.u-dh-metrics > div { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 3px; border-right: 1px solid rgba(255, 255, 255, 0.14); }
 .u-dh-metrics > div:last-child { border-right: none; }
-.u-dh-mv { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; color: #fff; }
-.u-dh-ml { font-size: 11px; color: rgba(255, 255, 255, 0.5); }
+.u-dh-mv { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 22px; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
+.u-dh-ml { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: rgba(255, 255, 255, 0.6); }
 .u-dh-quick { display: flex; flex-wrap: wrap; gap: 8px; }
-.u-dh-quick .btn-ghost-soft { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.18); }
-.u-dh-quick .btn-ghost-soft:hover { background: rgba(255, 255, 255, 0.18); }
+.u-dh-quick .btn-ghost-soft { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+.u-dh-quick .btn-ghost-soft:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
 
-/* Onglets */
+/* Onglets — soulignés (aucun fond plein), accent or sur l'onglet actif */
 .u-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; position: sticky; top: 0; background: var(--surface); z-index: 2; }
 .u-tab {
   border: 0; background: none; cursor: pointer;
-  padding: 10px 14px;
+  padding: 12px 16px;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 14px; font-weight: 600; color: var(--muted);
   border-bottom: 2px solid transparent; margin-bottom: -1px;
-  transition: color var(--t-fast);
+  transition: color var(--t-fast), border-color var(--t-fast);
 }
-.u-tab:hover { color: var(--green700); }
-.u-tab.active { color: var(--ink); border-bottom-color: var(--gold); font-family: 'Outfit', sans-serif; }
+.u-tab:hover { color: var(--ink); }
+.u-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
 .u-tab-body { padding-bottom: 4px; }
 
 .u-section-title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13.5px; color: var(--ink); margin-bottom: 10px; }
 .u-empty-note { font-size: 13px; }
 
 /* Onglet Profil */
-.u-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin: 0; }
-.u-kv > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.u-kv dt { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--fg-faint); }
-.u-kv dd { margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 14px; color: var(--ink); word-break: break-word; }
+.u-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; margin: 0; }
+.u-kv > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.u-kv dt { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.u-kv dd { margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 15px; color: var(--ink); word-break: break-word; }
 
 .u-account { display: flex; flex-direction: column; gap: 10px; }
 .u-account-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; }
@@ -240,7 +256,7 @@
 .u-theme-perf { display: flex; flex-direction: column; gap: 10px; }
 .u-theme-row { display: grid; grid-template-columns: 130px 1fr 42px; align-items: center; gap: 10px; }
 .u-theme-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.u-theme-track { height: 8px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
+.u-theme-track { height: 4px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
 .u-theme-fill { display: block; height: 100%; border-radius: 999px; transition: width 800ms ease; }
 .u-theme-pct { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: #0b2e1a; text-align: right; }
 

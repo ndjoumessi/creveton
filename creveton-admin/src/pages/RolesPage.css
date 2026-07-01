@@ -78,56 +78,95 @@
   font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: default;
 }
 
-/* ── Modale matrice ── */
+/* ── Modale matrice ──
+   Deux colonnes : matrice (1fr) + résumé (240px), séparées par un filet 1px. */
 .roles-modal-grid {
-  display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: start;
+  display: grid; grid-template-columns: 1fr 240px; gap: 20px; align-items: start;
 }
 @media (max-width: 640px) { .roles-modal-grid { grid-template-columns: 1fr; } }
 
 .roles-matrix-wrap { overflow-x: auto; }
 .roles-matrix { width: 100%; border-collapse: collapse; }
 .roles-matrix th, .roles-matrix td {
-  padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--border);
+  padding: 9px 6px; text-align: center; border-bottom: 1px solid var(--border);
 }
+
+/* En-têtes d'action : 11px MAJUSCULES, muet, centrés. */
 .roles-matrix thead th {
   font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600;
-  letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted);
+  letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted);
 }
 .roles-matrix tbody tr:last-child th, .roles-matrix tbody tr:last-child td { border-bottom: none; }
-.roles-matrix-modcol { text-align: left !important; font-weight: 600; font-size: 13px; color: var(--ink); white-space: nowrap; }
+
+/* Colonne module : 14px encre, poids 500, à gauche. */
+.roles-matrix-modcol {
+  text-align: left !important; font-weight: 500; font-size: 14px;
+  color: var(--ink); white-space: nowrap;
+}
 .roles-matrix thead .roles-matrix-modcol { color: var(--muted); }
-.roles-na { color: #cbd5e1; font-weight: 600; }
+
+/* Zébrage : une ligne sur deux légèrement plus sombre. */
+.roles-matrix tbody tr:nth-child(even) { background: rgba(0, 0, 0, 0.03); }
+
+/* N/A (« — ») : transparent, muet, non interactif. */
+.roles-na { color: var(--muted); font-weight: 600; cursor: default; }
 
 /* Case à cocher animée (bouton accessible). */
 .roles-check {
-  width: 20px; height: 20px; border-radius: 6px;
-  border: 1.5px solid #cbd5e1; background: var(--surface); color: #fff;
+  width: 22px; height: 22px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: transparent; color: var(--green500);
   display: inline-grid; place-items: center; cursor: pointer;
   transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
 }
 .roles-check svg { opacity: 0; transform: scale(0.4); transition: opacity var(--t-fast), transform var(--t-fast); }
-.roles-check:hover { border-color: var(--green300); }
-.roles-check.on { background: var(--green500); border-color: var(--green500); }
+.roles-check:hover { background: rgba(42, 138, 79, 0.07); border-color: var(--green300); }
+.roles-check.on {
+  background: rgba(42, 138, 79, 0.15); border-color: var(--green500); color: var(--green500);
+}
 .roles-check.on svg { opacity: 1; transform: scale(1); }
 .roles-check:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.30); }
 
-/* ── Panneau résumé ── */
+/* ── Colonne résumé : filet séparateur + panneau interne ── */
 .roles-summary {
-  background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px 16px; align-self: stretch;
+  align-self: stretch;
+  border-left: 1px solid var(--border);
+  padding-left: 20px;
+}
+@media (max-width: 640px) {
+  .roles-summary { border-left: none; padding-left: 0; }
+}
+
+/* Panneau « ce que le rôle peut faire ». */
+.roles-summary-can {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 16px;
 }
 .roles-summary h4 {
-  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink);
-  margin: 0 0 8px;
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12px;
+  letter-spacing: 0.6px; text-transform: uppercase; color: var(--gold);
+  opacity: 0.85; margin: 0 0 10px;
 }
-.roles-summary ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
-.roles-summary li { font-size: 12.5px; color: var(--green700); }
-.roles-summary-empty { font-size: 12.5px; color: var(--muted); margin: 0; }
+.roles-summary ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.roles-summary li {
+  position: relative; padding-left: 16px;
+  font-size: 12.5px; color: var(--green700); line-height: 1.45;
+}
+.roles-summary li::before {
+  content: '\2022'; position: absolute; left: 0; top: 0;
+  color: var(--green500); font-weight: 700;
+}
+.roles-summary-empty {
+  font-size: 12.5px; color: var(--muted); margin: 0; text-align: center; padding: 8px 0;
+}
 
 /* ── Dark-mode base surface override (neutral gray → dark surface) ── */
 [data-theme="dark"] .roles-tone-gray .roles-card-head { background: var(--surface-2); }
 
 /* ── Dark-mode semantic badge tint (hue-preserving) ── */
 [data-theme="dark"] .roles-pill-on { background: rgba(42,138,79,0.18); color: var(--green300); }
+/* Zébrage : sur fond sombre, une teinte claire subtile via token. */
+[data-theme="dark"] .roles-matrix tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.04); }
 /* Liste « ce que le rôle peut faire » : green700 → clair sur surface-2 sombre. */
 [data-theme="dark"] .roles-summary li { color: var(--green300); }
+[data-theme="dark"] .roles-summary li::before { color: var(--green300); }

@@ -559,7 +559,7 @@ function DrawerBody({ user, tab, setTab, onMessage, onSuspend, onReset }) {
     <>
       <div className="u-drawer-head">
         <div className="u-dh-top">
-          <Avatar name={user.name} src={detail?.avatar_url ?? user.avatar_url} size="lg" />
+          <Avatar name={user.name} src={detail?.avatar_url ?? user.avatar_url} size="xl" />
           <div className="u-dh-id">
             <div className="u-dh-name">{user.name}</div>
             <div className="u-dh-badges"><RoleBadge role={user.role} /><StatusDot status={user.status} /></div>

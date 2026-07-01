@@ -239,12 +239,14 @@ function ActiviteTab({ memberId }) {
         <li className="team-timeline-item" key={e.id}>
           <span className="team-timeline-dot" aria-hidden="true" />
           <div className="team-timeline-body">
-            <div className="team-timeline-text">
-              <strong>{t(`team.events.${e.event}`, e.event)}</strong>
-              {e.question_text && <span className="team-timeline-q"> « {e.question_text} »</span>}
+            <div className="team-timeline-head">
+              <div className="team-timeline-text">
+                <strong>{t(`team.events.${e.event}`, e.event)}</strong>
+                {e.question_text && <span className="team-timeline-q"> « {e.question_text} »</span>}
+              </div>
+              <div className="team-timeline-when">{dateTimeFr(e.created_at)}</div>
             </div>
             {e.reason && <div className="team-timeline-reason">{e.reason}</div>}
-            <div className="team-timeline-when">{dateTimeFr(e.created_at)}</div>
           </div>
         </li>
       ))}
@@ -258,7 +260,9 @@ function DrawerBody({ member, tab, setTab }) {
   return (
     <>
       <div className="team-drawer-head">
-        <Avatar name={member.name} size="xl" />
+        <span className={`team-dh-avatar team-dh-avatar--${member.role || 'player'}`}>
+          <Avatar name={member.name} size="xl" />
+        </span>
         <div className="team-dh-id">
           <div className="team-dh-name">{member.name}</div>
           <div className="team-dh-badges"><RoleBadge role={member.role} /><StatusDot status={member.status} /></div>

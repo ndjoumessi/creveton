@@ -199,10 +199,10 @@
 /* ── Drawer : détail ──────────────────────────────────────────────── */
 .ses-detail { display: flex; flex-direction: column; gap: 16px; }
 
-/* En-tête sombre. */
+/* En-tête héros (dégradé émeraude). */
 .ses-dhead {
-  background: var(--green900);
-  border-radius: 16px;
+  background: linear-gradient(135deg, #0b2e1a 0%, #1a4a2e 100%);
+  border-radius: var(--radius);
   padding: 18px 20px;
   margin: -2px 0 0;
 }
@@ -235,7 +235,7 @@
 .ses-ddate {
   color: rgba(255, 255, 255, 0.55);
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* Bannière de triche. */
@@ -254,26 +254,26 @@
 }
 .ses-cheat svg { flex: none; }
 
-/* Carte score blanche. */
+/* Carte score (plate, sur surface). */
 .ses-score-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
+  border-radius: var(--radius);
   padding: 24px 20px 18px;
   text-align: center;
 }
 .ses-score-big {
   font-family: 'Outfit', sans-serif;
-  font-weight: 900;
-  font-size: 64px;
+  font-weight: 800;
+  font-size: 56px;
   line-height: 1;
+  color: var(--gold);
   font-variant-numeric: tabular-nums;
 }
 .ses-score-unit {
   color: var(--muted);
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   margin-top: 4px;
 }
 .ses-score-stats {
@@ -297,8 +297,8 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.ses-sstat-v.ok { color: #15803d; }
-.ses-sstat-v.ko { color: #dc2626; }
+.ses-sstat-v.ok { color: var(--green500); }
+.ses-sstat-v.ko { color: var(--red); }
 .ses-sstat-v.xp { color: var(--gold); }
 .ses-sstat-v svg { flex: none; }
 .ses-sstat-l {
@@ -320,14 +320,18 @@
 }
 .ses-ans {
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 11px 13px;
+  border-left: 3px solid var(--muted);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px 11px 14px;
   background: var(--surface);
 }
-.ses-ans:nth-child(even) { background: var(--surface-2); }
+/* Barre d'accent gauche colorée par résultat (demande explicite). */
+.ses-ans--ok { border-left-color: var(--green500); background: rgba(42, 138, 79, 0.06); }
+.ses-ans--ko { border-left-color: var(--red); background: rgba(231, 76, 60, 0.06); }
+.ses-ans--skip { border-left-color: var(--muted); background: transparent; }
 .ses-ans-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 9px;
 }
 .ses-ans-num {
@@ -364,14 +368,18 @@
   min-width: 0;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 500;
-  font-size: 13.5px;
+  font-size: 14px;
+  line-height: 1.35;
   color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .ses-ans-time {
   flex: none;
+  margin-left: auto;
+  text-align: right;
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 12px;
@@ -452,3 +460,9 @@
 [data-theme="dark"] .ses-ans-line--ko { color: #fca5a5; }
 /* Badge réponse correcte : aligné sur --ko/--skip (tint vert hue-preserving). */
 [data-theme="dark"] .ses-ans-badge--ok { background: rgba(42,138,79,0.18); color: var(--green300); }
+/* Tints d'accent des réponses : remontées pour rester lisibles sur surface sombre. */
+[data-theme="dark"] .ses-ans--ok { background: rgba(42,138,79,0.12); }
+[data-theme="dark"] .ses-ans--ko { background: rgba(231,76,60,0.12); }
+[data-theme="dark"] .ses-ans--skip { background: transparent; }
+/* Pastille numéro : le fond noir translucide disparaît sur sombre → tint clair. */
+[data-theme="dark"] .ses-ans-num { background: rgba(255,255,255,0.08); }
