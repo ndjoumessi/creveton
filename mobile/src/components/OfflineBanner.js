@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { WifiOff } from 'lucide-react-native';
 import { useNetworkStore } from '../store/networkStore';
+import { useGameStore } from '../store/gameStore';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { colors, fonts } from '../constants/theme';
 import Icon from './Icon';
@@ -21,6 +22,7 @@ export default function OfflineBanner() {
   const reduceMotion = useReduceMotion();
   const isOnline = useNetworkStore((s) => s.isOnline);
   const isInternetReachable = useNetworkStore((s) => s.isInternetReachable);
+  const isQuizActive = useGameStore((s) => s.isQuizActive);
   const [dismissed, setDismissed] = useState(false);
   const [mounted, setMounted] = useState(false); // garde la vue montée le temps du slide-up
   const total = BAR_HEIGHT + insets.top;
@@ -29,7 +31,9 @@ export default function OfflineBanner() {
   // Hors-ligne « effectif » : déconnecté OU connecté sans Internet joignable
   // (portail captif). `null` = inconnu → joignable (pas de faux hors-ligne).
   const offline = !isOnline || isInternetReachable === false;
-  const visible = offline && !dismissed;
+  // Masquée pendant une partie active (QuizScreen) — l'immersion ne doit pas
+  // être interrompue ; la logique offline queue reste active en arrière-plan.
+  const visible = offline && !dismissed && !isQuizActive;
 
   // Réinitialise le « dismiss » dès qu'on repasse en ligne (réapparaîtra à la
   // prochaine coupure).

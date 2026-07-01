@@ -28,7 +28,6 @@ import Icon from '../components/Icon';
 import { LoadingScreen, ProgressDots, CircularTimer, useToast } from '../components';
 import { useGameStore } from '../store/gameStore';
 import { sessions as sessionsApi } from '../services/endpoints';
-import { parseApiError } from '../services/api';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
@@ -90,6 +89,7 @@ export default function QuizScreen({ navigation }) {
   const mode = useGameStore((s) => s.mode);
   const sessionId = useGameStore((s) => s.sessionId);
   const setSessionId = useGameStore((s) => s.setSessionId);
+  const setQuizActive = useGameStore((s) => s.setQuizActive);
 
   const question = questions[currentIndex];
   const total = questions.length;
@@ -165,6 +165,11 @@ export default function QuizScreen({ navigation }) {
       },
     ]);
   }, [clearTimers, navigation, t]);
+
+  useEffect(() => {
+    setQuizActive(true);
+    return () => setQuizActive(false);
+  }, [setQuizActive]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -323,8 +328,7 @@ export default function QuizScreen({ navigation }) {
         });
         revealExplain();
         scheduleAutoNext(timedOut ? TIMEOUT_DELAY_MS : ANSWER_DELAY_MS);
-      } catch (e) {
-        toast.show({ type: 'error', message: parseApiError(e).message });
+      } catch {
         setAnswered({ selectedIndex, correctIndex: null, isCorrect: false, timedOut });
         setDotStates((d) => {
           const c = [...d];

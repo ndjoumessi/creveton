@@ -54,6 +54,7 @@ const initial = {
   result: null, // réponse de /sessions/submit
   submitting: false,
   error: null,
+  isQuizActive: false,
 };
 
 export const useGameStore = create((set, get) => ({
@@ -103,6 +104,8 @@ export const useGameStore = create((set, get) => ({
   setSessionId: (sessionId) => {
     if (sessionId && !get().sessionId) set({ sessionId });
   },
+
+  setQuizActive: (active) => set({ isQuizActive: active }),
 
   next: () => set((s) => ({ currentIndex: s.currentIndex + 1 })),
 
