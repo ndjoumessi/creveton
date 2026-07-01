@@ -13,7 +13,7 @@ const userModel = require('../models/user.model');
  * (mode gratuit forcé). Les payouts répartissent la cagnotte au top 3.
  */
 
-const MIN_PLAYERS_TO_START = 2;
+const MIN_PLAYERS_TO_START = 1;
 // Répartition de la cagnotte par rang (top 3). Somme = 1.
 const PRIZE_SPLIT = [0.5, 0.3, 0.2];
 
