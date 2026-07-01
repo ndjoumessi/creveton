@@ -32,14 +32,14 @@
 }
 
 .lb-pill:hover {
-  border-color: #cbd5d0;
+  border-color: var(--border-green);
   background: var(--surface-2);
 }
 
 .lb-pill.active {
   background: var(--green900);
   border-color: var(--green900);
-  color: #fff;
+  color: var(--gold);
 }
 
 .lb-pill-icon {
@@ -73,7 +73,7 @@
   background: var(--cream);
   border: 1px solid var(--gold);
   border-radius: var(--radius);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .lb-me-label {
@@ -119,19 +119,20 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* Carte 1ʳᵉ place — fond or, surélevée. */
+/* Carte 1ʳᵉ place — dégradé or, surélevée, ombre dorée. */
 .lb-p1 {
-  background: var(--gold);
-  border-radius: 20px;
+  background: linear-gradient(135deg, var(--gold), var(--gold400));
+  border-radius: var(--radius-lg);
   padding: 28px 22px 24px;
   margin-top: 36px;
+  box-shadow: var(--shadow-gold);
 }
 
 /* Cartes 2e / 3e — blanches, bordées de la teinte du métal. */
 .lb-p2,
 .lb-p3 {
   background: var(--surface);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   padding: 22px 18px 20px;
 }
 
@@ -188,7 +189,8 @@
   color: var(--green900);
 }
 
-.lb-name-light { font-size: 20px; color: #fff; }
+/* Texte vert nuit sur la carte or (contraste AA — comme .btn-gold). */
+.lb-name-light { font-size: 20px; color: var(--green900); }
 
 .lb-podium-city {
   font-family: 'Space Grotesk', system-ui, sans-serif;
@@ -197,7 +199,7 @@
   margin-top: 2px;
 }
 
-.lb-city-light { color: rgba(255, 255, 255, 0.7); }
+.lb-city-light { color: rgba(11, 46, 26, 0.62); }
 
 .lb-podium-score {
   font-family: 'Outfit', system-ui, sans-serif;
@@ -209,7 +211,7 @@
   line-height: 1;
 }
 
-.lb-score-light { font-weight: 800; font-size: 32px; color: #fff; }
+.lb-score-light { font-weight: 800; font-size: 32px; color: var(--green900); }
 
 .lb-podium-pts {
   font-family: 'Space Grotesk', system-ui, sans-serif;
@@ -221,17 +223,17 @@
   margin-top: 2px;
 }
 
-.lb-pts-light { color: rgba(255, 255, 255, 0.75); }
+.lb-pts-light { color: rgba(11, 46, 26, 0.7); }
 
 .lb-champ-badge {
   margin-top: 12px;
   padding: 4px 12px;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: rgba(11, 46, 26, 0.14);
+  color: var(--green900);
   font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* ─── Table (rangs 4 → N) ──────────────────────────────────────────────── */
