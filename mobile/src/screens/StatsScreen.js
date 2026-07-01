@@ -317,6 +317,7 @@ export default function StatsScreen({ navigation }) {
             isOffline={isOffline}
             onRetry={() => loadHistory()}
             onPlay={() => navigation.navigate('Play')}
+            onViewHistory={() => navigation.navigate('SessionsHistory')}
           />
         ) : (
           <RankTab
@@ -364,7 +365,7 @@ function LoadIssue({ isOffline, error, onRetry }) {
 }
 
 // ── Onglet Mes stats ───────────────────────────────────────────────────────
-function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay }) {
+function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, onViewHistory }) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -582,6 +583,13 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay }
           <HistoryRow key={String(g.session_id || i)} game={g} />
         ))}
       </View>
+      <AppButton
+        variant="outlineGold"
+        size="sm"
+        title={`📋 ${t('home.lastGames.viewAll')}`}
+        onPress={onViewHistory}
+        style={styles.historyBtn}
+      />
     </>
   );
 }
@@ -966,6 +974,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
   // Historique
   histList: { gap: spacing.sm },
+  historyBtn: { marginTop: spacing.md },
   histCard: {
     flexDirection: 'row',
     alignItems: 'stretch',

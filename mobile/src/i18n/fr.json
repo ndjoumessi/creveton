@@ -128,7 +128,8 @@
     },
     "lastGames": {
       "badgeTop": "TOP",
-      "badgeGood": "BIEN"
+      "badgeGood": "BIEN",
+      "viewAll": "Voir tout l'historique"
     }
   },
   "gameStart": {

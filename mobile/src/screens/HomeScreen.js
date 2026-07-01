@@ -395,6 +395,13 @@ export default function HomeScreen({ navigation }) {
                   <SessionCard key={String(g.session_id || i)} game={g} />
                 ))}
               </View>
+              <AppButton
+                variant="outlineGold"
+                size="sm"
+                title={`📋 ${t('home.lastGames.viewAll')}`}
+                onPress={() => navigation.navigate('SessionsHistory')}
+                style={styles.historyBtn}
+              />
             </>
           ) : null}
 
@@ -673,6 +680,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
   // Dernières parties
   lastList: { gap: spacing.sm },
+  historyBtn: { marginTop: spacing.sm },
 
   // Tournois
   hScroll: { gap: spacing.md, paddingRight: spacing.lg, paddingBottom: spacing.xs },
