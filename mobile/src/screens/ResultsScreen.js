@@ -2,7 +2,7 @@
 // (count-up), stats, récapitulatif des réponses, barre d'XP et palier débloqué.
 // Données issues de /sessions/submit (API §6), lues depuis le gameStore.
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -38,7 +38,7 @@ import { useQuestionsStore } from '../store/questionsStore';
 import { useAuthStore } from '../store/authStore';
 import { users } from '../services/endpoints';
 import { TIMED_MODES } from '../constants/config';
-import { hapticSuccess } from '../utils/haptics';
+import { hapticSuccess, hapticLight } from '../utils/haptics';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { getOptionText, normalizeLang } from '../utils/i18n';
 import { colors, fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
@@ -80,6 +80,14 @@ export default function ResultsScreen({ route, navigation }) {
   const storeMode = useGameStore((s) => s.mode);
   const modeRef = useRef(storeMode);
   if (!replaying) modeRef.current = storeMode;
+  // Thème/niveau de la partie figés de la même façon — servent à comparer le
+  // score à la partie précédente du MÊME thème+niveau (rejeu réinitialise le store).
+  const storeTheme = useGameStore((s) => s.theme);
+  const themeRef = useRef(storeTheme);
+  if (!replaying) themeRef.current = storeTheme;
+  const storeLevel = useGameStore((s) => s.level);
+  const levelRef = useRef(storeLevel);
+  if (!replaying) levelRef.current = storeLevel;
   const isMixed = TIMED_MODES.includes(modeRef.current);
   const reset = useGameStore((s) => s.reset);
   const startGame = useGameStore((s) => s.startGame);
@@ -214,6 +222,8 @@ export default function ResultsScreen({ route, navigation }) {
       result={result}
       isMixed={isMixed}
       mode={modeRef.current}
+      theme={themeRef.current}
+      level={levelRef.current}
       onReplay={replay}
       onHome={goHome}
       onBackToChallenges={goChallenges}
@@ -222,7 +232,7 @@ export default function ResultsScreen({ route, navigation }) {
   );
 }
 
-function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChallenges, replaying }) {
+function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome, onBackToChallenges, replaying }) {
   const { t, i18n } = useTranslation();
   const lang = normalizeLang(i18n.language);
   const total = result.total_questions || 0;
@@ -268,7 +278,11 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
   }, [rowAnims]);
 
   const heroEmoji = pct > 70 ? '🏆' : pct >= 50 ? '🥈' : '🎯';
-  const celebrate = pct > 70;
+  const celebrate = pct >= 80;
+
+  // — Titre de performance selon la justesse (correct/total), donnée réelle.
+  const perfTier = pct >= 80 ? 'excellent' : pct >= 50 ? 'good' : 'keepGoing';
+  const perfColor = pct >= 80 ? colors.gold500 : pct >= 50 ? colors.green500 : colors.textMuted;
 
   // — Nouveau record : uniquement si l'API expose réellement l'info.
   const isRecord =
@@ -289,6 +303,13 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
   const scoreAnim = useRef(new Animated.Value(0)).current;
   const [displayScore, setDisplayScore] = useState(0);
 
+  // — Pulse du score à la fin du count-up (1 → 1.15 → 1), driver natif.
+  const scorePulse = useRef(new Animated.Value(1)).current;
+  // — Titre de perf : fondu APRÈS le score (~800ms).
+  const perfFade = useRef(new Animated.Value(0)).current;
+  // — Ligne de comparaison au précédent : fondu quand l'historique est arrivé.
+  const compareFade = useRef(new Animated.Value(0)).current;
+
   // — Barre d'XP : remplissage gauche → droite.
   const xpFill = useRef(new Animated.Value(0)).current;
 
@@ -308,6 +329,8 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
       levelGlow.setValue(result.level_unlocked ? 1 : 0);
       scoreAnim.setValue(result.score || 0);
       setDisplayScore(result.score || 0);
+      scorePulse.setValue(1);
+      perfFade.setValue(1);
       if (isRecord) hapticSuccess();
       return undefined;
     }
@@ -333,6 +356,33 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
       duration: 1200,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
+    }).start(({ finished }) => {
+      // Pulse d'accent quand le count-up se termine (1 → 1.15 → 1).
+      if (finished) {
+        Animated.sequence([
+          Animated.timing(scorePulse, {
+            toValue: 1.15,
+            duration: 160,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.spring(scorePulse, {
+            toValue: 1,
+            friction: 3,
+            tension: 120,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+    });
+
+    // Titre de perf : apparaît après le score.
+    Animated.timing(perfFade, {
+      toValue: 1,
+      duration: motion.enter,
+      delay: 800,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
     }).start();
 
     if (isRecord) {
@@ -365,14 +415,26 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
     }
 
     return () => scoreAnim.removeAllListeners();
-  }, [heroScale, heroRotate, scoreAnim, xpFill, levelGlow, recordSlide, isRecord, result, reduceMotion]);
+  }, [heroScale, heroRotate, scoreAnim, scorePulse, perfFade, xpFill, levelGlow, recordSlide, isRecord, result, reduceMotion]);
 
-  // — Historique récent pour la mini-courbe de progression.
+  // — Retour haptique selon la performance, une seule fois. Le record déclenche
+  // déjà hapticSuccess (effet ci-dessus) → on ne double pas.
+  const hapticFired = useRef(false);
+  useEffect(() => {
+    if (hapticFired.current) return;
+    hapticFired.current = true;
+    if (isRecord) return;
+    if (pct >= 80) hapticSuccess();
+    else if (pct < 50) hapticLight();
+  }, [pct, isRecord]);
+
+  // — Historique récent : mini-courbe de progression + comparaison à la partie
+  // précédente du même thème/niveau. On tire large (20) pour trouver un match.
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const res = await users.history({ limit: 5 });
+        const res = await users.history({ limit: 20 });
         if (alive) setHistory(res?.data || []);
       } catch {
         if (alive) setHistory([]);
@@ -384,9 +446,52 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
   }, []);
 
   const progressScores = (history || [])
-    .slice()
+    .slice(0, 5)
     .reverse()
     .map((h) => Number(h.score) || 0);
+
+  // — Comparaison au score précédent : dernière partie du MÊME mode+thème+niveau,
+  // en excluant la partie courante (identifiée par son session_id). On masque la
+  // ligne s'il n'existe pas d'antériorité comparable ou si les scores sont égaux
+  // (aucune donnée inventée).
+  const currentScore = result.score || 0;
+  const priorSession = useMemo(() => {
+    if (!Array.isArray(history)) return null;
+    const curId = result.session_id ?? result.id ?? null;
+    return (
+      history.find((h) => {
+        if (!h) return false;
+        if (curId != null && (h.session_id === curId || h.id === curId)) return false;
+        return (
+          h.mode === mode &&
+          (h.theme ?? null) === (theme ?? null) &&
+          (h.level ?? null) === (level ?? null)
+        );
+      }) || null
+    );
+  }, [history, result, mode, theme, level]);
+
+  const comparison = useMemo(() => {
+    if (!priorSession) return null;
+    const prev = Number(priorSession.score) || 0;
+    if (currentScore === prev) return null;
+    return { dir: currentScore > prev ? 'up' : 'down', pts: Math.abs(currentScore - prev) };
+  }, [priorSession, currentScore]);
+
+  useEffect(() => {
+    if (!comparison) return undefined;
+    if (reduceMotion) {
+      compareFade.setValue(1);
+      return undefined;
+    }
+    Animated.timing(compareFade, {
+      toValue: 1,
+      duration: motion.enter,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+    return undefined;
+  }, [comparison, reduceMotion, compareFade]);
 
   const rotate = heroRotate.interpolate({
     inputRange: [0, 1],
@@ -448,10 +553,28 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
         <Label color={colors.textOnDarkMuted} style={styles.scoreLabel}>
           {t('results.finalScore')}
         </Label>
-        <Text style={styles.score}>{displayScore}</Text>
+        <Animated.Text style={[styles.score, { transform: [{ scale: scorePulse }] }]}>
+          {displayScore}
+        </Animated.Text>
         <Label color={colors.textOnDarkMuted}>
           {t('results.misc.heroSubtitle', { correct, total, pct })}
         </Label>
+        <Animated.Text style={[styles.perfTitle, { color: perfColor, opacity: perfFade }]}>
+          {t(`results.perf.${perfTier}`)}
+        </Animated.Text>
+        {comparison ? (
+          <Animated.Text
+            style={[
+              styles.compareLine,
+              comparison.dir === 'up' ? styles.compareUp : styles.compareDown,
+              { opacity: compareFade },
+            ]}
+          >
+            {comparison.dir === 'up'
+              ? t('results.compare.up', { pts: comparison.pts })
+              : t('results.compare.down', { pts: comparison.pts })}
+          </Animated.Text>
+        ) : null}
         {modeBadge ? (
           <View style={styles.modeBadge}>
             <Text style={styles.modeBadgeText}>{modeBadge}</Text>
@@ -693,6 +816,20 @@ const styles = StyleSheet.create({
   hero: { alignItems: 'center', paddingVertical: spacing.lg, zIndex: 2 },
   trophy: { fontSize: 72, marginBottom: spacing.sm },
   scoreLabel: { marginBottom: spacing.xs },
+  perfTitle: {
+    fontFamily: fonts.titleBold,
+    fontSize: fontSizes.xl,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  compareLine: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: fontSizes.md,
+    textAlign: 'center',
+    marginTop: spacing.xxs,
+  },
+  compareUp: { color: colors.green500 },
+  compareDown: { color: colors.textMuted },
   score: {
     fontFamily: fonts.titleBlack,
     fontSize: fontSizes.hero, // 64

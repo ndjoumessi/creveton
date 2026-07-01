@@ -177,7 +177,7 @@ export default function TournamentScreen() {
             keyExtractor={(t, i) => String(t.id ?? i)}
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
-            refreshing={refreshing}
+            refreshing={items.length > 0 && refreshing}
             onRefresh={onRefresh}
             ListEmptyComponent={<EmptyTournaments />}
             renderItem={({ item }) => <TournamentCard t={item} onJoin={onJoin} />}

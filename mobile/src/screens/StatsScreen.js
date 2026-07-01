@@ -2,19 +2,18 @@
 // parties (GET /users/me/history) : KPI, courbe d'évolution du score, performance
 // par thème, historique. Onglet « Classement » : ma position, podium, liste (API §7/§10).
 
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
   Pressable,
   Text,
-  Animated,
   Dimensions,
 } from 'react-native';
 import Svg, { Path, Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { BarChart2, Trophy, Target, TrendingUp, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, XpBar } from '../components';
+import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, XpBar, FillBar } from '../components';
 import Icon from '../components/Icon';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -193,24 +192,14 @@ function ScoreChart({ data }) {
   );
 }
 
-// ── Barre de performance par thème (green500, animée au mount) ─────────────
-function ThemeBar({ pct }) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const fill = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(fill, {
-      toValue: pct == null ? 0 : pct / 100,
-      duration: 800,
-      useNativeDriver: false,
-    }).start();
-  }, [fill, pct]);
-  const width = fill.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  return (
-    <View style={styles.barTrack}>
-      <Animated.View style={[styles.barFill, { width }]} />
-    </View>
-  );
+// Couleur de la barre de perf par thème (feu tricolore, doublée d'un libellé %) :
+// ≥70 vert, 40–69 or, <40 rouge. green500 conservé (barre, pas texte → contraste
+// moins strict que rateColor qui bascule en green300 pour le texte sur fond sombre).
+function barColor(pct, c) {
+  if (pct == null) return c.border;
+  if (pct >= 70) return c.green500;
+  if (pct >= 40) return c.gold500;
+  return c.red400;
 }
 
 export default function StatsScreen({ navigation }) {
@@ -379,6 +368,45 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay }
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  // Tri LOCAL de la liste de thèmes (aucun appel API). Défaut = parties décroissantes
+  // (comme le tri de computeStats). Re-taper le critère actif inverse le sens.
+  const [sortBy, setSortBy] = useState('games'); // 'games' | 'rate'
+  const [sortDir, setSortDir] = useState('desc'); // 'desc' | 'asc'
+  const toggleSort = useCallback(
+    (key) => {
+      hapticLight();
+      if (key === sortBy) {
+        setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'));
+      } else {
+        setSortBy(key);
+        setSortDir('desc');
+      }
+    },
+    [sortBy]
+  );
+
+  // Liste de thèmes enrichie des agrégats + triée. Les thèmes non joués (games 0,
+  // rate null) coulent en bas en tri décroissant (rate null → -1).
+  const themeStats = useMemo(() => {
+    const byTheme = stats?.byTheme || {};
+    const rows = THEMES.map((theme) => {
+      const entry = byTheme[theme.key];
+      return {
+        theme,
+        games: entry?.games ?? 0,
+        rate: entry?.rate ?? null,
+        best: entry?.best ?? null,
+      };
+    });
+    const sign = sortDir === 'desc' ? -1 : 1;
+    return rows.sort((a, b) => {
+      const av = sortBy === 'rate' ? (a.rate ?? -1) : a.games;
+      const bv = sortBy === 'rate' ? (b.rate ?? -1) : b.games;
+      return (av - bv) * sign;
+    });
+  }, [stats?.byTheme, sortBy, sortDir]);
+
   if (loading) {
     return (
       <View style={styles.kpiGrid}>
@@ -479,10 +507,30 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay }
       {/* Performance par thème */}
       <Text style={styles.sectionTitle}>{t('stats.performanceByTheme')}</Text>
       <View style={styles.card}>
-        {THEMES.map((theme, i) => {
-          const entry = stats.byTheme?.[theme.key];
-          const games = entry?.games ?? 0;
-          const rate = entry?.rate ?? null;
+        {/* Tri local : Réussite / Parties (le critère actif affiche le sens ↑/↓) */}
+        <View style={styles.sortRow}>
+          <Text style={styles.sortLabel}>{t('stats.themePerf.sortBy')}</Text>
+          {[
+            { key: 'rate', label: t('stats.themePerf.sortRate') },
+            { key: 'games', label: t('stats.themePerf.sortGames') },
+          ].map((opt) => {
+            const active = sortBy === opt.key;
+            return (
+              <Pressable
+                key={opt.key}
+                onPress={() => toggleSort(opt.key)}
+                style={[styles.sortToggle, active && styles.sortToggleActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.sortToggleText, active && styles.sortToggleTextActive]}>
+                  {opt.label} {active ? (sortDir === 'desc' ? '↓' : '↑') : '↕'}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        {themeStats.map(({ theme, games, rate, best }, i) => {
           const played = games > 0;
           // Méta compacte « N parties · X% » sur une ligne.
           const meta = played
@@ -494,10 +542,25 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay }
                 <Text style={[styles.themeLabel, !played && styles.themeLabelMuted]}>
                   {theme.emoji} {theme.label}
                 </Text>
-                <Text style={styles.themeMeta}>{meta}</Text>
+                <View style={styles.themeMetaRow}>
+                  <Text style={styles.themeMeta}>{meta}</Text>
+                  {/* Meilleur score RÉEL (max des parties complètes) — masqué si aucun. */}
+                  {best != null ? (
+                    <Text style={styles.themeBest}>{t('stats.themePerf.best', { pts: fmt(best) })}</Text>
+                  ) : null}
+                </View>
               </View>
-              {/* Pas encore joué → pas de barre vide, juste l'état grisé. */}
-              {played ? <ThemeBar pct={rate} /> : null}
+              {/* Pas encore joué → pas de barre vide, juste l'état grisé. Barre
+                  colorée (feu tricolore) + stagger 100ms via le prop delay. */}
+              {played ? (
+                <FillBar
+                  pct={rate ?? 0}
+                  height={6}
+                  color={barColor(rate, colors)}
+                  trackColor={colors.borderOnDark}
+                  delay={i * 100}
+                />
+              ) : null}
             </View>
           );
         })}
@@ -872,17 +935,34 @@ const makeStyles = (colors) => StyleSheet.create({
     gap: spacing.sm,
   },
   themeRowFirst: { borderTopWidth: 0, marginTop: 0, paddingTop: 0 },
-  themeHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  themeLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textBody },
+  themeHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
+  themeLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textBody, flexShrink: 1 },
   themeLabelMuted: { color: colors.textMuted },
+  themeMetaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 },
   themeMeta: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
-  barTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.border,
-    overflow: 'hidden',
+  themeBest: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textMuted },
+
+  // Tri local (Réussite / Parties)
+  sortRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
   },
-  barFill: { height: '100%', borderRadius: 3, backgroundColor: colors.green500 },
+  sortLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
+  sortToggle: {
+    minHeight: MIN_TOUCH,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  sortToggleActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
+  sortToggleText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.xs, color: colors.textBody },
+  sortToggleTextActive: { color: colors.textOnDark },
 
   // Historique
   histList: { gap: spacing.sm },

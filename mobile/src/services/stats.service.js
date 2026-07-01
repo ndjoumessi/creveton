@@ -66,7 +66,7 @@ export function computeStats(history) {
   history.forEach((g) => {
     const key = g.theme || 'inconnu';
     if (!byTheme[key]) {
-      byTheme[key] = { games: 0, correct: 0, total: 0, score: 0 };
+      byTheme[key] = { games: 0, correct: 0, total: 0, score: 0, best: null };
     }
     byTheme[key].games += 1;
     byTheme[key].correct += num(g.correct_count);
@@ -74,6 +74,13 @@ export function computeStats(history) {
     // ce fallback, `total` restait 0 et le taux par thème affichait « — ».
     byTheme[key].total += num(g.question_count ?? g.total_questions);
     byTheme[key].score += num(g.score);
+    // Meilleur score RÉEL du thème = max sur les seules parties complètes (même
+    // filtre `isIncomplete` que le score moyen / taux). Reste `null` si le thème
+    // n'a que des parties avortées → l'écran masque le « Meilleur ».
+    if (!isIncomplete(g)) {
+      const s = num(g.score);
+      byTheme[key].best = byTheme[key].best === null ? s : Math.max(byTheme[key].best, s);
+    }
   });
   Object.values(byTheme).forEach((t) => {
     t.rate = t.total > 0 ? Math.round((t.correct / t.total) * 100) : null;

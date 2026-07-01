@@ -8,6 +8,7 @@ import QuizScreen from '../screens/QuizScreen';
 import ResultsScreen from '../screens/ResultsScreen';
 import ChallengeScreen from '../screens/ChallengeScreen';
 import TournamentLiveScreen from '../screens/TournamentLiveScreen';
+import SessionsHistoryScreen from '../screens/SessionsHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -15,6 +16,13 @@ export default function MainStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={BottomTabs} />
+      {/* Historique complet des parties — atteignable depuis l'accueil
+          (« Dernières parties → Voir tout »). */}
+      <Stack.Screen
+        name="SessionsHistory"
+        component={SessionsHistoryScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
       {/* Le quiz prend tout l'écran, pas de retour gestuel pour ne pas
           quitter une partie par accident. */}
       <Stack.Screen

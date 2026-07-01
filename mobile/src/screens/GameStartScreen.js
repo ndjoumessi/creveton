@@ -21,6 +21,8 @@ import { useQuestionsStore } from '../store/questionsStore';
 import { useGameStore } from '../store/gameStore';
 import { themeGradients, fonts, fontSizes, radius, spacing, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useReduceMotion } from '../hooks/useReduceMotion';
+import { countQuestionsByTheme } from '../services/database';
 import { themeLabel, levelLabel } from '../utils/format';
 import { hapticMedium } from '../utils/haptics';
 
@@ -39,10 +41,12 @@ export default function GameStartScreen({ navigation, route }) {
   const presetMode = route.params?.presetMode;
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
+  const reduceMotion = useReduceMotion();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  // En sombre, les en-têtes de section passent au vert clair (green300) — lisible
-  // sur fond sombre. En clair, on garde textDark (green300 serait illisible sur crème).
-  const sectionStyle = isDark ? [styles.section, { color: colors.green300 }] : styles.section;
+  // En-têtes de section : toujours textDark (théma-aware = quasi-blanc en sombre,
+  // vert profond en clair) pour qu'ils se lisent comme des titres, pas comme des
+  // accents verts (green300 se confondait avec la charte sur fond sombre).
+  const sectionStyle = styles.section;
   // Indice « choisis un thème » : doré (attire l'œil) en sombre ; en clair, l'or
   // sur crème serait illisible → on garde le muté lisible. L'icône ℹ️ reste dans les 2.
   const hintColor = isDark ? colors.gold400 : colors.textMuted;
@@ -54,6 +58,22 @@ export default function GameStartScreen({ navigation, route }) {
   const [theme, setTheme] = useState(preset || null);
   const [level, setLevel] = useState('beginner');
   const [loading, setLoading] = useState(false);
+  // Nombre RÉEL de questions en cache par thème (SQLite) — jamais fabriqué.
+  // null tant que le chargement n'est pas terminé (évite un faux « Connexion requise »).
+  const [themeCounts, setThemeCounts] = useState(null);
+  useEffect(() => {
+    let mounted = true;
+    countQuestionsByTheme()
+      .then((map) => {
+        if (mounted) setThemeCounts(map || {});
+      })
+      .catch(() => {
+        if (mounted) setThemeCounts({});
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // L'onglet « Jouer » reste monté : un nouveau tap sur une carte de mode (Accueil)
   // met à jour route.params mais NE relance PAS le useState ci-dessus → le mode
@@ -120,27 +140,84 @@ export default function GameStartScreen({ navigation, route }) {
   const ready = isMixed || (!!theme && !!level);
   const pulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    if (!ready) {
+    // Inactif ou reduce-motion : rendu final direct (échelle 1, pas de boucle).
+    if (!ready || reduceMotion) {
       pulse.setValue(1);
       return undefined;
     }
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1.03,
-          duration: 700,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 700,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [ready, pulse]);
+    let loop;
+    // Le bouton s'active : petit scale-in 0.97 → 1.0 (~200ms), puis pulse doré en boucle.
+    pulse.setValue(0.97);
+    const enter = Animated.timing(pulse, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    });
+    enter.start(({ finished }) => {
+      if (!finished) return;
+      loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulse, {
+            toValue: 1.03,
+            duration: 700,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulse, {
+            toValue: 1,
+            duration: 700,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      loop.start();
+    });
+    return () => {
+      enter.stop();
+      loop?.stop();
+    };
+  }, [ready, pulse, reduceMotion]);
+
+  // Indice « choisis un thème » sous le bouton (mode non mixte, aucun thème choisi).
+  // Fondu d'apparition après ~1s pour laisser l'utilisateur parcourir les thèmes d'abord.
+  const showPickHint = !isMixed && !theme;
+  const pickHintAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!showPickHint) {
+      pickHintAnim.setValue(0);
+      return undefined;
+    }
+    if (reduceMotion) {
+      pickHintAnim.setValue(1);
+      return undefined;
+    }
+    pickHintAnim.setValue(0);
+    const anim = Animated.timing(pickHintAnim, {
+      toValue: 1,
+      duration: 400,
+      delay: 1000,
+      useNativeDriver: true,
+    });
+    anim.start();
+    return () => anim.stop();
+  }, [showPickHint, pickHintAnim, reduceMotion]);
+
+  // Emphase de la carte de thème sélectionnée : scale 1.03 + badge ✓ doré animé
+  // (0.8 → 1.0, ~200ms). Une valeur animée par carte (0 = non sélectionnée).
+  const selectAnims = useRef(THEMES.map(() => new Animated.Value(0))).current;
+  useEffect(() => {
+    THEMES.forEach((th, i) => {
+      const target = th.key === theme ? 1 : 0;
+      if (reduceMotion) {
+        selectAnims[i].setValue(target);
+        return;
+      }
+      Animated.timing(selectAnims[i], {
+        toValue: target,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [theme, selectAnims, reduceMotion]);
 
   const onStart = async () => {
     if (!ready) return;
@@ -219,6 +296,9 @@ export default function GameStartScreen({ navigation, route }) {
         {THEMES.map((th, i) => {
           const active = th.key === theme;
           const anim = cardAnims[i];
+          const select = selectAnims[i];
+          // Nombre réel de questions en cache pour ce thème (0 si absent / non chargé).
+          const themeCount = themeCounts ? themeCounts[th.key] || 0 : null;
           return (
             <Animated.View
               key={th.key}
@@ -233,6 +313,12 @@ export default function GameStartScreen({ navigation, route }) {
                         outputRange: [24, 0],
                       }),
                     },
+                    {
+                      scale: select.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 1.03],
+                      }),
+                    },
                   ],
                 },
               ]}
@@ -245,9 +331,24 @@ export default function GameStartScreen({ navigation, route }) {
                   style={[styles.themeCard, active && styles.themeCardActive]}
                 >
                   {active ? (
-                    <View style={styles.check}>
+                    <Animated.View
+                      style={[
+                        styles.check,
+                        {
+                          opacity: select,
+                          transform: [
+                            {
+                              scale: select.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0.8, 1],
+                              }),
+                            },
+                          ],
+                        },
+                      ]}
+                    >
                       <Text style={styles.checkText}>✓</Text>
-                    </View>
+                    </Animated.View>
                   ) : null}
                   <Text style={styles.themeEmoji}>{th.emoji}</Text>
                   <Text style={styles.themeName}>
@@ -258,6 +359,15 @@ export default function GameStartScreen({ navigation, route }) {
                   </Text>
                 </LinearGradient>
               </Pressable>
+              {themeCount === null ? null : themeCount > 0 ? (
+                <Text style={styles.themeOffline}>
+                  {t('gameStart.offlineCount', { count: themeCount })}
+                </Text>
+              ) : (
+                <Text style={styles.themeOfflineNone}>
+                  {t('gameStart.connectionRequired')}
+                </Text>
+              )}
             </Animated.View>
           );
         })}
@@ -322,6 +432,11 @@ export default function GameStartScreen({ navigation, route }) {
           style={styles.cta}
         />
       </Animated.View>
+      {showPickHint ? (
+        <Animated.View style={{ opacity: pickHintAnim }}>
+          <Body style={styles.pickHint}>{t('gameStart.pickThemeHint')}</Body>
+        </Animated.View>
+      ) : null}
       <AppButton
         title={t('gameStart.misc.challengeFriend')}
         variant="ghost"
@@ -364,6 +479,9 @@ const makeStyles = (colors) => StyleSheet.create({
     overflow: 'hidden',
   },
   themeCardActive: { borderColor: colors.gold500 },
+  // Chip or plein + glyphe vert profond = contraste maxi du ✓. L'anneau crème
+  // (textOnDark) sépare le badge de TOUTE couleur de carte (brun histoire, vert
+  // industrie inclus) → visible sur les 6 thèmes.
   check: {
     position: 'absolute',
     top: spacing.sm,
@@ -372,13 +490,31 @@ const makeStyles = (colors) => StyleSheet.create({
     height: 24,
     borderRadius: 12,
     backgroundColor: colors.gold500,
+    borderWidth: 1.5,
+    borderColor: colors.textOnDark,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.sm, color: colors.green900 },
   themeEmoji: { fontSize: 32 },
   themeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.textOnDark, marginTop: spacing.xs },
-  themeMeta: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: 'rgba(255,255,255,0.7)' },
+  themeMeta: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textOnDarkMuted },
+  // Compteur de questions en cache : sous la carte, sur le fond écran (sombre) →
+  // textOnDarkMuted (crème atténué, ≥4.5:1) plutôt que textMuted (vert-de-gris en sombre).
+  themeOffline: {
+    fontFamily: fonts.bodyRegular,
+    fontSize: 11,
+    color: colors.textOnDarkMuted,
+    marginTop: spacing.xs,
+    paddingLeft: 2,
+  },
+  themeOfflineNone: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11,
+    color: colors.red400,
+    marginTop: spacing.xs,
+    paddingLeft: 2,
+  },
 
   modes: { gap: spacing.sm },
   modeRow: {
@@ -439,5 +575,14 @@ const makeStyles = (colors) => StyleSheet.create({
   },
 
   cta: { marginTop: spacing.xl },
+  // Nudge vers le CTA : or (accent distinct, court libellé unique → dans le budget or).
+  // textMuted rendait vert-de-gris en sombre (indistinct du reste).
+  pickHint: {
+    marginTop: spacing.md,
+    textAlign: 'center',
+    color: colors.gold500,
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.sm,
+  },
   challenge: { marginTop: spacing.md },
 });

@@ -23,6 +23,9 @@ export const STORAGE_KEYS = {
   // URL de l'API utilisée lors du dernier sync — sert à invalider le cache de
   // questions si l'on change d'environnement (ex. local → staging).
   cacheApiUrl: 'crv.cache_api_url',
+  // Dernier niveau « vu » sur l'écran Profil — sert à détecter un badge tout juste
+  // débloqué (niveau franchi depuis la dernière visite) pour l'animer une seule fois.
+  badgesSeenLevel: 'crv.badges_seen_level',
 };
 
 // Délai au-delà duquel un retour au premier plan déclenche un delta sync (CDC §2.8)

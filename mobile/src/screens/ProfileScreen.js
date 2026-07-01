@@ -42,7 +42,10 @@ import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen, Avatar, AppButton, XpBar, useToast } from '../components';
+import FillBar from '../components/FillBar';
 import Icon from '../components/Icon';
+import { useReduceMotion } from '../hooks/useReduceMotion';
+import { getBadgesSeenLevel, setBadgesSeenLevel } from '../services/storage';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
 import { wallet, users } from '../services/endpoints';
@@ -74,7 +77,6 @@ function deriveBadges(level, t) {
   ].map((b) => ({
     ...b,
     unlocked: level >= b.min,
-    req: t('profile.badges.lockedByLevel', { min: b.min }),
   }));
 }
 
@@ -138,6 +140,7 @@ export default function ProfileScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const toast = useToast();
+  const reduceMotion = useReduceMotion();
   const insets = useSafeAreaInsets();
   const { isOnline } = useNetworkStatus();
   const user = useAuthStore((s) => s.user);
@@ -392,6 +395,67 @@ export default function ProfileScreen() {
   const level = progress.level;
   const badges = deriveBadges(level, t);
 
+  // ── « Badge tout juste débloqué » ─────────────────────────────────────────
+  // On compare le niveau courant au dernier niveau « vu » (persisté). Tout badge
+  // dont le seuil `min` a été franchi depuis (min > vu ET min ≤ actuel) est
+  // fraîchement débloqué → pop d'échelle (~500 ms) + halo doré (~2 s) + toast.
+  // Au tout premier passage (aucun niveau stocké) on n'anime PAS : on ne peut
+  // pas affirmer honnêtement que le franchissement vient d'avoir lieu ; on se
+  // contente d'enregistrer le niveau de référence.
+  const [justUnlockedKeys, setJustUnlockedKeys] = useState([]);
+  const [badgeGlow, setBadgeGlow] = useState(false);
+  const badgePop = useRef(new Animated.Value(1)).current;
+  const badgesCheckedRef = useRef(false);
+  const glowTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (badgesCheckedRef.current) return;
+    badgesCheckedRef.current = true;
+    let cancelled = false;
+    (async () => {
+      const raw = await getBadgesSeenLevel();
+      const seen = raw != null ? Number(raw) : null;
+      // Baseline manquante → on enregistre sans animer.
+      if (seen == null || Number.isNaN(seen)) {
+        await setBadgesSeenLevel(level);
+        return;
+      }
+      if (cancelled) return;
+      if (level > seen) {
+        const fresh = deriveBadges(level, t).filter((b) => b.min > seen && b.min <= level);
+        if (fresh.length > 0) {
+          setJustUnlockedKeys(fresh.map((b) => b.key));
+          // Toast récap (le dernier badge franchi = le plus prestigieux).
+          const top = fresh[fresh.length - 1];
+          toast.show({ type: 'success', message: t('profile.badges.unlocked', { name: top.label }) });
+          if (!reduceMotion) {
+            badgePop.setValue(0);
+            Animated.sequence([
+              Animated.timing(badgePop, { toValue: 1, duration: 300, useNativeDriver: true }),
+              Animated.timing(badgePop, { toValue: 2, duration: 200, useNativeDriver: true }),
+            ]).start();
+            setBadgeGlow(true);
+            glowTimerRef.current = setTimeout(() => setBadgeGlow(false), 2000);
+          }
+        }
+      }
+      await setBadgesSeenLevel(level);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Effet « une fois par montage » (garde badgesCheckedRef) — deps volontairement figées.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => () => clearTimeout(glowTimerRef.current), []);
+
+  // 0→1.2→1.0 : pic à mi-parcours puis retour à l'échelle normale.
+  const badgePopScale = badgePop.interpolate({
+    inputRange: [0, 1, 2],
+    outputRange: [0, 1.2, 1],
+  });
+
   // Mises en valeur de la rangée de stats : rang #1 en or, taux <50 % rouge /
   // >70 % vert, + liseré haut coloré selon le rang (top 1 or, top 10 vert).
   const rank = myRank?.rank;
@@ -563,31 +627,61 @@ export default function ProfileScreen() {
           />
         </Section>
 
-        {/* D. Badges */}
+        {/* D. Badges — dérivés du niveau. Un badge verrouillé montre sa progression
+            (niveau courant / seuil requis) ; un tap en explique la condition. */}
         <Text style={styles.sectionLabel}>{t('profile.badges.title')}</Text>
         <View style={styles.badgeGrid}>
-          {badges.map((b) => (
-            <Pressable
-              key={b.key}
-              disabled={b.unlocked}
-              onPress={() => toast.show({ type: 'info', message: b.req })}
-              style={[styles.badge, b.unlocked ? styles.badgeUnlocked : styles.badgeLocked]}
-            >
-              {b.unlocked ? (
-                <Text style={styles.badgeEmoji}>{b.emoji}</Text>
-              ) : (
-                <Icon icon={Lock} size={22} color={colors.textFaint} />
-              )}
-              <Text
+          {badges.map((b) => {
+            const isFresh = justUnlockedKeys.includes(b.key);
+            const pct = b.min > 0 ? Math.min(1, level / b.min) * 100 : 100;
+            return (
+              <AnimatedPressable
+                key={b.key}
+                disabled={b.unlocked}
+                onPress={() =>
+                  Alert.alert(
+                    b.label,
+                    `${t('profile.badges.condition', { min: b.min })}\n\n${t(
+                      'profile.badges.levelProgress',
+                      { current: level, req: b.min },
+                    )}`,
+                  )
+                }
+                accessibilityRole="button"
+                accessibilityLabel={b.label}
                 style={[
-                  styles.badgeLabel,
-                  b.unlocked ? styles.badgeLabelUnlocked : styles.badgeLabelLocked,
+                  styles.badge,
+                  b.unlocked ? styles.badgeUnlocked : styles.badgeLocked,
+                  isFresh && badgeGlow && shadow.gold,
+                  isFresh && { transform: [{ scale: badgePopScale }] },
                 ]}
               >
-                {b.label}
-              </Text>
-            </Pressable>
-          ))}
+                <View style={styles.badgeTop}>
+                  {b.unlocked ? (
+                    <Text style={styles.badgeEmoji}>{b.emoji}</Text>
+                  ) : (
+                    <Icon icon={Lock} size={22} color={colors.textFaint} />
+                  )}
+                  <Text
+                    style={[
+                      styles.badgeLabel,
+                      b.unlocked ? styles.badgeLabelUnlocked : styles.badgeLabelLocked,
+                    ]}
+                  >
+                    {b.label}
+                  </Text>
+                </View>
+                {!b.unlocked ? (
+                  <View style={styles.badgeProgress}>
+                    <FillBar pct={pct} color={colors.gold500} height={4} />
+                    <Text style={styles.badgeProgressText}>
+                      {t('profile.badges.levelProgress', { current: level, req: b.min })}
+                    </Text>
+                  </View>
+                ) : null}
+              </AnimatedPressable>
+            );
+          })}
         </View>
 
         {/* E. Wallet (compact) */}
@@ -915,17 +1009,24 @@ const makeStyles = (colors) => StyleSheet.create({
     borderRadius: radius.lg,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'center',
     gap: spacing.sm,
     borderWidth: 1,
   },
+  // Rangée icône + libellé (haut de la tuile).
+  badgeTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   badgeUnlocked: { backgroundColor: colors.goldVeil, borderColor: colors.goldVeilBorder },
-  badgeLocked: { backgroundColor: colors.surface, borderColor: colors.border, opacity: 0.4 },
+  // Verrouillé : dé-emphasé par la couleur (libellé textFaint) plutôt qu'une
+  // opacité globale, pour que la barre de progression reste lisible.
+  badgeLocked: { backgroundColor: colors.surface, borderColor: colors.border },
   badgeEmoji: { fontSize: 22 },
   badgeLabel: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, flexShrink: 1 },
   badgeLabelUnlocked: { color: colors.gold500 },
   badgeLabelLocked: { color: colors.textFaint },
+  // Progression sous un badge verrouillé : FillBar + « Niveau X/Y ».
+  badgeProgress: { gap: spacing.xxs },
+  badgeProgressText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
 
   // E. Wallet
   walletLocked: {

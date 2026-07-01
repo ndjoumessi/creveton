@@ -104,6 +104,11 @@ export const setSolutionsSyncAt = (ms) => setItem(STORAGE_KEYS.solutionsSyncAt, 
 export const getCacheApiUrl = () => getItem(STORAGE_KEYS.cacheApiUrl);
 export const setCacheApiUrl = (url) => setItem(STORAGE_KEYS.cacheApiUrl, url);
 
+// Dernier niveau vu sur l'écran Profil (détection « badge tout juste débloqué »).
+export const getBadgesSeenLevel = () => getItem(STORAGE_KEYS.badgesSeenLevel);
+export const setBadgesSeenLevel = (level) =>
+  setItem(STORAGE_KEYS.badgesSeenLevel, String(level));
+
 export default {
   getItem,
   setItem,
@@ -126,4 +131,6 @@ export default {
   setSolutionsSyncAt,
   getCacheApiUrl,
   setCacheApiUrl,
+  getBadgesSeenLevel,
+  setBadgesSeenLevel,
 };

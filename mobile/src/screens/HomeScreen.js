@@ -30,6 +30,7 @@ import {
   Skeleton,
   ErrorScreen,
   SectionHeader,
+  SessionCard,
 } from '../components';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -47,14 +48,7 @@ import {
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import {
-  formatDateTime,
-  themeLabel,
-  levelLabel,
-  timeAgo,
-  themeEmoji,
-  avatarUri,
-} from '../utils/format';
+import { formatDateTime, avatarUri } from '../utils/format';
 import { medalEmoji } from '../utils/rank';
 
 // Pastels des tuiles d'icônes de stats (décoratif, non sémantique).
@@ -124,43 +118,6 @@ function StatCardSkeleton() {
       <Skeleton width={44} height={44} radius={radius.md} />
       <Skeleton width={64} height={26} style={styles.skelGap} />
       <Skeleton width={80} height={11} style={styles.skelGapSm} />
-    </View>
-  );
-}
-
-function LastGameRow({ game }) {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const total = Number(game.question_count ?? game.total_questions) || 0;
-  const rate = total > 0 ? Math.round((Number(game.correct_count) || 0) / total * 100) : null;
-  const tone = rate === null ? null : rate >= 70 ? 'good' : rate < 50 ? 'bad' : null;
-  // Blitz/marathon : thème null (mix auto) → repli sur le nom + l'emoji du mode.
-  const emoji = game.theme
-    ? themeEmoji(game.theme)
-    : PLAY_MODES.find((m) => m.key === game.mode)?.emoji || '🎯';
-  const label = game.theme
-    ? themeLabel(game.theme)
-    : t(`gameStart.modes.${game.mode}.name`, game.mode || '—');
-  return (
-    <View
-      style={[
-        styles.lastRow,
-        tone === 'good' && styles.lastRowGood,
-        tone === 'bad' && styles.lastRowBad,
-      ]}
-    >
-      <Text style={styles.lastEmoji}>{emoji}</Text>
-      <View style={styles.lastMid}>
-        <Text style={styles.lastTitle} numberOfLines={1}>
-          {game.level ? `${label} · ${levelLabel(game.level)}` : label}
-        </Text>
-        <Text style={styles.lastSub} numberOfLines={1}>
-          {timeAgo(game.played_at)}
-          {rate !== null ? ` · ✓ ${game.correct_count}/${total}` : ''}
-        </Text>
-      </View>
-      <Text style={styles.lastScore}>{fmtNum(game.score)}</Text>
     </View>
   );
 }
@@ -431,11 +388,11 @@ export default function HomeScreen({ navigation }) {
                 title={t('home.misc.lastGames')}
                 color={sectionColor}
                 actionLabel={t('home.misc.seeAll')}
-                onAction={() => navigation.navigate('Stats')}
+                onAction={() => navigation.navigate('SessionsHistory')}
               />
               <View style={styles.lastList}>
                 {recent.map((g, i) => (
-                  <LastGameRow key={String(g.session_id || i)} game={g} />
+                  <SessionCard key={String(g.session_id || i)} game={g} />
                 ))}
               </View>
             </>
@@ -716,36 +673,6 @@ const makeStyles = (colors) => StyleSheet.create({
 
   // Dernières parties
   lastList: { gap: spacing.sm },
-  lastRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.surfaceCream,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-  },
-  lastRowGood: { backgroundColor: colors.successBgSoft, borderColor: colors.successBg },
-  lastRowBad: { backgroundColor: colors.errorBg, borderColor: colors.errorBorder },
-  lastEmoji: { fontSize: 24 },
-  lastMid: { flex: 1 },
-  lastTitle: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
-    color: colors.textDark,
-  },
-  lastSub: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
-  lastScore: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.lg,
-    color: colors.textDark,
-  },
 
   // Tournois
   hScroll: { gap: spacing.md, paddingRight: spacing.lg, paddingBottom: spacing.xs },

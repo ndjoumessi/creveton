@@ -125,6 +125,10 @@
     },
     "a11y": {
       "openProfile": "Open profile"
+    },
+    "lastGames": {
+      "badgeTop": "TOP",
+      "badgeGood": "GOOD"
     }
   },
   "gameStart": {
@@ -176,7 +180,10 @@
     "recapTimed": {
       "blitz": "Blitz · {{minutes}} min · all themes mixed",
       "marathon": "Marathon · {{minutes}} min · {{count}} questions · mix"
-    }
+    },
+    "pickThemeHint": "← Pick a theme to begin",
+    "offlineCount": "{{count}} questions offline",
+    "connectionRequired": "Connection required"
   },
   "quiz": {
     "question": "Q {{current}}/{{total}}",
@@ -234,7 +241,16 @@
       "levelUpTitle": "Level up!",
       "difficultyUnlocked": "Difficulty “{{difficulty}}” unlocked"
     },
-    "themeBonus": "🎯 Theme bonus: +{{bonus}} pts"
+    "themeBonus": "🎯 Theme bonus: +{{bonus}} pts",
+    "perf": {
+      "excellent": "Excellent! 🔥",
+      "good": "Well played! 👏",
+      "keepGoing": "Keep going! 💪"
+    },
+    "compare": {
+      "up": "↑ +{{pts}}",
+      "down": "↓ −{{pts}}"
+    }
   },
   "tournaments": {
     "title": "Tournaments",
@@ -370,6 +386,12 @@
       "outOfPlayers": "out of {{totalPlayers}} players",
       "globalRank": "Global ranking",
       "mePill": "You"
+    },
+    "themePerf": {
+      "best": "Best: {{pts}} pts",
+      "sortBy": "Sort by:",
+      "sortRate": "Success",
+      "sortGames": "Games"
     }
   },
   "profile": {
@@ -399,7 +421,10 @@
       "regular": "Regular",
       "expert": "Brain",
       "champion": "Champion",
-      "lockedByLevel": "Reach level {{min}} to unlock"
+      "lockedByLevel": "Reach level {{min}} to unlock",
+      "levelProgress": "Level {{current}}/{{req}}",
+      "condition": "Reach level {{min}} to unlock.",
+      "unlocked": "Badge unlocked: {{name}}!"
     },
     "sections": {
       "account": "MY ACCOUNT",
@@ -605,5 +630,13 @@
     "avatarDisabled": "Photo update available online",
     "title": "You're offline",
     "message": "Check your internet connection, then try again."
+  },
+  "sessionsHistory": {
+    "title": "History",
+    "filterAll": "All",
+    "loadMore": "Load more",
+    "empty": "No games played yet",
+    "playNow": "Play now",
+    "noMatch": "No games match this filter"
   }
 }

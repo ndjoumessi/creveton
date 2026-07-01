@@ -125,6 +125,10 @@
     },
     "a11y": {
       "openProfile": "Ouvrir le profil"
+    },
+    "lastGames": {
+      "badgeTop": "TOP",
+      "badgeGood": "BIEN"
     }
   },
   "gameStart": {
@@ -176,7 +180,10 @@
     "recapTimed": {
       "blitz": "Blitz · {{minutes}} min · tous thèmes mélangés",
       "marathon": "Marathon · {{minutes}} min · {{count}} questions · mix"
-    }
+    },
+    "pickThemeHint": "← Choisis un thème pour commencer",
+    "offlineCount": "{{count}} questions hors ligne",
+    "connectionRequired": "Connexion requise"
   },
   "quiz": {
     "question": "Q {{current}}/{{total}}",
@@ -234,7 +241,16 @@
       "levelUpTitle": "Niveau supérieur !",
       "difficultyUnlocked": "Difficulté « {{difficulty}} » débloquée"
     },
-    "themeBonus": "🎯 Bonus thème : +{{bonus}} pts"
+    "themeBonus": "🎯 Bonus thème : +{{bonus}} pts",
+    "perf": {
+      "excellent": "Excellent ! 🔥",
+      "good": "Bien joué ! 👏",
+      "keepGoing": "Continue ! 💪"
+    },
+    "compare": {
+      "up": "↑ +{{pts}}",
+      "down": "↓ −{{pts}}"
+    }
   },
   "tournaments": {
     "title": "Tournois",
@@ -370,6 +386,12 @@
       "outOfPlayers": "sur {{totalPlayers}} joueurs",
       "globalRank": "Classement global",
       "mePill": "Vous"
+    },
+    "themePerf": {
+      "best": "Meilleur : {{pts}} pts",
+      "sortBy": "Trier par :",
+      "sortRate": "Réussite",
+      "sortGames": "Parties"
     }
   },
   "profile": {
@@ -399,7 +421,10 @@
       "regular": "Habitué",
       "expert": "Cerveau",
       "champion": "Champion",
-      "lockedByLevel": "Atteins le niveau {{min}} pour débloquer"
+      "lockedByLevel": "Atteins le niveau {{min}} pour débloquer",
+      "levelProgress": "Niveau {{current}}/{{req}}",
+      "condition": "Atteins le niveau {{min}} pour débloquer.",
+      "unlocked": "Badge débloqué : {{name}} !"
     },
     "sections": {
       "account": "MON COMPTE",
@@ -605,5 +630,13 @@
     "avatarDisabled": "Modification photo disponible en ligne",
     "title": "Pas de connexion",
     "message": "Vérifie ta connexion internet, puis réessaie."
+  },
+  "sessionsHistory": {
+    "title": "Historique",
+    "filterAll": "Tous",
+    "loadMore": "Charger plus",
+    "empty": "Aucune partie jouée",
+    "playNow": "Jouer maintenant",
+    "noMatch": "Aucune partie pour ce filtre"
   }
 }

@@ -39,4 +39,5 @@ export { default as FillBar } from './FillBar';
 
 // Structure / bandeaux
 export { default as SectionHeader } from './SectionHeader';
+export { default as SessionCard } from './SessionCard';
 export { default as GoldVeilBanner } from './GoldVeilBanner';

@@ -180,6 +180,19 @@ export async function countQuestions() {
   return row?.n || 0;
 }
 
+// Nombre de questions actives en cache, regroupées par thème — alimente le badge
+// « X questions offline » sur les cartes de thème de l'écran de lancement. Une seule
+// requête ; renvoie une map { [theme]: count } (thèmes absents = 0 côté appelant).
+export async function countQuestionsByTheme() {
+  const db = await getDb();
+  const rows = await db.getAllAsync(
+    'SELECT theme, COUNT(*) AS n FROM questions WHERE deleted = 0 GROUP BY theme'
+  );
+  const map = {};
+  for (const r of rows) map[r.theme] = r.n;
+  return map;
+}
+
 export async function clearQuestions() {
   const db = await getDb();
   await db.runAsync('DELETE FROM questions');
@@ -218,5 +231,6 @@ export default {
   getQuestions,
   getAllQuestionIds,
   countQuestions,
+  countQuestionsByTheme,
   clearQuestions,
 };
