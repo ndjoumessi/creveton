@@ -270,43 +270,53 @@ export default function TournoiDetail() {
       <div className="td-grid">
         <div className="card card-pad">
           <h3 className="card-title">{t('tournaments.detail.info')}</h3>
-          <dl className="kv" style={{ marginTop: 12 }}>
-            <dt>{t('tournaments.detail.type')}</dt>
-            <dd>{Number(tour.entry_fee) > 0 ? t('tournaments.card.paid') : t('tournaments.detail.freeType')}</dd>
-            <dt>{t('tournaments.modal.theme')}</dt>
-            <dd>{themeLabel}</dd>
-            <dt>{t('tournaments.detail.rewards')}</dt>
-            <dd>
-              {Number(tour.entry_fee) > 0
-                ? fcfa(tour.prize_pool)
-                : <><Icon icon={Award} size={13} /> {t('tournaments.card.xpBadges')}</>}
-            </dd>
-            <dt>{t('tournaments.detail.players')}</dt>
-            <dd>
-              {tour.max_players ? (
-                <>
-                  <div className="td-cap-bar"><span style={{ width: `${fillPct}%` }} /></div>
-                  <span className="td-cap-text">
-                    {num(tour.registered_players || 0)} / {tour.max_players}
-                    <span className="td-cap-pct"> ({fillPct} %)</span>
-                  </span>
-                </>
-              ) : (
-                <>{num(tour.registered_players || 0)} inscrits</>
-              )}
-            </dd>
-            <dt>{t('tournaments.modal.startLabel')}</dt>
-            <dd>
-              <Calendar size={13} />
-              {' '}{tour.starts_at ? dateFr(tour.starts_at, "dd MMM yyyy 'à' HH'h'mm") : '—'}
-            </dd>
-            {tour.ends_at && (
-              <>
-                <dt>{t('tournaments.detail.end')}</dt>
-                <dd>{dateFr(tour.ends_at, "dd MMM yyyy 'à' HH'h'mm")}</dd>
-              </>
-            )}
-          </dl>
+          <div className="td-info-grid">
+            <div className="td-field">
+              <span className="td-field-label">{t('tournaments.detail.type')}</span>
+              <span className="td-field-value">
+                {Number(tour.entry_fee) > 0 ? t('tournaments.card.paid') : t('tournaments.detail.freeType')}
+              </span>
+            </div>
+            <div className="td-field">
+              <span className="td-field-label">{t('tournaments.modal.startLabel')}</span>
+              <span className="td-field-value">
+                <Calendar size={13} />
+                {' '}{tour.starts_at ? dateFr(tour.starts_at, "dd MMM yyyy 'à' HH'h'mm") : '—'}
+              </span>
+            </div>
+
+            <div className="td-field">
+              <span className="td-field-label">{t('tournaments.modal.theme')}</span>
+              <span className="td-field-value">{emoji} {themeLabel}</span>
+            </div>
+            <div className="td-field">
+              <span className="td-field-label">{t('tournaments.detail.end')}</span>
+              <span className="td-field-value">
+                {tour.ends_at ? dateFr(tour.ends_at, "dd MMM yyyy 'à' HH'h'mm") : '—'}
+              </span>
+            </div>
+
+            <div className="td-field">
+              <span className="td-field-label">{t('tournaments.detail.rewards')}</span>
+              <span className="td-field-value">
+                {Number(tour.entry_fee) > 0
+                  ? fcfa(tour.prize_pool)
+                  : <><Icon icon={Award} size={13} /> {t('tournaments.card.xpBadges')}</>}
+              </span>
+            </div>
+            <div className="td-field">
+              <span className="td-field-label">{t('tournaments.detail.players')}</span>
+              <span className="td-field-value">
+                <span className="td-cap-text">
+                  {num(tour.registered_players || 0)}{tour.max_players ? ` / ${tour.max_players}` : ''}
+                  {tour.max_players ? <span className="td-cap-pct"> ({fillPct} %)</span> : ''}
+                </span>
+                {tour.max_players != null && (
+                  <div className="td-capacity-bar"><div style={{ width: `${fillPct}%` }} /></div>
+                )}
+              </span>
+            </div>
+          </div>
         </div>
 
         {isClosed && podium.length > 0 ? (
