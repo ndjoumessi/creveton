@@ -20,7 +20,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
   Camera,
   User,
@@ -141,6 +141,7 @@ export default function ProfileScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const toast = useToast();
   const reduceMotion = useReduceMotion();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { isOnline } = useNetworkStatus();
   const user = useAuthStore((s) => s.user);
@@ -720,10 +721,11 @@ export default function ProfileScreen() {
             label={t('profile.rows.changePassword')}
             value={!isOnline ? t('offline.banner') : undefined}
             valueMuted={!isOnline}
-            onPress={() => toast.show({
-              type: 'info',
-              message: isOnline ? t('profile.changePasswordSoon') : t('offline.banner'),
-            })}
+            onPress={() =>
+              isOnline
+                ? navigation.navigate('ChangePassword')
+                : toast.show({ type: 'info', message: t('offline.banner') })
+            }
             isLast
           />
         </Section>

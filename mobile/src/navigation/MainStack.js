@@ -9,6 +9,7 @@ import ResultsScreen from '../screens/ResultsScreen';
 import ChallengeScreen from '../screens/ChallengeScreen';
 import TournamentLiveScreen from '../screens/TournamentLiveScreen';
 import SessionsHistoryScreen from '../screens/SessionsHistoryScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -21,6 +22,12 @@ export default function MainStack() {
       <Stack.Screen
         name="SessionsHistory"
         component={SessionsHistoryScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      {/* Changement de mot de passe — atteignable depuis Profil › Sécurité. */}
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
         options={{ animation: 'slide_from_right' }}
       />
       {/* Le quiz prend tout l'écran, pas de retour gestuel pour ne pas

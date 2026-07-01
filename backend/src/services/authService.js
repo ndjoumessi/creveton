@@ -270,13 +270,22 @@ async function revokeOtherSessions(userId, currentSid) {
 /**
  * Change le mot de passe d'un compte authentifié : vérifie le mot de passe
  * actuel, refuse un nouveau identique à l'ancien, puis stocke le hash bcrypt.
+ *
+ * Le compte étant déjà authentifié, un mot de passe *actuel* faux est une erreur
+ * de saisie (400 INVALID_CURRENT_PASSWORD), pas un 401 : un 401 déclencherait le
+ * refresh automatique du client mobile (retry parasite du token).
+ *
+ * Sécurité : après un changement réussi, on révoque les *autres* sessions refresh
+ * de l'utilisateur (un ancien mot de passe volé ne doit plus donner accès), en
+ * conservant la session courante (`currentSid`) pour ne pas déconnecter l'appelant
+ * en plein flux.
  */
-async function changePassword(userId, currentPassword, newPassword) {
+async function changePassword(userId, currentPassword, newPassword, currentSid) {
   const user = await userModel.findById(userId);
   if (!user || !user.password_hash) throw new ApiError('USER_NOT_FOUND');
 
   const match = await bcrypt.compare(currentPassword, user.password_hash);
-  if (!match) throw new ApiError('AUTH_INVALID_CREDENTIALS', { message: 'Mot de passe actuel incorrect.' });
+  if (!match) throw new ApiError('INVALID_CURRENT_PASSWORD');
 
   if (await bcrypt.compare(newPassword, user.password_hash)) {
     throw new ApiError('VALIDATION_ERROR', { message: "Le nouveau mot de passe doit différer de l'ancien." });
@@ -284,6 +293,7 @@ async function changePassword(userId, currentPassword, newPassword) {
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_COST);
   await userModel.setPassword(userId, passwordHash);
+  await revokeOtherSessions(userId, currentSid);
   return { changed: true };
 }
 

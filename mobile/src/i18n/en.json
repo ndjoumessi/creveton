@@ -619,6 +619,20 @@
       "soon": "Coming soon"
     }
   },
+  "changePassword": {
+    "title": "Change password",
+    "subtitle": "Choose a password with at least 8 characters, one uppercase letter and one digit.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "submit": "Change password",
+    "success": "Password changed successfully ✓",
+    "currentRequired": "Enter your current password",
+    "weak": "At least 8 characters, one uppercase letter and one digit",
+    "mismatch": "Passwords do not match",
+    "samePassword": "The new password must be different",
+    "wrongCurrent": "Current password is incorrect"
+  },
   "offline": {
     "banner": "Offline mode",
     "tournaments": "Tournaments available online only",

@@ -42,7 +42,12 @@ const refresh = asyncHandler(async (req, res) => {
 
 /** POST /auth/change-password → 200 (vérifie l'actuel, applique le nouveau) */
 const changePassword = asyncHandler(async (req, res) => {
-  const result = await authService.changePassword(req.user.id, req.body.current_password, req.body.new_password);
+  const result = await authService.changePassword(
+    req.user.id,
+    req.body.current_password,
+    req.body.new_password,
+    req.user.sid
+  );
   return ok(res, result);
 });
 

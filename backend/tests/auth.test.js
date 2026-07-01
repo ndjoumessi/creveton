@@ -2,6 +2,7 @@
 
 const H = require('./helpers/integration');
 const request = require('supertest');
+const bcrypt = require('bcryptjs');
 const app = require('../src/app');
 
 /**
@@ -113,4 +114,64 @@ t('login avant vérification OTP → 403 PHONE_NOT_VERIFIED', async () => {
   const r = await request(app).post(`${base}/login`).send({ email: REG.email, password: REG.password });
   expect(r.status).toBe(403);
   expect(r.body.error.code).toBe('PHONE_NOT_VERIFIED');
+});
+
+/**
+ * POST /auth/change-password — l'utilisateur est authentifié (Bearer). `createUser`
+ * ne pose pas de password_hash, on en injecte un connu directement en base.
+ */
+async function userWithPassword(password = 'KnownPass1') {
+  const user = await H.createUser();
+  await H.db.query('UPDATE users SET password_hash=$1 WHERE id=$2', [
+    await bcrypt.hash(password, 12),
+    user.id,
+  ]);
+  return user;
+}
+
+t('change-password valide → 200 { changed: true }', async () => {
+  const user = await userWithPassword();
+  const r = await request(app)
+    .post(`${base}/change-password`)
+    .set('Authorization', `Bearer ${H.tokenFor(user)}`)
+    .send({ current_password: 'KnownPass1', new_password: 'NewPass2' });
+  expect(r.status).toBe(200);
+  expect(r.body.changed).toBe(true);
+});
+
+t('change-password mauvais actuel → 400 INVALID_CURRENT_PASSWORD', async () => {
+  const user = await userWithPassword();
+  const r = await request(app)
+    .post(`${base}/change-password`)
+    .set('Authorization', `Bearer ${H.tokenFor(user)}`)
+    .send({ current_password: 'WrongPass1', new_password: 'NewPass2' });
+  expect(r.status).toBe(400);
+  expect(r.body.error.code).toBe('INVALID_CURRENT_PASSWORD');
+});
+
+t('change-password nouveau trop faible → 400 VALIDATION_ERROR', async () => {
+  const user = await userWithPassword();
+  const r = await request(app)
+    .post(`${base}/change-password`)
+    .set('Authorization', `Bearer ${H.tokenFor(user)}`)
+    .send({ current_password: 'KnownPass1', new_password: 'short' });
+  expect(r.status).toBe(400);
+  expect(r.body.error.code).toBe('VALIDATION_ERROR');
+});
+
+t('change-password nouveau = ancien → 400 VALIDATION_ERROR', async () => {
+  const user = await userWithPassword();
+  const r = await request(app)
+    .post(`${base}/change-password`)
+    .set('Authorization', `Bearer ${H.tokenFor(user)}`)
+    .send({ current_password: 'KnownPass1', new_password: 'KnownPass1' });
+  expect(r.status).toBe(400);
+  expect(r.body.error.code).toBe('VALIDATION_ERROR');
+});
+
+t('change-password sans authentification → 401', async () => {
+  const r = await request(app)
+    .post(`${base}/change-password`)
+    .send({ current_password: 'KnownPass1', new_password: 'NewPass2' });
+  expect(r.status).toBe(401);
 });

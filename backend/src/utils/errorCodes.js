@@ -10,6 +10,7 @@ const ERROR_CODES = {
   VALIDATION_ERROR: { http: 400, message: 'Champ(s) invalide(s).' },
   INVALID_TIMESTAMP: { http: 400, message: "Le paramètre « since » est mal formé." },
   OTP_INVALID: { http: 400, message: 'Code OTP incorrect.' },
+  INVALID_CURRENT_PASSWORD: { http: 400, message: 'Mot de passe actuel incorrect.' },
 
   AUTH_INVALID_CREDENTIALS: { http: 401, message: 'Email ou mot de passe incorrect.' },
   TOKEN_EXPIRED: { http: 401, message: "Le token d'accès a expiré." },

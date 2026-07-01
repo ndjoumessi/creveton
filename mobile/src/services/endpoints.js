@@ -16,6 +16,10 @@ export const auth = {
   login: (email, password) =>
     api.post('/auth/login', { email, password }).then((r) => r.data),
   logout: () => api.post('/auth/logout').then((r) => r.data),
+  // Change le mot de passe (auth requis, token injecté par l'intercepteur).
+  // data : { current_password, new_password } (snake_case). → { changed: true }
+  changePassword: (data) =>
+    api.post('/auth/change-password', data).then((r) => r.data),
 };
 
 // --- Questions & sync (API §5) ------------------------------------------

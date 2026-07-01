@@ -40,13 +40,16 @@ t('POST /auth/change-password : change le mot de passe (mot de passe actuel OK)'
   expect(await bcrypt.compare('NewPass456', rows[0].password_hash)).toBe(true);
 });
 
-t('POST /auth/change-password : mauvais mot de passe actuel → 401', async () => {
+t('POST /auth/change-password : mauvais mot de passe actuel → 400', async () => {
   const user = await userWithPassword();
   const r = await request(app).post(`${P}/auth/change-password`)
     .set('Authorization', `Bearer ${H.tokenFor(user)}`)
     .send({ current_password: 'Wrong000', new_password: 'NewPass456' });
-  expect(r.status).toBe(401);
-  expect(r.body.error.code).toBe('AUTH_INVALID_CREDENTIALS');
+  // 400 (et non 401) : l'utilisateur est authentifié ; un mauvais mot de passe
+  // ACTUEL est une erreur d'entrée, pas d'auth. En 401, l'intercepteur mobile
+  // tenterait un refresh + retry parasites.
+  expect(r.status).toBe(400);
+  expect(r.body.error.code).toBe('INVALID_CURRENT_PASSWORD');
 });
 
 t('POST /auth/change-password : nouveau identique à l’ancien → 400', async () => {

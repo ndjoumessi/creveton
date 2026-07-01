@@ -619,6 +619,20 @@
       "soon": "Bientôt disponible"
     }
   },
+  "changePassword": {
+    "title": "Changer le mot de passe",
+    "subtitle": "Choisis un mot de passe d'au moins 8 caractères, avec une majuscule et un chiffre.",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "confirm": "Confirmer le nouveau mot de passe",
+    "submit": "Modifier le mot de passe",
+    "success": "Mot de passe modifié avec succès ✓",
+    "currentRequired": "Saisis ton mot de passe actuel",
+    "weak": "Au moins 8 caractères, une majuscule et un chiffre",
+    "mismatch": "Les mots de passe ne correspondent pas",
+    "samePassword": "Le nouveau mot de passe doit être différent",
+    "wrongCurrent": "Mot de passe actuel incorrect"
+  },
   "offline": {
     "banner": "Mode hors connexion",
     "tournaments": "Tournois disponibles en ligne uniquement",
