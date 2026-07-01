@@ -7,7 +7,7 @@
 .tour-banner {
   display: flex; align-items: center; gap: 14px;
   background: rgba(212, 160, 23, 0.08); border: 1px dashed rgba(212, 160, 23, 0.5);
-  border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; color: #8a6a12;
+  border-radius: var(--radius); padding: 14px 18px; margin-bottom: 20px; color: #8a6d12;
 }
 .tour-banner-body { flex: 1; }
 .tour-banner-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; }
@@ -28,7 +28,7 @@
 /* ── Toolbar + switch vue ── */
 .tour-toolbar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
 .tour-view-switch { display: inline-flex; gap: 2px; background: var(--bg-mute); border-radius: 9px; padding: 3px; }
-.tour-view-btn { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; padding: 6px 14px; border-radius: 7px; transition: var(--t-fast); }
+.tour-view-btn { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; padding: 6px 14px; border-radius: var(--radius-sm); transition: var(--t-fast); }
 .tour-view-btn.is-active { background: var(--green900); color: var(--gold); box-shadow: 0 1px 3px rgba(11,46,26,0.25); }
 .tour-view-btn.is-active svg { color: var(--gold); }
 
@@ -42,7 +42,7 @@
 .tour-card.is-preview { box-shadow: var(--shadow); }
 .tour-card-head { height: 96px; display: flex; align-items: center; justify-content: center; position: relative; color: rgba(255,255,255,0.95); }
 .tour-card-emoji { font-size: 48px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.28)); }
-.tour-status { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; padding: 4px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+.tour-status { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; padding: 4px 10px; border-radius: var(--radius-pill); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
 .tour-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
 /* Statut sur la zone visuelle colorée : pilule glassmorphism (blur), texte
@@ -68,13 +68,13 @@
 .tour-card-head .tour-status--cancelled .tour-status-dot { background: #fca5a5; }
 .tour-status.is-live { animation: tourPulse 1.6s infinite; }
 .tour-status.is-live .tour-status-dot { animation: tourPulse 1.2s infinite; }
-/* Statut badge — couleur par statut (remplace inline styles). */
-.tour-status--scheduled, .tour-status--unknown { color: #6b7280; background: #fff; }
-.tour-status--open      { color: #2563eb; background: #fff; }
-.tour-status--running   { color: #15803d; background: #fff; }
-.tour-status--closed    { color: #b45309; background: #fff; }
-.tour-status--paid      { color: #b8860b; background: #fff; }
-.tour-status--cancelled { color: #dc2626; background: #fff; }
+/* Statut badge — tints rgba hue-preserving (vue liste). Sur card-head, .tour-card-head .tour-status écrase via spécificité. */
+.tour-status--scheduled, .tour-status--unknown { color: var(--muted);      background: var(--bg-mute); }
+.tour-status--open      { color: #2563eb;          background: rgba(37,99,235,0.10); }
+.tour-status--running   { color: var(--green500);  background: rgba(42,138,79,0.10); }
+.tour-status--closed    { color: #b45309;           background: rgba(180,83,9,0.10); }
+.tour-status--paid      { color: #8a6d12;           background: rgba(212,160,23,0.10); }
+.tour-status--cancelled { color: var(--red);        background: rgba(231,76,60,0.10); }
 /* Thème badge — couleur par thème (remplace inline styles). */
 .tour-theme--culture    { background: #f3edff; color: #8b5cf6; }
 .tour-theme--geographie { background: #e6f0ff; color: #3b82f6; }
@@ -88,14 +88,14 @@
 .tour-card-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; color: var(--green900); line-height: 1.25; }
 .tour-card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
 .tour-badge { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 7px; background: var(--bg-mute); color: var(--text); }
-.tour-badge-free { background: #e3f3ea; color: var(--green700); }
+.tour-badge-free { background: rgba(42, 138, 79, 0.10); color: var(--green700); }
 .tour-badge-soft { background: var(--bg-mute); color: var(--muted); }
 
 .tour-players-top { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); font-weight: 600; }
 .tour-players-top > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
 .tour-players-pct { margin-left: auto; font-size: 12px; color: var(--green700); }
 /* Piste toujours visible (même à 0 %) : bordure interne + fond plus contrasté. */
-.tour-players-bar { height: 8px; background: #e3ebe5; border: 1px solid var(--border-green, #d6e6db); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+.tour-players-bar { height: 8px; background: rgba(42, 138, 79, 0.10); border: 1px solid var(--border-green, #d6e6db); border-radius: var(--radius-pill); overflow: hidden; margin-top: 6px; }
 .tour-players-bar > span { display: block; height: 100%; min-width: 0; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; transition: width var(--t-modal); }
 
 .tour-card-rewards { font-size: 13.5px; font-weight: 600; color: var(--green700); }
@@ -103,15 +103,15 @@
 .tour-card-cd { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
 /* Décompte coloré : aujourd'hui rouge · ≤ 7 j or · au-delà vert */
 .tour-cd--red { color: var(--red); }
-.tour-cd--gold { color: #b45309; }
-.tour-cd--green { color: var(--green600, #2a8a4f); }
+.tour-cd--gold { color: #8a6d12; }
+.tour-cd--green { color: var(--green500); }
 
 .tour-card-foot { display: flex; gap: 8px; padding: 0 18px 18px; }
 .tour-card-foot .btn { flex: 1; justify-content: center; }
 .tour-card-detail { flex: 1; }
 
 /* ── Carte « Créer » ── */
-.tour-create { border: 2px dashed var(--gold); border-radius: 16px; background: rgba(212, 160, 23, 0.04); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 280px; color: var(--green900); cursor: pointer; transition: transform var(--t-fast), background var(--t-fast), border-color var(--t-fast); }
+.tour-create { border: 2px dashed var(--gold); border-radius: var(--radius-lg); background: rgba(212, 160, 23, 0.04); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 280px; color: var(--green900); cursor: pointer; transition: transform var(--t-fast), background var(--t-fast), border-color var(--t-fast); }
 .tour-create:hover { background: rgba(212, 160, 23, 0.08); border-color: var(--gold); transform: scale(1.01); }
 .tour-create svg { color: var(--gold); }
 .tour-create-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; }
@@ -128,7 +128,7 @@
   display: inline-flex; align-items: center; gap: 6px;
   font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.7px; color: var(--green700);
-  background: rgba(42, 138, 79, 0.10); padding: 4px 10px; border-radius: 999px;
+  background: rgba(42, 138, 79, 0.10); padding: 4px 10px; border-radius: var(--radius-pill);
 }
 .tour-preview-cap::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green500); }
 
@@ -137,21 +137,21 @@
 .tcm-step-wrap { display: flex; align-items: center; flex: 0 1 auto; }
 .tcm-step {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 14px 6px 8px; border-radius: 999px;
+  padding: 6px 14px 6px 8px; border-radius: var(--radius-pill);
   background: var(--surface-2); color: var(--muted);
   font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px;
   white-space: nowrap; transition: background var(--t-fast), color var(--t-fast);
 }
 .tcm-step-num {
   display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
-  background: #dfe6e0; color: var(--muted);
+  background: rgba(42, 138, 79, 0.12); color: var(--muted);
   font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12px;
 }
 .tcm-step.active { background: var(--gold); color: var(--green900); box-shadow: var(--shadow-gold); }
 .tcm-step.active .tcm-step-num { background: var(--green900); color: var(--gold); }
 .tcm-step.done { background: rgba(42, 138, 79, 0.12); color: var(--green700); }
 .tcm-step.done .tcm-step-num { background: var(--green500); color: #fff; }
-.tcm-step-line { flex: 1 1 14px; min-width: 12px; height: 2px; margin: 0 6px; background: var(--border); border-radius: 999px; }
+.tcm-step-line { flex: 1 1 14px; min-width: 12px; height: 2px; margin: 0 6px; background: var(--border); border-radius: var(--radius-pill); }
 .tcm-step-line.done { background: var(--green500); }
 @media (max-width: 560px) { .tcm-step-label { display: none; } .tcm-step { padding: 5px; } }
 
@@ -165,9 +165,9 @@
 /* Bandeau info CDC (or). */
 .tcm-hint {
   display: flex; align-items: flex-start; gap: 8px; margin-top: 14px;
-  padding: 10px 12px; border-radius: 10px;
+  padding: 10px 12px; border-radius: var(--radius);
   background: rgba(212, 160, 23, 0.09); border: 1px solid rgba(212, 160, 23, 0.28);
-  color: #8a6a12; font-size: 12.5px; line-height: 1.4;
+  color: #8a6d12; font-size: 12.5px; line-height: 1.4;
 }
 .tcm-hint svg { flex-shrink: 0; color: var(--gold); margin-top: 1px; }
 
@@ -207,7 +207,7 @@
 .tour-dkpi .l { font-size: 12px; color: var(--muted); }
 .tour-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 900px) { .tour-detail-grid { grid-template-columns: 1fr; } }
-.tour-detail-fill { height: 7px; background: #eef1ee; border-radius: 999px; overflow: hidden; margin-bottom: 5px; max-width: 220px; }
+.tour-detail-fill { height: 7px; background: rgba(42, 138, 79, 0.10); border-radius: var(--radius-pill); overflow: hidden; margin-bottom: 5px; max-width: 220px; }
 .tour-detail-fill > span { display: block; height: 100%; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; }
 .tour-rank { display: inline-flex; align-items: center; gap: 3px; min-width: 26px; height: 24px; padding: 0 7px; border-radius: 999px; background: var(--bg-mute); color: var(--muted); font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px; justify-content: center; font-variant-numeric: tabular-nums; }
 
@@ -224,19 +224,19 @@
 .tour-banner-cdc {
   margin-left: auto; flex-shrink: 0;
   font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.4px;
-  padding: 3px 10px; border-radius: 999px;
-  background: rgba(212, 160, 23, 0.16); color: #8a6a12;
+  padding: 3px 10px; border-radius: var(--radius-pill);
+  background: rgba(212, 160, 23, 0.16); color: #8a6d12;
 }
 
 /* ── Vue liste : cellules enrichies ── */
 .tour-lst-name { display: flex; align-items: center; gap: 10px; }
 .tour-lst-emoji {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; border-radius: 8px; font-size: 17px; flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: var(--radius-sm); font-size: 17px; flex-shrink: 0;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 .tour-lst-players { display: flex; flex-direction: column; gap: 4px; min-width: 92px; }
-.tour-lst-bar { height: 5px; width: 82px; background: #eef1ee; border-radius: 999px; overflow: hidden; }
+.tour-lst-bar { height: 5px; width: 82px; background: rgba(42, 138, 79, 0.10); border-radius: var(--radius-pill); overflow: hidden; }
 .tour-lst-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; }
 
 /* ── Inscription manuelle (TournoiDetail) ── */
