@@ -118,11 +118,82 @@
 .tour-create-sub { font-size: 12.5px; color: var(--muted); }
 
 /* ── Modal création (2 colonnes) ── */
-.tour-modal-grid { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+.tour-modal-grid { display: grid; grid-template-columns: 1fr 288px; gap: 24px; }
 @media (max-width: 720px) { .tour-modal-grid { grid-template-columns: 1fr; } }
-.tour-preview-pane { display: flex; flex-direction: column; gap: 8px; }
-.tour-preview-cap { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
-.tour-validate .kv { margin-top: 14px; }
+.tour-preview-pane { display: flex; flex-direction: column; gap: 10px; }
+
+/* Badge « APERÇU LIVE » discret. */
+.tour-preview-cap {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.7px; color: var(--green700);
+  background: rgba(42, 138, 79, 0.10); padding: 4px 10px; border-radius: 999px;
+}
+.tour-preview-cap::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green500); }
+
+/* ── Stepper (pilules connectées) ── */
+.tcm-steps { display: flex; align-items: center; margin-bottom: 22px; }
+.tcm-step-wrap { display: flex; align-items: center; flex: 0 1 auto; }
+.tcm-step {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px 6px 8px; border-radius: 999px;
+  background: var(--surface-2); color: var(--muted);
+  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px;
+  white-space: nowrap; transition: background var(--t-fast), color var(--t-fast);
+}
+.tcm-step-num {
+  display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  background: #dfe6e0; color: var(--muted);
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12px;
+}
+.tcm-step.active { background: var(--gold); color: var(--green900); box-shadow: var(--shadow-gold); }
+.tcm-step.active .tcm-step-num { background: var(--green900); color: var(--gold); }
+.tcm-step.done { background: rgba(42, 138, 79, 0.12); color: var(--green700); }
+.tcm-step.done .tcm-step-num { background: var(--green500); color: #fff; }
+.tcm-step-line { flex: 1 1 14px; min-width: 12px; height: 2px; margin: 0 6px; background: var(--border); border-radius: 999px; }
+.tcm-step-line.done { background: var(--green500); }
+@media (max-width: 560px) { .tcm-step-label { display: none; } .tcm-step { padding: 5px; } }
+
+/* ── Formulaire ── */
+.tcm-form .field label { display: inline-flex; align-items: center; gap: 6px; }
+.tcm-form .field label svg { color: var(--muted); }
+.tcm-config-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.tcm-config-row.tcm-config-2 { grid-template-columns: 1fr 1fr; margin-top: 16px; }
+@media (max-width: 460px) { .tcm-config-row { grid-template-columns: 1fr; } }
+
+/* Bandeau info CDC (or). */
+.tcm-hint {
+  display: flex; align-items: flex-start; gap: 8px; margin-top: 14px;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(212, 160, 23, 0.09); border: 1px solid rgba(212, 160, 23, 0.28);
+  color: #8a6a12; font-size: 12.5px; line-height: 1.4;
+}
+.tcm-hint svg { flex-shrink: 0; color: var(--gold); margin-top: 1px; }
+
+/* Date + heure : pickers dédiés stylés (chrome natif recoloré). */
+.tcm-datetime { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.tcm-datefield { position: relative; }
+.tcm-datefield-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.tcm-dateinput { padding-left: 34px; background: var(--surface-2); color-scheme: light; }
+.tcm-dateinput::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+.tcm-dateinput::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+
+/* ── Résumé validation ── */
+.tcm-summary { display: flex; flex-direction: column; gap: 2px; }
+.tcm-sum-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
+.tcm-sum-row:last-of-type { border-bottom: none; }
+.tcm-sum-ico { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--surface-2); color: var(--green700); flex-shrink: 0; }
+.tcm-sum-k { font-size: 13px; color: var(--muted); min-width: 90px; }
+.tcm-sum-v { margin-left: auto; text-align: right; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink); }
+
+/* Dark-mode modal création. */
+[data-theme="dark"] .tour-preview-cap { background: rgba(94, 202, 132, 0.14); color: var(--green300); }
+[data-theme="dark"] .tcm-step-num { background: var(--surface-2); }
+[data-theme="dark"] .tcm-step.done { background: rgba(94, 202, 132, 0.14); color: var(--green300); }
+[data-theme="dark"] .tcm-hint { color: var(--gold400, #e6b84d); background: rgba(212, 160, 23, 0.12); }
+[data-theme="dark"] .tcm-dateinput { color-scheme: dark; }
+[data-theme="dark"] .tcm-sum-ico { color: var(--green300); }
 
 /* ── Page détail ── */
 .tour-back { display: inline-flex; align-items: center; gap: 6px; border: none; background: none; cursor: pointer; color: var(--muted); font-weight: 600; font-size: 13px; margin-bottom: 8px; transition: var(--t-fast); }

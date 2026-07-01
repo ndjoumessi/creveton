@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Plus, Trophy, BarChart3, LayoutGrid, List, Lock, Play, X, Users,
   Calendar, Clock, ChevronLeft, ChevronRight, Eye, Wallet, Award,
+  Info, Tag, Palette, Hash, Check,
 } from 'lucide-react';
 import { Icon } from '../components/Icon';
 import tournamentsService from '../services/tournaments.service';
@@ -147,7 +148,7 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
 }
 
 /* ── Modal de création (3 étapes + aperçu live) ── */
-const EMPTY = { name: '', description: '', type: 'free', theme: 'culture', entry_fee: 0, max_players: 128, starts_at: '', questions: 20, time_per_q_s: 30 };
+const EMPTY = { name: '', type: 'free', theme: 'culture', entry_fee: 0, max_players: 128, date: '', time: '', questions: 20, time_per_q_s: 30 };
 function CreateModal({ open, onClose, onCreate, submitting }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
@@ -168,15 +169,19 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
     }));
   };
 
+  // Date + heure saisies séparément (pickers dédiés) → recomposées en ISO local.
+  const startsAt = d.date && d.time ? `${d.date}T${d.time}` : '';
+  const isPaid = d.type !== 'free';
   const nameOk = d.name.trim().length >= 5;
-  const dateOk = isFutureDate(d.starts_at);
+  const dateOk = isFutureDate(startsAt);
   const canCreate = nameOk && dateOk;
+  const stepValid = step === 0 ? nameOk : step === 1 ? dateOk : canCreate;
 
   // Estimation de cagnotte pour l'aperçu (payant) : entry_fee × joueurs max.
   const estPool = Number(d.entry_fee) > 0 ? Number(d.entry_fee) * Number(d.max_players || 0) : 0;
   const preview = {
     name: d.name, type: d.type, theme: d.theme, max_players: d.max_players, registered_players: 0,
-    entry_fee: d.entry_fee, prize_pool: Math.round(estPool * 0.9), status: 'scheduled', starts_at: d.starts_at || null,
+    entry_fee: d.entry_fee, prize_pool: Math.round(estPool * 0.9), status: 'scheduled', starts_at: startsAt || null,
     format: { questions: d.questions, time_per_q_s: d.time_per_q_s },
   };
 
@@ -189,7 +194,7 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
       entry_fee: Number(d.entry_fee) || 0,
       max_players: d.max_players,
       format: { questions: d.questions, time_per_q_s: d.time_per_q_s },
-      starts_at: new Date(d.starts_at).toISOString(),
+      starts_at: new Date(startsAt).toISOString(),
     });
   };
 
@@ -197,27 +202,29 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
     <>
       <button className="btn btn-ghost-soft" onClick={onClose}>{t('tournaments.modal.cancel')}</button>
       <div style={{ flex: 1 }} />
-      {step > 0 && <button className="btn" onClick={() => setStep((s) => s - 1)}><ChevronLeft size={15} /> {t('tournaments.modal.previous')}</button>}
-      {step < 2 && <button className="btn btn-primary" onClick={() => setStep((s) => s + 1)} disabled={step === 0 && !nameOk}>{t('tournaments.modal.next')} <ChevronRight size={15} /></button>}
-      {step === 2 && <button className="btn btn-success" onClick={submit} disabled={!canCreate || submitting}><Plus size={15} /> {t('tournaments.modal.create')}</button>}
+      {step > 0 && <button className="btn btn-ghost" onClick={() => setStep((s) => s - 1)}><ChevronLeft size={15} /> {t('tournaments.modal.previous')}</button>}
+      {step < 2 && <button className="btn btn-gold" onClick={() => setStep((s) => s + 1)} disabled={!stepValid}>{t('tournaments.modal.next')} <ChevronRight size={15} /></button>}
+      {step === 2 && <button className="btn btn-gold" onClick={submit} disabled={!canCreate || submitting}><Plus size={15} /> {t('tournaments.modal.create')}</button>}
     </>
   );
 
   return (
-    <Modal open={open} onClose={onClose} title={t('tournaments.modal.title')} footer={footer} width={840}>
-      <div className="steps">
+    <Modal open={open} onClose={onClose} title={t('tournaments.modal.title')} footer={footer} width="min(780px, 94vw)">
+      {/* Stepper — pilules connectées : actif or, fait vert nuit, à venir sourdine. */}
+      <div className="tcm-steps">
         {[t('tournaments.modal.stepIdentity'), t('tournaments.modal.stepFormat'), t('tournaments.modal.stepValidation')].map((label, i) => (
-          <div key={label} style={{ display: 'contents' }}>
-            <span className={`step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
-              <span className="num">{i + 1}</span>{label}
+          <div className="tcm-step-wrap" key={label}>
+            <span className={`tcm-step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
+              <span className="tcm-step-num">{i < step ? <Check size={13} /> : i + 1}</span>
+              <span className="tcm-step-label">{label}</span>
             </span>
-            {i < 2 && <span className="step-sep" />}
+            {i < 2 && <span className={`tcm-step-line ${i < step ? 'done' : ''}`} />}
           </div>
         ))}
       </div>
 
       <div className="tour-modal-grid">
-        <div>
+        <div className="tcm-form">
           {step === 0 && (
             <>
               <div className="field">
@@ -225,81 +232,92 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
                 <input className="input" value={d.name} onChange={(e) => set('name', e.target.value)} placeholder={t('tournaments.modal.namePlaceholder')} maxLength={120} />
                 <div className={`field-help ${nameOk ? '' : 'field-error'}`}>{nameOk ? t('tournaments.modal.nameValid') : t('tournaments.modal.nameMin')}</div>
               </div>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label>{t('tournaments.modal.descriptionOptional')}</label>
-                <textarea className="textarea" value={d.description} onChange={(e) => set('description', e.target.value)} placeholder={t('tournaments.modal.descriptionPlaceholder')} />
+              <div className="tcm-config-row tcm-config-2">
+                <div className="field" style={{ marginBottom: 0 }}>
+                  <label><Tag size={13} /> {t('tournaments.modal.type', 'Type de tournoi')}</label>
+                  <select className="select" value={d.type} onChange={(e) => setType(e.target.value)}>
+                    {TYPE_ORDER.map((k) => (
+                      <option key={k} value={k} disabled={TYPE_DEFAULTS[k].disabled}>
+                        {TYPE_DEFAULTS[k].entry_fee > 0 ? '🔒 ' : ''}{t(`tournaments.types.${k}`, TYPE_LABELS[k])}{TYPE_DEFAULTS[k].disabled ? ' (v1.5)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field" style={{ marginBottom: 0 }}>
+                  <label><Palette size={13} /> {t('tournaments.modal.theme')}</label>
+                  <select className="select" value={d.theme} onChange={(e) => set('theme', e.target.value)}>
+                    {THEME_KEYS.map((k) => <option key={k} value={k}>{(themeBadgeColors[k] && themeBadgeColors[k].icon) || ''} {t(`questions.themes.${k}`, themeLabels[k])}</option>)}
+                  </select>
+                </div>
               </div>
+              <div className="tcm-hint"><Info size={15} /> <span>{t('tournaments.modal.typeHint', 'Pré-remplit les valeurs CDC (éditables).')}</span></div>
             </>
           )}
           {step === 1 && (
             <>
-              <div className="row" style={{ gap: 12 }}>
-                <div className="field" style={{ flex: 1 }}>
-                  <label>{t('tournaments.modal.type', 'Type de tournoi')}</label>
-                  <select className="select" value={d.type} onChange={(e) => setType(e.target.value)}>
-                    {TYPE_ORDER.map((k) => (
-                      <option key={k} value={k} disabled={TYPE_DEFAULTS[k].disabled}>
-                        {t(`tournaments.types.${k}`, TYPE_LABELS[k])}{TYPE_DEFAULTS[k].disabled ? ' (v1.5)' : ''}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="field-help">{t('tournaments.modal.typeHint', 'Pré-remplit les valeurs CDC (éditables).')}</div>
-                </div>
-                <div className="field" style={{ flex: 1 }}>
-                  <label>{t('tournaments.modal.entryFee', 'Frais d’inscription (FCFA)')}</label>
-                  <input className="input" type="number" min={0} step={100} value={d.entry_fee} onChange={(e) => set('entry_fee', Number(e.target.value))} />
-                </div>
-              </div>
-              <div className="field">
-                <label>{t('tournaments.modal.theme')}</label>
-                <select className="select" value={d.theme} onChange={(e) => set('theme', e.target.value)}>
-                  {THEME_KEYS.map((k) => <option key={k} value={k}>{t(`questions.themes.${k}`, themeLabels[k])}</option>)}
-                </select>
-              </div>
-              <div className="row" style={{ gap: 12 }}>
-                <div className="field" style={{ flex: 1 }}>
+              <div className="tcm-config-row">
+                <div className="field" style={{ marginBottom: 0 }}>
                   <label>{t('tournaments.modal.maxPlayersShort')}</label>
                   <select className="select" value={d.max_players} onChange={(e) => set('max_players', Number(e.target.value))}>
                     {MAX_PLAYER_OPTS.map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
-                <div className="field" style={{ flex: 1 }}>
+                <div className="field" style={{ marginBottom: 0 }}>
                   <label>{t('tournaments.modal.questions')}</label>
                   <select className="select" value={d.questions} onChange={(e) => set('questions', Number(e.target.value))}>
                     {FORMAT_QUESTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
-                <div className="field" style={{ flex: 1 }}>
+                <div className="field" style={{ marginBottom: 0 }}>
                   <label>{t('tournaments.modal.timePerQ')}</label>
                   <select className="select" value={d.time_per_q_s} onChange={(e) => set('time_per_q_s', Number(e.target.value))}>
                     {FORMAT_TIMES.map((n) => <option key={n} value={n}>{t('tournaments.modal.seconds', { n })}</option>)}
                   </select>
                 </div>
               </div>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label>{t('tournaments.modal.startDateTime')}</label>
-                <input className="input" type="datetime-local" value={d.starts_at} onChange={(e) => set('starts_at', e.target.value)} />
-                {!dateOk && d.starts_at && <div className="field-error">{t('tournaments.modal.dateFuture')}</div>}
+
+              <div className="tcm-datetime">
+                <div className="field" style={{ marginBottom: 0 }}>
+                  <label>{t('tournaments.modal.startDate')}</label>
+                  <div className="tcm-datefield">
+                    <Calendar size={15} className="tcm-datefield-ico" />
+                    <input className="input tcm-dateinput" type="date" value={d.date} onChange={(e) => set('date', e.target.value)} />
+                  </div>
+                </div>
+                <div className="field" style={{ marginBottom: 0 }}>
+                  <label>{t('tournaments.modal.startTime')}</label>
+                  <div className="tcm-datefield">
+                    <Clock size={15} className="tcm-datefield-ico" />
+                    <input className="input tcm-dateinput" type="time" value={d.time} onChange={(e) => set('time', e.target.value)} />
+                  </div>
+                </div>
               </div>
+              {!dateOk && d.date && d.time && <div className="field-error" style={{ marginTop: 8 }}>{t('tournaments.modal.dateFuture')}</div>}
+
+              {isPaid && (
+                <div className="field" style={{ marginTop: 16, marginBottom: 0 }}>
+                  <label><Lock size={13} /> {t('tournaments.modal.entryFee', 'Frais d’inscription (FCFA)')}</label>
+                  <input className="input" type="number" min={0} step={100} value={d.entry_fee} onChange={(e) => set('entry_fee', Number(e.target.value))} />
+                </div>
+              )}
             </>
           )}
           {step === 2 && (
-            <div className="tour-validate">
-              <div className="banner banner-locked"><Lock size={15} /> {t('tournaments.modal.lockedBannerPre')} <strong>{t('tournaments.modal.lockedBannerFree')}</strong> {t('tournaments.modal.lockedBannerPost')}</div>
-              <dl className="kv">
-                <dt>{t('tournaments.modal.nameLabel')}</dt><dd>{d.name || '—'}</dd>
-                <dt>{t('tournaments.modal.theme')}</dt><dd>{t(`questions.themes.${d.theme}`, themeLabels[d.theme])}</dd>
-                <dt>{t('tournaments.modal.maxPlayersShort')}</dt><dd>{d.max_players}</dd>
-                <dt>{t('tournaments.modal.formatLabel')}</dt><dd>{t('tournaments.modal.formatValue', { q: d.questions, s: d.time_per_q_s })}</dd>
-                <dt>{t('tournaments.modal.startLabel')}</dt><dd>{d.starts_at ? dateFr(d.starts_at, "dd MMM yyyy 'à' HH'h'mm") : '—'}</dd>
-              </dl>
-              {!canCreate && <div className="field-error">{t('tournaments.modal.completeRequired')}</div>}
+            <div className="tcm-summary">
+              <div className="tcm-sum-row"><span className="tcm-sum-ico"><Tag size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.nameLabel')}</span><span className="tcm-sum-v">{d.name || '—'}</span></div>
+              <div className="tcm-sum-row"><span className="tcm-sum-ico"><Palette size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.theme')}</span><span className="tcm-sum-v">{(themeBadgeColors[d.theme] && themeBadgeColors[d.theme].icon) || ''} {t(`questions.themes.${d.theme}`, themeLabels[d.theme])}</span></div>
+              <div className="tcm-sum-row"><span className="tcm-sum-ico"><Users size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.maxPlayersShort')}</span><span className="tcm-sum-v">{d.max_players}</span></div>
+              <div className="tcm-sum-row"><span className="tcm-sum-ico"><Hash size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.formatLabel')}</span><span className="tcm-sum-v">{t('tournaments.modal.formatValue', { q: d.questions, s: d.time_per_q_s })}</span></div>
+              <div className="tcm-sum-row"><span className="tcm-sum-ico"><Calendar size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.startLabel')}</span><span className="tcm-sum-v">{startsAt ? dateFr(startsAt, "dd MMM yyyy 'à' HH'h'mm") : '—'}</span></div>
+              {isPaid && <div className="tcm-sum-row"><span className="tcm-sum-ico"><Wallet size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.entryFee')}</span><span className="tcm-sum-v">{fcfa(d.entry_fee)}</span></div>}
+              <div className="banner banner-locked" style={{ marginTop: 16, marginBottom: 0 }}><Lock size={15} /> {t('tournaments.modal.lockedBannerPre')} <strong>{t('tournaments.modal.lockedBannerFree')}</strong> {t('tournaments.modal.lockedBannerPost')}</div>
+              {!canCreate && <div className="field-error" style={{ marginTop: 10 }}>{t('tournaments.modal.completeRequired')}</div>}
             </div>
           )}
         </div>
 
         <aside className="tour-preview-pane">
-          <div className="tour-preview-cap">{t('tournaments.modal.livePreview')}</div>
+          <span className="tour-preview-cap">{t('tournaments.modal.livePreview')}</span>
           <TournamentCard t={preview} preview />
         </aside>
       </div>
