@@ -27,6 +27,11 @@ const all = Joi.object({
   cursor: Joi.string().optional(),
 });
 
+/** POST /questions/solutions — sync des solutions vers le cache offline mobile */
+const solutions = Joi.object({
+  question_ids: Joi.array().items(Joi.string().uuid()).min(1).max(500).required(),
+});
+
 /** POST /admin/questions */
 const adminCreate = Joi.object({
   text_fr: Joi.string().min(3).required(),
@@ -99,4 +104,4 @@ const translate = Joi.object({
   target_lang: Joi.string().valid('en', 'fr').required(),
 });
 
-module.exports = { list, delta, all, adminCreate, adminUpdate, adminTransition, forceSync, adminList, improveText, translate };
+module.exports = { list, delta, all, solutions, adminCreate, adminUpdate, adminTransition, forceSync, adminList, improveText, translate };

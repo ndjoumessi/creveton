@@ -171,3 +171,56 @@ t('GET /questions/delta : timestamp invalide → 400 INVALID_TIMESTAMP', async (
   expect(r.status).toBe(400);
   expect(r.body.error.code).toBe('INVALID_TIMESTAMP');
 });
+
+// ── POST /questions/solutions (sync cache offline mobile) ──────────────────────
+t('POST /questions/solutions : IDs valides → 200 + solutions (avec correct_index)', async () => {
+  const { token, ids } = await setup(3);
+  const r = await request(app)
+    .post('/api/v1/questions/solutions')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ question_ids: ids });
+
+  expect(r.status).toBe(200);
+  expect(Array.isArray(r.body.solutions)).toBe(true);
+  expect(r.body.solutions).toHaveLength(3);
+  const s = r.body.solutions.find((x) => x.id === ids[0]);
+  // Contrairement à la vue joueur, cet endpoint EXPOSE bien la solution.
+  expect(Number.isInteger(s.correct_index)).toBe(true);
+  expect(s).toHaveProperty('explanation');
+  expect(s).toHaveProperty('explanation_en');
+});
+
+t('POST /questions/solutions : sans auth → 401', async () => {
+  const { ids } = await setup(2);
+  const r = await request(app)
+    .post('/api/v1/questions/solutions')
+    .send({ question_ids: ids });
+  expect(r.status).toBe(401);
+});
+
+t('POST /questions/solutions : body invalide (pas un tableau) → 400', async () => {
+  const user = await H.createUser({ role: 'player' });
+  const token = H.tokenFor(user);
+  const r = await request(app)
+    .post('/api/v1/questions/solutions')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ question_ids: 'not-an-array' });
+  expect(r.status).toBe(400);
+  expect(r.body.error.code).toBe('VALIDATION_ERROR');
+});
+
+t('POST /questions/solutions : rate limit 1/h → 2e appel rapide 429', async () => {
+  const { token, ids } = await setup(2);
+  const first = await request(app)
+    .post('/api/v1/questions/solutions')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ question_ids: ids });
+  expect(first.status).toBe(200);
+
+  const second = await request(app)
+    .post('/api/v1/questions/solutions')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ question_ids: ids });
+  expect(second.status).toBe(429);
+  expect(second.body.error.code).toBe('RATE_LIMITED');
+});

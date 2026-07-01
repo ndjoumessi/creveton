@@ -27,6 +27,10 @@ export const questions = {
   delta: (since) =>
     api.get('/questions/delta', { params: { since } }).then((r) => r.data),
   all: (params) => api.get('/questions/all', { params }).then((r) => r.data),
+  // Sync des solutions vers le cache offline (POST : liste d'IDs dans le body).
+  // → { solutions: [{ id, correct_index, explanation, explanation_en }] }
+  solutions: (questionIds) =>
+    api.post('/questions/solutions', { question_ids: questionIds }).then((r) => r.data),
 };
 
 // --- Sessions (API §6) ---------------------------------------------------

@@ -28,6 +28,7 @@ import Icon from '../components/Icon';
 import { LoadingScreen, ProgressDots, CircularTimer, useToast } from '../components';
 import { useGameStore } from '../store/gameStore';
 import { sessions as sessionsApi } from '../services/endpoints';
+import { patchQuestionSolution } from '../services/database';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
@@ -308,6 +309,16 @@ export default function QuizScreen({ navigation }) {
           session_id: sessionId || undefined,
         });
         setSessionId(fb.session_id);
+        // Persiste la solution en cache (fire-and-forget) : la bonne réponse et
+        // l'explication resserviront à la révélation + au score des parties
+        // OFFLINE futures sur cette question (la vue joueur ne les cache pas).
+        if (Number.isInteger(fb.correct_index) && question?.id) {
+          patchQuestionSolution(question.id, {
+            correct_index: fb.correct_index,
+            explanation: fb.explanation,
+            explanation_en: fb.explanation_en,
+          }).catch(() => {});
+        }
         bumpScore(fb.points_earned || 0);
         if (typeof fb.streak === 'number') setCorrectStreak(fb.streak);
         if (fb.correct) hapticSuccess();

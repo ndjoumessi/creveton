@@ -379,6 +379,21 @@ async function historyForQuestion(id) {
   return { id, version: question.version, events };
 }
 
+/**
+ * POST /questions/solutions — renvoie les solutions (correct_index + explications)
+ * des questions demandées pour alimenter le cache offline mobile (révélation +
+ * score local en mode normal hors ligne). Défense en profondeur : re-borne à 500
+ * ids même si la validation Joi l'impose déjà.
+ * @param {string[]} questionIds
+ * @returns {Promise<{ solutions: Array<{id, correct_index, explanation, explanation_en}> }>}
+ */
+async function getSolutionsForCache(questionIds) {
+  const ids = Array.isArray(questionIds) ? questionIds.slice(0, 500) : [];
+  if (ids.length === 0) return { solutions: [] };
+  const solutions = await questionModel.findSolutionsForCache(ids);
+  return { solutions };
+}
+
 /** Liste admin paginée (curseur opaque = offset). */
 async function listForAdmin({ status, theme, level, q, limit = 20, cursor }) {
   // Pagination simple par offset encodé dans le curseur.
@@ -394,6 +409,7 @@ module.exports = {
   getQuestionSet,
   getDelta,
   getAll,
+  getSolutionsForCache,
   isDuplicate,
   recomputeSuccessRates,
   generateSeed,

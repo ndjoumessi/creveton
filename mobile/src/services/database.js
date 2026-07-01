@@ -110,6 +110,40 @@ export async function softDeleteQuestions(ids = []) {
   );
 }
 
+// Persiste la solution (correct_index + explications) d'une question déjà en
+// cache — alimentée par le feedback /sessions/answer (mode normal, EN LIGNE).
+// La vue joueur du serveur ne cache jamais ces champs (anti-triche) ; on les
+// écrit donc au fil des réponses online pour rendre possible, lors des parties
+// OFFLINE ultérieures sur ces mêmes questions, la révélation de la bonne réponse
+// ET le calcul du score local. No-op si correct_index absent (rien à écrire).
+export async function patchQuestionSolution(questionId, { correct_index, explanation, explanation_en } = {}) {
+  if (!questionId || !Number.isInteger(correct_index)) return;
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE questions
+        SET correct_index = ?, explanation = ?, explanation_en = ?
+      WHERE id = ?`,
+    [correct_index, explanation ?? null, explanation_en ?? null, questionId]
+  );
+}
+
+// Patch en lot des solutions (POST /questions/solutions) : alimente le cache
+// offline en une transaction. Ignore silencieusement les entrées sans correct_index.
+export async function batchPatchSolutions(solutions) {
+  if (!solutions?.length) return;
+  const db = await getDb();
+  await db.withTransactionAsync(async () => {
+    for (const s of solutions) {
+      if (!s?.id || !Number.isInteger(s.correct_index)) continue;
+      await db.runAsync(
+        `UPDATE questions SET correct_index = ?, explanation = ?, explanation_en = ?
+         WHERE id = ?`,
+        [s.correct_index, s.explanation ?? null, s.explanation_en ?? null, s.id]
+      );
+    }
+  });
+}
+
 // Tirage local pour démarrer une partie en mode hybride.
 export async function getQuestions({ theme, level, count = 10 }) {
   const db = await getDb();
@@ -129,6 +163,13 @@ export async function getQuestions({ theme, level, count = 10 }) {
     [...params, count]
   );
   return rows.map(rowToQuestion);
+}
+
+// IDs de toutes les questions actives en cache — pour la sync des solutions.
+export async function getAllQuestionIds() {
+  const db = await getDb();
+  const rows = await db.getAllAsync('SELECT id FROM questions WHERE deleted = 0');
+  return rows.map((r) => r.id);
 }
 
 export async function countQuestions() {
@@ -172,7 +213,10 @@ export default {
   initDatabase,
   upsertQuestions,
   softDeleteQuestions,
+  patchQuestionSolution,
+  batchPatchSolutions,
   getQuestions,
+  getAllQuestionIds,
   countQuestions,
   clearQuestions,
 };

@@ -308,6 +308,27 @@ async function findSolutions(ids) {
 }
 
 /**
+ * Solutions (correct_index + explications) d'un lot de questions APPROUVÉES et non
+ * supprimées — pour la sync du cache offline mobile (POST /questions/solutions).
+ * Contrairement à findSolutions (scoring, inclut les questions archivées/supprimées),
+ * on se limite ici à l'état « jouable » : seules les questions encore actives
+ * alimentent le cache offline. Renvoie un tableau brut (projeté en réponse par le
+ * service), jamais une Map.
+ * @param {string[]} ids
+ * @returns {Promise<Array<{id:string, correct_index:number|null, explanation:string|null, explanation_en:string|null}>>}
+ */
+async function findSolutionsForCache(ids) {
+  if (!ids || ids.length === 0) return [];
+  const { rows } = await db.query(
+    `SELECT id, correct_index, explanation, explanation_en
+       FROM questions
+      WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL AND status = 'approved'`,
+    [ids]
+  );
+  return rows;
+}
+
+/**
  * Solution + difficulté d'UNE question approuvée (feedback immédiat mode normal,
  * POST /sessions/answer). Le niveau sert au calcul des points de base.
  * @returns {Promise<{correct_index:number|null, explanation:string|null, level:string}|null>}
@@ -627,6 +648,7 @@ module.exports = {
   create,
   findManyBrief,
   findSolutions,
+  findSolutionsForCache,
   findAnswerInfo,
   findByIdAny,
   setMedia,

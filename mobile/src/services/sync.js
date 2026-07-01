@@ -16,6 +16,8 @@ import {
   initDatabase,
   upsertQuestions,
   softDeleteQuestions,
+  batchPatchSolutions,
+  getAllQuestionIds,
   countQuestions,
   clearQuestions,
 } from './database';
@@ -23,6 +25,8 @@ import {
   getLastSyncAt,
   setLastSyncAt,
   clearLastSyncAt,
+  getSolutionsSyncAt,
+  setSolutionsSyncAt,
   getCacheApiUrl,
   setCacheApiUrl,
 } from './storage';
@@ -62,6 +66,33 @@ async function deltaSync(since) {
   };
 }
 
+// Intervalle minimal entre deux syncs de solutions — écho du rate limit serveur
+// (1 req/h/user sur POST /questions/solutions). Évite le 429 et la charge inutile.
+const SOLUTIONS_SYNC_INTERVAL_MS = 60 * 60 * 1000; // 1 h
+
+// Sync des solutions (correct_index + explications) vers le cache offline : rend
+// possible la révélation de la bonne réponse ET le score local en mode normal HORS
+// LIGNE (cf. QuizScreen reveal / gameStore.computeLocalResult). Throttle 1 h côté
+// client. Silencieux et non bloquant : un échec n'affecte pas le sync des questions.
+export async function syncSolutions() {
+  try {
+    const last = Number(await getSolutionsSyncAt()) || 0;
+    if (Date.now() - last < SOLUTIONS_SYNC_INTERVAL_MS) return; // throttle 1 h
+
+    const ids = await getAllQuestionIds();
+    if (!ids.length) return;
+
+    const res = await questionsApi.solutions(ids);
+    const solutions = res?.solutions || [];
+    if (solutions.length) await batchPatchSolutions(solutions);
+
+    // Marque le sync même si 0 solution renvoyée → pas de re-tentative avant 1 h.
+    await setSolutionsSyncAt(Date.now());
+  } catch {
+    /* non bloquant : nouvelle tentative au prochain cycle de sync */
+  }
+}
+
 // Point d'entrée : exécute un sync si besoin. Jamais bloquant.
 export async function runSync({ force = false } = {}) {
   if (isSyncing && !force) return;
@@ -99,6 +130,8 @@ export async function runSync({ force = false } = {}) {
     store.setError(null);
     // Mémorise l'URL de l'API de ce sync réussi (référence pour l'invalidation).
     await setCacheApiUrl(API_URL);
+    // Sync des solutions offline (throttle 1 h interne, non bloquant).
+    await syncSolutions();
     return result;
   } catch (e) {
     // Non bloquant : on log l'état mais on n'interrompt pas l'UI.
