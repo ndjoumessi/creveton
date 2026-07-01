@@ -17,6 +17,7 @@ export { default as Logo } from './Logo';
 export { default as Avatar } from './Avatar';
 export { default as ThemeBadge } from './ThemeBadge';
 export { default as LevelBadge } from './LevelBadge';
+export { default as StatusBadge } from './StatusBadge';
 
 // États
 export { default as LoadingScreen } from './LoadingScreen';
@@ -34,3 +35,8 @@ export { default as CircularTimer } from './CircularTimer';
 export { default as Confetti } from './Confetti';
 export { default as MiniLineChart } from './MiniLineChart';
 export { default as XpBar } from './XpBar';
+export { default as FillBar } from './FillBar';
+
+// Structure / bandeaux
+export { default as SectionHeader } from './SectionHeader';
+export { default as GoldVeilBanner } from './GoldVeilBanner';

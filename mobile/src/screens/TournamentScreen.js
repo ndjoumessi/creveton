@@ -2,10 +2,10 @@
 // Terminés). Gratuits au lancement ; le payant est derrière un flag (API §8).
 // En-tête sombre, corps clair (crème) avec cartes blanches.
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, Animated, FlatList, StyleSheet, Pressable, Modal } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Modal } from 'react-native';
 import { Users, Clock, Calendar, Timer } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import {
@@ -18,6 +18,8 @@ import {
   ThemeBadge,
   ErrorScreen,
   Skeleton,
+  StatusBadge,
+  FillBar,
   useToast,
 } from '../components';
 import { tournaments as tournamentsApi } from '../services/endpoints';
@@ -25,7 +27,7 @@ import { parseApiError } from '../services/api';
 import { fonts, fontSizes, radius, spacing, themeAccent, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { formatDateTime } from '../utils/format';
+import { formatDateTime, formatCountdown } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
 // labelKey → clé i18n (tournaments.tabs.*) résolue au rendu ; key/statuses = logique.
@@ -43,17 +45,6 @@ const TYPE_LABEL = {
   grand: 'grand',
   premium: 'premium',
 };
-
-// Renvoie « Xh Ymin » si starts_at est dans les 24 prochaines heures, sinon null.
-function formatCountdown(startsAt) {
-  if (!startsAt) return null;
-  const ms = new Date(startsAt).getTime() - Date.now();
-  if (Number.isNaN(ms) || ms <= 0 || ms > 24 * 60 * 60 * 1000) return null;
-  const totalMin = Math.floor(ms / 60000);
-  const h = Math.floor(totalMin / 60);
-  const min = totalMin % 60;
-  return h > 0 ? `${h}h ${min}min` : `${min}min`;
-}
 
 export default function TournamentScreen() {
   const { colors } = useTheme();
@@ -285,7 +276,7 @@ function TournamentCard({ t, onJoin }) {
               </View>
             </View>
           </View>
-          {running ? <RunningPill /> : null}
+          {running ? <StatusBadge status="running" label={tr('tournaments.card.running')} live /> : null}
         </View>
 
         <View style={styles.metaBlock}>
@@ -295,7 +286,7 @@ function TournamentCard({ t, onJoin }) {
               {t.registered_players ?? 0} / {t.max_players ?? 0} {tr('tournaments.card.players')}
             </Body>
           </View>
-          <FillBar ratio={ratio} />
+          <FillBar pct={ratio * 100} />
           {countdown ? (
             <View style={styles.metaRow}>
               <Icon icon={Clock} size={15} color={colors.gold500} />
@@ -332,49 +323,6 @@ function TournamentCard({ t, onJoin }) {
         />
       </View>
     </AppCard>
-  );
-}
-
-function FillBar({ ratio }) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const grow = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(grow, {
-      toValue: ratio,
-      duration: 600,
-      useNativeDriver: false,
-    }).start();
-  }, [grow, ratio]);
-  const width = grow.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  return (
-    <View style={styles.fillTrack}>
-      <Animated.View style={[styles.fillBar, { width }]} />
-    </View>
-  );
-}
-
-function RunningPill() {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { t: tr } = useTranslation();
-  const pulse = useRef(new Animated.Value(0.5)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 650, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.5, duration: 650, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulse]);
-
-  return (
-    <Animated.View style={[styles.runningPill, { opacity: pulse }]}>
-      <View style={styles.runningDot} />
-      <Text style={styles.runningText}>{tr('tournaments.card.running')}</Text>
-    </Animated.View>
   );
 }
 
@@ -466,14 +414,6 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.textBody,
   },
   metaLineMuted: { fontSize: fontSizes.md },
-  fillTrack: {
-    height: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.border,
-    overflow: 'hidden',
-    marginVertical: spacing.xxs,
-  },
-  fillBar: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.green500 },
   countdownLine: {
     fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.md,
@@ -505,28 +445,6 @@ const makeStyles = (colors) => StyleSheet.create({
   confirmText: { textAlign: 'center' },
   confirmActions: { width: '100%', marginTop: spacing.lg, gap: spacing.sm },
   confirmCancel: { marginTop: 0 },
-
-  runningPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.errorBg,
-    borderRadius: radius.pill,
-    paddingVertical: 4,
-    paddingHorizontal: spacing.sm,
-  },
-  runningDot: {
-    width: 6,
-    height: 6,
-    borderRadius: radius.pill,
-    backgroundColor: colors.red600,
-  },
-  runningText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: fontSizes.xs,
-    color: colors.red600,
-    letterSpacing: 0.5,
-  },
 
   empty: { alignItems: 'center', paddingTop: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.sm },
   emptyEmoji: { fontSize: 56 },

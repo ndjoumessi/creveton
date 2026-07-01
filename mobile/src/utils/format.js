@@ -49,6 +49,17 @@ export function formatDateTime(iso) {
   });
 }
 
+// Renvoie « Xh Ymin » si startsAt est dans les 24 prochaines heures, sinon null.
+export function formatCountdown(startsAt) {
+  if (!startsAt) return null;
+  const ms = new Date(startsAt).getTime() - Date.now();
+  if (Number.isNaN(ms) || ms <= 0 || ms > 24 * 60 * 60 * 1000) return null;
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const min = totalMin % 60;
+  return h > 0 ? `${h}h ${min}min` : `${min}min`;
+}
+
 // Secondes → mm:ss
 export function formatTimer(seconds) {
   const s = Math.max(0, Math.floor(seconds));

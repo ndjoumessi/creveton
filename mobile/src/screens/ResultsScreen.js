@@ -28,6 +28,7 @@ import {
   Skeleton,
   Confetti,
   MiniLineChart,
+  GoldVeilBanner,
   useToast,
 } from '../components';
 import { Lightbulb, WifiOff } from 'lucide-react-native';
@@ -427,11 +428,13 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
       {isRecord ? (
         <Animated.View
           style={[
-            styles.recordBanner,
+            styles.recordBannerWrap,
             { opacity: recordSlide, transform: [{ translateY: recordTranslateY }] },
           ]}
         >
-          <Text style={styles.recordText}>{t('results.newRecord')}</Text>
+          <GoldVeilBanner style={styles.recordBanner} radius={radius.pill}>
+            <Text style={styles.recordText}>{t('results.newRecord')}</Text>
+          </GoldVeilBanner>
         </Animated.View>
       ) : null}
 
@@ -465,7 +468,7 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
 
       {/* ISSUE DU DUEL (défi) — résultat final si les deux ont joué, sinon attente */}
       {isChallenge ? (
-        <View style={styles.duelBanner}>
+        <GoldVeilBanner style={styles.duelBanner} radius={radius.xl}>
           {duelCompleted ? (
             <>
               <Text style={styles.duelEmoji}>{duelEmoji}</Text>
@@ -477,7 +480,7 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
           ) : (
             <Text style={styles.duelWaiting}>⏳ {t('challengesHub.card.waiting')}</Text>
           )}
-        </View>
+        </GoldVeilBanner>
       ) : null}
 
       {/* RÉCAP */}
@@ -572,11 +575,11 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
 
       {/* BONUS THÈME (marathon) — points gagnés par séries thématiques */}
       {result.theme_streak_bonus > 0 ? (
-        <View style={styles.themeBonus}>
+        <GoldVeilBanner style={styles.themeBonus} radius={radius.pill}>
           <Text style={styles.themeBonusText}>
             {t('results.themeBonus', { bonus: result.theme_streak_bonus })}
           </Text>
-        </View>
+        </GoldVeilBanner>
       ) : null}
 
       {/* MA PROGRESSION — mini-courbe des derniers scores */}
@@ -602,14 +605,16 @@ function ResultsContent({ result, isMixed, mode, onReplay, onHome, onBackToChall
 
       {/* PALIER DÉBLOQUÉ */}
       {result.level_unlocked ? (
-        <Animated.View style={[styles.levelUp, { transform: [{ scale: glowScale }] }]}>
-          <Text style={styles.levelUpEmoji}>🎉</Text>
-          <Heading color={colors.gold400}>{t('results.misc.levelUpTitle')}</Heading>
-          {result.unlocked_difficulty ? (
-            <Body color={colors.cream} style={styles.levelUpText}>
-              {t('results.misc.difficultyUnlocked', { difficulty: result.unlocked_difficulty })}
-            </Body>
-          ) : null}
+        <Animated.View style={[styles.levelUpWrap, { transform: [{ scale: glowScale }] }]}>
+          <GoldVeilBanner style={styles.levelUp} radius={radius.xl}>
+            <Text style={styles.levelUpEmoji}>🎉</Text>
+            <Heading color={colors.gold400}>{t('results.misc.levelUpTitle')}</Heading>
+            {result.unlocked_difficulty ? (
+              <Body color={colors.cream} style={styles.levelUpText}>
+                {t('results.misc.difficultyUnlocked', { difficulty: result.unlocked_difficulty })}
+              </Body>
+            ) : null}
+          </GoldVeilBanner>
         </Animated.View>
       ) : null}
 
@@ -664,17 +669,17 @@ const styles = StyleSheet.create({
 
   confettiLayer: { ...StyleSheet.absoluteFillObject, zIndex: 1 },
 
-  recordBanner: {
+  // Enveloppe animée (slide + fondu) — porte les marges/alignement dans le parent ;
+  // le voile d'or visuel vit dans GoldVeilBanner (styles.recordBanner).
+  recordBannerWrap: {
     alignSelf: 'center',
+    marginBottom: spacing.md,
+  },
+  recordBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    borderRadius: radius.pill,
-    backgroundColor: colors.goldVeil,
-    borderWidth: 1,
-    borderColor: colors.goldVeilBorder,
   },
   recordText: {
     fontFamily: fonts.titleBold,
@@ -793,10 +798,6 @@ const styles = StyleSheet.create({
     gap: spacing.xxs,
     marginBottom: spacing.xl,
     paddingVertical: spacing.lg,
-    borderRadius: radius.xl,
-    backgroundColor: colors.goldVeil,
-    borderWidth: 1,
-    borderColor: colors.goldVeilBorder,
   },
   duelEmoji: { fontSize: 40 },
   duelLabel: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.gold400 },
@@ -808,22 +809,18 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
-    borderRadius: radius.pill,
-    backgroundColor: colors.goldVeil,
-    borderWidth: 1,
-    borderColor: colors.goldVeilBorder,
   },
   themeBonusText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.gold400 },
 
+  // Enveloppe animée (scale) — porte la marge parent hors du transform pour que
+  // le « pop » reste centré sur le bandeau ; le voile d'or vit dans GoldVeilBanner.
+  levelUpWrap: {
+    marginTop: spacing.xl,
+  },
   levelUp: {
     alignItems: 'center',
     gap: spacing.xs,
-    marginTop: spacing.xl,
     padding: spacing.lg,
-    borderRadius: radius.xl,
-    backgroundColor: colors.goldVeil,
-    borderWidth: 1,
-    borderColor: colors.goldVeilBorder,
   },
   levelUpEmoji: { fontSize: 36 },
   levelUpText: { textAlign: 'center' },

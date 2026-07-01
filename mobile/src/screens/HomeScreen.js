@@ -29,6 +29,7 @@ import {
   LevelBadge,
   Skeleton,
   ErrorScreen,
+  SectionHeader,
 } from '../components';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -308,9 +309,7 @@ export default function HomeScreen({ navigation }) {
         {/* Corps cream */}
         <View style={styles.body}>
           {/* Choisir un mode — cartes horizontales → GameStart pré-réglé */}
-          <View style={styles.sectionHeaderTight}>
-            <Heading color={sectionColor}>{t('home.chooseMode')}</Heading>
-          </View>
+          <SectionHeader title={t('home.chooseMode')} color={sectionColor} />
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -389,9 +388,7 @@ export default function HomeScreen({ navigation }) {
           ) : (
             <>
           {/* Mes stats rapides */}
-          <View style={styles.sectionHeaderTight}>
-            <Heading color={sectionColor}>{t('home.myStats.title')}</Heading>
-          </View>
+          <SectionHeader title={t('home.myStats.title')} color={sectionColor} />
 
           <View style={styles.statsGrid}>
             {loadingStats ? (
@@ -433,15 +430,12 @@ export default function HomeScreen({ navigation }) {
           {/* Dernières parties */}
           {recent.length > 0 ? (
             <>
-              <View style={styles.sectionHeader}>
-                <Heading color={sectionColor}>{t('home.misc.lastGames')}</Heading>
-                <Pressable
-                  onPress={() => navigation.navigate('Stats')}
-                  hitSlop={{ top: 15, bottom: 15, left: 12, right: 12 }} // cible tactile ≥44px (lien texte inline)
-                >
-                  <Body style={styles.seeAll}>{t('home.misc.seeAll')}</Body>
-                </Pressable>
-              </View>
+              <SectionHeader
+                title={t('home.misc.lastGames')}
+                color={sectionColor}
+                actionLabel={t('home.misc.seeAll')}
+                onAction={() => navigation.navigate('Stats')}
+              />
               <View style={styles.lastList}>
                 {recent.map((g, i) => (
                   <LastGameRow key={String(g.session_id || i)} game={g} />
@@ -451,15 +445,12 @@ export default function HomeScreen({ navigation }) {
           ) : null}
 
           {/* Tournois */}
-          <View style={styles.sectionHeader}>
-            <Heading color={sectionColor}>{t('home.tournaments.title')}</Heading>
-            <Pressable
-              onPress={() => navigation.navigate('Tournaments')}
-              hitSlop={{ top: 15, bottom: 15, left: 12, right: 12 }} // cible tactile ≥44px (lien texte inline)
-            >
-              <Body style={styles.seeAll}>{t('home.tournaments.seeAll')}</Body>
-            </Pressable>
-          </View>
+          <SectionHeader
+            title={t('home.tournaments.title')}
+            color={sectionColor}
+            actionLabel={t('home.tournaments.seeAll')}
+            onAction={() => navigation.navigate('Tournaments')}
+          />
 
           {tournLoading ? (
             <ScrollView
@@ -517,9 +508,7 @@ export default function HomeScreen({ navigation }) {
           )}
 
           {/* Classement */}
-          <View style={styles.sectionHeaderTight}>
-            <Heading color={sectionColor}>{t('home.leaderboard.title')}</Heading>
-          </View>
+          <SectionHeader title={t('home.leaderboard.title')} color={sectionColor} />
 
           {lbLoading ? (
             <View style={styles.podium}>
@@ -684,20 +673,6 @@ const makeStyles = (colors) => StyleSheet.create({
   challengeTitle: { fontFamily: fonts.titleBold, fontSize: fontSizes.base },
   challengeDesc: { fontSize: fontSizes.sm, marginTop: spacing.xs },
   challengeBtn: { marginTop: spacing.md, alignSelf: 'flex-start' },
-
-  // Sections
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  sectionHeaderTight: {
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  seeAll: { fontFamily: fonts.bodySemiBold, color: colors.gold500 },
 
   // Stats
   statsGrid: {
