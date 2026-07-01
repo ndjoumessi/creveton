@@ -1,11 +1,12 @@
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings, UsersRound, ShieldCheck, Headphones, Wallet } from 'lucide-react';
+import { LayoutDashboard, Trophy, FileQuestion, Gamepad2, Swords, Users, Settings, UsersRound, ShieldCheck, Headphones, Wallet, LogOut } from 'lucide-react';
 import dashboardService from '../../services/dashboard.service';
 import { useApiData } from '../../hooks/useApiData';
 import { useAuthStore } from '../../store/authStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import Logo from '../Logo';
+import { roleLabels } from '../../constants/enums';
+import Avatar from '../Avatar';
 
 const NAV = [
   {
@@ -49,7 +50,11 @@ const NAV = [
 
 export default function Sidebar({ mobileNavOpen = false, onCloseMobileNav }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const role = useAuthStore((s) => s.role)();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const handleLogout = () => { logout(); navigate('/login', { replace: true }); };
   // Focus trap + Échap + restauration du focus quand le drawer mobile est ouvert.
   const trapRef = useFocusTrap(mobileNavOpen, onCloseMobileNav);
   // Compteur de questions en attente pour le badge de notification.
@@ -67,8 +72,11 @@ export default function Sidebar({ mobileNavOpen = false, onCloseMobileNav }) {
   return (
     <aside id="main-sidebar" ref={trapRef} className={`sidebar${mobileNavOpen ? ' is-open' : ''}`}>
       <Link to="/dashboard" className="sidebar-brand" aria-label="Tableau de bord Creveton" onClick={onCloseMobileNav}>
-        <Logo size={40} className="sidebar-logo-svg" />
-        <span className="sidebar-brand-name">Creveton</span>
+        <img src="/logo.png" width={32} height={32} className="sidebar-logo-img" alt="Creveton" />
+        <span className="sidebar-brand-txt">
+          <span className="sidebar-brand-name">Creveton</span>
+          <span className="sidebar-brand-sub">Cockpit Émeraude</span>
+        </span>
       </Link>
       <nav className="sidebar-nav">
         {sections.map((section) => (
@@ -87,6 +95,24 @@ export default function Sidebar({ mobileNavOpen = false, onCloseMobileNav }) {
           </div>
         ))}
       </nav>
+      {user && (
+        <div className="sidebar-foot">
+          <Avatar name={user.name} src={user.avatar_url} size="sm" />
+          <div className="sidebar-foot-id">
+            <span className="sidebar-foot-name">{user.name}</span>
+            <span className="sidebar-foot-role">{roleLabels[user.role] || user.role}</span>
+          </div>
+          <button
+            type="button"
+            className="sidebar-logout"
+            onClick={handleLogout}
+            title={t('header.logout')}
+            aria-label={t('header.logout')}
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
