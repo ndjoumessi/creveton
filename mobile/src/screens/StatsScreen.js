@@ -583,8 +583,10 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
           <HistoryRow key={String(g.session_id || i)} game={g} />
         ))}
       </View>
+      {/* Corps Stats = surface CLAIRE (Screen dark=false) → variant plein (comme
+          le bouton d'état vide) ; l'outlineGold est réservé aux fonds sombres. */}
       <AppButton
-        variant="outlineGold"
+        variant="primary"
         size="sm"
         title={`📋 ${t('home.lastGames.viewAll')}`}
         onPress={onViewHistory}
