@@ -278,6 +278,15 @@
 [data-theme="dark"] .tour-status--closed    { background: rgba(180,83,9,0.25);    color: var(--gold400); }
 [data-theme="dark"] .tour-status--paid      { background: rgba(212,160,23,0.25);  color: var(--gold); }
 [data-theme="dark"] .tour-status--cancelled { background: rgba(220,38,38,0.25);   color: #f87171; }
+/* IMPORTANT — les 6 règles ci-dessus visent la pilule de statut de la vue LISTE
+   (sur surface sombre). Sur la ZONE VISUELLE colorée des cartes, elles écrasaient
+   le verre sombre par spécificité égale (0,2,0) + ordre source, ce qui rendait le
+   texte « Annulé » peu lisible en dark. On restaure ici un verre sombre uniforme
+   (spécificité 0,3,0 → gagne) avec texte blanc garanti. */
+[data-theme="dark"] .tour-card-head .tour-status {
+  background: rgba(0, 0, 0, 0.34);
+  color: #fff !important;
+}
 /* tour-theme badge dark. */
 [data-theme="dark"] .tour-theme--culture    { background: rgba(139,92,246,0.18);  color: #c4b5fd; }
 [data-theme="dark"] .tour-theme--geographie { background: rgba(59,130,246,0.18);  color: #93c5fd; }
