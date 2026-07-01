@@ -31,9 +31,9 @@ import { disconnectSocket } from '../services/socket';
 import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { hapticLight } from '../utils/haptics';
+import { medalEmoji } from '../utils/rank';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
-const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
 const toMs = (v) => (v == null ? 0 : typeof v === 'number' ? v : new Date(v).getTime());
 
 // Watchdog de connexion : si la manche n'a pas démarré après ce délai, on bascule
@@ -346,7 +346,7 @@ function EndedView({ t, ended, myScore, myRank, myId, onBack }) {
     >
       <View style={styles.endedHero}>
         {podium ? (
-          <Text style={styles.endedMedal}>{MEDALS[myRank]}</Text>
+          <Text style={styles.endedMedal}>{medalEmoji(myRank)}</Text>
         ) : (
           <Text style={styles.waitingEmoji}>🎉</Text>
         )}
@@ -390,7 +390,7 @@ function MiniLeaderboard({ t, board, myId, limit = 5 }) {
       ) : (
         rows.map((e) => {
           const me = e.user_id === myId;
-          const medal = MEDALS[e.rank];
+          const medal = medalEmoji(e.rank);
           return (
             <View key={e.user_id} style={[styles.boardRow, me && styles.boardRowMe]}>
               <Text style={[styles.boardRank, me && styles.boardTextMe]}>

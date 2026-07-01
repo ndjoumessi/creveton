@@ -55,6 +55,7 @@ import {
   themeEmoji,
   avatarUri,
 } from '../utils/format';
+import { medalEmoji } from '../utils/rank';
 
 // Pastels des tuiles d'icônes de stats (décoratif, non sémantique).
 const ICON_BG = {
@@ -71,10 +72,6 @@ const PLAY_MODES = [
   { key: 'blitz', emoji: '⏱', color: colors.red400, bg: colors.errorBg },
   { key: 'marathon', emoji: '🏃', color: colors.gold500, bg: colors.goldVeil },
 ];
-
-function medalFor(rank) {
-  return rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉';
-}
 
 const fmtNum = (n) => Number(n || 0).toLocaleString('fr-FR');
 
@@ -532,7 +529,7 @@ export default function HomeScreen({ navigation }) {
                     key={row.user_id || slot}
                     style={[styles.podiumCol, isFirst && styles.podiumColFirst]}
                   >
-                    <Body style={styles.medal}>{medalFor(rank)}</Body>
+                    <Body style={styles.medal}>{medalEmoji(rank) || '🥉'}</Body>
                     <View style={isFirst ? styles.firstRing : null}>
                       <Avatar
                         name={row.name}

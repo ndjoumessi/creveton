@@ -22,7 +22,6 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle } from 'react-native-svg';
 import { Lightbulb } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import { LoadingScreen, ProgressDots, CircularTimer, useToast } from '../components';
@@ -35,14 +34,8 @@ import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/
 import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-
 const LETTERS = ['A', 'B', 'C', 'D'];
 const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
-// Timer global circulaire (montre) — distinct par mode.
-const GT_SIZE = 80;
-const GT_STROKE = { blitz: 4, marathon: 3 };
-const GT_TRACK = { blitz: 'rgba(255,255,255,0.08)', marathon: 'rgba(255,255,255,0.06)' };
 const ANSWER_DELAY_MS = 1500;
 const TIMEOUT_DELAY_MS = 2000;
 // Modes mixtes (blitz/marathon) : feedback neutre puis avance après 800 ms.
@@ -506,7 +499,17 @@ export default function QuizScreen({ navigation }) {
           réinitialisée à chaque question (un remount afficherait une frame périmée). */}
       <View style={styles.timerWrap}>
         {isTimed ? (
-          <GlobalTimer mode={mode} leftMs={globalLeftMs} totalMs={MODE_DURATION_S[mode] * 1000} t={t} />
+          <CircularTimer
+            variant="watch"
+            mode={mode}
+            leftMs={globalLeftMs}
+            totalMs={MODE_DURATION_S[mode] * 1000}
+            label={
+              mode === 'blitz'
+                ? `⚡ ${t('gameStart.modes.blitz.name')}`
+                : `🏃 ${t('gameStart.modes.marathon.name')}`
+            }
+          />
         ) : (
           <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
         )}
@@ -593,92 +596,6 @@ export default function QuizScreen({ navigation }) {
         </Animated.View>
       ) : null}
     </SafeAreaView>
-  );
-}
-
-// Timer global des modes chronométrés — cercle SVG « montre » qui se vide, M:SS
-// au centre, libellé du mode dessous. Blitz : anneau rouge. Marathon : anneau or.
-// Pulse dans les 10 dernières secondes (chiffres en rouge).
-function GlobalTimer({ mode, leftMs, totalMs, t }) {
-  const seconds = Math.max(0, Math.ceil(leftMs / 1000));
-  const urgent = seconds <= 10;
-  const label = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-  const reduceMotion = useReduceMotion();
-  const pulse = useRef(new Animated.Value(1)).current;
-  const progress = useRef(new Animated.Value(1)).current; // 1 plein → 0 vide
-
-  // Vidage régulier de l'anneau sur toute la durée (démarré une fois au montage).
-  useEffect(() => {
-    progress.setValue(1);
-    const anim = Animated.timing(progress, {
-      toValue: 0,
-      duration: totalMs,
-      easing: Easing.linear,
-      useNativeDriver: false, // strokeDashoffset n'est pas pilotable en natif
-    });
-    anim.start();
-    return () => anim.stop();
-  }, [progress, totalMs]);
-
-  // Pulsation sous les 10 s — emphase décorative, coupée si « réduire les animations ».
-  useEffect(() => {
-    if (!urgent || reduceMotion) {
-      pulse.setValue(1);
-      return undefined;
-    }
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.08, duration: 400, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 400, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => {
-      loop.stop();
-      pulse.setValue(1);
-    };
-  }, [urgent, pulse, reduceMotion]);
-
-  const sw = GT_STROKE[mode] || 4;
-  const r = (GT_SIZE - sw) / 2;
-  const circumference = 2 * Math.PI * r;
-  const dashoffset = progress.interpolate({ inputRange: [0, 1], outputRange: [circumference, 0] });
-  const arcColor = mode === 'blitz' ? colors.red400 : colors.gold500;
-  const labelColor = mode === 'blitz' ? colors.gold500 : colors.gold400;
-  const labelText =
-    mode === 'blitz' ? `⚡ ${t('gameStart.modes.blitz.name')}` : `🏃 ${t('gameStart.modes.marathon.name')}`;
-
-  return (
-    <Animated.View style={[styles.gtWrap, { transform: [{ scale: pulse }] }]}>
-      <View style={styles.gtCircle}>
-        <Svg width={GT_SIZE} height={GT_SIZE}>
-          <Circle
-            cx={GT_SIZE / 2}
-            cy={GT_SIZE / 2}
-            r={r}
-            stroke={GT_TRACK[mode] || GT_TRACK.blitz}
-            strokeWidth={sw}
-            fill="none"
-          />
-          <AnimatedCircle
-            cx={GT_SIZE / 2}
-            cy={GT_SIZE / 2}
-            r={r}
-            stroke={arcColor}
-            strokeWidth={sw}
-            strokeLinecap="round"
-            fill="none"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashoffset}
-            transform={`rotate(-90 ${GT_SIZE / 2} ${GT_SIZE / 2})`}
-          />
-        </Svg>
-        <View style={styles.gtCenter} pointerEvents="none">
-          <Text style={[styles.gtValue, urgent && styles.gtValueUrgent]}>{label}</Text>
-        </View>
-      </View>
-      <Text style={[styles.gtLabel, { color: labelColor }]}>{labelText}</Text>
-    </Animated.View>
   );
 }
 
@@ -821,12 +738,6 @@ const styles = StyleSheet.create({
   dots: { marginTop: spacing.md },
 
   // B. Timer global circulaire (montre) — anneau par mode + M:SS + libellé.
-  gtWrap: { alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
-  gtCircle: { width: GT_SIZE, height: GT_SIZE, alignItems: 'center', justifyContent: 'center' },
-  gtCenter: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  gtValue: { fontFamily: fonts.titleBlack, fontSize: 28, color: colors.white },
-  gtValueUrgent: { color: colors.red400 },
-  gtLabel: { fontFamily: fonts.titleBold, fontSize: 10 },
 
   streak: {
     position: 'absolute',

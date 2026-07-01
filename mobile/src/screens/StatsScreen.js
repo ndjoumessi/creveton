@@ -32,6 +32,7 @@ import {
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { themeEmoji, themeLabel, levelLabel, timeAgo, levelProgress, avatarUri } from '../utils/format';
+import { medalEmoji, medalColor, SILVER, BRONZE } from '../utils/rank';
 import { hapticLight } from '../utils/haptics';
 
 const TABS = [
@@ -39,18 +40,10 @@ const TABS = [
   { key: 'rank', icon: Trophy, labelKey: 'stats.tabs.leaderboard' },
 ];
 
-const PODIUM_MEDALS = ['🥇', '🥈', '🥉'];
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
 
-// Médailles classement : or (1) · argent (2) · bronze (3). En dessous : texte neutre.
-const SILVER = '#C0C0C0';
-const BRONZE = '#CD7F32';
-function rankColor(rank, c) {
-  if (rank === 1) return c.gold500;
-  if (rank === 2) return SILVER;
-  if (rank === 3) return BRONZE;
-  return c.textDark;
-}
+// Médailles / couleurs de rang : voir `utils/rank.js` (medalEmoji, medalColor,
+// SILVER, BRONZE) — partagé avec le podium Accueil et le classement live.
 // Nom tronqué à 14 caractères max (ellipsis) pour les cartes podium.
 function truncName(name, max = 14) {
   const s = String(name || '');
@@ -649,7 +642,7 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
         <Text style={styles.myRankLabel}>{t('stats.leaderboard.myPosition')}</Text>
         {myRank ? (
           <>
-            <Text style={[styles.myRankValue, { color: rankColor(myRank.rank, colors) }]}>
+            <Text style={[styles.myRankValue, { color: medalColor(myRank.rank, colors) }]}>
               {t('common.rank', { n: fmt(myRank.rank) })}
             </Text>
             {totalPlayers ? (
@@ -692,7 +685,7 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
                 { borderColor },
               ]}
             >
-              <Text style={styles.podiumMedal}>{PODIUM_MEDALS[rank - 1] || PODIUM_MEDALS[2]}</Text>
+              <Text style={styles.podiumMedal}>{medalEmoji(rank) || '🥉'}</Text>
               {/* avatar_url absent de la réponse leaderboard aujourd'hui → repli initiales
                   (Avatar gère uri→initiales). Prêt si le backend ajoute la photo. */}
               <Avatar name={p.name || ''} size={isFirst ? 56 : 44} gold={isFirst} uri={p.avatar_url || null} />
