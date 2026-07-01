@@ -184,15 +184,11 @@ input, select, textarea { font-family: inherit; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(94, 202, 132, 0.5); } 70% { box-shadow: 0 0 0 7px rgba(94, 202, 132, 0); } 100% { box-shadow: 0 0 0 0 rgba(94, 202, 132, 0); } }
 .header-btn { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; color: rgba(253, 246, 233, 0.7); font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 13.5px; padding: 7px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: color var(--t-fast), background var(--t-fast); }
 .header-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
-/* Bouton déconnexion : accent rouge au survol (action sensible), comme la sidebar. */
-.header-btn-logout:hover { background: rgba(231, 76, 60, 0.18); color: #f2a49b; }
 .lang-toggle { display: inline-flex; gap: 2px; background: rgba(255, 255, 255, 0.06); border-radius: var(--radius-pill); padding: 3px; }
 .lang-toggle button { padding: 5px 12px; font-size: 12px; font-weight: 600; background: transparent; border: none; color: rgba(253, 246, 233, 0.6); border-radius: var(--radius-pill); cursor: pointer; transition: var(--t-fast); }
 .lang-toggle button.active { background: rgba(212, 160, 23, 0.18); color: var(--gold); }
 .header-theme-btn { width: 34px; height: 34px; flex: none; border-radius: var(--radius-sm); border: 1px solid rgba(255, 255, 255, 0.12); background: transparent; color: rgba(253, 246, 233, 0.8); display: grid; place-items: center; cursor: pointer; transition: var(--t-fast); }
 .header-theme-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-.profile-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: var(--green900); display: grid; place-items: center; font-family: 'Outfit'; font-weight: 700; font-size: 13.5px; flex: none; box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.25); }
-.profile-avatar-img { object-fit: cover; padding: 0; }
 
 /* ===================== Buttons ===================== */
 .btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 9px 15px; border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13.5px; transition: all var(--t-fast); }

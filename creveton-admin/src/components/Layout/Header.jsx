@@ -1,13 +1,10 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, LogOut, Command, Moon, Sun, Menu, X } from 'lucide-react';
+import { RefreshCw, Command, Moon, Sun, Menu, X } from 'lucide-react';
 import { useUiStore } from '../../store/uiStore';
-import { useAuthStore } from '../../store/authStore';
 import useThemeStore from '../../store/themeStore';
 import { triggerRefresh } from '../../hooks/useApiData';
 import { notify } from '../Toast';
-import Modal from '../Modal';
 
 const TITLE_KEYS = {
   '/dashboard': 'nav.dashboard',
@@ -22,12 +19,8 @@ const TITLE_KEYS = {
 export default function Header({ mobileNavOpen, onToggleMobileNav }) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const lang = useUiStore((s) => s.lang);
   const setLang = useUiStore((s) => s.setLang);
-  const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
-  const [confirmLogout, setConfirmLogout] = useState(false);
   const isDark = useThemeStore((s) => s.isDark);
   const toggleTheme = useThemeStore((s) => s.toggle);
   const onToggleTheme = () => {
@@ -36,15 +29,10 @@ export default function Header({ mobileNavOpen, onToggleMobileNav }) {
   };
 
   const title = TITLE_KEYS[pathname] ? t(TITLE_KEYS[pathname]) : t('header.console');
-  const initials = (user?.name || 'AD').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
   const onRefresh = () => {
     triggerRefresh();
     notify.success(t('header.notify.refreshed'));
-  };
-  const doLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
   };
   // Ouvre la palette de commandes (Cmd+K) via un faux événement clavier.
   const openPalette = () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
@@ -94,32 +82,6 @@ export default function Header({ mobileNavOpen, onToggleMobileNav }) {
       </button>
 
       <button className="header-btn" onClick={onRefresh} title={t('header.refresh')}><RefreshCw size={15} /> {t('header.refresh')}</button>
-
-      <div className="header-sep" />
-
-      {user?.avatar_url ? (
-        <img className="profile-avatar profile-avatar-img" src={user.avatar_url} alt={user?.name || 'Admin'} title={user?.name || 'Admin'} />
-      ) : (
-        <div className="profile-avatar" title={user?.name || 'Admin'}>{initials}</div>
-      )}
-
-      <button className="header-btn header-btn-logout" onClick={() => setConfirmLogout(true)} title={t('header.logout')} aria-label={t('header.logout')}>
-        <LogOut size={17} />
-      </button>
-
-      <Modal
-        open={confirmLogout}
-        onClose={() => setConfirmLogout(false)}
-        title={t('header.logout')}
-        footer={(
-          <>
-            <button className="btn" onClick={() => setConfirmLogout(false)}>{t('common.cancel')}</button>
-            <button className="btn btn-danger" onClick={doLogout}><LogOut size={15} /> {t('header.logout')}</button>
-          </>
-        )}
-      >
-        <p style={{ margin: 0 }}>{t('header.logoutConfirm')}</p>
-      </Modal>
     </header>
   );
 }
