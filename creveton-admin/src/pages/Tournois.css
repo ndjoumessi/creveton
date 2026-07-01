@@ -46,14 +46,18 @@
 .tour-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
 /* Statut sur la zone visuelle colorée : pilule glassmorphism (blur), texte
-   blanc + point coloré par statut → lisibilité garantie, sens doublé préservé. */
+   blanc + point coloré par statut → lisibilité garantie, sens doublé préservé.
+   Verre SOMBRE (vert nuit) : le texte blanc reste lisible sur n'importe quelle
+   teinte de thème (rouge Sport, amber Histoire…) même si backdrop-filter n'est
+   pas supporté — le fallback reste un fond sombre translucide, jamais blanc. */
 .tour-card-head .tour-status {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.18);
+  color: #fff !important;
+  background: rgba(11, 46, 26, 0.42);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
 }
 .tour-card-head .tour-status--scheduled .tour-status-dot,
 .tour-card-head .tour-status--unknown .tour-status-dot   { background: #d1d5db; }
@@ -90,8 +94,9 @@
 .tour-players-top { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); font-weight: 600; }
 .tour-players-top > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
 .tour-players-pct { margin-left: auto; font-size: 12px; color: var(--green700); }
-.tour-players-bar { height: 7px; background: #eef1ee; border-radius: 999px; overflow: hidden; margin-top: 6px; }
-.tour-players-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; transition: width var(--t-modal); }
+/* Piste toujours visible (même à 0 %) : bordure interne + fond plus contrasté. */
+.tour-players-bar { height: 8px; background: #e3ebe5; border: 1px solid var(--border-green, #d6e6db); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+.tour-players-bar > span { display: block; height: 100%; min-width: 0; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; transition: width var(--t-modal); }
 
 .tour-card-rewards { font-size: 13.5px; font-weight: 600; color: var(--green700); }
 .tour-card-date { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
@@ -183,7 +188,7 @@
 .tour-selected-clear:hover { color: var(--ink); }
 
 /* ── Dark-mode base surface overrides (neutral light → dark track) ── */
-[data-theme="dark"] .tour-players-bar { background: var(--bg-mute); }
+[data-theme="dark"] .tour-players-bar { background: var(--bg-mute); border-color: rgba(255, 255, 255, 0.10); }
 [data-theme="dark"] .tour-detail-fill { background: var(--bg-mute); }
 
 /* ── Dark-mode semantic badge tint (hue-preserving) ── */
