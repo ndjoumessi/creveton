@@ -271,9 +271,9 @@ function ImportModal({ open, onClose, onDone }) {
         <>
           <div className="import-report">
             <div className="import-stat"><div className="n">{report.total_rows}</div><div className="muted">{t('questions.import.rows')}</div></div>
-            <div className="import-stat" style={{ background: '#f3fbf5' }}><div className="n" style={{ color: '#15803d' }}>{report.accepted}</div><div className="muted">{t('questions.import.accepted')}</div></div>
-            <div className="import-stat" style={{ background: '#fffbeb' }}><div className="n" style={{ color: '#b45309' }}>{report.warnings || 0}</div><div className="muted">{t('questions.import.warningsShort')}</div></div>
-            <div className="import-stat" style={{ background: '#fef2f2' }}><div className="n" style={{ color: '#dc2626' }}>{report.rejected}</div><div className="muted">{t('questions.import.errors')}</div></div>
+            <div className="import-stat import-stat--ok"><div className="n">{report.accepted}</div><div className="muted">{t('questions.import.accepted')}</div></div>
+            <div className="import-stat import-stat--warn"><div className="n">{report.warnings || 0}</div><div className="muted">{t('questions.import.warningsShort')}</div></div>
+            <div className="import-stat import-stat--err"><div className="n">{report.rejected}</div><div className="muted">{t('questions.import.errors')}</div></div>
           </div>
 
           <div className="import-tabs" role="tablist">
