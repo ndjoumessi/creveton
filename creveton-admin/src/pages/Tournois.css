@@ -39,7 +39,7 @@
 .tour-card { display: flex; flex-direction: column; overflow: hidden; padding: 0; transition: transform 0.15s, box-shadow 0.15s; }
 .tour-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 .tour-card.is-preview { box-shadow: var(--shadow); }
-.tour-card-head { height: 80px; display: flex; align-items: center; justify-content: center; position: relative; }
+.tour-card-head { height: 80px; display: flex; align-items: center; justify-content: center; position: relative; color: rgba(255,255,255,0.95); }
 .tour-card-emoji { font-size: 40px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
 .tour-status { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; padding: 4px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
 .tour-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
@@ -168,3 +168,7 @@
 [data-theme="dark"] .tour-theme--industrie  { background: rgba(16,185,129,0.18);  color: #6ee7b7; }
 [data-theme="dark"] .tour-theme--sport      { background: rgba(231,76,60,0.18);   color: #f87171; }
 [data-theme="dark"] .tour-theme--science    { background: rgba(8,145,178,0.18);   color: #67e8f9; }
+/* tour-card-body dark : tokens verts manquants illisibles sur --surface #17341f. */
+[data-theme="dark"] .tour-players-pct { color: var(--green300); }
+[data-theme="dark"] .tour-cd--gold    { color: var(--gold400, #e6b84d); }
+[data-theme="dark"] .tour-cd--green   { color: var(--green300); }

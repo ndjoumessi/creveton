@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "space grotesk",
+        "reason": "Space Grotesk is the designated body font of the Creveton design system (DESIGN.md + CLAUDE.md — typo Outfit + Space Grotesk). Intentional brand choice.",
+        "createdAt": "2026-07-01T01:02:45.450Z"
+      }
+    ]
+  }
+}
