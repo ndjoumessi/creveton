@@ -103,7 +103,7 @@ export default function Header({ mobileNavOpen, onToggleMobileNav }) {
         <div className="profile-avatar" title={user?.name || 'Admin'}>{initials}</div>
       )}
 
-      <button className="header-btn" onClick={() => setConfirmLogout(true)} title={t('header.logout')} aria-label={t('header.logout')}>
+      <button className="header-btn header-btn-logout" onClick={() => setConfirmLogout(true)} title={t('header.logout')} aria-label={t('header.logout')}>
         <LogOut size={17} />
       </button>
 

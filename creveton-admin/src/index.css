@@ -171,24 +171,27 @@ input, select, textarea { font-family: inherit; }
 .sidebar-logout:hover { background: rgba(231, 76, 60, 0.18); color: #f2a49b; }
 
 /* ===================== Header (sombre) ===================== */
-.header { position: sticky; top: 0; height: var(--header-h); background: var(--bg-header); border-bottom: 1px solid var(--green700); display: flex; align-items: center; gap: 14px; padding: 0 24px; z-index: 20; }
-.breadcrumb { font-family: 'Space Grotesk'; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-.breadcrumb .crumb-muted { color: rgba(255, 255, 255, 0.5); }
-.breadcrumb .crumb-sep { color: rgba(255, 255, 255, 0.3); }
-.breadcrumb .crumb-current { font-family: 'Outfit'; font-weight: 600; color: rgba(255, 255, 255, 0.9); }
+.header { position: sticky; top: 0; height: var(--header-h); background: var(--bg-header); border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; gap: 12px; padding: 0 20px; z-index: 20; }
+.breadcrumb { font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+.breadcrumb .crumb-muted { color: rgba(253, 246, 233, 0.5); transition: color var(--t-fast); }
+.breadcrumb .crumb-muted:hover { color: rgba(253, 246, 233, 0.85); }
+.breadcrumb .crumb-sep { color: rgba(255, 255, 255, 0.25); }
+.breadcrumb .crumb-current { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; color: #fff; }
 .header-spacer { flex: 1; }
-.header-sep { width: 1px; height: 26px; background: var(--green700); }
+.header-sep { width: 1px; height: 20px; background: rgba(255, 255, 255, 0.1); }
 .live-badge { display: inline-flex; align-items: center; gap: 7px; color: var(--green300); font-weight: 600; font-size: 13px; }
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green300); box-shadow: 0 0 0 0 rgba(94, 202, 132, 0.5); animation: pulse 1.8s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(94, 202, 132, 0.5); } 70% { box-shadow: 0 0 0 7px rgba(94, 202, 132, 0); } 100% { box-shadow: 0 0 0 0 rgba(94, 202, 132, 0); } }
-.header-btn { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; color: rgba(255, 255, 255, 0.7); font-family: 'Space Grotesk'; font-weight: 500; font-size: 13.5px; padding: 7px 10px; border-radius: 8px; transition: color var(--t-fast), background var(--t-fast); }
+.header-btn { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; color: rgba(253, 246, 233, 0.7); font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 13.5px; padding: 7px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: color var(--t-fast), background var(--t-fast); }
 .header-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+/* Bouton déconnexion : accent rouge au survol (action sensible), comme la sidebar. */
+.header-btn-logout:hover { background: rgba(231, 76, 60, 0.18); color: #f2a49b; }
 .lang-toggle { display: inline-flex; gap: 2px; background: rgba(255, 255, 255, 0.06); border-radius: var(--radius-pill); padding: 3px; }
-.lang-toggle button { padding: 5px 12px; font-size: 12px; font-weight: 600; background: transparent; border: none; color: rgba(253, 246, 233, 0.65); border-radius: var(--radius-pill); transition: var(--t-fast); }
-.lang-toggle button.active { background: rgba(255, 255, 255, 0.12); color: #fff; }
-.header-theme-btn { width: 34px; height: 34px; flex: none; border-radius: 9px; border: 1px solid var(--green700); background: transparent; color: rgba(255, 255, 255, 0.8); display: grid; place-items: center; cursor: pointer; transition: var(--t-fast); }
+.lang-toggle button { padding: 5px 12px; font-size: 12px; font-weight: 600; background: transparent; border: none; color: rgba(253, 246, 233, 0.6); border-radius: var(--radius-pill); cursor: pointer; transition: var(--t-fast); }
+.lang-toggle button.active { background: rgba(212, 160, 23, 0.18); color: var(--gold); }
+.header-theme-btn { width: 34px; height: 34px; flex: none; border-radius: var(--radius-sm); border: 1px solid rgba(255, 255, 255, 0.12); background: transparent; color: rgba(253, 246, 233, 0.8); display: grid; place-items: center; cursor: pointer; transition: var(--t-fast); }
 .header-theme-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-.profile-avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--gold); color: var(--green900); display: grid; place-items: center; font-family: 'Outfit'; font-weight: 700; font-size: 14px; flex: none; }
+.profile-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: var(--green900); display: grid; place-items: center; font-family: 'Outfit'; font-weight: 700; font-size: 13.5px; flex: none; box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.25); }
 .profile-avatar-img { object-fit: cover; padding: 0; }
 
 /* ===================== Buttons ===================== */
@@ -583,7 +586,7 @@ table.data tbody tr:last-child td { border-bottom: none; }
 .cmdk-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cmdk-label { font-weight: 600; color: var(--ink); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cmdk-sub { color: var(--muted); font-size: 12px; }
-.cmdk-trigger { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.06); border: 1px solid var(--green700); color: rgba(255,255,255,0.6); font-family: 'Space Grotesk'; font-size: 12.5px; padding: 6px 10px; border-radius: 8px; transition: var(--t-fast); }
+.cmdk-trigger { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(253,246,233,0.6); font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; padding: 6px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: var(--t-fast); }
 .cmdk-trigger:hover { background: rgba(255,255,255,0.1); color: #fff; }
 .cmdk-trigger kbd { background: rgba(255,255,255,0.1); border-color: transparent; color: rgba(255,255,255,0.7); }
 @media (max-width: 1100px) { .cmdk-trigger span { display: none; } }
