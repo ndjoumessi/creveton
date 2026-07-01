@@ -29,7 +29,8 @@
 .tour-toolbar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
 .tour-view-switch { display: inline-flex; gap: 2px; background: var(--bg-mute); border-radius: 9px; padding: 3px; }
 .tour-view-btn { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; padding: 6px 14px; border-radius: 7px; transition: var(--t-fast); }
-.tour-view-btn.is-active { background: var(--surface); color: var(--green900); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.tour-view-btn.is-active { background: var(--green900); color: var(--gold); box-shadow: 0 1px 3px rgba(11,46,26,0.25); }
+.tour-view-btn.is-active svg { color: var(--gold); }
 
 /* ── Grille de cartes ── */
 .tour-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
@@ -39,10 +40,28 @@
 .tour-card { display: flex; flex-direction: column; overflow: hidden; padding: 0; transition: transform 0.15s, box-shadow 0.15s; }
 .tour-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 .tour-card.is-preview { box-shadow: var(--shadow); }
-.tour-card-head { height: 80px; display: flex; align-items: center; justify-content: center; position: relative; color: rgba(255,255,255,0.95); }
-.tour-card-emoji { font-size: 40px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+.tour-card-head { height: 96px; display: flex; align-items: center; justify-content: center; position: relative; color: rgba(255,255,255,0.95); }
+.tour-card-emoji { font-size: 48px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.28)); }
 .tour-status { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; padding: 4px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
 .tour-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+/* Statut sur la zone visuelle colorée : pilule glassmorphism (blur), texte
+   blanc + point coloré par statut → lisibilité garantie, sens doublé préservé. */
+.tour-card-head .tour-status {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.tour-card-head .tour-status--scheduled .tour-status-dot,
+.tour-card-head .tour-status--unknown .tour-status-dot   { background: #d1d5db; }
+.tour-card-head .tour-status--open .tour-status-dot      { background: #93c5fd; }
+.tour-card-head .tour-status--running .tour-status-dot   { background: #86efac; }
+.tour-card-head .tour-status--closed .tour-status-dot    { background: #fcd34d; }
+.tour-card-head .tour-status--paid .tour-status-dot      { background: #fde68a; }
+.tour-card-head .tour-status--cancelled .tour-status-dot { background: #fca5a5; }
 .tour-status.is-live { animation: tourPulse 1.6s infinite; }
 .tour-status.is-live .tour-status-dot { animation: tourPulse 1.2s infinite; }
 /* Statut badge — couleur par statut (remplace inline styles). */
@@ -119,8 +138,30 @@
 /* Gains estimés (CDC §2.4) sur la carte tournoi payant. */
 .tour-payouts { display: inline-flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .tour-payout { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink); white-space: nowrap; }
-/* Bannière info discrète (mode gratuit). */
-.tour-banner-info { align-items: center; }
+/* Bannière info discrète (mode gratuit) — icône en pastille + badge CDC à droite. */
+.tour-banner-info { align-items: center; gap: 12px; }
+.tour-banner-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  background: rgba(212, 160, 23, 0.16); color: var(--gold);
+}
+.tour-banner-cdc {
+  margin-left: auto; flex-shrink: 0;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.4px;
+  padding: 3px 10px; border-radius: 999px;
+  background: rgba(212, 160, 23, 0.16); color: #8a6a12;
+}
+
+/* ── Vue liste : cellules enrichies ── */
+.tour-lst-name { display: flex; align-items: center; gap: 10px; }
+.tour-lst-emoji {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px; font-size: 17px; flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+.tour-lst-players { display: flex; flex-direction: column; gap: 4px; min-width: 92px; }
+.tour-lst-bar { height: 5px; width: 82px; background: #eef1ee; border-radius: 999px; overflow: hidden; }
+.tour-lst-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; }
 
 /* ── Inscription manuelle (TournoiDetail) ── */
 .tour-add-section { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
@@ -151,7 +192,7 @@
 /* ── Dark-mode : textes verts de marque des cartes tournoi → tons clairs sur surface sombre ── */
 [data-theme="dark"] .tour-card-name { color: var(--ink); }
 [data-theme="dark"] .tour-card-rewards { color: var(--green300); }
-[data-theme="dark"] .tour-view-btn.is-active { color: var(--ink); }
+[data-theme="dark"] .tour-view-btn.is-active { color: var(--gold); }
 [data-theme="dark"] .tour-create { color: var(--gold); }
 /* tour-status dark : fond blanc → rgba sur gradient sombre. */
 [data-theme="dark"] .tour-status--scheduled,
@@ -172,3 +213,10 @@
 [data-theme="dark"] .tour-players-pct { color: var(--green300); }
 [data-theme="dark"] .tour-cd--gold    { color: var(--gold400, #e6b84d); }
 [data-theme="dark"] .tour-cd--green   { color: var(--green300); }
+
+/* ── Dark-mode : bannière mode gratuit + vue liste ── */
+[data-theme="dark"] .tour-banner { color: var(--gold400, #e6b84d); }
+[data-theme="dark"] .tour-banner-ico { background: rgba(212, 160, 23, 0.20); color: var(--gold400, #e6b84d); }
+[data-theme="dark"] .tour-banner-cdc { background: rgba(212, 160, 23, 0.20); color: var(--gold400, #e6b84d); }
+[data-theme="dark"] .tour-lst-bar { background: var(--bg-mute); }
+/* Toggle actif : or sur vert nuit — identique clair/sombre, aucune surcharge nécessaire. */

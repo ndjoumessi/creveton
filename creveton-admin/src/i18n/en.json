@@ -842,7 +842,8 @@
       "dateTbd": "Date to be set",
       "startsToday": "Today at {{time}}",
       "startsTomorrow": "Tomorrow at {{time}}",
-      "startsInDays": "in {{n}}d"
+      "startsInDays": "in {{n}}d",
+      "overdue": "Overdue"
     },
     "statuses": {
       "scheduled": "Scheduled",
@@ -862,6 +863,8 @@
       "detail": "Details",
       "createShort": "Create",
       "validateResults": "Validate results",
+      "viewScores": "View scores",
+      "viewResults": "View results",
       "remove": "Remove"
     },
     "modal": {

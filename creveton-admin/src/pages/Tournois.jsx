@@ -82,7 +82,9 @@ function startBadge(iso, t) {
 
 function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
   const { t } = useTranslation();
+  const si = tournamentStart(tour.starts_at);
   const cd = startBadge(tour.starts_at, t);
+  const overdue = !preview && si?.past && (tour.status === 'scheduled' || tour.status === 'open');
   const pct = tour.max_players ? Math.min(100, Math.round((tour.registered_players / tour.max_players) * 100)) : 0;
   const emoji = (themeBadgeColors[tour.theme] && themeBadgeColors[tour.theme].icon) || '🏆';
   return (
@@ -118,11 +120,13 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
 
         <div className="tour-card-date">
           <Calendar size={14} /> {tour.starts_at ? dateFr(tour.starts_at, "dd MMM yyyy 'à' HH'h'mm") : t('tournaments.card.dateTbd')}
-          {cd && <span className={`tour-card-cd tour-cd--${cd.tone}`}><Clock size={13} /> {cd.label}</span>}
+          {overdue
+            ? <span className="tour-card-cd tour-cd--red"><Clock size={13} /> {t('tournaments.card.overdue')}</span>
+            : cd && <span className={`tour-card-cd tour-cd--${cd.tone}`}><Clock size={13} /> {cd.label}</span>}
         </div>
       </div>
 
-      {!preview && (
+      {!preview && tour.status !== 'cancelled' && (
         <div className="tour-card-foot">
           {(tour.status === 'scheduled' || tour.status === 'open') && (
             <>
@@ -131,13 +135,10 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
             </>
           )}
           {tour.status === 'running' && (
-            <button className="btn btn-sm btn-primary" onClick={() => onOpen(tour)}><Eye size={13} /> {t('tournaments.actions.liveFollow')}</button>
+            <button className="btn btn-sm btn-gold" onClick={() => onOpen(tour)}><Eye size={13} /> {t('tournaments.actions.viewScores')}</button>
           )}
           {(tour.status === 'closed' || tour.status === 'paid') && (
-            <button className="btn btn-sm" onClick={() => onOpen(tour)}><Trophy size={13} /> {t('tournaments.actions.results')}</button>
-          )}
-          {tour.status !== 'running' && tour.status !== 'closed' && tour.status !== 'paid' && (
-            <button className="btn btn-sm btn-ghost tour-card-detail" onClick={() => onOpen(tour)}><Eye size={13} /> {t('tournaments.actions.detail')}</button>
+            <button className="btn btn-sm btn-ghost tour-card-detail" onClick={() => onOpen(tour)}><Trophy size={13} /> {t('tournaments.actions.viewResults')}</button>
           )}
         </div>
       )}
@@ -375,27 +376,41 @@ export default function Tournois() {
   const listColumns = [
     {
       accessorKey: 'name', header: t('tournaments.table.name'), enableSorting: false,
-      cell: (c) => <span className="cell-strong">{c.getValue()}</span>,
-    },
-    {
-      id: 'type', header: t('tournaments.table.type'), enableSorting: false,
-      cell: ({ row }) => (Number(row.original.entry_fee) > 0 ? t('tournaments.card.paid') : t('tournaments.card.free')),
+      cell: ({ row }) => {
+        const tour = row.original;
+        const emoji = (themeBadgeColors[tour.theme] && themeBadgeColors[tour.theme].icon) || '🏆';
+        return (
+          <div className="tour-lst-name">
+            <span className="tour-lst-emoji" style={{ background: themeGradient(tour.theme) }}>{emoji}</span>
+            <span className="cell-strong">{tour.name}</span>
+          </div>
+        );
+      },
     },
     {
       id: 'theme', header: t('tournaments.table.theme'), enableSorting: false,
-      cell: ({ row }) => t(`questions.themes.${row.original.theme}`, themeLabels[row.original.theme] || row.original.theme || '—'),
-    },
-    {
-      id: 'players', header: t('tournaments.table.players'), enableSorting: false,
-      cell: ({ row }) => `${num(row.original.registered_players || 0)}${row.original.max_players ? ` / ${row.original.max_players}` : ''}`,
+      cell: ({ row }) => (
+        row.original.theme
+          ? <span className={`tour-badge tour-theme--${row.original.theme}`}>{t(`questions.themes.${row.original.theme}`, themeLabels[row.original.theme] || row.original.theme)}</span>
+          : <span className="muted">—</span>
+      ),
     },
     {
       accessorKey: 'status', header: t('tournaments.table.status'), enableSorting: false,
-      cell: (c) => <StatusBadge status={c.getValue()} />,
+      cell: (c) => <span className="tour-lst-status"><StatusBadge status={c.getValue()} /></span>,
     },
     {
-      id: 'rewards', header: t('tournaments.table.rewards'), enableSorting: false,
-      cell: ({ row }) => (Number(row.original.entry_fee) > 0 ? fcfa(row.original.prize_pool) : t('tournaments.table.xpReward')),
+      id: 'players', header: t('tournaments.table.players'), enableSorting: false,
+      cell: ({ row }) => {
+        const tour = row.original;
+        const p = tour.max_players ? Math.min(100, Math.round((tour.registered_players / tour.max_players) * 100)) : 0;
+        return (
+          <div className="tour-lst-players">
+            <span className="cell-strong">{num(tour.registered_players || 0)}{tour.max_players ? ` / ${tour.max_players}` : ''}</span>
+            {tour.max_players ? <span className="tour-lst-bar"><span style={{ width: `${p}%` }} /></span> : null}
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'starts_at', header: t('tournaments.table.date'), enableSorting: false,
@@ -413,7 +428,7 @@ export default function Tournois() {
                 <button className="btn btn-sm btn-danger-ghost" onClick={() => doCancel(tour)} aria-label={t('tournaments.actions.cancel')}><X size={13} /></button>
               </div>
             )}
-            {tour.status !== 'scheduled' && tour.status !== 'open' && (
+            {tour.status !== 'scheduled' && tour.status !== 'open' && tour.status !== 'cancelled' && (
               <button className="btn btn-sm btn-ghost" onClick={() => openDetail(tour)} aria-label={t('tournaments.actions.detail')}><Eye size={13} /></button>
             )}
           </div>
@@ -438,15 +453,16 @@ export default function Tournois() {
         actions={(
           <>
             <button className={`btn btn-ghost ${showStats ? 'tour-btn-on' : ''}`} onClick={() => setShowStats((s) => !s)}><BarChart3 size={16} /> {t('tournaments.viewStats')}</button>
-            <button className="btn btn-primary" onClick={() => setCreating(true)}><Plus size={16} /> {t('tournaments.create')}</button>
+            <button className="btn btn-gold" onClick={() => setCreating(true)}><Plus size={16} /> {t('tournaments.create')}</button>
           </>
         )}
       />
 
       {/* Bannière discrète : mode gratuit forcé (flag tournaments.paid.enabled = false). */}
       <div className="tour-banner tour-banner-info">
-        <Lock size={16} />
+        <span className="tour-banner-ico"><Lock size={15} /></span>
         <span className="tour-banner-title">{t('tournaments.banner.freeMode', 'Mode gratuit — tournois payants désactivés')}</span>
+        <span className="tour-banner-cdc">{t('tournaments.banner.cdc')}</span>
       </div>
 
       {/* Panneau statistiques */}

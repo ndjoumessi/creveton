@@ -842,7 +842,8 @@
       "dateTbd": "Date à définir",
       "startsToday": "Aujourd'hui à {{time}}",
       "startsTomorrow": "Demain à {{time}}",
-      "startsInDays": "dans {{n}} j"
+      "startsInDays": "dans {{n}} j",
+      "overdue": "En retard"
     },
     "statuses": {
       "scheduled": "Programmé",
@@ -862,6 +863,8 @@
       "detail": "Détail",
       "createShort": "Créer",
       "validateResults": "Valider les résultats",
+      "viewScores": "Voir les scores",
+      "viewResults": "Voir les résultats",
       "remove": "Retirer"
     },
     "modal": {
