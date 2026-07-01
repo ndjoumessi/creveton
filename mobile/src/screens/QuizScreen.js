@@ -329,13 +329,23 @@ export default function QuizScreen({ navigation }) {
         revealExplain();
         scheduleAutoNext(timedOut ? TIMEOUT_DELAY_MS : ANSWER_DELAY_MS);
       } catch {
-        setAnswered({ selectedIndex, correctIndex: null, isCorrect: false, timedOut });
+        const localCorrectIndex = question?.correct_index ?? null;
+        const localIsCorrect = localCorrectIndex !== null && selectedIndex === localCorrectIndex;
+        setAnswered({
+          selectedIndex,
+          correctIndex: localCorrectIndex,
+          explanation: question?.explanation || null,
+          explanation_en: question?.explanation_en || null,
+          isCorrect: localIsCorrect,
+          timedOut,
+        });
         setDotStates((d) => {
           const c = [...d];
-          c[currentIndex] = 'wrong';
+          c[currentIndex] = localIsCorrect ? 'correct' : 'wrong';
           return c;
         });
-        scheduleAutoNext(ANSWER_DELAY_MS);
+        if (localCorrectIndex !== null) revealExplain();
+        scheduleAutoNext(timedOut ? TIMEOUT_DELAY_MS : ANSWER_DELAY_MS);
       } finally {
         setChecking(false);
       }
