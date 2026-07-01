@@ -1,11 +1,11 @@
 // Navigateur racine : choisit AuthStack ou MainStack selon l'état d'auth.
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import AuthStack from './AuthStack';
 import MainStack from './MainStack';
 import { navigationRef } from './navigationRef';
-import { LoadingScreen } from '../components';
+import SplashScreen from '../screens/SplashScreen';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { colors, darkColors } from '../constants/theme';
@@ -38,13 +38,17 @@ export default function AppNavigator() {
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const isDark = useThemeStore((s) => s.isDark);
   const navTheme = buildNavTheme(isDark);
+  // Vrai quand l'animation du splash custom (2 s) est terminée.
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     bootstrap();
   }, [bootstrap]);
 
-  if (isBootstrapping) {
-    return <LoadingScreen message="Chargement…" />;
+  // Afficher le splash custom pour tous les utilisateurs jusqu'à ce que
+  // l'animation (2 s) ET le bootstrap soient tous deux terminés.
+  if (!splashDone || isBootstrapping) {
+    return <SplashScreen onFinish={() => setSplashDone(true)} />;
   }
 
   return (
