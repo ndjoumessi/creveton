@@ -50,7 +50,7 @@ const TABS = ['received', 'sent', 'completed'];
 const PAGE_SIZE = 50;
 const emptyTabState = { loading: false, error: null, loaded: false };
 
-export default function ChallengesScreen({ navigation }) {
+export default function ChallengesScreen({ navigation, route }) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors, isDark), [colors, isDark]);
   const { t } = useTranslation();
@@ -111,6 +111,17 @@ export default function ChallengesScreen({ navigation }) {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
+
+  // Ouverture directe du bottom sheet quand on arrive depuis « Défier un ami »
+  // (GameStartScreen) ou l'ancienne route « Challenge » redirigée. On consomme le
+  // param une seule fois pour ne pas rouvrir le sheet à chaque focus/re-render.
+  const openCreateParam = route.params?.openCreate;
+  useEffect(() => {
+    if (openCreateParam) {
+      setSheetOpen(true);
+      navigation.setParams({ openCreate: undefined });
+    }
+  }, [openCreateParam, navigation]);
 
   // Recherche débouncée (≥ 2 caractères) tant que le mode « ami » est actif.
   useEffect(() => {

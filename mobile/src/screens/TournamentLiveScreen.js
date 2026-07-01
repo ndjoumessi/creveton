@@ -18,22 +18,31 @@ import {
   Animated,
   Easing,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Lightbulb, Check } from 'lucide-react-native';
+import { Lightbulb, Check, WifiOff, X } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import { CircularTimer } from '../components';
 import { useTournamentSocket } from '../hooks/useTournamentSocket';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useAuthStore } from '../store/authStore';
-import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { disconnectSocket } from '../services/socket';
+import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { hapticLight } from '../utils/haptics';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
 const toMs = (v) => (v == null ? 0 : typeof v === 'number' ? v : new Date(v).getTime());
 
+// Watchdog de connexion : si la manche n'a pas démarré après ce délai, on bascule
+// l'écran d'attente en état d'erreur (plutôt que de laisser le spinner tourner).
+const WAIT_TIMEOUT_MS = 30000;
+
 export default function TournamentLiveScreen({ navigation, route }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const tournamentId = route.params?.tournamentId;
   const { submitAnswer } = useTournamentSocket(tournamentId);
@@ -51,9 +60,28 @@ export default function TournamentLiveScreen({ navigation, route }) {
   const [picked, setPicked] = useState(null);
   const [answered, setAnswered] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  // La manche n'a jamais démarré (socket bloqué / room vide) → état d'erreur.
+  const [connectionError, setConnectionError] = useState(false);
 
   const timerAnim = useRef(new Animated.Value(1)).current; // 1 → 0
   const intervalRef = useRef(null);
+  const waitTimeoutRef = useRef(null);
+
+  // Watchdog 30s : armé au montage tant qu'on est en attente. Désarmé au démontage.
+  useEffect(() => {
+    waitTimeoutRef.current = setTimeout(() => setConnectionError(true), WAIT_TIMEOUT_MS);
+    return () => clearTimeout(waitTimeoutRef.current);
+  }, []);
+
+  // Dès qu'une question arrive (ou que la manche se termine), on ne « waiting » plus :
+  // on désarme le watchdog pour qu'il ne se déclenche jamais après coup.
+  useEffect(() => {
+    if (question || phase === 'ended') {
+      clearTimeout(waitTimeoutRef.current);
+      waitTimeoutRef.current = null;
+      setConnectionError(false);
+    }
+  }, [question, phase]);
 
   // (Re)démarre le timer à chaque nouvelle question.
   useEffect(() => {
@@ -105,6 +133,22 @@ export default function TournamentLiveScreen({ navigation, route }) {
     submitAnswer(optionIndex);
   };
 
+  // Quitter la manche en cours : confirmation destructive puis fermeture socket +
+  // retour. `disconnectSocket` est la même fermeture que celle du hook au démontage.
+  const onQuit = () => {
+    Alert.alert(t('tournament.quitTitle'), t('tournament.quitMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.quit'),
+        style: 'destructive',
+        onPress: () => {
+          disconnectSocket();
+          navigation.goBack();
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       {phase === 'ended' ? (
@@ -117,9 +161,26 @@ export default function TournamentLiveScreen({ navigation, route }) {
           onBack={() => navigation.navigate('Tabs', { screen: 'Tournaments' })}
         />
       ) : phase === 'waiting' || !question ? (
-        <WaitingView t={t} leaderboard={leaderboard} myId={myId} />
+        <WaitingView
+          t={t}
+          leaderboard={leaderboard}
+          myId={myId}
+          connectionError={connectionError}
+          onBack={() => navigation.goBack()}
+        />
       ) : (
         <>
+          {/* Sortie de secours pendant la manche active (question / reveal) */}
+          <Pressable
+            onPress={onQuit}
+            hitSlop={8}
+            style={styles.quitBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.quit')}
+          >
+            <Icon icon={X} size={24} color={colors.textOnDarkMuted} />
+          </Pressable>
+
           {/* Barre haute : compteur + score perso */}
           <View style={styles.topBar}>
             <Text style={styles.counter}>
@@ -169,6 +230,8 @@ export default function TournamentLiveScreen({ navigation, route }) {
 }
 
 function OptionRow({ letter, text, optionIndex, picked, correctIndex, revealing, disabled, onPress }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isPicked = picked === optionIndex;
   const isCorrect = revealing && correctIndex === optionIndex;
   const isWrongPick = revealing && isPicked && correctIndex !== optionIndex;
@@ -210,6 +273,8 @@ function OptionRow({ letter, text, optionIndex, picked, correctIndex, revealing,
 }
 
 function RevealPanel({ t, reveal, myId }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.revealPanel}>
       {reveal?.explanation ? (
@@ -228,7 +293,31 @@ function RevealPanel({ t, reveal, myId }) {
   );
 }
 
-function WaitingView({ t, leaderboard, myId }) {
+function WaitingView({ t, leaderboard, myId, connectionError, onBack }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  // Le socket n'a jamais livré de manche : on remplace le spinner par un état
+  // d'erreur avec une sortie explicite (le spinner ne tournera plus indéfiniment).
+  if (connectionError) {
+    return (
+      <View style={styles.centered}>
+        <Icon icon={WifiOff} size={48} color={colors.textOnDarkMuted} />
+        <Text style={styles.waitingTitle}>{t('tournament.connectionError')}</Text>
+        <Text style={styles.waitingSubtitle}>{t('tournament.connectionErrorMsg')}</Text>
+        <Pressable
+          onPress={onBack}
+          hitSlop={8}
+          style={styles.errorBackBtn}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}
+        >
+          <Text style={styles.errorBackText}>{t('common.back')}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.centered}>
       <Text style={styles.waitingEmoji}>🏆</Text>
@@ -245,6 +334,8 @@ function WaitingView({ t, leaderboard, myId }) {
 }
 
 function EndedView({ t, ended, myScore, myRank, myId, onBack }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const board = ended?.leaderboard || [];
   const podium = myRank != null && myRank <= 3;
   return (
@@ -288,6 +379,8 @@ function EndedView({ t, ended, myScore, myRank, myId, onBack }) {
 // Classement live. Les entrées n'ont pas de nom (anti-jointure temps réel) :
 // on affiche le rang + le score, et on met en évidence la ligne du joueur.
 function MiniLeaderboard({ t, board, myId, limit = 5 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const rows = Array.isArray(board) ? board.slice(0, limit) : [];
   return (
     <View style={styles.board}>
@@ -317,8 +410,16 @@ function MiniLeaderboard({ t, board, myId, limit = 5 }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.green900, paddingHorizontal: spacing.lg },
+
+  quitBtn: {
+    minWidth: MIN_TOUCH,
+    minHeight: MIN_TOUCH,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    marginTop: spacing.sm,
+  },
 
   topBar: {
     flexDirection: 'row',
@@ -357,14 +458,14 @@ const styles = StyleSheet.create({
   optCorrect: { backgroundColor: colors.successBg, borderWidth: 3, borderColor: colors.green500 },
   optWrong: { backgroundColor: colors.errorBg, borderWidth: 3, borderColor: colors.red400 },
   badge: { width: 32, height: 32, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  badgeDefault: { backgroundColor: '#f3f4f6' },
+  badgeDefault: { backgroundColor: colors.border },
   badgeCorrect: { backgroundColor: colors.green500 },
   badgeWrong: { backgroundColor: colors.red400 },
   badgeTextBase: { fontFamily: fonts.bodyBold, fontSize: fontSizes.md },
-  badgeTextDefault: { color: '#374151' },
+  badgeTextDefault: { color: colors.textBody },
   badgeTextOnColor: { color: colors.white },
   optText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: fontSizes.md },
-  optTextDefault: { color: '#374151' },
+  optTextDefault: { color: colors.textBody },
   optTextCorrect: { color: colors.successText, fontFamily: fonts.bodySemiBold },
   optTextWrong: { color: colors.red600 },
 
@@ -411,6 +512,17 @@ const styles = StyleSheet.create({
   },
   spinner: { marginTop: spacing.md },
   waitingBoard: { alignSelf: 'stretch', marginTop: spacing.xl },
+  errorBackBtn: {
+    minHeight: MIN_TOUCH,
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.gold500,
+    ...shadow.gold,
+  },
+  errorBackText: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.green900 },
 
   // Ended
   endedScroll: { flex: 1 },
@@ -475,7 +587,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
   },
-  boardRowMe: { backgroundColor: 'rgba(212, 160, 23, 0.16)' },
+  boardRowMe: { backgroundColor: colors.goldVeil },
   boardRank: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.cream, width: 36 },
   boardName: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkMuted },
   boardScore: { fontFamily: fonts.bodyBold, fontSize: fontSizes.md, color: colors.cream },

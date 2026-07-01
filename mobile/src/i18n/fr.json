@@ -481,6 +481,7 @@
     "save": "Enregistrer",
     "close": "Fermer",
     "back": "Retour",
+    "quit": "Quitter",
     "next": "Suivant",
     "yes": "Oui",
     "no": "Non",
@@ -505,6 +506,12 @@
     "stats": "Stats",
     "profile": "Profil",
     "challenges": "Défis"
+  },
+  "tournament": {
+    "connectionError": "Connexion perdue",
+    "connectionErrorMsg": "Le tournoi n'a pas pu démarrer.",
+    "quitTitle": "Quitter le tournoi ?",
+    "quitMessage": "Ta progression sera perdue."
   },
   "tournamentLive": {
     "waitingTitle": "En attente du démarrage…",

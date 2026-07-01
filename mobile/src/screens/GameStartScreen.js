@@ -326,7 +326,12 @@ export default function GameStartScreen({ navigation, route }) {
         title={t('gameStart.misc.challengeFriend')}
         variant="ghost"
         size="md"
-        onPress={() => navigation.navigate('Challenge')}
+        onPress={() =>
+          navigation.navigate('Tabs', {
+            screen: 'Challenges',
+            params: { openCreate: true },
+          })
+        }
         style={styles.challenge}
       />
     </Screen>

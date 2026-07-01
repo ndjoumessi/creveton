@@ -481,6 +481,7 @@
     "save": "Save",
     "close": "Close",
     "back": "Back",
+    "quit": "Leave",
     "next": "Next",
     "yes": "Yes",
     "no": "No",
@@ -505,6 +506,12 @@
     "stats": "Stats",
     "profile": "Profile",
     "challenges": "Duels"
+  },
+  "tournament": {
+    "connectionError": "Connection lost",
+    "connectionErrorMsg": "The tournament could not start.",
+    "quitTitle": "Leave the tournament?",
+    "quitMessage": "Your progress will be lost."
   },
   "tournamentLive": {
     "waitingTitle": "Waiting to start…",
