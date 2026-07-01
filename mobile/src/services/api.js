@@ -8,6 +8,7 @@
 // callback enregistrable (setOnAuthExpired).
 
 import axios from 'axios';
+import i18n from '../i18n';
 import { API_URL, RETRY } from '../constants/config';
 import {
   getAccessToken,
@@ -134,7 +135,7 @@ export function parseApiError(error) {
   return {
     status: status || 0,
     code: 'NETWORK_ERROR',
-    message: 'Connexion impossible. Vérifie ta connexion internet.',
+    message: i18n.t('offline.banner'),
   };
 }
 
