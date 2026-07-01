@@ -82,6 +82,7 @@ export default function ResultsScreen({ route, navigation }) {
   const isMixed = TIMED_MODES.includes(modeRef.current);
   const reset = useGameStore((s) => s.reset);
   const startGame = useGameStore((s) => s.startGame);
+  const localResult = useGameStore((s) => s.localResult);
   const drawForMode = useQuestionsStore((s) => s.drawForMode);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const toast = useToast();
@@ -148,18 +149,38 @@ export default function ResultsScreen({ route, navigation }) {
     if (valid) refreshProfile();
   }, [valid, refreshProfile]);
 
-  // Partie jouée hors ligne : pas de score serveur. On confirme la sauvegarde
-  // locale (rejouée automatiquement au retour de la connexion).
+  // Partie jouée hors ligne : pas de score serveur (rejouée automatiquement au
+  // retour de la connexion). On confirme la sauvegarde locale et, si le set
+  // jouait sur cache complet, on montre un récap honnête — score/justesse
+  // calculés localement, identiques au recalcul serveur au rejeu de la file
+  // (cf. gameStore.computeLocalResult). Sinon (localResult null), on masque les
+  // chiffres plutôt que d'en inventer.
   if (queued) {
     return (
-      <ErrorScreen
-        dark
-        icon={WifiOff}
-        title={t('offline.savedOffline')}
-        message={t('offline.savedOfflineMessage')}
-        onRetry={goHome}
-        retryLabel={t('results.home')}
-      />
+      <Screen dark contentStyle={styles.offlineContent}>
+        <View style={styles.offlineHero}>
+          <Icon icon={WifiOff} size={48} color={colors.gold500} />
+          <Heading color={colors.cream} style={styles.offlineTitle}>
+            {t('offline.savedOffline')}
+          </Heading>
+          <Body color={colors.textOnDarkMuted} style={styles.offlineSubtitle}>
+            {t('offline.savedOfflineMessage')}
+          </Body>
+        </View>
+
+        {localResult ? (
+          <View style={styles.offlineScoreCard}>
+            <Text style={styles.offlineScoreValue}>{localResult.score}</Text>
+            <Label color={colors.textOnDarkMuted}>{t('results.finalScore')}</Label>
+            <View style={styles.offlineDivider} />
+            <Text style={styles.offlineMeta}>
+              {localResult.correct_count}/{localResult.total_questions} {t('results.correct')}
+            </Text>
+          </View>
+        ) : null}
+
+        <AppButton title={t('results.home')} variant="primary" onPress={goHome} fullWidth />
+      </Screen>
     );
   }
 
@@ -822,4 +843,37 @@ const styles = StyleSheet.create({
   // Écran « Calcul en cours… » (suspense 800 ms, blitz/marathon).
   calcWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
   calcText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textOnDarkMuted },
+
+  // Écran de résultat hors-ligne (partie mise en file, sync au retour réseau).
+  offlineContent: { flex: 1, justifyContent: 'center', gap: spacing.xl },
+  offlineHero: { alignItems: 'center', gap: spacing.sm },
+  offlineTitle: { textAlign: 'center' },
+  offlineSubtitle: { textAlign: 'center' },
+  offlineScoreCard: {
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xl,
+    borderRadius: radius.xl,
+    backgroundColor: colors.cardOnDark,
+    borderWidth: 1,
+    borderColor: colors.borderOnDark,
+  },
+  offlineScoreValue: {
+    fontFamily: fonts.titleBlack,
+    fontSize: fontSizes.hero,
+    lineHeight: 72,
+    color: colors.gold500,
+  },
+  offlineDivider: {
+    width: 40,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: colors.gold500,
+    marginVertical: spacing.sm,
+  },
+  offlineMeta: {
+    fontFamily: fonts.titleBold,
+    fontSize: fontSizes.xl,
+    color: colors.white,
+  },
 });

@@ -35,6 +35,59 @@ function enrichResult(result, answers, questions) {
     : { ...enriched, avg_time_ms: avgMs };
 }
 
+// Score local « miroir » du serveur (backend scoreService.computeSession) : mêmes
+// règles — points de base par niveau, bonus vitesse +50 % (≤ 5 s), bonus de série
+// thématique en marathon. Sert au récap hors-ligne : la partie sera rejouée vers
+// /sessions/submit au retour réseau et le serveur recalculera EXACTEMENT ces mêmes
+// valeurs → aucune donnée factice. Renvoie null si une question jouée n'a pas de
+// `correct_index` en cache (set complété par l'API en vue joueur, anti-triche) :
+// justesse indéterminable → on n'invente rien, le récap masque les chiffres.
+const LOCAL_BASE_POINTS = { beginner: 50, intermediate: 75, expert: 100 };
+const LOCAL_SPEED_MS = 5000;
+const LOCAL_SPEED_RATE = 0.5;
+
+function localThemeStreakMult(themeHistory) {
+  if (themeHistory.length < 2) return 1;
+  const last = themeHistory[themeHistory.length - 1];
+  let streak = 0;
+  for (let i = themeHistory.length - 1; i >= 0; i -= 1) {
+    if (themeHistory[i] === last) streak += 1;
+    else break;
+  }
+  if (streak >= 5) return 2;
+  if (streak >= 3) return 1.5;
+  return 1;
+}
+
+function computeLocalResult({ mode, level, answers, questions }) {
+  const qById = new Map(questions.map((q) => [q.id, q]));
+  const isMixed = mode === 'blitz' || mode === 'marathon';
+  let score = 0;
+  let correctCount = 0;
+  const themeHistory = [];
+  for (let idx = 0; idx < answers.length; idx += 1) {
+    const ans = answers[idx];
+    const q = qById.get(ans.question_id);
+    // Justesse indéterminable (question sans correct_index en cache) → abandon.
+    if (!q || !Number.isInteger(q.correct_index)) return null;
+    // Modes mixtes : points de base du niveau RÉEL de la question (niveaux mêlés).
+    const qLevel = isMixed ? q.level || level : level;
+    const qBase = LOCAL_BASE_POINTS[qLevel] ?? LOCAL_BASE_POINTS.beginner;
+    themeHistory.push(q.theme || `__nomatch_${idx}__`);
+    const isCorrect =
+      !ans.skipped && ans.selected_index !== null && ans.selected_index === q.correct_index;
+    if (isCorrect) {
+      correctCount += 1;
+      let points = qBase;
+      if (ans.elapsed_ms <= LOCAL_SPEED_MS) points += Math.round(qBase * LOCAL_SPEED_RATE);
+      const themeMult = mode === 'marathon' ? localThemeStreakMult(themeHistory) : 1;
+      if (themeMult > 1) points += Math.round(points * (themeMult - 1));
+      score += points;
+    }
+  }
+  return { score, correct_count: correctCount, total_questions: answers.length };
+}
+
 const initial = {
   mode: 'normal', // normal | tournament | challenge
   challengeId: null, // défini en mode challenge → submit vers /challenges/:id/submit
@@ -55,6 +108,7 @@ const initial = {
   submitting: false,
   error: null,
   isQuizActive: false,
+  localResult: null, // récap hors-ligne (score/justesse calculés localement)
 };
 
 export const useGameStore = create((set, get) => ({
@@ -178,7 +232,8 @@ export const useGameStore = create((set, get) => ({
     // « sauvegardé hors ligne ».
     if (!useNetworkStore.getState().isOnline) {
       useOfflineQueue.getState().addSession(payload);
-      set({ submitting: false });
+      const localResult = computeLocalResult({ mode, level, answers, questions: get().questions });
+      set({ submitting: false, localResult });
       return { ok: true, queued: true };
     }
 
@@ -199,7 +254,8 @@ export const useGameStore = create((set, get) => ({
       // que de perdre la partie (sera rejouée au prochain retour réseau).
       if (err.code === 'NETWORK_ERROR' || err.code === 'TIMEOUT') {
         useOfflineQueue.getState().addSession(payload);
-        set({ submitting: false });
+        const localResult = computeLocalResult({ mode, level, answers, questions: get().questions });
+        set({ submitting: false, localResult });
         return { ok: true, queued: true };
       }
       set({ submitting: false, error: err.message });
