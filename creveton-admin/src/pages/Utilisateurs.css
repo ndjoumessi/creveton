@@ -168,20 +168,24 @@
 .u-dh-badges .u-role-badge { background: rgba(255, 255, 255, 0.14); color: #fff; }
 .u-dh-contact { display: flex; flex-wrap: wrap; gap: 8px; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: rgba(255, 255, 255, 0.7); }
 
+/* Bandeau métriques : panneau légèrement différencié sur le hero + dividers
+   plus visibles. (surface-2 est clair et jurerait sur le hero toujours vert :
+   on utilise un voile blanc translucide, équivalent sombre du token.) */
 .u-dh-metrics {
   display: flex;
   gap: 0;
   margin: 20px 0 18px;
-  padding: 14px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 14px 4px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
-.u-dh-metrics > div { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 3px; border-right: 1px solid rgba(255, 255, 255, 0.14); }
+.u-dh-metrics > div { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 3px; border-right: 1px solid rgba(255, 255, 255, 0.22); }
 .u-dh-metrics > div:last-child { border-right: none; }
 .u-dh-mv { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 22px; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
 .u-dh-ml { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: rgba(255, 255, 255, 0.6); }
 .u-dh-quick { display: flex; flex-wrap: wrap; gap: 8px; }
-.u-dh-quick .btn-ghost-soft { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+.u-dh-quick .btn-ghost-soft { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.2); border-radius: var(--radius-sm, 8px); min-height: 36px; display: inline-flex; align-items: center; }
 .u-dh-quick .btn-ghost-soft:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
 
 /* Onglets — soulignés (aucun fond plein), accent or sur l'onglet actif */

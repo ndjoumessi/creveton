@@ -79,15 +79,15 @@
   border-radius: var(--radius-lg, 16px); padding: 24px; margin-bottom: 18px;
   display: flex; align-items: center; gap: 18px;
 }
-/* Anneau d'avatar teinté par rôle (or = super_admin, vert = admin, bleu = moderator). */
+/* Anneau or 2px pour tous les membres + halo teinté par rôle (or/vert/bleu). */
 .team-dh-avatar {
   display: inline-flex; border-radius: 50%; flex: none;
   padding: 3px; background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22);
+  box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(212, 160, 23, 0.22);
 }
-.team-dh-avatar--super_admin { box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(212, 160, 23, 0.22); }
-.team-dh-avatar--admin { box-shadow: 0 0 0 2px var(--green500), 0 0 0 5px rgba(42, 138, 79, 0.22); }
-.team-dh-avatar--moderator { box-shadow: 0 0 0 2px #3b82f6, 0 0 0 5px rgba(59, 130, 246, 0.22); }
+.team-dh-avatar--super_admin { box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(212, 160, 23, 0.28); }
+.team-dh-avatar--admin { box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(42, 138, 79, 0.28); }
+.team-dh-avatar--moderator { box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(59, 130, 246, 0.28); }
 .team-dh-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
 .team-dh-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; letter-spacing: -0.2px; }
 .team-dh-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
