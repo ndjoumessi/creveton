@@ -229,8 +229,8 @@ function SysLine({ icon, label, latency, stateLabel, down }) {
     <div className="dash-sys-line">
       <span className="dash-sys-ic">{icon}</span>
       <span className="dash-sys-name">{label}</span>
-      <span className="dash-sys-state">
-        <span className="dash-sys-dot" style={down ? { background: 'var(--red)' } : undefined} />
+      <span className={`dash-sys-state ${down ? 'is-down' : 'is-up'}`}>
+        <span className="dash-sys-dot" />
         {stateLabel}
       </span>
       {!down && latency != null && <span className="dash-sys-ms">{latency} ms</span>}
@@ -614,7 +614,7 @@ export default function Dashboard() {
         </div>
 
         {/* Col 2 — À modérer */}
-        <div className="card card-pad">
+        <div className={`card card-pad dash-mod-card ${pending.length > 0 ? 'has-pending' : 'is-clear'}`}>
           <div className="dash-card-head">
             <div>
               <h3 className="card-title">{t('dashboard.moderation.title')}</h3>
@@ -627,6 +627,7 @@ export default function Dashboard() {
               <Check size={26} color="#5eca84" />
               <span className="dash-empty-title">{t('dashboard.moderation.upToDate')}</span>
               <span>{t('dashboard.moderation.noPending')}</span>
+              <Link className="dash-gold-link" to="/questions">{t('dashboard.moderation.manage')} <ArrowRight size={14} /></Link>
             </div>
           ) : (
             <>
@@ -693,7 +694,7 @@ export default function Dashboard() {
             <div className="dash-sys-frow">
               <span className="dash-online-dot" />
               <span className="dash-sys-flabel">{t('dashboard.system.online')}</span>
-              <span className="dash-sys-fval dash-sys-fval--num">{num(kpis.online_now ?? 0)}</span>
+              <span className={`dash-sys-fval dash-sys-fval--num dash-online-pill ${(kpis.online_now ?? 0) > 0 ? 'is-live' : ''}`}>{num(kpis.online_now ?? 0)}</span>
             </div>
             <div className="dash-sys-frow">
               <Server size={14} color="rgba(255,255,255,0.5)" />
