@@ -30,7 +30,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
 import { themeEmoji, themeLabel, formatDateTime } from '../utils/format';
-import { fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { radius, spacing } from '../constants/theme';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
