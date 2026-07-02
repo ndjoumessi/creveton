@@ -8,12 +8,20 @@ Guidance pour les agents travaillant sur Creveton — app de quiz mobile compét
 
 - Backend : `cd backend && npm start` → http://localhost:4000 (API sous `/api/v1`,
   liveness sous `/health`). DB dev : `creveton_dev` (Postgres :5432), Redis :6379.
+  Migrations : `npm run migrate` (`src/models/migrations/*.sql`, appliquées en ordre) ;
+  lint : `npm run lint`.
 - Admin : `cd creveton-admin && npm run dev` → http://localhost:5174. Vite proxifie
   `/api` **et** `/health` vers :4000. Login admin : `admin@creveton.cm` / `Admin1234`.
-- Tests backend : `cd backend && npm test` (jest `--runInBand`). Les tests d'intégration
-  tournent contre un **vrai** Postgres + Redis ; `tests/helpers/integration.js`
+  Avant commit : `npm run lint` **et** `npm run build` doivent passer.
+- Mobile : `cd mobile && npm start` (Expo). `EXPO_PUBLIC_API_URL` pointe le backend (sur
+  appareil physique : l'IP LAN, **pas** `localhost`). Détails, conventions et build APK
+  local dans **[`mobile/CLAUDE.md`](mobile/CLAUDE.md)** (à lire avant toute tâche mobile).
+- Tests backend : `cd backend && npm test` (jest `--runInBand` ; `test:watch`,
+  `test:coverage`). Les tests d'intégration tournent contre un **vrai** Postgres + Redis ;
+  `tests/helpers/integration.js`
   (`ensureReady`/`resetState`/`createUser`/`tokenFor`/`createApprovedQuestion`) les
-  saute proprement si l'infra est absente.
+  saute proprement si l'infra est absente. Un seul fichier :
+  `npm test -- challenges.test.js` (ou `-t "motif"` pour un test précis).
 
 ## Design Context
 
@@ -165,6 +173,33 @@ régénérer avec `/impeccable document`.
   `Privacy.jsx` (header). `creveton-admin/public/logo.png` : vrai PNG 416×416 (était un JPEG mislabeled).
   `creveton-admin/public/favicon.png` : idem, re-encodé en vrai PNG. CSS : tile or → tile
   image, `object-fit: cover`, fond crème (cream backing).
+
+## Mobile (`mobile/`) — l'essentiel
+
+Doc complète (stack, architecture `src/`, build APK local, branding) :
+**[`mobile/CLAUDE.md`](mobile/CLAUDE.md)** — la lire avant toute tâche mobile. Points
+transverses qui touchent aussi le backend :
+
+- **Expo SDK 54** (RN 0.81, React 19.1), **JavaScript pur** (pas de TS). Navigation
+  `@react-navigation` v7, state `zustand`, réseau `axios`, temps réel `socket.io-client`.
+- **Tokens visuels** dans `src/constants/theme.js` (même charte « Cockpit Émeraude » que
+  l'admin) — jamais de couleur en dur. Contenu bilingue localisé via `utils/i18n.js`
+  (`getQuestionText`/`getOptionText`, **repli FR toujours**) ; l'explication localisée
+  vient du **serveur** (`/sessions/answer`, `review[]`), jamais du cache (anti-triche).
+- **Cache & sync questions** : `expo-sqlite` alimenté par le delta sync (`/questions/all`
+  puis `/questions/delta`) ; `correct_index`/`explanation` présents **en mode normal
+  seulement**. Ne jamais fabriquer la bonne réponse côté client.
+- **Hors ligne** : les parties jouées sans réseau sont mises en file (`offlineQueue`,
+  AsyncStorage) et **rejouées** via `/sessions/submit` au retour de connexion.
+- **Courbe XP** : mêmes paliers `[0, 200, 500, 1200, 3000]` que le backend (`levelForXp`
+  dans `utils/format.js`) ; niveau dérivé de `total_xp`.
+- **Commits scopés à `mobile/`** (voir Git ci-dessous).
+
+## Temps réel (tournois)
+
+Serveur socket.io monté dans `backend/src/sockets/index.js` (adossé à
+`services/liveTournamentService.js` / `tournamentService.js`) ; côté mobile
+`services/socket.js` + `hooks/useTournamentSocket.js` (écran `TournamentLiveScreen`).
 
 ## Git
 
