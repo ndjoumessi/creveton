@@ -201,6 +201,15 @@ export default function MiniLineChart({
     ? Math.min(Math.max(selPoint.x - tipW / 2, 0), Math.max(plotRight - tipW, 0))
     : 0;
 
+  // Y du label « valeur du dernier point » (showLastValue) : au-dessus du point par
+  // défaut, mais SOUS lui si sa baseline devient trop haute (< 12) — sinon les glyphes
+  // (fontSize 11) sortent par le HAUT du SVG (y<0) et react-native-svg les rend EN
+  // MIROIR. Ce cas survient quand le dernier point est au sommet, i.e. sa valeur ==
+  // graduation max. (Le bug est devenu visible après la séparation des colonnes : le
+  // label, jadis superposé au libellé d'axe à droite, est maintenant isolé.)
+  const lastLabelY =
+    n > 0 && points[n - 1].y - 9 >= 12 ? points[n - 1].y - 9 : (n > 0 ? points[n - 1].y + 16 : 0);
+
   return (
     <View style={autoWidth ? styles.wrapAuto : styles.wrap} onLayout={onWrapLayout}>
       <Svg width={w} height={height}>
@@ -277,7 +286,7 @@ export default function MiniLineChart({
         {showLastValue && sel !== n - 1 ? (
           <SvgText
             x={points[n - 1].x}
-            y={points[n - 1].y - 9}
+            y={lastLabelY}
             fontSize={11}
             fontFamily={fonts.titleBold}
             fill={lastValueColor || stroke}
