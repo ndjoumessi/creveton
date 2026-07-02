@@ -36,7 +36,8 @@ import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
-const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
+// Mode Normal : 15 s/question, quel que soit le niveau (aplati — était 30/20/15).
+const TIME_BY_LEVEL = { beginner: 15, intermediate: 15, expert: 15 };
 const ANSWER_DELAY_MS = 1500;
 const TIMEOUT_DELAY_MS = 2000;
 // Modes mixtes (blitz/marathon) : feedback neutre puis avance après 800 ms.
@@ -93,7 +94,7 @@ export default function QuizScreen({ navigation }) {
 
   const question = questions[currentIndex];
   const total = questions.length;
-  const timeLimit = TIME_BY_LEVEL[level] || 30;
+  const timeLimit = TIME_BY_LEVEL[level] || 15;
   const feedbackEnabled = mode === 'normal';
   // Blitz/Marathon : timer GLOBAL (et non par question), set mixte sans feedback
   // serveur (la correction vient du cache local, mode normal sync).

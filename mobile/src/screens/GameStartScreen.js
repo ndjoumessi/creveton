@@ -26,7 +26,9 @@ import { countQuestionsByTheme } from '../services/database';
 import { themeLabel, levelLabel } from '../utils/format';
 import { hapticMedium } from '../utils/haptics';
 
-const TIME_BY_LEVEL = { beginner: 30, intermediate: 20, expert: 15 };
+// Mode Normal : 15 s/question, quel que soit le niveau (aplati — était 30/20/15).
+// La difficulté reste portée par les questions et le score (50/75/100 pts).
+const TIME_BY_LEVEL = { beginner: 15, intermediate: 15, expert: 15 };
 
 // Modes proposés. `mixed` = thème/niveau automatiques (tous mélangés) + timer global.
 const GAME_MODES = [
@@ -116,7 +118,7 @@ export default function GameStartScreen({ navigation, route }) {
       });
     }
     if (!theme) return null;
-    const time = TIME_BY_LEVEL[level] || 30;
+    const time = TIME_BY_LEVEL[level] || 15;
     return t('gameStart.recap', {
       theme: t(`gameStart.themes.${theme}`, themeLabel(theme)),
       level: t(`gameStart.levels.${level}`, levelLabel(level)),

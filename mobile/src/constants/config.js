@@ -55,15 +55,15 @@ export const LEVELS = [
 ];
 
 // Modes de jeu chronométrés (timer GLOBAL, pas par question) — tous thèmes/niveaux
-// mélangés. blitz : 60 s. marathon : 180 s + 20 questions + bonus thème serveur.
-export const MODE_DURATION_S = { blitz: 60, marathon: 180 };
+// mélangés. blitz : 60 s. marathon : 120 s + 20 questions + bonus thème serveur.
+export const MODE_DURATION_S = { blitz: 60, marathon: 120 };
 export const MODE_QUESTION_COUNT = { blitz: 20, marathon: 20 };
 export const TIMED_MODES = ['blitz', 'marathon'];
 
 // Paramètres de jeu
 export const GAME = {
   questionsPerSession: 10,
-  timePerQuestionS: 30,
+  timePerQuestionS: 15,
   speedBonusThresholdMs: 5000, // ≤ 5 s → +50 %
   cheatThresholdMs: 1000, // < 1 s répété → triche
   streakX15: 3, // ×1,5 dès 3 bonnes réponses
