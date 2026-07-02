@@ -13,7 +13,6 @@
 import React, { useRef, useState, useMemo } from 'react';
 import {
   View,
-  Text,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -23,11 +22,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { AppButton, AuthField, useToast } from '../components';
+import { AppButton, AuthField, Title, Body, useToast } from '../components';
 import Icon from '../components/Icon';
 import { auth } from '../services/endpoints';
 import { parseApiError } from '../services/api';
-import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
+import { radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 // Règle serveur : ≥ 8 caractères, au moins une majuscule et un chiffre.
@@ -118,8 +117,8 @@ export default function ChangePasswordScreen({ navigation }) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.kav}
       >
-        <Text style={styles.title}>{t('changePassword.title')}</Text>
-        <Text style={styles.subtitle}>{t('changePassword.subtitle')}</Text>
+        <Title size={26} color={colors.textOnDark} style={styles.title}>{t('changePassword.title')}</Title>
+        <Body size="md" color={colors.textOnDarkMuted} style={styles.subtitle}>{t('changePassword.subtitle')}</Body>
 
         <View style={styles.card}>
           <AuthField
@@ -204,15 +203,9 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   kav: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.lg, marginTop: -MIN_TOUCH },
   title: {
-    fontFamily: fonts.titleBold,
-    fontSize: 26,
-    color: colors.textOnDark,
     marginBottom: spacing.xs,
   },
   subtitle: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.md,
-    color: colors.textOnDarkMuted,
     marginBottom: spacing.xl,
   },
   card: {
