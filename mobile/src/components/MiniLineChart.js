@@ -154,11 +154,20 @@ export default function MiniLineChart({
     points.map((p) => `L ${p.x},${p.y}`).join(' ') +
     ` L ${points[n - 1].x},${baseY} Z`;
 
-  // 4 graduations Y (valeurs décroissantes de max vers min).
+  // Graduations Y (valeurs décroissantes de max vers min). Nombre ADAPTÉ à la
+  // hauteur : avec 4 libellés, sur les petits graphiques ils sont si rapprochés que
+  // le tooltip (~22-28px + marges) ne peut se glisser dans AUCUN interstice →
+  // l'anti-collision verticale échouait, le tooltip retombait sur une ligne de grille
+  // et chevauchait son libellé. On réduit donc le nombre de libellés quand la hauteur
+  // manque, jusqu'à garantir un créneau libre (vérifié par simulation pour tipH≤28) :
+  //   innerH ≥ 150 → 4 libellés · ≥ 100 → 3 (Stats h=140) · sinon → 2 min/max (Results h=120).
+  // Précision d'échelle réduite sur les petits graphiques, mais plus de chevauchement
+  // — compromis assumé (cf. brief : « la solution la plus simple qui l'élimine »).
+  const gradDivs = showGrid ? (innerH >= 150 ? 3 : innerH >= 100 ? 2 : 1) : 0; // libellés = divs+1
   const grads = showGrid
-    ? [0, 1, 2, 3].map((i) => ({
-        y: padT + (innerH * i) / 3,
-        val: Math.round(max - (span * i) / 3),
+    ? Array.from({ length: gradDivs + 1 }, (_, i) => ({
+        y: padT + (innerH * i) / gradDivs,
+        val: Math.round(max - (span * i) / gradDivs),
       }))
     : [];
 
@@ -187,7 +196,10 @@ export default function MiniLineChart({
   // l'emplacement dégagé le PLUS PROCHE (déplacement minimal), en restant à l'écran.
   // Actif uniquement avec la grille (sinon aucun libellé d'axe).
   if (selPoint && showGrid && tipH > 0) {
-    const LABEL_HALF = 13; // demi-hauteur de la zone d'exclusion autour du centre du libellé
+    // Demi-hauteur d'exclusion : serrée au plus près du texte réel (~9px à fontSize 9)
+    // pour maximiser les interstices exploitables entre libellés (cf. réduction à 3
+    // graduations ci-dessus) → la garde trouve un créneau même sur h=120.
+    const LABEL_HALF = 8;
     const maxTop = Math.max(height - tipH, 0);
     const clampV = (top) => Math.min(Math.max(top, 0), maxTop);
     // Centre vertical approx. du texte de graduation (baseline g.y-2, fontSize 9).
