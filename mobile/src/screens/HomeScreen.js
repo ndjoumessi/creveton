@@ -19,6 +19,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Icon from '../components/Icon';
 import {
   Logo,
+  Title,
   Heading,
   Body,
   Label,
@@ -41,8 +42,6 @@ import { tournaments as tournamentsApi } from '../services/endpoints';
 import { runSync } from '../services/sync';
 import {
   colors,
-  fonts,
-  fontSizes,
   radius,
   spacing,
   shadow,
@@ -96,16 +95,16 @@ function StatCard({ icon, iconBg, value, valueColor, label, sub }) {
           <Text style={styles.statIconText}>{icon}</Text>
         )}
       </View>
-      <Text style={[styles.statValue, valueColor ? { color: valueColor } : null]}>
+      <Title weight="extrabold" style={[styles.statValue, valueColor ? { color: valueColor } : null]}>
         {value}
-      </Text>
-      <Text style={styles.statLabel} numberOfLines={1}>
+      </Title>
+      <Label size="xs" style={styles.statLabel} numberOfLines={1}>
         {label}
-      </Text>
+      </Label>
       {sub ? (
-        <Text style={styles.statSub} numberOfLines={1}>
+        <Label size="xs" color={colors.green500} style={styles.statSub} numberOfLines={1}>
           {sub}
-        </Text>
+        </Label>
       ) : null}
     </View>
   );
@@ -142,7 +141,7 @@ function StatusPill({ tournament, t }) {
         { backgroundColor: paid ? colors.goldVeil : colors.borderOnDark },
       ]}
     >
-      <Label color={paid ? colors.gold400 : colors.green300} style={styles.statusText}>
+      <Label weight="bold" size="xs" color={paid ? colors.gold400 : colors.green300}>
         {label}
       </Label>
     </View>
@@ -242,9 +241,9 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.headerLeft}>
             <View style={styles.greetingRow}>
               <Logo size={40} />
-              <Body style={styles.greeting}>{t('home.greeting', { name: firstName })}</Body>
+              <Heading weight="bold" size="xl" color={colors.textOnDark} style={styles.greeting}>{t('home.greeting', { name: firstName })}</Heading>
             </View>
-            <Body style={styles.heroSubtitle}>{t('home.heroSubtitle')}</Body>
+            <Body weight="medium" size="sm" color={colors.gold400} style={styles.heroSubtitle}>{t('home.heroSubtitle')}</Body>
             <View style={styles.levelWrap}>
               <LevelBadge level={user?.level ?? 1} xp={user?.total_xp ?? 0} />
             </View>
@@ -281,12 +280,12 @@ export default function HomeScreen({ navigation }) {
                 <View style={[styles.modeIcon, { backgroundColor: m.bg }]}>
                   <Text style={styles.modeIconText}>{m.emoji}</Text>
                 </View>
-                <Text style={styles.modeName}>
+                <Heading weight="bold" size="base" style={styles.modeName}>
                   {t(`gameStart.modes.${m.key}.name`)}
-                </Text>
-                <Text style={styles.modeDesc} numberOfLines={2}>
+                </Heading>
+                <Body size="xs" muted style={styles.modeDesc} numberOfLines={2}>
                   {t(`gameStart.modes.${m.key}.desc`)}
-                </Text>
+                </Body>
               </Pressable>
             ))}
           </ScrollView>
@@ -300,11 +299,11 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.challengeTitleRow}>
               <Icon icon={HelpCircle} size={20} color={colors.green900} />
-              <Heading color={colors.green900} style={styles.challengeTitle}>
+              <Heading weight="bold" size="base" color={colors.green900}>
                 {t('home.dailyChallenge.title')}
               </Heading>
             </View>
-            <Body color={colors.green900} style={styles.challengeDesc}>
+            <Body size="sm" color={colors.green900} style={styles.challengeDesc}>
               {t('home.dailyChallenge.subtitle')}
             </Body>
             <AppButton
@@ -448,19 +447,20 @@ export default function HomeScreen({ navigation }) {
                   style={styles.tCard}
                 >
                   <ThemeBadge theme={tournament.theme} size="sm" showLabel={false} />
-                  <Body
+                  <Heading
+                    size="md"
                     color={colors.white}
                     numberOfLines={2}
                     style={styles.tName}
                   >
                     {tournament.name}
-                  </Body>
+                  </Heading>
                   <View style={styles.tFooter}>
                     <Label color={colors.textOnDarkMuted}>
                       {t('home.misc.players', { count: tournament.registered_players ?? 0 })}
                     </Label>
                     <StatusPill tournament={tournament} t={t} />
-                    <Label color={colors.textOnDarkFaint} style={styles.tDate}>
+                    <Label size="xs" color={colors.textOnDarkFaint}>
                       {formatDateTime(tournament.starts_at)}
                     </Label>
                   </View>
@@ -519,14 +519,8 @@ const makeStyles = (colors) => StyleSheet.create({
   greetingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   greeting: {
     flexShrink: 1,
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl,
-    color: colors.textOnDark,
   },
   heroSubtitle: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.sm,
-    color: colors.gold400,
     marginTop: spacing.xs,
   },
   levelWrap: { marginTop: spacing.sm },
@@ -569,15 +563,9 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   modeIconText: { fontSize: 22 },
   modeName: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.base,
-    color: colors.textDark,
     marginTop: spacing.md,
   },
   modeDesc: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
     marginTop: 2,
     lineHeight: 15,
   },
@@ -590,8 +578,7 @@ const makeStyles = (colors) => StyleSheet.create({
     ...shadow.gold,
   },
   challengeTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  challengeTitle: { fontFamily: fonts.titleBold, fontSize: fontSizes.base },
-  challengeDesc: { fontSize: fontSizes.sm, marginTop: spacing.xs },
+  challengeDesc: { marginTop: spacing.xs },
   challengeBtn: { marginTop: spacing.md, alignSelf: 'flex-start' },
 
   // Stats
@@ -617,21 +604,12 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   statIconText: { fontSize: 24 },
   statValue: {
-    fontFamily: fonts.titleExtraBold,
-    fontSize: fontSizes.xxl,
-    color: colors.textDark,
     marginTop: spacing.md,
   },
   statLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
     marginTop: 2,
   },
   statSub: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.xs,
-    color: colors.green500,
     marginTop: 2,
   },
   skelGap: { marginTop: spacing.md },
@@ -654,8 +632,6 @@ const makeStyles = (colors) => StyleSheet.create({
     ...shadow.soft,
   },
   tName: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.md,
     lineHeight: 19,
     marginTop: spacing.sm,
   },
@@ -666,8 +642,6 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingVertical: 2,
     paddingHorizontal: spacing.sm,
   },
-  statusText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs },
-  tDate: { fontSize: fontSizes.xs },
 
   // Podium partagé : voir composant `Podium` (variante compact).
   lbButton: { marginTop: spacing.lg },
