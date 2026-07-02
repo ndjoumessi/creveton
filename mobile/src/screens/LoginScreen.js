@@ -7,7 +7,6 @@
 import React, { useRef, useState, useMemo, useEffect } from 'react';
 import {
   View,
-  Text,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -17,13 +16,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Logo, AppButton, AuthField } from '../components';
+import { Logo, AppButton, AuthField, Title, Body, Label } from '../components';
 import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { isValidEmail } from '../utils/validation';
 import { getLastEmail } from '../services/storage';
-import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
+import { radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 export default function LoginScreen({ navigation }) {
@@ -92,8 +91,8 @@ export default function LoginScreen({ navigation }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.title}>{t('auth.welcome')}</Text>
-          <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
+          <Title size={26} style={styles.title}>{t('auth.welcome')}</Title>
+          <Body size="md" muted style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Body>
 
           <AuthField
             ref={emailRef}
@@ -124,10 +123,10 @@ export default function LoginScreen({ navigation }) {
           {!isOnline ? (
             <View style={styles.offlineRow}>
               <Icon icon={WifiOff} size={16} color={colors.textMuted} />
-              <Text style={styles.offline}>{t('offline.loginRequired')}</Text>
+              <Label style={styles.offline}>{t('offline.loginRequired')}</Label>
             </View>
           ) : null}
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Label color={colors.red400} style={styles.error}>{error}</Label> : null}
 
           <AppButton
             title={t('auth.login')}
@@ -145,10 +144,10 @@ export default function LoginScreen({ navigation }) {
           onPress={() => navigation.navigate('Register')}
           hitSlop={8}
         >
-          <Text style={styles.linkText}>
+          <Body size="md" color={colors.textOnDarkMuted}>
             {t('auth.noAccount')}{' '}
-            <Text style={styles.linkAccent}>{t('auth.signup')}</Text>
-          </Text>
+            <Body weight="bold" size="md" color={colors.gold500}>{t('auth.signup')}</Body>
+          </Body>
         </Pressable>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -168,21 +167,12 @@ const makeStyles = (colors) => StyleSheet.create({
     ...shadow.floating,
   },
   title: {
-    fontFamily: fonts.titleBold,
-    fontSize: 26,
-    color: colors.textDark,
     marginBottom: spacing.xs,
   },
   subtitle: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.md,
-    color: colors.textMuted,
     marginBottom: spacing.xl,
   },
   error: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.sm,
-    color: colors.red400,
     marginBottom: spacing.md,
     marginTop: -spacing.sm,
   },
@@ -195,9 +185,6 @@ const makeStyles = (colors) => StyleSheet.create({
     marginTop: -spacing.sm,
   },
   offline: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.sm,
-    color: colors.textMuted,
     textAlign: 'center',
   },
   submit: { marginTop: spacing.sm },
@@ -208,10 +195,4 @@ const makeStyles = (colors) => StyleSheet.create({
     minHeight: MIN_TOUCH,
     paddingVertical: spacing.sm,
   },
-  linkText: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.md,
-    color: colors.textOnDarkMuted,
-  },
-  linkAccent: { fontFamily: fonts.bodyBold, color: colors.gold500 },
 });
