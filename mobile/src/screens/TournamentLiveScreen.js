@@ -23,14 +23,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Lightbulb, Check, WifiOff, X } from 'lucide-react-native';
 import Icon from '../components/Icon';
-import { CircularTimer } from '../components';
+import { AnswerOption, CircularTimer } from '../components';
 import { useTournamentSocket } from '../hooks/useTournamentSocket';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useAuthStore } from '../store/authStore';
 import { disconnectSocket } from '../services/socket';
 import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
-import { hapticLight } from '../utils/haptics';
 import { medalEmoji } from '../utils/rank';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -127,7 +126,6 @@ export default function TournamentLiveScreen({ navigation, route }) {
 
   const onPick = (optionIndex) => {
     if (answered || phase !== 'question') return;
-    hapticLight();
     setPicked(optionIndex);
     setAnswered(true);
     submitAnswer(optionIndex);
@@ -200,21 +198,35 @@ export default function TournamentLiveScreen({ navigation, route }) {
             <View style={styles.underline} />
           </View>
 
-          {/* Options */}
+          {/* Options — mapping picked/reveal → état visuel AnswerOption :
+              au reveal, correct/incorrect (le serveur tranche) ; avant, sélection
+              simple + autres options grisées dès que la réponse est envoyée. */}
           <View style={styles.options}>
-            {(question.options || []).map((opt, i) => (
-              <OptionRow
-                key={opt.index ?? i}
-                letter={LETTERS[i] || '•'}
-                text={opt.text}
-                optionIndex={opt.index ?? i}
-                picked={picked}
-                correctIndex={phase === 'reveal' ? reveal?.correctIndex : null}
-                revealing={phase === 'reveal'}
-                disabled={answered || phase === 'reveal'}
-                onPress={() => onPick(opt.index ?? i)}
-              />
-            ))}
+            {(question.options || []).map((opt, i) => {
+              const idx = opt.index ?? i;
+              const revealing = phase === 'reveal';
+              const isPicked = picked === idx;
+              let state = 'idle';
+              if (revealing) {
+                if (reveal?.correctIndex === idx) state = 'correct';
+                else if (isPicked) state = 'incorrect';
+              } else if (isPicked) {
+                state = 'selected';
+              } else if (answered) {
+                state = 'dimmed';
+              }
+              return (
+                <AnswerOption
+                  key={idx}
+                  letter={LETTERS[i] || '•'}
+                  text={opt.text}
+                  state={state}
+                  selected={isPicked}
+                  disabled={answered || revealing}
+                  onPress={() => onPick(idx)}
+                />
+              );
+            })}
           </View>
 
           {/* État sous la question : envoyé / révélation */}
@@ -226,49 +238,6 @@ export default function TournamentLiveScreen({ navigation, route }) {
         </>
       )}
     </SafeAreaView>
-  );
-}
-
-function OptionRow({ letter, text, optionIndex, picked, correctIndex, revealing, disabled, onPress }) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const isPicked = picked === optionIndex;
-  const isCorrect = revealing && correctIndex === optionIndex;
-  const isWrongPick = revealing && isPicked && correctIndex !== optionIndex;
-
-  let container = styles.optDefault;
-  let badge = styles.badgeDefault;
-  let badgeText = styles.badgeTextDefault;
-  let label = styles.optTextDefault;
-  let glyph = letter;
-
-  if (isCorrect) {
-    container = styles.optCorrect;
-    badge = styles.badgeCorrect;
-    badgeText = styles.badgeTextOnColor;
-    label = styles.optTextCorrect;
-    glyph = '✓';
-  } else if (isWrongPick) {
-    container = styles.optWrong;
-    badge = styles.badgeWrong;
-    badgeText = styles.badgeTextOnColor;
-    label = styles.optTextWrong;
-    glyph = '✗';
-  } else if (isPicked) {
-    container = styles.optSelected;
-  }
-
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={[styles.option, container, disabled && !revealing && !isPicked && styles.optDimmed]}
-    >
-      <View style={[styles.badge, badge]}>
-        <Text style={[styles.badgeTextBase, badgeText]}>{glyph}</Text>
-      </View>
-      <Text style={[styles.optText, label]}>{text}</Text>
-    </Pressable>
   );
 }
 
@@ -441,33 +410,8 @@ const makeStyles = (colors) => StyleSheet.create({
   question: { fontFamily: fonts.titleSemiBold, fontSize: 17, lineHeight: 26, color: colors.green900 },
   underline: { width: 32, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.md },
 
+  // Boutons réponse — rendus par <AnswerOption /> (états/feedback inclus).
   options: { marginTop: spacing.lg, gap: spacing.sm },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    minHeight: 58,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderWidth: 1.5,
-  },
-  optDefault: { backgroundColor: colors.white, borderColor: colors.border },
-  optDimmed: { opacity: 0.55 },
-  optSelected: { backgroundColor: colors.successBgSoft, borderColor: colors.green500 },
-  optCorrect: { backgroundColor: colors.successBg, borderWidth: 3, borderColor: colors.green500 },
-  optWrong: { backgroundColor: colors.errorBg, borderWidth: 3, borderColor: colors.red400 },
-  badge: { width: 32, height: 32, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  badgeDefault: { backgroundColor: colors.border },
-  badgeCorrect: { backgroundColor: colors.green500 },
-  badgeWrong: { backgroundColor: colors.red400 },
-  badgeTextBase: { fontFamily: fonts.bodyBold, fontSize: fontSizes.md },
-  badgeTextDefault: { color: colors.textBody },
-  badgeTextOnColor: { color: colors.white },
-  optText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: fontSizes.md },
-  optTextDefault: { color: colors.textBody },
-  optTextCorrect: { color: colors.successText, fontFamily: fonts.bodySemiBold },
-  optTextWrong: { color: colors.red600 },
 
   answeredHint: {
     marginTop: spacing.lg,

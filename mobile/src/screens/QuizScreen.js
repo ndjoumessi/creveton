@@ -24,7 +24,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Lightbulb } from 'lucide-react-native';
 import Icon from '../components/Icon';
-import { LoadingScreen, ProgressDots, CircularTimer, useToast } from '../components';
+import { AnswerOption, LoadingScreen, ProgressDots, CircularTimer, useToast } from '../components';
 import { useGameStore } from '../store/gameStore';
 import { sessions as sessionsApi } from '../services/endpoints';
 import { patchQuestionSolution } from '../services/database';
@@ -76,8 +76,8 @@ export default function QuizScreen({ navigation }) {
   const toast = useToast();
   // Palette active (claire/sombre) — les surfaces (carte question, options,
   // explication) suivent le thème ; le fond green900 immersif reste identitaire.
-  const { colors, isDark } = useTheme();
-  const styles = useMemo(() => makeStyles(colors, isDark), [colors, isDark]);
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const questions = useGameStore((s) => s.questions);
   const currentIndex = useGameStore((s) => s.currentIndex);
   const answerCurrent = useGameStore((s) => s.answerCurrent);
@@ -542,19 +542,37 @@ export default function QuizScreen({ navigation }) {
         <View style={styles.goldBar} />
       </View>
 
-      {/* Options A–D */}
+      {/* Options A–D — mapping answered → état visuel AnswerOption :
+          neutre (mode mixte : or/dimmed, ✓ pop), révélation (correct/incorrect,
+          libellé « bonne réponse » si non choisie), sinon sélection simple. */}
       <View style={styles.options}>
-        {displayOptions.map((opt, i) => (
-          <OptionRow
-            key={opt.index}
-            letter={LETTERS[i]}
-            text={opt.label}
-            optionIndex={opt.index}
-            answered={answered}
-            styles={styles}
-            onPress={() => handleAnswer({ selectedIndex: opt.index })}
-          />
-        ))}
+        {displayOptions.map((opt, i) => {
+          const isSelected = !!answered && answered.selectedIndex === opt.index;
+          let state = 'idle';
+          if (answered) {
+            if (answered.neutral) {
+              state = isSelected ? 'neutral' : 'dimmed';
+            } else if (answered.correctIndex !== null && answered.correctIndex !== undefined) {
+              if (answered.correctIndex === opt.index) state = 'correct';
+              else if (isSelected) state = 'incorrect';
+            } else if (isSelected) {
+              state = 'selected';
+            }
+          }
+          return (
+            <AnswerOption
+              key={opt.index}
+              letter={LETTERS[i]}
+              text={opt.label}
+              state={state}
+              selected={isSelected}
+              disabled={!!answered}
+              showCheck={state === 'neutral'}
+              showGoodLabel={state === 'correct' && !isSelected}
+              onPress={() => handleAnswer({ selectedIndex: opt.index })}
+            />
+          );
+        })}
       </View>
 
       {/* Passer (avant réponse) */}
@@ -608,109 +626,10 @@ export default function QuizScreen({ navigation }) {
   );
 }
 
-// `styles` vient du parent (makeStyles thémé) — évite 4 abonnements useTheme.
-function OptionRow({ letter, text, optionIndex, answered, styles, onPress }) {
-  const { t } = useTranslation();
-  const scale = useRef(new Animated.Value(1)).current;
-  const checkScale = useRef(new Animated.Value(0)).current;
-
-  const neutral = !!(answered && answered.neutral);
-  const isSelected = answered && answered.selectedIndex === optionIndex;
-  const isCorrectOpt = answered && answered.correctIndex === optionIndex;
-  const revealing =
-    !neutral && answered && answered.correctIndex !== null && answered.correctIndex !== undefined;
-
-  // Mode mixte : ✓ qui « pop » sur le badge de l'option choisie (confirmation
-  // visuelle du tap — pas de vert/rouge, la justesse reste serveur-only).
-  const showCheck = !!(neutral && isSelected);
-  useEffect(() => {
-    if (!showCheck) {
-      checkScale.setValue(0);
-      return undefined;
-    }
-    Animated.sequence([
-      Animated.timing(checkScale, { toValue: 1.2, duration: 120, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      Animated.timing(checkScale, { toValue: 1, duration: 80, useNativeDriver: true }),
-    ]).start();
-    return undefined;
-  }, [showCheck, checkScale]);
-
-  let container = styles.optDefault;
-  let badge = styles.badgeDefault;
-  let badgeText = styles.badgeTextDefault;
-  let label = styles.optTextDefault;
-  let glyph = letter;
-  let showGoodLabel = false;
-
-  if (neutral) {
-    // Mode mixte : pas de vert/rouge. Option choisie en or (badge blanc/or),
-    // les autres grisées (opacité réduite).
-    if (isSelected) {
-      container = styles.optNeutral;
-      badge = styles.badgeOnGold;
-      badgeText = styles.badgeTextGold;
-      label = styles.optTextNeutral;
-    } else {
-      container = styles.optDimmed;
-    }
-  } else if (revealing) {
-    if (isCorrectOpt) {
-      container = styles.optCorrect;
-      badge = styles.badgeCorrect;
-      badgeText = styles.badgeTextOnColor;
-      label = styles.optTextCorrect;
-      glyph = '✓';
-      showGoodLabel = !isSelected;
-    } else if (isSelected) {
-      container = styles.optWrong;
-      badge = styles.badgeWrong;
-      badgeText = styles.badgeTextOnColor;
-      label = styles.optTextWrong;
-      glyph = '✗';
-    }
-  } else if (isSelected) {
-    container = styles.optSelected;
-  }
-
-  const onPressIn = () =>
-    Animated.timing(scale, { toValue: 0.97, duration: 50, useNativeDriver: true }).start();
-  const onPressOut = () =>
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
-
-  return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <Pressable
-        onPress={() => {
-          hapticLight();
-          onPress();
-        }}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        disabled={!!answered}
-        style={[styles.option, container]}
-      >
-        <View style={[styles.badge, badge]}>
-          {showCheck ? (
-            <Animated.Text style={[styles.badgeText, badgeText, { transform: [{ scale: checkScale }] }]}>
-              ✓
-            </Animated.Text>
-          ) : (
-            <Text style={[styles.badgeText, badgeText]}>{glyph}</Text>
-          )}
-        </View>
-        <View style={styles.optBody}>
-          {showGoodLabel ? <Text style={styles.goodLabel}>{t('quiz.goodAnswer')}</Text> : null}
-          <Text style={[styles.optText, label]}>{text}</Text>
-        </View>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
 // Styles thémés — les clés des palettes claire/sombre sont symétriques :
 // `surface`/`surfaceCream` s'inversent en sombre, `green900`/`gold500` restent
-// identitaires. `isDark` ne sert qu'aux états de feedback (fonds/textes AA).
-const makeStyles = (colors, isDark) => StyleSheet.create({
+// identitaires. (Les états de feedback des options vivent dans AnswerOption.)
+const makeStyles = (colors) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.green900, paddingHorizontal: spacing.lg },
 
   // A. Header — bandeau vert plein largeur, coins bas arrondis.
@@ -787,58 +706,8 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   qMediaImg: { width: '100%', height: '100%' },
   qMediaSkeleton: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
 
-  // E. Boutons réponse.
+  // E. Boutons réponse — rendus par <AnswerOption /> (états/feedback inclus).
   options: { marginTop: spacing.lg, gap: spacing.sm },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    minHeight: 56,
-    borderRadius: radius.base, // 14
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderWidth: 1.5,
-  },
-  optDefault: { backgroundColor: colors.surface, borderColor: colors.border },
-  // Sélection (pré-feedback) : `successBgSoft` n'a pas d'équivalent sombre → successBg.
-  optSelected: {
-    backgroundColor: isDark ? colors.successBg : colors.successBgSoft,
-    borderColor: colors.green500,
-  },
-  optCorrect: { backgroundColor: colors.successBg, borderColor: colors.green500 },
-  optWrong: { backgroundColor: colors.errorBg, borderColor: colors.red400 },
-  // Mode mixte (blitz/marathon) : feedback neutre (or / grisé).
-  optNeutral: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
-  optDimmed: { backgroundColor: colors.surface, borderColor: colors.border, opacity: 0.4 },
-
-  badge: { width: 32, height: 32, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  badgeDefault: { backgroundColor: colors.green900 },
-  badgeCorrect: { backgroundColor: colors.green500 },
-  badgeWrong: { backgroundColor: colors.red400 },
-  badgeOnGold: { backgroundColor: colors.surface },
-  badgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md },
-  // Lettres A-D sur pastilles pleines (vert nuit/émeraude/rouge) : toujours claires
-  // — `colors.white` s'inverse en sombre, `textOnDark` non.
-  badgeTextDefault: { color: colors.textOnDark },
-  badgeTextOnColor: { color: colors.textOnDark },
-  badgeTextGold: { color: colors.gold500 },
-  optBody: { flex: 1 },
-  optText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md },
-  optTextDefault: { color: colors.textBody },
-  // Feedback : sur les fonds sombres (successBg/errorBg sombres), les teintes
-  // claires `green300`/`red400` gardent un contraste AA — successText/red600 non.
-  optTextCorrect: {
-    color: isDark ? colors.green300 : colors.successText,
-    fontFamily: fonts.bodySemiBold,
-  },
-  optTextWrong: { color: isDark ? colors.red400 : colors.red600 },
-  optTextNeutral: { color: colors.white, fontFamily: fonts.bodySemiBold },
-  goodLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
-    color: isDark ? colors.green300 : colors.successText,
-    marginBottom: 2,
-  },
 
   skip: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: 'auto' },
   skipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkFaint },

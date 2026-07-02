@@ -34,6 +34,7 @@ import {
   AppButton,
   Avatar,
   ThemeBadge,
+  SegmentedTabs,
   useToast,
 } from '../components';
 import { THEMES, LEVELS } from '../constants/config';
@@ -310,21 +311,15 @@ export default function ChallengesScreen({ navigation, route }) {
           ) : null}
         </View>
 
-        <View style={styles.tabs}>
-          {TABS.map((key) => {
-            const active = key === tab;
-            const count = key === 'received' ? data.received.length : 0;
-            return (
-              <Pressable key={key} onPress={() => setTab(key)} style={styles.tab} hitSlop={6}>
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                  {t(`challengesHub.tabs.${key}`)}
-                  {count > 0 ? ` •${count}` : ''}
-                </Text>
-                <View style={[styles.tabUnderline, active && styles.tabUnderlineActive]} />
-              </Pressable>
-            );
-          })}
-        </View>
+        <SegmentedTabs
+          tabs={TABS.map((key) => ({
+            key,
+            label: t(`challengesHub.tabs.${key}`),
+            count: key === 'received' ? data.received.length : 0,
+          }))}
+          activeKey={tab}
+          onChange={setTab}
+        />
       </View>
 
       {/* Corps clair */}
@@ -652,13 +647,6 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     marginTop: spacing.xs,
   },
   countPillText: { fontFamily: fonts.titleBold, fontSize: fontSizes.xs, color: colors.textOnDark },
-
-  tabs: { flexDirection: 'row', gap: spacing.xl },
-  tab: { minHeight: MIN_TOUCH, alignItems: 'center', justifyContent: 'center', paddingBottom: spacing.xs },
-  tabLabel: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.base, color: colors.textOnDarkMuted },
-  tabLabelActive: { color: colors.gold400 },
-  tabUnderline: { height: 3, width: '100%', marginTop: spacing.xs, borderRadius: radius.pill, backgroundColor: 'transparent' },
-  tabUnderlineActive: { backgroundColor: colors.gold500 },
 
   body: { flex: 1, backgroundColor: colors.cream, borderTopLeftRadius: 28, borderTopRightRadius: 28 },
   fab: {

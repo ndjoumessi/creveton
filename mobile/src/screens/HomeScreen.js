@@ -31,6 +31,7 @@ import {
   ErrorScreen,
   SectionHeader,
   SessionCard,
+  Podium,
 } from '../components';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -49,7 +50,6 @@ import {
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { formatDateTime, avatarUri } from '../utils/format';
-import { medalEmoji } from '../utils/rank';
 
 // Pastels des tuiles d'icônes de stats (décoratif, non sémantique).
 const ICON_BG = {
@@ -150,7 +150,7 @@ function StatusPill({ tournament, t }) {
 
 export default function HomeScreen({ navigation }) {
   const { t } = useTranslation();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   // En-têtes de section : vert clair (green300) en sombre — lisibles sur la page
   // sombre ; vert profond (green900) en clair, inchangé.
@@ -472,55 +472,9 @@ export default function HomeScreen({ navigation }) {
           <SectionHeader title={t('home.leaderboard.title')} color={sectionColor} />
 
           {lbLoading ? (
-            <View style={styles.podium}>
-              {[0, 1, 2].map((i) => (
-                <View key={i} style={styles.podiumCol}>
-                  <Skeleton width={48} height={48} radius={radius.pill} />
-                  <Skeleton width={56} height={12} style={styles.podiumGap} />
-                  <Skeleton width={32} height={14} style={styles.podiumGap} />
-                </View>
-              ))}
-            </View>
+            <Podium loading />
           ) : podium.length ? (
-            <View style={styles.podium}>
-              {[1, 0, 2].map((slot) => {
-                const row = podium[slot];
-                if (!row) return <View key={slot} style={styles.podiumCol} />;
-                const isFirst = slot === 0;
-                const rank = row.rank ?? slot + 1;
-                return (
-                  <View
-                    key={row.user_id || slot}
-                    style={[styles.podiumCol, isFirst && styles.podiumColFirst]}
-                  >
-                    <Body style={styles.medal}>{medalEmoji(rank) || '🥉'}</Body>
-                    <View style={isFirst ? styles.firstRing : null}>
-                      <Avatar
-                        name={row.name}
-                        size={isFirst ? 52 : 44}
-                        gold={isFirst}
-                      />
-                    </View>
-                    <Body
-                      color={colors.textDark}
-                      numberOfLines={1}
-                      style={styles.podiumName}
-                    >
-                      {row.name}
-                    </Body>
-                    <Body
-                      style={[
-                        styles.podiumScore,
-                        isFirst && styles.podiumScoreFirst,
-                        isDark && !isFirst && { color: colors.green300 },
-                      ]}
-                    >
-                      {fmtNum(row.score)}
-                    </Body>
-                  </View>
-                );
-              })}
-            </View>
+            <Podium players={podium} />
           ) : (
             <AppCard tone="cream" padding="md" elevation="soft">
               <Body muted>{t('home.empty.leaderboard')}</Body>
@@ -710,36 +664,6 @@ const makeStyles = (colors) => StyleSheet.create({
   statusText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs },
   tDate: { fontSize: fontSizes.xs },
 
-  // Podium
-  podium: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-around',
-    paddingVertical: spacing.sm,
-  },
-  podiumCol: { flex: 1, alignItems: 'center' },
-  podiumColFirst: { marginBottom: spacing.sm },
-  medal: { fontSize: 22, marginBottom: spacing.xs },
-  firstRing: {
-    borderRadius: radius.pill,
-    borderWidth: 2,
-    borderColor: colors.gold500,
-    padding: 3,
-  },
-  podiumName: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.sm,
-    marginTop: spacing.sm,
-    maxWidth: 88,
-    textAlign: 'center',
-  },
-  podiumScore: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.base,
-    color: colors.green700,
-    marginTop: 2,
-  },
-  podiumScoreFirst: { color: colors.green700, fontSize: fontSizes.lg },
-  podiumGap: { marginTop: spacing.sm },
+  // Podium partagé : voir composant `Podium` (variante compact).
   lbButton: { marginTop: spacing.lg },
 });

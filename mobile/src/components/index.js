@@ -11,6 +11,7 @@ export { default as AppCard } from './AppCard';
 export { default as AppButton } from './AppButton';
 export { default as AppInput } from './AppInput';
 export { default as AuthField } from './AuthField';
+export { default as SegmentedTabs } from './SegmentedTabs';
 
 // Identité / badges
 export { default as Logo } from './Logo';
@@ -30,12 +31,14 @@ export { ToastProvider, useToast } from './Toast';
 // Jeu
 export { default as ProgressDots } from './ProgressDots';
 export { default as CircularTimer } from './CircularTimer';
+export { default as AnswerOption } from './AnswerOption';
 
 // Visualisations / effets
 export { default as Confetti } from './Confetti';
 export { default as MiniLineChart } from './MiniLineChart';
 export { default as XpBar } from './XpBar';
 export { default as FillBar } from './FillBar';
+export { default as Podium } from './Podium';
 
 // Structure / bandeaux
 export { default as SectionHeader } from './SectionHeader';

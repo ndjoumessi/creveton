@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { BarChart2, Trophy, Target, TrendingUp, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, XpBar, FillBar, SessionCard, MiniLineChart } from '../components';
+import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, XpBar, FillBar, Podium, SessionCard, MiniLineChart, SegmentedTabs } from '../components';
 import Icon from '../components/Icon';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -30,7 +30,7 @@ import {
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { levelProgress, avatarUri } from '../utils/format';
-import { medalEmoji, medalColor, SILVER, BRONZE } from '../utils/rank';
+import { medalColor } from '../utils/rank';
 import { hapticLight } from '../utils/haptics';
 
 const TABS = [
@@ -40,13 +40,8 @@ const TABS = [
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
 
-// Médailles / couleurs de rang : voir `utils/rank.js` (medalEmoji, medalColor,
-// SILVER, BRONZE) — partagé avec le podium Accueil et le classement live.
-// Nom tronqué à 14 caractères max (ellipsis) pour les cartes podium.
-function truncName(name, max = 14) {
-  const s = String(name || '');
-  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
-}
+// Médailles / couleurs de rang : voir `utils/rank.js` (medalColor ici ; le
+// podium top 3 est rendu par le composant partagé `Podium`, variante card).
 
 // Géométrie de la courbe d'évolution (pleine largeur - paddings écran + carte).
 const WIN_W = Dimensions.get('window').width;
@@ -154,28 +149,18 @@ export default function StatsScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Tabs — pills (actif : or / texte vert) */}
-      <View style={styles.tabs}>
-        {TABS.map((tabItem) => {
-          const active = tabItem.key === tab;
-          return (
-            <Pressable
-              key={tabItem.key}
-              onPress={() => setTab(tabItem.key)}
-              style={[styles.tab, active && styles.tabActive]}
-            >
-              <Icon
-                icon={tabItem.icon}
-                size={16}
-                color={active ? colors.green900 : 'rgba(255,255,255,0.88)'}
-              />
-              <Text style={[styles.tabText, active && styles.tabTextActive]}>
-                {t(tabItem.labelKey)}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {/* Tabs — pills (actif : or / texte vert), composant partagé SegmentedTabs */}
+      <SegmentedTabs
+        variant="pills"
+        tabs={TABS.map((tabItem) => ({
+          key: tabItem.key,
+          icon: tabItem.icon,
+          label: t(tabItem.labelKey),
+        }))}
+        activeKey={tab}
+        onChange={setTab}
+        style={styles.tabs}
+      />
 
       <View style={styles.body}>
         {tab === 'stats' ? (
@@ -551,8 +536,6 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
 
   const podium = data.slice(0, 3);
   const rest = data.slice(3);
-  // Ordre visuel du podium : 2e (gauche) · 1er (centre) · 3e (droite).
-  const podiumOrder = [podium[1], podium[0], podium[2]];
 
   return (
     <>
@@ -587,43 +570,8 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
         )}
       </View>
 
-      {/* Podium top 3 */}
-      <View style={styles.podium}>
-        {podiumOrder.map((p, idx) => {
-          if (!p) return <View key={idx} style={styles.podiumCol} />;
-          const isFirst = idx === 1;
-          // Rang réel (les lignes data portent `rank`) → médaille + bordure colorée.
-          const rank = p.rank || (isFirst ? 1 : idx === 0 ? 2 : 3);
-          const borderColor = rank === 1 ? colors.gold400 : rank === 2 ? SILVER : BRONZE;
-          return (
-            <View
-              key={p.user_id || idx}
-              style={[
-                styles.podiumCol,
-                isFirst ? styles.podiumFirst : styles.podiumSide,
-                { borderColor },
-              ]}
-            >
-              <Text style={styles.podiumMedal}>{medalEmoji(rank) || '🥉'}</Text>
-              {/* avatar_url absent de la réponse leaderboard aujourd'hui → repli initiales
-                  (Avatar gère uri→initiales). Prêt si le backend ajoute la photo. */}
-              <Avatar name={p.name || ''} size={isFirst ? 56 : 44} gold={isFirst} uri={p.avatar_url || null} />
-              <Text style={styles.podiumName} numberOfLines={1}>
-                {truncName(p.name)}
-              </Text>
-              {p.ville ? (
-                <Text style={styles.podiumVille} numberOfLines={1}>
-                  {p.ville}
-                </Text>
-              ) : null}
-              <Text style={[styles.podiumScore, isFirst && styles.podiumScoreFirst]}>
-                {fmt(p.score)}
-              </Text>
-              <Text style={styles.podiumPts}>{t('stats.leaderboard.pts')}</Text>
-            </View>
-          );
-        })}
-      </View>
+      {/* Podium top 3 — composant partagé avec l'Accueil (variante card). */}
+      <Podium players={podium} variant="card" />
 
       {/* Classement complet */}
       {rest.length > 0 ? (
@@ -685,34 +633,14 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.textOnDarkMuted,
   },
 
-  // Tabs — pills sur le header sombre.
+  // Tabs — bandeau du composant partagé SegmentedTabs (variant pills). Les
+  // styles des pilules vivent dans SegmentedTabs ; ici on ne garde que le fond
+  // vert profond qui prolonge le header + le padding du bandeau.
   tabs: {
-    flexDirection: 'row',
-    gap: spacing.sm,
     backgroundColor: colors.green900,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
   },
-  tab: {
-    flex: 1,
-    minHeight: MIN_TOUCH, // cible tactile ≥44/48 (était height: 40)
-    paddingVertical: spacing.xs,
-    flexDirection: 'row',
-    gap: 6,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
-  },
-  tabActive: { backgroundColor: colors.gold500 },
-  tabText: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.md,
-    // Inactif sur en-tête vert profond : blanc à 88 % → nettement lisible (le
-    // 60 % précédent était trop discret). Actif = vert sur or (contraste fort).
-    color: 'rgba(255,255,255,0.88)',
-  },
-  tabTextActive: { fontFamily: fonts.titleBold, color: colors.green900 },
 
   body: { padding: spacing.lg },
 
@@ -862,34 +790,7 @@ const makeStyles = (colors) => StyleSheet.create({
     marginTop: spacing.sm,
   },
 
-  // Podium
-  podium: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-  },
-  podiumCol: { flex: 1, alignItems: 'center', borderRadius: radius.lg, padding: spacing.md, gap: 2 },
-  podiumFirst: { backgroundColor: colors.goldVeil, borderWidth: 2, padding: spacing.xl },
-  podiumSide: { backgroundColor: colors.surface, borderWidth: 1 },
-  podiumMedal: { fontSize: 22, marginBottom: 2 },
-  podiumName: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.sm,
-    color: colors.textDark,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-  },
-  podiumVille: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted },
-  podiumScore: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.base,
-    color: colors.textDark,
-    marginTop: 2,
-  },
-  podiumScoreFirst: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.xl, color: colors.gold500 },
-  podiumPts: { fontFamily: fonts.bodyMedium, fontSize: 10, color: colors.textMuted, marginTop: -2 },
+  // Podium partagé : voir composant `Podium` (variante card).
 
   // Liste de rangs
   rankRow: {

@@ -20,6 +20,7 @@ import {
   Skeleton,
   StatusBadge,
   FillBar,
+  SegmentedTabs,
   useToast,
 } from '../components';
 import { tournaments as tournamentsApi } from '../services/endpoints';
@@ -129,24 +130,11 @@ export default function TournamentScreen() {
           </Text>
         </View>
 
-        <View style={styles.tabs}>
-          {TABS.map((t) => {
-            const active = t.key === tab;
-            return (
-              <Pressable
-                key={t.key}
-                onPress={() => setTab(t.key)}
-                style={styles.tab}
-                hitSlop={8}
-              >
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                  {tr(`tournaments.tabs.${t.labelKey}`)}
-                </Text>
-                <View style={[styles.tabUnderline, active && styles.tabUnderlineActive]} />
-              </Pressable>
-            );
-          })}
-        </View>
+        <SegmentedTabs
+          tabs={TABS.map((t) => ({ key: t.key, label: tr(`tournaments.tabs.${t.labelKey}`) }))}
+          activeKey={tab}
+          onChange={setTab}
+        />
       </View>
 
       {/* Corps clair */}
@@ -355,23 +343,6 @@ const makeStyles = (colors) => StyleSheet.create({
     fontSize: fontSizes.md,
     color: colors.gold500,
   },
-
-  tabs: { flexDirection: 'row', gap: spacing.xl },
-  tab: { alignItems: 'center', paddingBottom: spacing.xs },
-  tabLabel: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.base,
-    color: colors.textOnDarkMuted,
-  },
-  tabLabelActive: { color: colors.gold400 },
-  tabUnderline: {
-    height: 3,
-    width: '100%',
-    marginTop: spacing.xs,
-    borderRadius: radius.pill,
-    backgroundColor: 'transparent',
-  },
-  tabUnderlineActive: { backgroundColor: colors.gold500 },
 
   body: { flex: 1, backgroundColor: colors.cream },
   loading: { padding: spacing.lg, gap: spacing.md },
