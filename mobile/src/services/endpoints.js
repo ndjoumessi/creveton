@@ -46,6 +46,9 @@ export const sessions = {
     api.post('/sessions/answer', payload).then((r) => r.data),
   submit: (payload) =>
     api.post('/sessions/submit', payload).then((r) => r.data),
+  // Détail d'une partie jouée (en-tête + review[] par question). Le joueur ne
+  // peut consulter que ses propres parties (403 sinon). → GET /sessions/:id
+  detail: (id) => api.get(`/sessions/${id}`).then((r) => r.data),
 };
 
 // --- Classement (API §7) -------------------------------------------------

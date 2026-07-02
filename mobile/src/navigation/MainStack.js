@@ -9,6 +9,7 @@ import ResultsScreen from '../screens/ResultsScreen';
 import ChallengeScreen from '../screens/ChallengeScreen';
 import TournamentLiveScreen from '../screens/TournamentLiveScreen';
 import SessionsHistoryScreen from '../screens/SessionsHistoryScreen';
+import SessionDetailScreen from '../screens/SessionDetailScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 
 const Stack = createNativeStackNavigator();
@@ -22,6 +23,13 @@ export default function MainStack() {
       <Stack.Screen
         name="SessionsHistory"
         component={SessionsHistoryScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      {/* Détail d'une partie — atteignable en tapant une SessionCard
+          (Accueil, Stats, Historique). */}
+      <Stack.Screen
+        name="SessionDetail"
+        component={SessionDetailScreen}
         options={{ animation: 'slide_from_right' }}
       />
       {/* Changement de mot de passe — atteignable depuis Profil › Sécurité. */}

@@ -13,3 +13,4 @@ export { default as ChallengeScreen } from './ChallengeScreen';
 export { default as ChallengesScreen } from './ChallengesScreen';
 export { default as StatsScreen } from './StatsScreen';
 export { default as ProfileScreen } from './ProfileScreen';
+export { default as SessionDetailScreen } from './SessionDetailScreen';

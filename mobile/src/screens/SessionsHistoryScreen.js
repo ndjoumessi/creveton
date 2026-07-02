@@ -225,7 +225,13 @@ export default function SessionsHistoryScreen({ navigation }) {
       <FlatList
         data={filtered}
         keyExtractor={(g, i) => String(g.session_id || g.id || i)}
-        renderItem={({ item }) => <SessionCard game={item} style={styles.card} />}
+        renderItem={({ item }) => (
+          <SessionCard
+            game={item}
+            style={styles.card}
+            onPress={() => navigation.navigate('SessionDetail', { sessionId: item.session_id || item.id })}
+          />
+        )}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListFooterComponent={renderFooter}

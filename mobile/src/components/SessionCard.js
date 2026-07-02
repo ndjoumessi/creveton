@@ -18,11 +18,14 @@
 // la surface de carte sombre tintée).
 
 import React, { useMemo, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { ChevronRight } from 'lucide-react-native';
+import Icon from './Icon';
 import { fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useReduceMotion } from '../hooks/useReduceMotion';
+import { hapticLight } from '../utils/haptics';
 import { themeEmoji, themeLabel, levelLabel, timeAgo } from '../utils/format';
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
@@ -53,7 +56,12 @@ function barColor(rate, colors) {
   return colors.red400;
 }
 
-export default function SessionCard({ game, style, showIncomplete = false }) {
+// `onPress` OPTIONNELLE (rétro-compat stricte : sans elle, rendu et arbre de vues
+// inchangés — simple View). Fournie → la carte devient Pressable (navigation vers
+// le détail de la partie) : chevron discret (textFaint), rôle bouton + libellé
+// a11y récapitulatif, haptique légère. Cible tactile ≥ 44pt déjà couverte par la
+// hauteur de carte (~92px).
+export default function SessionCard({ game, style, showIncomplete = false, onPress }) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -104,10 +112,11 @@ export default function SessionCard({ game, style, showIncomplete = false }) {
   }, [fill, rate, reduceMotion]);
   const barWidth = fill.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
-  return (
-    <View
-      style={[styles.card, tone, incomplete && styles.cardIncomplete, style]}
-    >
+  const pressable = typeof onPress === 'function';
+
+  // Contenu de carte commun aux deux rendus (View inerte / Pressable).
+  const content = (
+    <>
       <View style={styles.row}>
         <Text style={styles.emoji}>{emoji}</Text>
         <View style={styles.mid}>
@@ -145,6 +154,10 @@ export default function SessionCard({ game, style, showIncomplete = false }) {
             {fmt(score)}
           </Text>
         </View>
+        {/* Chevron discret : uniquement quand la carte est tapable (détail). */}
+        {pressable ? (
+          <Icon icon={ChevronRight} size={18} color={colors.textFaint} />
+        ) : null}
       </View>
 
       {/* Barre de progression pleine largeur, épinglée au bord bas de la carte. */}
@@ -155,7 +168,31 @@ export default function SessionCard({ game, style, showIncomplete = false }) {
           />
         </View>
       ) : null}
-    </View>
+    </>
+  );
+
+  const cardStyle = [styles.card, tone, incomplete && styles.cardIncomplete, style];
+
+  if (!pressable) {
+    return <View style={cardStyle}>{content}</View>;
+  }
+
+  return (
+    <Pressable
+      onPress={() => {
+        hapticLight();
+        onPress();
+      }}
+      style={({ pressed }) => [...cardStyle, pressed && styles.cardPressed]}
+      accessibilityRole="button"
+      accessibilityLabel={t('sessionDetail.cardA11y', {
+        title,
+        score: fmt(score),
+        defaultValue: '{{title}}, {{score}} points — voir le détail',
+      })}
+    >
+      {content}
+    </Pressable>
   );
 }
 
@@ -211,6 +248,8 @@ const makeStyles = (colors) =>
     badgeText: { fontFamily: fonts.bodyBold, fontSize: 10, letterSpacing: 0.4 },
     badgeTextTop: { color: colors.green900 }, // vert profond sur or → contraste fort (motif CTA)
     badgeTextGood: { color: colors.successText },
+    // Retour visuel du tap (carte tapable uniquement).
+    cardPressed: { opacity: 0.75 },
     // Partie avortée (opt-in `showIncomplete`) : carte grisée + pastille neutre.
     cardIncomplete: { opacity: 0.85 },
     incompleteBadge: {

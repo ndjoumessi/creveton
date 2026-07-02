@@ -393,7 +393,11 @@ export default function HomeScreen({ navigation }) {
               />
               <View style={styles.lastList}>
                 {recent.map((g, i) => (
-                  <SessionCard key={String(g.session_id || i)} game={g} />
+                  <SessionCard
+                    key={String(g.session_id || i)}
+                    game={g}
+                    onPress={() => navigation.navigate('SessionDetail', { sessionId: g.session_id || g.id })}
+                  />
                 ))}
               </View>
               <AppButton

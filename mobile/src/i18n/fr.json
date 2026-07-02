@@ -653,5 +653,17 @@
     "empty": "Aucune partie jouée",
     "playNow": "Jouer maintenant",
     "noMatch": "Aucune partie pour ce filtre"
+  },
+  "sessionDetail": {
+    "title": "Détail de la partie",
+    "questionN": "Question {{n}}",
+    "score": "Score",
+    "correct": "Bonnes réponses",
+    "skipped": "Passée",
+    "answerTime": "{{s}} s",
+    "noReview": "Aucun détail disponible pour cette partie.",
+    "notFound": "Partie introuvable.",
+    "offline": "Connexion requise pour afficher le détail d'une partie.",
+    "cardA11y": "{{title}}, {{score}} points — voir le détail"
   }
 }

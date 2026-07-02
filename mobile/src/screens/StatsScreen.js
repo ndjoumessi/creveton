@@ -173,6 +173,7 @@ export default function StatsScreen({ navigation }) {
             onRetry={() => loadHistory()}
             onPlay={() => navigation.navigate('Play')}
             onViewHistory={() => navigation.navigate('SessionsHistory')}
+            onOpenSession={(id) => navigation.navigate('SessionDetail', { sessionId: id })}
           />
         ) : (
           <RankTab
@@ -220,7 +221,7 @@ function LoadIssue({ isOffline, error, onRetry }) {
 }
 
 // ── Onglet Mes stats ───────────────────────────────────────────────────────
-function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, onViewHistory }) {
+function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, onViewHistory, onOpenSession }) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -482,7 +483,12 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
       <Text style={styles.sectionTitle}>{t('stats.history')}</Text>
       <View style={styles.histList}>
         {recent.map((g, i) => (
-          <SessionCard key={String(g.session_id || i)} game={g} showIncomplete />
+          <SessionCard
+            key={String(g.session_id || i)}
+            game={g}
+            showIncomplete
+            onPress={() => onOpenSession(g.session_id || g.id)}
+          />
         ))}
       </View>
       {/* Corps Stats = surface CLAIRE (Screen dark=false) → variant plein (comme
