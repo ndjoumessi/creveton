@@ -11,7 +11,6 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
-  Text,
   ScrollView,
   StyleSheet,
   Pressable,
@@ -23,12 +22,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Lightbulb, Check, WifiOff, X } from 'lucide-react-native';
 import Icon from '../components/Icon';
-import { AnswerOption, CircularTimer } from '../components';
+import { AnswerOption, CircularTimer, Title, Heading, Body, Label } from '../components';
 import { useTournamentSocket } from '../hooks/useTournamentSocket';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useAuthStore } from '../store/authStore';
 import { disconnectSocket } from '../services/socket';
-import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
+import { radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { medalEmoji } from '../utils/rank';
 
@@ -181,10 +180,10 @@ export default function TournamentLiveScreen({ navigation, route }) {
 
           {/* Barre haute : compteur + score perso */}
           <View style={styles.topBar}>
-            <Text style={styles.counter}>
+            <Label size="md" style={styles.counter}>
               {t('tournamentLive.counter', { current: question.index + 1, total: question.total })}
-            </Text>
-            <Text style={styles.score}>⚡ {myScore} {t('tournamentLive.pts')}</Text>
+            </Label>
+            <Title size="lg" style={styles.score}>⚡ {myScore} {t('tournamentLive.pts')}</Title>
           </View>
 
           {/* Timer circulaire serveur-autoritaire */}
@@ -194,7 +193,7 @@ export default function TournamentLiveScreen({ navigation, route }) {
 
           {/* Question */}
           <View style={styles.card}>
-            <Text style={styles.question}>{question.text}</Text>
+            <Heading size={17} style={styles.question}>{question.text}</Heading>
             <View style={styles.underline} />
           </View>
 
@@ -233,7 +232,7 @@ export default function TournamentLiveScreen({ navigation, route }) {
           {phase === 'reveal' ? (
             <RevealPanel t={t} reveal={reveal} myId={myId} />
           ) : answered ? (
-            <Text style={styles.answeredHint}>✓ {t('tournamentLive.answered')}</Text>
+            <Body weight="semibold" size="md" style={styles.answeredHint}>✓ {t('tournamentLive.answered')}</Body>
           ) : null}
         </>
       )}
@@ -249,12 +248,12 @@ function RevealPanel({ t, reveal, myId }) {
       {reveal?.explanation ? (
         <View style={styles.explainBox}>
           <Icon icon={Lightbulb} size={18} color={colors.textDark} />
-          <Text style={[styles.explainText, styles.explainTextFlex]}>{reveal.explanation}</Text>
+          <Body size="md" style={[styles.explainText, styles.explainTextFlex]}>{reveal.explanation}</Body>
         </View>
       ) : (
         <View style={styles.explainBox}>
           <Icon icon={Check} size={18} color={colors.textDark} />
-          <Text style={[styles.explainText, styles.explainTextFlex]}>{t('tournamentLive.correctAnswer')}</Text>
+          <Body size="md" style={[styles.explainText, styles.explainTextFlex]}>{t('tournamentLive.correctAnswer')}</Body>
         </View>
       )}
       <MiniLeaderboard t={t} board={reveal?.leaderboard} myId={myId} limit={5} />
@@ -272,8 +271,8 @@ function WaitingView({ t, leaderboard, myId, connectionError, onBack }) {
     return (
       <View style={styles.centered}>
         <Icon icon={WifiOff} size={48} color={colors.textOnDarkMuted} />
-        <Text style={styles.waitingTitle}>{t('tournament.connectionError')}</Text>
-        <Text style={styles.waitingSubtitle}>{t('tournament.connectionErrorMsg')}</Text>
+        <Title size="xl" style={styles.waitingTitle}>{t('tournament.connectionError')}</Title>
+        <Body size="md" style={styles.waitingSubtitle}>{t('tournament.connectionErrorMsg')}</Body>
         <Pressable
           onPress={onBack}
           hitSlop={8}
@@ -281,7 +280,7 @@ function WaitingView({ t, leaderboard, myId, connectionError, onBack }) {
           accessibilityRole="button"
           accessibilityLabel={t('common.back')}
         >
-          <Text style={styles.errorBackText}>{t('common.back')}</Text>
+          <Title size="base" style={styles.errorBackText}>{t('common.back')}</Title>
         </Pressable>
       </View>
     );
@@ -289,9 +288,9 @@ function WaitingView({ t, leaderboard, myId, connectionError, onBack }) {
 
   return (
     <View style={styles.centered}>
-      <Text style={styles.waitingEmoji}>🏆</Text>
-      <Text style={styles.waitingTitle}>{t('tournamentLive.waitingTitle')}</Text>
-      <Text style={styles.waitingSubtitle}>{t('tournamentLive.waitingSubtitle')}</Text>
+      <Body size={56} style={styles.waitingEmoji}>🏆</Body>
+      <Title size="xl" style={styles.waitingTitle}>{t('tournamentLive.waitingTitle')}</Title>
+      <Body size="md" style={styles.waitingSubtitle}>{t('tournamentLive.waitingSubtitle')}</Body>
       <ActivityIndicator color={colors.gold500} style={styles.spinner} />
       {leaderboard?.length ? (
         <View style={styles.waitingBoard}>
@@ -315,23 +314,23 @@ function EndedView({ t, ended, myScore, myRank, myId, onBack }) {
     >
       <View style={styles.endedHero}>
         {podium ? (
-          <Text style={styles.endedMedal}>{medalEmoji(myRank)}</Text>
+          <Body size={64} style={styles.endedMedal}>{medalEmoji(myRank)}</Body>
         ) : (
-          <Text style={styles.waitingEmoji}>🎉</Text>
+          <Body size={56} style={styles.waitingEmoji}>🎉</Body>
         )}
-        <Text style={styles.endedTitle}>{t('tournamentLive.endedTitle')}</Text>
+        <Title style={styles.endedTitle}>{t('tournamentLive.endedTitle')}</Title>
         <View style={styles.endedStats}>
           <View style={styles.endedStat}>
-            <Text style={styles.endedStatLabel}>{t('tournamentLive.rank')}</Text>
-            <Text style={styles.endedStatValue}>{myRank != null ? `#${myRank}` : '—'}</Text>
+            <Label style={styles.endedStatLabel}>{t('tournamentLive.rank')}</Label>
+            <Title style={styles.endedStatValue}>{myRank != null ? `#${myRank}` : '—'}</Title>
           </View>
           <View style={styles.endedStatDivider} />
           <View style={styles.endedStat}>
-            <Text style={styles.endedStatLabel}>{t('tournamentLive.score')}</Text>
-            <Text style={styles.endedStatValue}>{myScore}</Text>
+            <Label style={styles.endedStatLabel}>{t('tournamentLive.score')}</Label>
+            <Title style={styles.endedStatValue}>{myScore}</Title>
           </View>
         </View>
-        <Text style={styles.xpNote}>{t('tournamentLive.xpNote')}</Text>
+        <Body size="sm" style={styles.xpNote}>{t('tournamentLive.xpNote')}</Body>
       </View>
 
       <View style={styles.endedBoard}>
@@ -339,7 +338,7 @@ function EndedView({ t, ended, myScore, myRank, myId, onBack }) {
       </View>
 
       <Pressable style={styles.backButton} onPress={onBack}>
-        <Text style={styles.backButtonText}>{t('tournamentLive.back')}</Text>
+        <Title size="base" style={styles.backButtonText}>{t('tournamentLive.back')}</Title>
       </Pressable>
     </ScrollView>
   );
@@ -353,24 +352,24 @@ function MiniLeaderboard({ t, board, myId, limit = 5 }) {
   const rows = Array.isArray(board) ? board.slice(0, limit) : [];
   return (
     <View style={styles.board}>
-      <Text style={styles.boardTitle}>{t('tournamentLive.leaderboard')}</Text>
+      <Heading size="md" style={styles.boardTitle}>{t('tournamentLive.leaderboard')}</Heading>
       {rows.length === 0 ? (
-        <Text style={styles.boardEmpty}>{t('tournamentLive.leaderboardEmpty')}</Text>
+        <Body size="sm" style={styles.boardEmpty}>{t('tournamentLive.leaderboardEmpty')}</Body>
       ) : (
         rows.map((e) => {
           const me = e.user_id === myId;
           const medal = medalEmoji(e.rank);
           return (
             <View key={e.user_id} style={[styles.boardRow, me && styles.boardRowMe]}>
-              <Text style={[styles.boardRank, me && styles.boardTextMe]}>
+              <Title size="md" style={[styles.boardRank, me && styles.boardTextMe]}>
                 {medal || `#${e.rank}`}
-              </Text>
-              <Text style={[styles.boardName, me && styles.boardTextMe]} numberOfLines={1}>
+              </Title>
+              <Body weight="medium" size="md" style={[styles.boardName, me && styles.boardTextMe]} numberOfLines={1}>
                 {me ? t('tournamentLive.you') : `${t('tournamentLive.player')} ${e.rank}`}
-              </Text>
-              <Text style={[styles.boardScore, me && styles.boardTextMe]}>
+              </Body>
+              <Body weight="bold" size="md" style={[styles.boardScore, me && styles.boardTextMe]}>
                 {e.score} {t('tournamentLive.pts')}
-              </Text>
+              </Body>
             </View>
           );
         })
@@ -396,8 +395,8 @@ const makeStyles = (colors) => StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
   },
-  counter: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkMuted },
-  score: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.gold500 },
+  counter: { color: colors.textOnDarkMuted },
+  score: { color: colors.gold500 },
 
   timerWrap: { alignItems: 'center', marginTop: spacing.xs },
 
@@ -407,7 +406,7 @@ const makeStyles = (colors) => StyleSheet.create({
     padding: 20,
     marginTop: spacing.lg,
   },
-  question: { fontFamily: fonts.titleSemiBold, fontSize: 17, lineHeight: 26, color: colors.green900 },
+  question: { lineHeight: 26, color: colors.green900 },
   underline: { width: 32, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.md },
 
   // Boutons réponse — rendus par <AnswerOption /> (états/feedback inclus).
@@ -416,8 +415,6 @@ const makeStyles = (colors) => StyleSheet.create({
   answeredHint: {
     marginTop: spacing.lg,
     textAlign: 'center',
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
     color: colors.green300,
   },
 
@@ -432,24 +429,19 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   explainTextFlex: { flex: 1 },
   explainText: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.md,
     color: colors.textDark,
     lineHeight: 21,
   },
 
   // Waiting
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
-  waitingEmoji: { fontSize: 56 },
+  // Emojis (waitingEmoji/endedMedal) : taille via la prop `size`, couleur sans effet.
+  waitingEmoji: {},
   waitingTitle: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl,
     color: colors.cream,
     textAlign: 'center',
   },
   waitingSubtitle: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.md,
     color: colors.textOnDarkMuted,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
@@ -466,14 +458,14 @@ const makeStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.gold500,
     ...shadow.gold,
   },
-  errorBackText: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.green900 },
+  errorBackText: { color: colors.green900 },
 
   // Ended
   endedScroll: { flex: 1 },
   endedContent: { paddingVertical: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg },
-  endedMedal: { fontSize: 64 },
+  endedMedal: {},
   endedHero: { alignItems: 'center', gap: spacing.sm, marginTop: spacing.xl },
-  endedTitle: { fontFamily: fonts.titleBold, fontSize: fontSizes.xxl, color: colors.gold500 },
+  endedTitle: { color: colors.gold500 },
   endedStats: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -486,11 +478,9 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   endedStat: { alignItems: 'center', gap: spacing.xxs },
   endedStatDivider: { width: 1, height: 36, backgroundColor: colors.borderOnDark },
-  endedStatLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textOnDarkMuted },
-  endedStatValue: { fontFamily: fonts.titleBold, fontSize: fontSizes.xxl, color: colors.cream },
+  endedStatLabel: { color: colors.textOnDarkMuted },
+  endedStatValue: { color: colors.cream },
   xpNote: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.sm,
     color: colors.green300,
     marginTop: spacing.xs,
   },
@@ -502,7 +492,7 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     ...shadow.gold,
   },
-  backButtonText: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.green900 },
+  backButtonText: { color: colors.green900 },
 
   // Leaderboard partagé
   board: {
@@ -512,14 +502,10 @@ const makeStyles = (colors) => StyleSheet.create({
     gap: spacing.xs,
   },
   boardTitle: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.md,
     color: colors.gold400,
     marginBottom: spacing.xs,
   },
   boardEmpty: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.sm,
     color: colors.textOnDarkMuted,
     paddingVertical: spacing.sm,
   },
@@ -532,8 +518,8 @@ const makeStyles = (colors) => StyleSheet.create({
     borderRadius: radius.sm,
   },
   boardRowMe: { backgroundColor: colors.goldVeil },
-  boardRank: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.cream, width: 36 },
-  boardName: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkMuted },
-  boardScore: { fontFamily: fonts.bodyBold, fontSize: fontSizes.md, color: colors.cream },
+  boardRank: { color: colors.cream, width: 36 },
+  boardName: { flex: 1, color: colors.textOnDarkMuted },
+  boardScore: { color: colors.cream },
   boardTextMe: { color: colors.gold400 },
 });
