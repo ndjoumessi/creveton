@@ -29,7 +29,7 @@ Pas de simulateur dispo ici : valider via `expo export` (build) + `expo start --
 
 ## Architecture (`src/`)
 
-- `constants/theme.js` — **tous les design tokens** (couleurs, dégradés par thème, fonts, spacing, radius, shadow, motion, zIndex). Source de vérité visuelle.
+- `constants/theme.js` — **tous les design tokens** (palettes `colors`/`darkColors` à clés symétriques, dégradés par thème, fonts, spacing, radius, shadow, motion, zIndex). Source de vérité visuelle. Voir **« Thème & tokens »** plus bas.
 - `constants/config.js` — `API_URL` (env `EXPO_PUBLIC_API_URL`), `THEMES`, `LEVELS`, `GAME`, clés storage.
 - `services/`
   - `api.js` — client axios + 3 intercepteurs : injection Bearer, refresh auto sur 401 (single-flight), retry exponentiel sur 503. `parseApiError`, `setOnAuthExpired`.
@@ -38,11 +38,64 @@ Pas de simulateur dispo ici : valider via `expo export` (build) + `expo start --
   - `sync.js` — delta sync CDC §2.8 (snapshot complet au 1er lancement via `/questions/all`, puis `/questions/delta`), non bloquant ; `handleForceSync` (push silencieux).
   - `notifications.js`, `socket.js`.
 - `store/` — `authStore`, `questionsStore`, `gameStore`, `leaderboardStore`, `networkStore` (état réseau), `offlineQueue` (parties jouées hors ligne, persistée AsyncStorage) (zustand).
-- `components/` — bibliothèque : `AppButton`, `AppInput`, `AuthField`, `AppCard`, `Avatar`, `Logo`, `ThemeBadge`, `LevelBadge`, `CircularTimer`, `ProgressDots`, `Confetti`, `MiniLineChart`, `LoadingScreen`, `ErrorScreen`, `Skeleton`, `Toast`/`useToast`, `OfflineBanner`, `NetworkWatcher`, `PendingSyncBadge`, typographie (`Title/Heading/Body/Label`), `Screen`. Tout est ré-exporté par `components/index.js`.
-- `navigation/` — `AppNavigator` (AuthStack si non authentifié, sinon MainStack) → `AuthStack` (Splash/Register/OTP/Login), `MainStack` (Tabs + Quiz/Results/Challenge), `BottomTabs` (Accueil/Jouer/Tournois/Stats/Profil).
-- `screens/` — 12 écrans.
+- `components/` — bibliothèque partagée, tout ré-exporté par `components/index.js`. Voir **« Bibliothèque de composants partagés »** plus bas : **réutiliser avant de coder un nouvel écran**.
+- `navigation/` — `AppNavigator` (AuthStack si non authentifié, sinon MainStack) → `AuthStack` (Splash/Register/OTP/Login), `MainStack` (Tabs + Quiz/Results/Challenge/SessionsHistory/ChangePassword/TournamentLive), `BottomTabs` (Accueil/Jouer/Tournois/Défis/Stats/Profil).
+- `screens/` — **16 écrans** :
+  - Auth : `SplashScreen` (ouverture animée → Login), `LoginScreen`, `RegisterScreen` (inscription 3 étapes), `OTPScreen` (6 chiffres, timer, renvoi).
+  - Tabs : `HomeScreen` (tableau de bord : Jouer, tournois, podium, stats), `GameStartScreen` (onglet Jouer : grille thèmes + niveau + mode), `TournamentScreen` (liste tournois par statut + inscription), `ChallengesScreen` (hub duels 1v1 : onglets + bottom sheet « Nouveau défi »), `StatsScreen` (« Mes stats » KPI/courbe/historique + « Classement »), `ProfileScreen` (photo, réglages, badges, wallet, déconnexion).
+  - Stack jeu : `QuizScreen` (quiz immersif : timer, feedback, explication), `ResultsScreen` (révélation célébrative : trophée, XP, partage).
+  - Stack secondaire : `SessionsHistoryScreen` (historique paginé + filtres), `ChangePasswordScreen`, `TournamentLiveScreen` (manche temps réel via socket), `ChallengeScreen` (stub de redirection vers `Challenges`).
 - `hooks/` — `usePushNotifications`, `useTheme`, `useTournamentSocket`, `useNetworkStatus` (lit `networkStore`).
 - `utils/` — `format.js` (FCFA, dates fr, **courbe XP**), `validation.js`, `haptics.js`, `i18n.js` (`getQuestionText`/`getOptionText`/`normalizeLang` — localisation du contenu des questions).
+
+## Bibliothèque de composants partagés
+
+Stabilisée après le refactor P1 (été 2026) : **13 composants + 1 hook** extraits/migrés.
+Avant de coder un écran, chercher ici — la duplication inline est bannie. **Tous** suivent
+le pattern `const { colors } = useTheme(); const styles = useMemo(() => makeStyles(colors),
+[colors])` (ou `makeStyles(colors, isDark)`), tokens uniquement.
+
+**Contrôles & formulaires**
+- `SegmentedTabs({ tabs:[{key,label,icon?,count?}], activeKey, onChange, variant:'underline'|'pills' })` — onglets. `MIN_TOUCH` + `role=tab` intégrés. → Challenges, Tournament, Stats.
+- `ChoiceChips({ options:[{key,label,emoji?}], value, onChange, multiple?, layout:'row'|'grid', haptic? })` — pilules de sélection (actif = vert nuit + bordure or). → GameStart (niveaux), Register (sexe/langue), Challenges (thème/niveau du sheet). *Cartes thème riches de GameStart = locales (gradient/compteur offline).* 
+- `AppInput({ label, value, onChangeText, error, success?, helperText, rightIcon? })` — input flottant. *Aucun call-site aujourd'hui* ; pour Login/Register préférer `AuthField` (cf. règle formulaires).
+- `AuthField` — champ non contrôlé (ref) anti-reset clavier, pour les formulaires. `AppButton`, `AppCard`.
+
+**Jeu**
+- `AnswerOption({ letter, text, state:'idle'|'selected'|'correct'|'incorrect'|'neutral'|'dimmed', selected, disabled, showGoodLabel?, showCheck?, onPress })` — option de réponse, tous états quiz + `role=radio`. → Quiz, TournamentLive.
+- `CircularTimer`, `ProgressDots`.
+
+**Overlays & feedback**
+- `BottomSheet({ visible, onClose, title?, children, snapPoint?, style })` — handle + backdrop + KeyboardAvoidingView + safe-area, slide-up reduce-motion-safe. → Profile (photo), Challenges (nouveau défi).
+- `useConfirm()` → `confirm({ title, message, confirmLabel?, cancelLabel?, destructive? }) → Promise<bool>` — **toute action destructrice** passe par là (Alert natif). → Challenges (refus/annulation), Tournament (inscription), Profile (logout). (`ConfirmDialog` contrôlé aussi dispo.)
+- `Toast`/`useToast` (`notify` via provider), `EmptyState({ icon, title, message?, ctaLabel?, onCta? })`, `ErrorScreen`, `LoadingScreen`, `Skeleton`, `OfflineBanner`, `PendingSyncBadge`.
+
+**Identité, visualisations, structure**
+- `Avatar({ name, size?, gold?, uri? })` — initiales colorées (hash → `themeAccent`) ou photo. → Home, Stats, Challenges, Profile.
+- `Podium({ players, variant:'compact'|'card', loading? })` → Home (compact), Stats (card). `MiniLineChart({ data, width, height, color, fillArea?, showGrid?, scaleToData?, showLastValue?, … })` → Results (défauts inertes), Stats (courbe enrichie). `SessionCard({ game, showIncomplete? })` → Home, Stats, SessionsHistory. `FAB({ onPress, icon?, accessibilityLabel, disabled? })` → Challenges.
+- `Logo`, `ThemeBadge`, `LevelBadge`, `StatusBadge`, `XpBar`, `FillBar`, `Confetti`, `GoldVeilBanner`, `SectionHeader`, `Screen`, `NetworkWatcher`.
+
+> **Pas de `LeaderboardRow`** : volontairement non extrait (rendus Stats clair/riche et TournamentLive sombre/anonymisé trop divergents, 1 occurrence chacun).
+
+## Thème & tokens
+
+`useTheme()` (`hooks/useTheme.js`) renvoie `{ colors, isDark, toggleTheme }` ; `colors` =
+`colors` (clair) **ou** `darkColors` (sombre) — **clés symétriques** : toute clé de `colors`
+existe en sombre (héritée via `...colors`, surchargée seulement si le clair y serait cassé).
+
+- **Base identité** : `green900/700/500/300`, `gold500/400`, `cream`, `red400/600`. L'or reste ≤ 10 % de l'écran.
+- **Sémantiques texte/surface** : `textDark/textBody/textMuted/textFaint/textOnDark*`, `surface/surfaceCream/surfaceElevated/cardOnDark`, `border/borderInput/divider`, `successBg/successText/errorBg/errorText`, voiles `goldVeil/whiteVeil/greenVeil`.
+- **Pastels & tints centralisés** (session été 2026, plus aucun hex pastel en dur) : `tintSuccess/tintGold/tintError` (voiles α0.06 SessionCard), `pastelGreen/Yellow/Blue/Red/Indigo/Violet/Rose` (pastilles d'icônes **décoratives, figées** — icône `green900` posée dessus, jamais surchargées en sombre), `orange` (timer), `trackOnDark*`/`goldTrack` (composants figés sur fond vert nuit), `red200` (accent Toast), `skeletonOnLight/OnDark`. **Valeurs light figées** (aucun delta clair) ; surcharges dark documentées au cas par cas dans `theme.js`.
+- Certains composants sont **volontairement figés clair-sur-sombre** (CircularTimer, ProgressDots, LoadingScreen, Toast, Splash) : leurs tokens n'ont pas de variante dark, c'est normal.
+
+**Typographie — `components/Text.js`** : `Title/Heading/Body/Label` (Outfit pour Title/Heading,
+Space Grotesk pour Body/Label), **theme-aware**. Props opt-in `size` (clé de `fontSizes` ou
+nombre px) et `weight` (poids dans la famille du variant) — **defaults inchangés** (rétro-compat
+stricte), valeur inconnue ignorée sans crash. Ex. `<Title size="lg">⚡ 120 pts</Title>`,
+`<Heading size={17}>…</Heading>`, `<Body weight="semibold" size="md">…</Body>`. Règle charte :
+chiffres importants = Outfit ≥ 700 (Title/`weight="bold"+`). **Migration** : `TournamentLiveScreen`
+fait (0 `<Text>` brut) ; ~200 usages `fontFamily:` locaux subsistent ailleurs → migrer **écran
+par écran** au fil de l'eau (pas de chantier global), toujours pixel-identical.
 
 ## Conventions & règles à respecter
 
