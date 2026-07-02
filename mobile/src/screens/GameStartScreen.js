@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Info, WifiOff } from 'lucide-react-native';
+import { Info, CloudDownload } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Screen, Title, Heading, Body, Label, AppButton, ChoiceChips, useToast } from '../components';
 import Icon from '../components/Icon';
@@ -364,10 +364,16 @@ export default function GameStartScreen({ navigation, route }) {
                   {t('gameStart.offlineCount', { count: themeCount })}
                 </Body>
               ) : (
+                // Aucune question en cache local pour ce thème : il se charge à la
+                // demande depuis le serveur (jouable en ligne, mais pas de secours
+                // hors ligne). Ce n'est PAS un état de déconnexion réseau — d'où
+                // « En ligne uniquement » + icône de téléchargement cloud (et non
+                // « Connexion requise » + Wi-Fi barré, qui faisaient croire à une
+                // coupure). drawForMode complète via l'API quand on est connecté.
                 <View style={styles.offlineBadge}>
-                  <Icon icon={WifiOff} size={11} color={colors.red600} />
+                  <Icon icon={CloudDownload} size={11} color={colors.red600} />
                   <Label size={11} weight="semibold" color={colors.red600}>
-                    {t('gameStart.connectionRequired')}
+                    {t('gameStart.onlineOnly')}
                   </Label>
                 </View>
               )}
@@ -495,7 +501,7 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingLeft: 2,
   },
   // Badge « Connexion requise » : pill compacte, paire figée red200/red600 (comme
-  // l'accent d'erreur du Toast), sans rouge plein agressif. Icône WifiOff + texte
+  // l'accent d'erreur du Toast), sans rouge plein agressif. Icône CloudDownload + texte
   // semibold, calé à gauche sous la carte. La bordure red400 est INDISPENSABLE en
   // mode CLAIR : le fond red200 seul ne contraste qu'à 1,27:1 avec le crème (pill
   // quasi invisible) ; la bordure (3,55:1 sur crème) redonne la forme. En sombre la

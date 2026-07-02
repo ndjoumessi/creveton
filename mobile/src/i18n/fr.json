@@ -184,7 +184,7 @@
     },
     "pickThemeHint": "← Choisis un thème pour commencer",
     "offlineCount": "{{count}} questions hors ligne",
-    "connectionRequired": "Connexion requise"
+    "onlineOnly": "En ligne uniquement"
   },
   "quiz": {
     "question": "Q {{current}}/{{total}}",
