@@ -7,19 +7,29 @@
 //   outlinedDots  — points blancs cerclés `color`, dernier point plein et grossi
 //   showLastValue — valeur du dernier point affichée au-dessus (Outfit bold)
 //   scaleToData   — échelle Y = min/max réels (défaut : plancher 0 / plafond ≥ 1)
-//   formatValue   — formatage des chiffres (graduations + dernier point)
+//   formatValue   — formatage des chiffres (graduations + dernier point + tooltip)
 //   lastValueColor, paddingTop, paddingBottom — surcharges fines.
+// Responsive (opt-in) : `width` omis ou `width="auto"` → largeur mesurée du conteneur
+//   via onLayout (re-render au changement). Un `width` numérique = comportement figé
+//   historique, strictement inchangé.
+// Interactif (inerte par défaut) : une bande tactile invisible par point (largeur =
+//   segment de la courbe, pleine hauteur — cible ≥ 44 px). Tap → tooltip (valeur via
+//   `formatValue` ; les data sont des nombres nus, donc pas de date) + point évidé
+//   agrandi. Re-tap → désélection. Fade ~motion.fast, instantané sous reduce-motion.
+//   Le label statique `showLastValue` est masqué quand le tooltip du même point est
+//   ouvert (pas de chevauchement). AUCUN élément visible tant que rien n'est sélectionné.
 // Theme-aware : palette via useTheme (identique en mode clair à l'ancien rendu).
 
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Pressable, Animated, StyleSheet } from 'react-native';
 import Svg, { Path, Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
-import { fonts } from '../constants/theme';
+import { fonts, motion, radius, zIndex } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 
 export default function MiniLineChart({
   data = [],
-  width = 280,
+  width = 'auto',
   height = 80,
   color,
   padding = 10,
@@ -34,7 +44,50 @@ export default function MiniLineChart({
   formatValue = (v) => String(v),
 }) {
   const { colors } = useTheme();
-  if (!data.length) return <View style={{ width, height }} />;
+  const reduceMotion = useReduceMotion();
+  const autoWidth = width == null || width === 'auto';
+  const [measuredW, setMeasuredW] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [tipSize, setTipSize] = useState(null);
+  const tipOpacity = useRef(new Animated.Value(0)).current;
+
+  const n = data.length;
+  // Sélection défensive : si la donnée rétrécit, on retombe sur « rien ».
+  const sel = selected != null && selected < n ? selected : null;
+
+  useEffect(() => {
+    if (sel == null) {
+      tipOpacity.setValue(0);
+      return;
+    }
+    if (reduceMotion) {
+      tipOpacity.setValue(1);
+      return;
+    }
+    tipOpacity.setValue(0);
+    Animated.timing(tipOpacity, {
+      toValue: 1,
+      duration: motion.fast,
+      useNativeDriver: true,
+    }).start();
+  }, [sel, reduceMotion, tipOpacity]);
+
+  const onWrapLayout = autoWidth
+    ? (e) => setMeasuredW(Math.round(e.nativeEvent.layout.width))
+    : undefined;
+
+  if (!data.length) {
+    return autoWidth ? (
+      <View style={[styles.wrapAuto, { height }]} onLayout={onWrapLayout} />
+    ) : (
+      <View style={{ width, height }} />
+    );
+  }
+  // Mode auto, pas encore mesuré : coquille pleine largeur en attente d'onLayout.
+  if (autoWidth && !(measuredW > 0)) {
+    return <View style={[styles.wrapAuto, { height }]} onLayout={onWrapLayout} />;
+  }
+  const w = autoWidth ? measuredW : width;
 
   const stroke = color || colors.gold500;
   const padT = paddingTop ?? padding;
@@ -42,10 +95,9 @@ export default function MiniLineChart({
   const max = scaleToData ? Math.max(...data) : Math.max(...data, 1);
   const min = scaleToData ? Math.min(...data) : Math.min(...data, 0);
   const span = max - min || 1;
-  const innerW = width - padding * 2;
+  const innerW = w - padding * 2;
   const innerH = height - padT - padB;
   const baseY = padT + innerH;
-  const n = data.length;
 
   const points = data.map((v, i) => {
     const x = padding + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
@@ -66,16 +118,36 @@ export default function MiniLineChart({
       }))
     : [];
 
+  // Bandes tactiles invisibles : une par point, bornées aux mi-distances entre
+  // points voisins (pleine hauteur du graphe → cible ≥ 44 px même quand la
+  // bande est étroite).
+  const bands = points.map((p, i) => {
+    const left = i === 0 ? 0 : (points[i - 1].x + p.x) / 2;
+    const right = i === n - 1 ? w : (p.x + points[i + 1].x) / 2;
+    return { left, width: right - left };
+  });
+
+  // Position du tooltip : centré sur le point, borné aux bords ; au-dessus du
+  // point, bascule en dessous s'il déborderait en haut.
+  const tipW = tipSize?.width ?? 0;
+  const tipH = tipSize?.height ?? 0;
+  const selPoint = sel != null ? points[sel] : null;
+  const tipRawTop = selPoint ? selPoint.y - tipH - 10 : 0;
+  const tipTop = tipRawTop < 0 ? (selPoint ? selPoint.y + 12 : 0) : tipRawTop;
+  const tipLeft = selPoint
+    ? Math.min(Math.max(selPoint.x - tipW / 2, 0), Math.max(w - tipW, 0))
+    : 0;
+
   return (
-    <View style={styles.wrap}>
-      <Svg width={width} height={height}>
+    <View style={autoWidth ? styles.wrapAuto : styles.wrap} onLayout={onWrapLayout}>
+      <Svg width={w} height={height}>
         {showGrid ? (
           grads.map((g, i) => (
             <Line
               key={`g${i}`}
               x1={padding}
               y1={g.y}
-              x2={width - padding}
+              x2={w - padding}
               y2={g.y}
               stroke={colors.divider}
               strokeWidth={1}
@@ -86,7 +158,7 @@ export default function MiniLineChart({
           <Line
             x1={padding}
             y1={height - padB}
-            x2={width - padding}
+            x2={w - padding}
             y2={height - padB}
             stroke={colors.border}
             strokeWidth={1}
@@ -95,7 +167,7 @@ export default function MiniLineChart({
         {grads.map((g, i) => (
           <SvgText
             key={`t${i}`}
-            x={width - padding}
+            x={w - padding}
             y={g.y - 2}
             fontSize={9}
             // intentional: graduations en Outfit SemiBold (l'ancien ScoreChart de
@@ -127,8 +199,19 @@ export default function MiniLineChart({
             <Circle key={i} cx={p.x} cy={p.y} r={3.5} fill={stroke} />
           )
         )}
-        {/* Valeur au-dessus du dernier point */}
-        {showLastValue ? (
+        {/* Feedback de sélection : point agrandi/évidé par-dessus le point courant. */}
+        {selPoint ? (
+          <Circle
+            cx={selPoint.x}
+            cy={selPoint.y}
+            r={outlinedDots ? 6.5 : 6}
+            fill={colors.white}
+            stroke={stroke}
+            strokeWidth={2.5}
+          />
+        ) : null}
+        {/* Valeur au-dessus du dernier point (masquée si son tooltip est ouvert). */}
+        {showLastValue && sel !== n - 1 ? (
           <SvgText
             x={points[n - 1].x}
             y={points[n - 1].y - 9}
@@ -141,10 +224,64 @@ export default function MiniLineChart({
           </SvgText>
         ) : null}
       </Svg>
+      {/* Surcouche tactile invisible (aucun rendu visuel). */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        {points.map((p, i) => (
+          <Pressable
+            key={i}
+            style={[styles.band, { left: bands[i].left, width: bands[i].width }]}
+            onPress={() => setSelected(sel === i ? null : i)}
+            accessibilityRole="button"
+            accessibilityLabel={`Point ${i + 1} sur ${n} : ${formatValue(data[i])} points`}
+            accessibilityState={{ selected: sel === i }}
+          />
+        ))}
+      </View>
+      {/* Tooltip du point sélectionné (valeur seule : data = nombres nus). */}
+      {sel != null ? (
+        <Animated.View
+          pointerEvents="none"
+          onLayout={(e) => {
+            const { width: tw, height: th } = e.nativeEvent.layout;
+            setTipSize({ width: tw, height: th });
+          }}
+          style={[
+            styles.tooltip,
+            {
+              left: tipLeft,
+              top: tipTop,
+              backgroundColor: colors.textDark,
+              opacity: tipSize ? tipOpacity : 0,
+            },
+          ]}
+        >
+          <Text style={[styles.tooltipText, { color: colors.cream }]}>
+            {formatValue(data[sel])}
+          </Text>
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { alignSelf: 'center' },
+  wrapAuto: { alignSelf: 'stretch' },
+  band: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+  },
+  tooltip: {
+    position: 'absolute',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+    zIndex: zIndex.tooltip,
+    elevation: 4,
+  },
+  tooltipText: {
+    fontFamily: fonts.titleBold,
+    fontSize: 11,
+  },
 });
