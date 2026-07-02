@@ -46,6 +46,11 @@ export default function MiniLineChart({
   scaleToData = false,
   lastValueColor,
   formatValue = (v) => String(v),
+  // Repères d'axe X (opt-in, défaut inerte) : tableau ALIGNÉ sur `data` — seules les
+  // entrées non-nulles sont rendues (ex. une date courte au point du milieu). Rendu
+  // fontSize 9 / textFaint / Space Grotesk, dans la bande paddingBottom sous la
+  // baseline (requiert paddingBottom ≥ 14, sinon ignoré pour ne pas mordre la courbe).
+  xLabels,
 }) {
   const { colors } = useTheme();
   const reduceMotion = useReduceMotion();
@@ -262,6 +267,27 @@ export default function MiniLineChart({
             {formatValue(g.val)}
           </SvgText>
         ))}
+        {/* Repères d'axe X : dans la bande paddingBottom (sous la baseline, jamais
+            sur la courbe/points). x clampé aux bords de la zone tracé. Aucun conflit
+            possible avec le tooltip (il ne passe SOUS un point que lorsque celui-ci
+            est en haut du graphe) ni avec showLastValue (bascule à y+16 max). */}
+        {Array.isArray(xLabels) && padB >= 14
+          ? points.map((p, i) =>
+              xLabels[i] ? (
+                <SvgText
+                  key={`x${i}`}
+                  x={Math.min(Math.max(p.x, 18), plotRight - 18)}
+                  y={height - 4}
+                  fontSize={9}
+                  fontFamily={fonts.bodyRegular}
+                  fill={colors.textFaint}
+                  textAnchor="middle"
+                >
+                  {xLabels[i]}
+                </SvgText>
+              ) : null
+            )
+          : null}
         {fillArea && n > 1 ? <Path d={area} fill={stroke} fillOpacity={0.15} /> : null}
         {n > 1 ? (
           <Polyline points={polyline} fill="none" stroke={stroke} strokeWidth={2.5} strokeLinejoin="round" />

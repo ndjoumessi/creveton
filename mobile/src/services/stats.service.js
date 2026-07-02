@@ -96,7 +96,7 @@ export function computeStats(history) {
   const scoreEvolution = history
     .slice(0, 10)
     .reverse()
-    .map((g, i) => ({ index: i, score: num(g.score), theme: g.theme }));
+    .map((g, i) => ({ index: i, score: num(g.score), theme: g.theme, played_at: g.played_at }));
 
   return {
     totalGames,

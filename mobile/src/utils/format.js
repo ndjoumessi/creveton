@@ -49,6 +49,17 @@ export function formatDateTime(iso) {
   });
 }
 
+// Date courte « 12 juin » / « 12 Jun » (repères d'axe X des mini-courbes).
+export function formatDayMonth(iso, lang = 'fr') {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(lang === 'en' ? 'en-GB' : 'fr-FR', {
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
 // Renvoie « Xh Ymin » si startsAt est dans les 24 prochaines heures, sinon null.
 export function formatCountdown(startsAt) {
   if (!startsAt) return null;

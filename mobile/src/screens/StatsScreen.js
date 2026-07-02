@@ -29,7 +29,8 @@ import {
   MIN_TOUCH,
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
-import { levelProgress, avatarUri } from '../utils/format';
+import { levelProgress, avatarUri, formatDayMonth } from '../utils/format';
+import { normalizeLang } from '../utils/i18n';
 import { medalColor } from '../utils/rank';
 import { hapticLight } from '../utils/haptics';
 
@@ -222,7 +223,8 @@ function LoadIssue({ isOffline, error, onRetry }) {
 
 // ── Onglet Mes stats ───────────────────────────────────────────────────────
 function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, onViewHistory, onOpenSession }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = normalizeLang(i18n.language);
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -366,8 +368,16 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
       <Heading style={styles.sectionTitle}>{t('stats.misc.scoreEvolution')}</Heading>
       <View style={styles.card}>
         {(() => {
-          const scoreValues = (stats.scoreEvolution || []).map((d) => d.score);
+          const evo = stats.scoreEvolution || [];
+          const scoreValues = evo.map((d) => d.score);
           const n = scoreValues.length;
+          // Repère X central : date courte de la partie du milieu (≥ 4 points,
+          // sinon les bornes J-N / « Dernière » suffisent sur un si petit graphe).
+          const mid = Math.floor((n - 1) / 2);
+          const xLabels =
+            n >= 4 && evo[mid]?.played_at
+              ? evo.map((d, i) => (i === mid ? formatDayMonth(d.played_at, lang) : null))
+              : undefined;
           if (n === 0) {
             return (
               <View style={styles.chartEmpty}>
@@ -394,6 +404,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
                 scaleToData
                 lastValueColor={colors.green700}
                 formatValue={fmt}
+                xLabels={xLabels}
               />
               <View style={styles.chartAxis}>
                 <Body size="xs" color={colors.textFaint}>{n > 1 ? `J-${n - 1}` : ''}</Body>

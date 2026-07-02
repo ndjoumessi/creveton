@@ -42,6 +42,7 @@ import { TIMED_MODES } from '../constants/config';
 import { hapticSuccess, hapticLight } from '../utils/haptics';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { getOptionText, normalizeLang } from '../utils/i18n';
+import { formatDayMonth } from '../utils/format';
 import { colors, radius, spacing, motion } from '../constants/theme';
 
 // Android : LayoutAnimation nécessite ce flag (no-op sous Fabric / iOS).
@@ -446,10 +447,17 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
     };
   }, []);
 
-  const progressScores = (history || [])
-    .slice(0, 5)
-    .reverse()
-    .map((h) => Number(h.score) || 0);
+  // On garde les items (pas seulement les scores) : leur `played_at` alimente le
+  // repère de date au centre de l'axe X de la mini-courbe.
+  const progressGames = (history || []).slice(0, 5).reverse();
+  const progressScores = progressGames.map((h) => Number(h.score) || 0);
+  const progressMid = Math.floor((progressGames.length - 1) / 2);
+  const progressXLabels =
+    progressGames.length >= 4 && progressGames[progressMid]?.played_at
+      ? progressGames.map((h, i) =>
+          i === progressMid ? formatDayMonth(h.played_at, lang) : null
+        )
+      : undefined;
 
   // — Comparaison au score précédent : dernière partie du MÊME mode+thème+niveau,
   // en excluant la partie courante (identifiée par son session_id). On masque la
@@ -749,6 +757,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
               scaleToData
               lastValueColor={colors.green700}
               formatValue={(v) => Number(v).toLocaleString('fr-FR')}
+              xLabels={progressXLabels}
             />
           </AppCard>
         </View>
