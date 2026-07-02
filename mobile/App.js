@@ -14,10 +14,13 @@ import {
   Outfit_500Medium,
   Outfit_600SemiBold,
   Outfit_700Bold,
+  Outfit_800ExtraBold,
+  Outfit_900Black,
 } from '@expo-google-fonts/outfit';
 import {
   SpaceGrotesk_400Regular,
   SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
 
@@ -49,8 +52,14 @@ export default function App() {
     Outfit_500Medium,
     Outfit_600SemiBold,
     Outfit_700Bold,
+    // Poids référencés par theme.js (titleExtraBold/titleBlack, weight extrabold/black
+    // des variants Text.js) — étaient absents ici → rendu en police système (fallback).
+    Outfit_800ExtraBold,
+    Outfit_900Black,
     SpaceGrotesk_400Regular,
     SpaceGrotesk_500Medium,
+    // bodySemiBold (weight="semibold" des variants) — idem, manquant → fallback.
+    SpaceGrotesk_600SemiBold,
     SpaceGrotesk_700Bold,
   });
 
