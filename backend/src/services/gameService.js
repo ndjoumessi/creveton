@@ -241,4 +241,61 @@ async function answerSingle({ userId, sessionId = null, questionId, selectedInde
   };
 }
 
-module.exports = { submitSession, answerSingle, levelFromXp, CHEAT_FAST_REPEAT, ANSWER_CHEAT_MIN_MS };
+/**
+ * GET /sessions/:id — détail d'une partie DÉJÀ SOUMISE du joueur authentifié.
+ * La révélation des bonnes réponses/explications est autorisée ici (même règle
+ * anti-triche que le review[] de /sessions/submit : post-soumission uniquement,
+ * et seulement au propriétaire de la partie — 403 sinon, 404 si inexistante).
+ *
+ * @param {object} p
+ * @param {string} p.userId    joueur authentifié.
+ * @param {string} p.sessionId id (UUID) de la partie.
+ * @returns {Promise<object>} vue session (toView) + review[] par question :
+ *   { question_id, text/text_fr/text_en, options[{index,text,text_fr,text_en}],
+ *     selected_index, correct_index, is_correct, elapsed_ms, explanation, explanation_en }.
+ */
+async function getSessionDetail({ userId, sessionId }) {
+  const row = await sessionModel.findById(sessionId);
+  if (!row) throw new ApiError('SESSION_NOT_FOUND');
+  if (row.user_id !== userId) throw new ApiError('FORBIDDEN');
+
+  const answers = Array.isArray(row.answers) ? row.answers : [];
+  const questions = await questionModel.findReviewByIds(answers.map((a) => a.question_id));
+
+  const review = answers.map((a) => {
+    const q = questions.get(a.question_id) || null;
+    const rawOptions = q && Array.isArray(q.options) ? q.options : [];
+    return {
+      question_id: a.question_id,
+      // Énoncé localisable côté client (même contrat que toPlayerView : text = FR
+      // rétro-compat + les deux langues). null si la question a été purgée depuis.
+      text: q ? q.text_fr : null,
+      text_fr: q ? q.text_fr : null,
+      text_en: q ? q.text_en ?? null : null,
+      options: rawOptions.map((opt, index) => ({
+        index,
+        text: opt.text,
+        text_fr: opt.text,
+        text_en: opt.text_en ?? null,
+      })),
+      selected_index: a.selected_index ?? null,
+      correct_index: q ? q.correct_index : null,
+      is_correct: a.is_correct === true,
+      // Anciennes lignes : le temps a pu être persisté sous time_ms (cf. schéma 003).
+      elapsed_ms: a.elapsed_ms ?? a.time_ms ?? null,
+      explanation: q ? q.explanation ?? null : null,
+      explanation_en: q ? q.explanation_en ?? null : null,
+    };
+  });
+
+  return { ...sessionModel.toView(row), review };
+}
+
+module.exports = {
+  submitSession,
+  answerSingle,
+  getSessionDetail,
+  levelFromXp,
+  CHEAT_FAST_REPEAT,
+  ANSWER_CHEAT_MIN_MS,
+};

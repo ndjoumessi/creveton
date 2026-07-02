@@ -52,4 +52,9 @@ const answerOne = Joi.object({
   mode: Joi.string().valid(...GAME_MODES).default('normal'),
 });
 
-module.exports = { submit, answer, answerOne };
+/** GET /sessions/:id — détail d'une partie (l'id doit être un UUID). */
+const idParam = Joi.object({
+  id: Joi.string().uuid().required(),
+});
+
+module.exports = { submit, answer, answerOne, idParam };

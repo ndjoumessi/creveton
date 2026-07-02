@@ -54,6 +54,12 @@ async function create(data, executor = db) {
   return rows[0];
 }
 
+/** Une partie par id (ligne brute, answers JSONB inclus) — détail joueur. */
+async function findById(id) {
+  const { rows } = await db.query(`SELECT * FROM game_sessions WHERE id = $1`, [id]);
+  return rows[0] || null;
+}
+
 /** Historique paginé (offset) des parties d'un joueur (fiche admin §3.2). */
 async function listByUser(userId, { limit = 50, offset = 0 } = {}) {
   const { rows } = await db.query(
@@ -138,4 +144,4 @@ async function statsByUser(userId) {
   return rows[0];
 }
 
-module.exports = { toView, toAdminView, create, listByUser, listAdmin, findByIdAdmin, statsByUser };
+module.exports = { toView, toAdminView, create, findById, listByUser, listAdmin, findByIdAdmin, statsByUser };

@@ -39,4 +39,13 @@ const answer = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
-module.exports = { submit, answer };
+/** GET /sessions/:id → 200 (détail d'une partie du joueur + review par question) */
+const detail = asyncHandler(async (req, res) => {
+  const result = await gameService.getSessionDetail({
+    userId: req.user.id,
+    sessionId: req.params.id,
+  });
+  return ok(res, result);
+});
+
+module.exports = { submit, answer, detail };

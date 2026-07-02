@@ -308,6 +308,26 @@ async function findSolutions(ids) {
 }
 
 /**
+ * Contenu complet d'un lot de questions pour le review POST-PARTIE
+ * (GET /sessions/:id) : énoncé FR/EN, options (FR/EN), solution + explications.
+ * La partie est déjà soumise → la révélation de correct_index/explanation est
+ * autorisée (même règle que le review[] de /sessions/submit). On n'exclut PAS
+ * les questions archivées/supprimées depuis : le joueur les a réellement jouées.
+ * @param {string[]} ids
+ * @returns {Promise<Map<string, object>>} question_id → ligne brute.
+ */
+async function findReviewByIds(ids) {
+  if (!ids || ids.length === 0) return new Map();
+  const { rows } = await db.query(
+    `SELECT id, text_fr, text_en, options, correct_index, explanation, explanation_en
+       FROM questions
+      WHERE id = ANY($1::uuid[])`,
+    [ids]
+  );
+  return new Map(rows.map((r) => [r.id, r]));
+}
+
+/**
  * Solutions (correct_index + explications) d'un lot de questions APPROUVÉES et non
  * supprimées — pour la sync du cache offline mobile (POST /questions/solutions).
  * Contrairement à findSolutions (scoring, inclut les questions archivées/supprimées),
@@ -647,6 +667,7 @@ module.exports = {
   findSimilar,
   create,
   findManyBrief,
+  findReviewByIds,
   findSolutions,
   findSolutionsForCache,
   findAnswerInfo,

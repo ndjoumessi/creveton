@@ -10,5 +10,6 @@ const router = express.Router();
 
 router.post('/answer', authenticate, validate(schemas.answerOne), ctrl.answer);
 router.post('/submit', authenticate, validate(schemas.submit), ctrl.submit);
+router.get('/:id', authenticate, validate(schemas.idParam, 'params'), ctrl.detail);
 
 module.exports = router;

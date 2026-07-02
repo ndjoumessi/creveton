@@ -32,6 +32,7 @@ const ERROR_CODES = {
   QUESTION_NOT_FOUND: { http: 404, message: 'Question introuvable.' },
   TOURNAMENT_NOT_FOUND: { http: 404, message: 'Tournoi introuvable.' },
   CHALLENGE_NOT_FOUND: { http: 404, message: 'Challenge introuvable.' },
+  SESSION_NOT_FOUND: { http: 404, message: 'Partie introuvable.' },
   NO_QUESTIONS_AVAILABLE: { http: 404, message: 'Aucune question disponible pour ce filtre.' },
   INVITATION_NOT_FOUND: { http: 404, message: 'Invitation introuvable.' },
   NOT_FOUND: { http: 404, message: 'Ressource introuvable.' },
