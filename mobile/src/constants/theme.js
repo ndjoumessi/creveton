@@ -65,6 +65,9 @@ export const colors = {
   // — Voiles or (pour bannières/podium, jamais en aplat large)
   goldVeil: 'rgba(212, 160, 23, 0.14)',
   goldVeilBorder: 'rgba(212, 160, 23, 0.45)',
+
+  // — Voile clair (boutons discrets posés sur les bandeaux vert nuit)
+  whiteVeil: 'rgba(255, 255, 255, 0.15)',
 };
 
 // ════════════════════════════════════════════════════════════════════════

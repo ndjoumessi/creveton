@@ -30,7 +30,8 @@ import { sessions as sessionsApi } from '../services/endpoints';
 import { patchQuestionSolution } from '../services/database';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { useReduceMotion } from '../hooks/useReduceMotion';
-import { colors, fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
+import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
 
@@ -44,7 +45,8 @@ const MIXED_ADVANCE_MS = 800;
 // Image optionnelle d'une question (au-dessus de l'énoncé). Skeleton pendant le
 // chargement ; en cas d'échec (URL cassée, hors-ligne) on masque l'image en
 // silence — le quiz ne doit jamais être bloqué par un média.
-function QuestionMedia({ uri }) {
+// `styles`/`colors` viennent du parent (makeStyles thémé — pas de palette figée).
+function QuestionMedia({ uri, styles, colors }) {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   // Réinitialise l'état quand la question change (nouvelle URL).
@@ -72,6 +74,10 @@ export default function QuizScreen({ navigation }) {
   const { t, i18n } = useTranslation();
   const lang = normalizeLang(i18n.language);
   const toast = useToast();
+  // Palette active (claire/sombre) — les surfaces (carte question, options,
+  // explication) suivent le thème ; le fond green900 immersif reste identitaire.
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, isDark), [colors, isDark]);
   const questions = useGameStore((s) => s.questions);
   const currentIndex = useGameStore((s) => s.currentIndex);
   const answerCurrent = useGameStore((s) => s.answerCurrent);
@@ -529,7 +535,9 @@ export default function QuizScreen({ navigation }) {
 
       {/* Question */}
       <View style={styles.card}>
-        {question.media_url ? <QuestionMedia uri={question.media_url} /> : null}
+        {question.media_url ? (
+          <QuestionMedia uri={question.media_url} styles={styles} colors={colors} />
+        ) : null}
         <Text style={styles.question}>{displayText}</Text>
         <View style={styles.goldBar} />
       </View>
@@ -543,6 +551,7 @@ export default function QuizScreen({ navigation }) {
             text={opt.label}
             optionIndex={opt.index}
             answered={answered}
+            styles={styles}
             onPress={() => handleAnswer({ selectedIndex: opt.index })}
           />
         ))}
@@ -599,7 +608,8 @@ export default function QuizScreen({ navigation }) {
   );
 }
 
-function OptionRow({ letter, text, optionIndex, answered, onPress }) {
+// `styles` vient du parent (makeStyles thémé) — évite 4 abonnements useTheme.
+function OptionRow({ letter, text, optionIndex, answered, styles, onPress }) {
   const { t } = useTranslation();
   const scale = useRef(new Animated.Value(1)).current;
   const checkScale = useRef(new Animated.Value(0)).current;
@@ -697,7 +707,10 @@ function OptionRow({ letter, text, optionIndex, answered, onPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+// Styles thémés — les clés des palettes claire/sombre sont symétriques :
+// `surface`/`surfaceCream` s'inversent en sombre, `green900`/`gold500` restent
+// identitaires. `isDark` ne sert qu'aux états de feedback (fonds/textes AA).
+const makeStyles = (colors, isDark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.green900, paddingHorizontal: spacing.lg },
 
   // A. Header — bandeau vert plein largeur, coins bas arrondis.
@@ -721,16 +734,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: colors.whiteVeil, // voile clair sur le bandeau vert (2 thèmes)
   },
-  quitText: { fontSize: fontSizes.base, color: colors.white },
+  quitText: { fontSize: fontSizes.base, color: colors.textOnDark },
   qBadge: {
     backgroundColor: colors.green700,
     borderRadius: radius.pill,
     paddingVertical: 4,
     paddingHorizontal: 12,
   },
-  qBadgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.white },
+  qBadgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.textOnDark },
   score: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.lg, color: colors.gold500 },
   headerSpacer: { width: 36 }, // équilibre le bouton ✕ → badge « Q x/N » centré
 
@@ -752,19 +765,15 @@ const styles = StyleSheet.create({
   },
   streakText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.green900 },
 
-  // D. Carte question — surface flottante, barre or sous le texte.
+  // D. Carte question — surface flottante (thémée), barre or sous le texte.
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radius.xl,
     padding: 20,
     marginTop: spacing.lg,
-    shadowColor: colors.green900,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    ...shadow.floating,
   },
-  question: { fontFamily: fonts.titleSemiBold, fontSize: 17, lineHeight: 26, color: colors.green900 },
+  question: { fontFamily: fonts.titleSemiBold, fontSize: 17, lineHeight: 26, color: colors.textDark },
   goldBar: { width: 40, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.sm },
   // Image optionnelle de la question (au-dessus de l'énoncé).
   qMediaWrap: {
@@ -773,7 +782,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: spacing.md,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.surfaceCream,
   },
   qMediaImg: { width: '100%', height: '100%' },
   qMediaSkeleton: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
@@ -790,41 +799,57 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderWidth: 1.5,
   },
-  optDefault: { backgroundColor: colors.white, borderColor: colors.border },
-  optSelected: { backgroundColor: colors.successBgSoft, borderColor: colors.green500 },
+  optDefault: { backgroundColor: colors.surface, borderColor: colors.border },
+  // Sélection (pré-feedback) : `successBgSoft` n'a pas d'équivalent sombre → successBg.
+  optSelected: {
+    backgroundColor: isDark ? colors.successBg : colors.successBgSoft,
+    borderColor: colors.green500,
+  },
   optCorrect: { backgroundColor: colors.successBg, borderColor: colors.green500 },
   optWrong: { backgroundColor: colors.errorBg, borderColor: colors.red400 },
   // Mode mixte (blitz/marathon) : feedback neutre (or / grisé).
   optNeutral: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
-  optDimmed: { backgroundColor: colors.white, borderColor: colors.border, opacity: 0.4 },
+  optDimmed: { backgroundColor: colors.surface, borderColor: colors.border, opacity: 0.4 },
 
   badge: { width: 32, height: 32, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   badgeDefault: { backgroundColor: colors.green900 },
   badgeCorrect: { backgroundColor: colors.green500 },
   badgeWrong: { backgroundColor: colors.red400 },
-  badgeOnGold: { backgroundColor: colors.white },
+  badgeOnGold: { backgroundColor: colors.surface },
   badgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md },
-  badgeTextDefault: { color: colors.white },
-  badgeTextOnColor: { color: colors.white },
+  // Lettres A-D sur pastilles pleines (vert nuit/émeraude/rouge) : toujours claires
+  // — `colors.white` s'inverse en sombre, `textOnDark` non.
+  badgeTextDefault: { color: colors.textOnDark },
+  badgeTextOnColor: { color: colors.textOnDark },
   badgeTextGold: { color: colors.gold500 },
   optBody: { flex: 1 },
   optText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md },
   optTextDefault: { color: colors.textBody },
-  optTextCorrect: { color: colors.successText, fontFamily: fonts.bodySemiBold },
-  optTextWrong: { color: colors.red600 },
+  // Feedback : sur les fonds sombres (successBg/errorBg sombres), les teintes
+  // claires `green300`/`red400` gardent un contraste AA — successText/red600 non.
+  optTextCorrect: {
+    color: isDark ? colors.green300 : colors.successText,
+    fontFamily: fonts.bodySemiBold,
+  },
+  optTextWrong: { color: isDark ? colors.red400 : colors.red600 },
   optTextNeutral: { color: colors.white, fontFamily: fonts.bodySemiBold },
-  goodLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.successText, marginBottom: 2 },
+  goodLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11,
+    color: isDark ? colors.green300 : colors.successText,
+    marginBottom: 2,
+  },
 
   skip: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: 'auto' },
   skipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkFaint },
 
   tapToSkip: { ...StyleSheet.absoluteFillObject },
 
-  // F. Explication (mode normal) — fond crème, liseré or à gauche.
+  // F. Explication (mode normal) — surface crème (thémée), liseré or à gauche.
   explain: {
     marginTop: 'auto',
     marginBottom: spacing.md,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.surfaceCream,
     borderRadius: radius.lg,
     borderLeftWidth: 3,
     borderLeftColor: colors.gold500,
@@ -837,7 +862,7 @@ const styles = StyleSheet.create({
   autoTrack: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(11,46,26,0.1)',
+    backgroundColor: colors.divider, // voile encre (clair) / voile clair (sombre)
     marginTop: spacing.md,
     overflow: 'hidden',
   },
