@@ -211,7 +211,7 @@ export default function OTPScreen({ route, navigation }) {
         onPress={() => navigation.goBack()}
         hitSlop={8}
       >
-        <Body color={linkGreen} style={styles.backText}>
+        <Body weight="semibold" color={linkGreen}>
           {t('auth.register.back')}
         </Body>
       </Pressable>
@@ -225,10 +225,10 @@ export default function OTPScreen({ route, navigation }) {
           <Icon icon={Smartphone} size={38} color={colors.green500} />
         </Animated.View>
 
-        <Title style={styles.heading}>{t('auth.otp.title')}</Title>
+        <Title size={22} style={styles.heading}>{t('auth.otp.title')}</Title>
         <Body muted style={styles.subtitle}>
           {t('auth.otp.subtitle')}{'\n'}
-          <Body style={[styles.phone, isDark && { color: colors.green300 }]}>{prettyPhone(phone)}</Body>
+          <Body weight="bold" color={colors.green700} style={isDark && { color: colors.green300 }}>{prettyPhone(phone)}</Body>
         </Body>
       </View>
 
@@ -276,7 +276,7 @@ export default function OTPScreen({ route, navigation }) {
         ) : (
           <>
             <Label muted>{t('auth.otp.misc.expiresIn')} </Label>
-            <Body style={styles.timer}>{formatTimer(remaining)}</Body>
+            <Title size="base" color={colors.gold500}>{formatTimer(remaining)}</Title>
           </>
         )}
       </View>
@@ -297,6 +297,7 @@ export default function OTPScreen({ route, navigation }) {
         style={styles.resendWrap}
       >
         <Body
+          weight="semibold"
           style={styles.resend}
           color={canResend ? linkGreen : colors.textFaint}
         >
@@ -310,7 +311,6 @@ export default function OTPScreen({ route, navigation }) {
 const makeStyles = (colors) => StyleSheet.create({
   content: { paddingBottom: spacing.xxl },
   back: { alignSelf: 'flex-start', marginBottom: spacing.lg },
-  backText: { fontFamily: fonts.bodySemiBold },
   center: { alignItems: 'center', marginBottom: spacing.xl },
   badge: {
     width: 84,
@@ -325,14 +325,10 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: spacing.lg,
   },
   heading: {
-    fontFamily: fonts.titleBold,
-    fontSize: 22,
-    color: colors.textDark,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   subtitle: { textAlign: 'center', lineHeight: 22 },
-  phone: { fontFamily: fonts.bodyBold, color: colors.green700 },
   boxes: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -369,12 +365,7 @@ const makeStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
     marginTop: spacing.lg,
   },
-  timer: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.base,
-    color: colors.gold500,
-  },
   submit: { marginTop: spacing.xl },
   resendWrap: { marginTop: spacing.lg, alignSelf: 'center' },
-  resend: { textAlign: 'center', fontFamily: fonts.bodySemiBold },
+  resend: { textAlign: 'center' },
 });
