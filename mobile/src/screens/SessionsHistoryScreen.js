@@ -7,7 +7,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Pressable,
   ScrollView,
@@ -18,11 +17,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import Icon from '../components/Icon';
-import { AppButton, Skeleton, SessionCard, ErrorScreen, EmptyState } from '../components';
+import { AppButton, Skeleton, SessionCard, ErrorScreen, EmptyState, Heading, Label } from '../components';
 import { users as usersApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { THEMES, LEVELS } from '../constants/config';
-import { fonts, fontSizes, radius, spacing, MIN_TOUCH } from '../constants/theme';
+import { fonts, radius, spacing, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 const PAGE_SIZE = 20;
@@ -37,10 +36,14 @@ function FilterPill({ label, emoji, active, onPress, colors, styles }) {
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
     >
-      <Text style={[styles.pillText, active && styles.pillTextActive]} numberOfLines={1}>
+      <Label
+        weight={active ? 'bold' : undefined}
+        color={active ? colors.textOnDark : colors.textBody}
+        numberOfLines={1}
+      >
         {emoji ? `${emoji} ` : ''}
         {label}
-      </Text>
+      </Label>
     </Pressable>
   );
 }
@@ -253,7 +256,7 @@ export default function SessionsHistoryScreen({ navigation }) {
         >
           <Icon icon={ArrowLeft} size={24} color={colors.textOnDark} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t('sessionsHistory.title', 'Historique')}</Text>
+        <Heading weight="bold" size="xl" color={colors.textOnDark}>{t('sessionsHistory.title', 'Historique')}</Heading>
       </View>
 
       <View style={styles.body}>
@@ -284,12 +287,6 @@ const makeStyles = (colors) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    headerTitle: {
-      fontFamily: fonts.titleBold,
-      fontSize: fontSizes.xl,
-      color: colors.textOnDark,
-    },
-
     // Corps cream arrondi
     body: {
       flex: 1,
@@ -320,12 +317,6 @@ const makeStyles = (colors) =>
       backgroundColor: colors.surface,
     },
     pillActive: { backgroundColor: colors.green700, borderColor: colors.green700 },
-    pillText: {
-      fontFamily: fonts.bodyMedium,
-      fontSize: fontSizes.sm,
-      color: colors.textBody,
-    },
-    pillTextActive: { fontFamily: fonts.bodyBold, color: colors.textOnDark },
 
     // Liste
     listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.sm },
