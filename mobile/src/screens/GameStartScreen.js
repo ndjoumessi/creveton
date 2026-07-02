@@ -495,8 +495,11 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingLeft: 2,
   },
   // Badge « Connexion requise » : pill compacte, paire figée red200/red600 (comme
-  // l'accent d'erreur du Toast) → lisible sur fond cream (clair) ET sombre, sans
-  // rouge plein agressif. Icône WifiOff + texte semibold, calé à gauche sous la carte.
+  // l'accent d'erreur du Toast), sans rouge plein agressif. Icône WifiOff + texte
+  // semibold, calé à gauche sous la carte. La bordure red400 est INDISPENSABLE en
+  // mode CLAIR : le fond red200 seul ne contraste qu'à 1,27:1 avec le crème (pill
+  // quasi invisible) ; la bordure (3,55:1 sur crème) redonne la forme. En sombre la
+  // pill ressort déjà (12,55:1), la bordure ajoute juste de la définition (4,49:1).
   offlineBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -507,6 +510,8 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingVertical: 2,
     borderRadius: radius.pill,
     backgroundColor: colors.red200,
+    borderWidth: 1,
+    borderColor: colors.red400,
   },
 
   modes: { gap: spacing.sm },
