@@ -5,7 +5,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet } from 'react-native';
 import { Users, Clock, Calendar, Timer } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import {
@@ -27,7 +27,7 @@ import {
 } from '../components';
 import { tournaments as tournamentsApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
-import { fonts, fontSizes, radius, spacing, themeAccent, shadow } from '../constants/theme';
+import { radius, spacing, themeAccent, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { formatDateTime, formatCountdown } from '../utils/format';
@@ -127,9 +127,9 @@ export default function TournamentScreen() {
         <Title color={colors.textOnDark}>{tr('tournaments.title')}</Title>
 
         <View style={styles.banner}>
-          <Text style={styles.bannerText}>
+          <Body weight="semibold" size="md" color={colors.gold500}>
             {tr('tournaments.freeBanner')}
-          </Text>
+          </Body>
         </View>
 
         <SegmentedTabs
@@ -227,15 +227,15 @@ function TournamentCard({ t, onJoin }) {
       <View style={styles.cardInner}>
         <View style={styles.cardTop}>
           <View style={styles.cardTitleWrap}>
-            <Heading numberOfLines={1} style={styles.cardTitle}>
+            <Heading weight="bold" size="base" numberOfLines={1}>
               {t.name}
             </Heading>
             <View style={styles.badgesRow}>
               <ThemeBadge theme={t.theme} size="sm" />
               <View style={styles.typePill}>
-                <Text style={styles.typePillText}>
+                <Body weight="bold" size="xs" color={colors.successText}>
                   {TYPE_LABEL[t.type] ? tr(`tournaments.misc.type.${TYPE_LABEL[t.type]}`) : t.type}
-                </Text>
+                </Body>
               </View>
             </View>
           </View>
@@ -245,7 +245,7 @@ function TournamentCard({ t, onJoin }) {
         <View style={styles.metaBlock}>
           <View style={styles.metaRow}>
             <Icon icon={Users} size={15} color={colors.textBody} />
-            <Body style={styles.metaLine}>
+            <Body weight="semibold" size="md">
               {t.registered_players ?? 0} / {t.max_players ?? 0} {tr('tournaments.card.players')}
             </Body>
           </View>
@@ -253,12 +253,12 @@ function TournamentCard({ t, onJoin }) {
           {countdown ? (
             <View style={styles.metaRow}>
               <Icon icon={Clock} size={15} color={colors.gold500} />
-              <Body style={styles.countdownLine}>{tr('tournaments.card.startsIn')} {countdown}</Body>
+              <Body weight="semibold" size="md" color={colors.gold500}>{tr('tournaments.card.startsIn')} {countdown}</Body>
             </View>
           ) : (
             <View style={styles.metaRow}>
               <Icon icon={Calendar} size={15} color={colors.textMuted} />
-              <Body muted style={styles.metaLineMuted}>
+              <Body muted size="md">
                 {formatDateTime(t.starts_at) || tr('tournaments.misc.dateTbd')}
               </Body>
             </View>
@@ -268,7 +268,7 @@ function TournamentCard({ t, onJoin }) {
           {t.format?.questions != null && t.format?.time_per_q_s != null ? (
             <View style={styles.metaRow}>
               <Icon icon={Timer} size={15} color={colors.textMuted} />
-              <Body muted style={styles.metaLineMuted}>
+              <Body muted size="md">
                 {t.format.questions} {tr('tournaments.card.questions')} · {t.format.time_per_q_s}
                 {tr('tournaments.card.perQ')}
               </Body>
@@ -298,12 +298,6 @@ const makeStyles = (colors) => StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
   },
-  bannerText: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
-    color: colors.gold500,
-  },
-
   body: { flex: 1, backgroundColor: colors.cream },
   loading: { padding: spacing.lg, gap: spacing.md },
   skeleton: { marginBottom: spacing.xs },
@@ -319,11 +313,6 @@ const makeStyles = (colors) => StyleSheet.create({
 
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   cardTitleWrap: { flex: 1, gap: spacing.sm },
-  cardTitle: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.base,
-    color: colors.textDark,
-  },
   badgesRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
   typePill: {
     backgroundColor: colors.successBg,
@@ -331,25 +320,9 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingVertical: 3,
     paddingHorizontal: spacing.sm,
   },
-  typePillText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: fontSizes.xs,
-    color: colors.successText,
-  },
 
   metaBlock: { gap: spacing.xs },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  metaLine: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
-    color: colors.textBody,
-  },
-  metaLineMuted: { fontSize: fontSizes.md },
-  countdownLine: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
-    color: colors.gold500,
-  },
 
   cta: { marginTop: spacing.xs },
 
