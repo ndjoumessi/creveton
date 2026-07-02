@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import {
   Screen,
+  Title,
   Heading,
   Body,
   Label,
@@ -179,12 +180,12 @@ export default function ResultsScreen({ route, navigation }) {
 
         {localResult ? (
           <View style={styles.offlineScoreCard}>
-            <Text style={styles.offlineScoreValue}>{localResult.score}</Text>
+            <Title weight="black" size="hero" color={colors.gold500} style={styles.offlineScoreValue}>{localResult.score}</Title>
             <Label color={colors.textOnDarkMuted}>{t('results.finalScore')}</Label>
             <View style={styles.offlineDivider} />
-            <Text style={styles.offlineMeta}>
+            <Title size="xl" color={colors.white}>
               {localResult.correct_count}/{localResult.total_questions} {t('results.correct')}
-            </Text>
+            </Title>
           </View>
         ) : null}
 
@@ -211,7 +212,7 @@ export default function ResultsScreen({ route, navigation }) {
       <Screen dark>
         <View style={styles.calcWrap}>
           <ActivityIndicator size="large" color={colors.gold500} />
-          <Text style={styles.calcText}>{t('quiz.misc.submitting')}</Text>
+          <Body weight="medium" color={colors.textOnDarkMuted}>{t('quiz.misc.submitting')}</Body>
         </View>
       </Screen>
     );
@@ -538,7 +539,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
           ]}
         >
           <GoldVeilBanner style={styles.recordBanner} radius={radius.pill}>
-            <Text style={styles.recordText}>{t('results.newRecord')}</Text>
+            <Title size="md" color={colors.gold400}>{t('results.newRecord')}</Title>
           </GoldVeilBanner>
         </Animated.View>
       ) : null}
@@ -577,7 +578,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
         ) : null}
         {modeBadge ? (
           <View style={styles.modeBadge}>
-            <Text style={styles.modeBadgeText}>{modeBadge}</Text>
+            <Title size="sm" color={colors.white}>{modeBadge}</Title>
           </View>
         ) : null}
       </View>
@@ -595,13 +596,13 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
           {duelCompleted ? (
             <>
               <Text style={styles.duelEmoji}>{duelEmoji}</Text>
-              <Text style={styles.duelLabel}>{duelLabel}</Text>
-              <Text style={styles.duelScore}>
+              <Title size="xl" color={colors.gold400}>{duelLabel}</Title>
+              <Heading color={colors.white}>
                 {result.your_score ?? 0} {t('challengesHub.card.vs')} {result.opponent_score ?? 0}
-              </Text>
+              </Heading>
             </>
           ) : (
-            <Text style={styles.duelWaiting}>⏳ {t('challengesHub.card.waiting')}</Text>
+            <Body weight="medium" color={colors.textOnDarkMuted}>⏳ {t('challengesHub.card.waiting')}</Body>
           )}
         </GoldVeilBanner>
       ) : null}
@@ -637,17 +638,17 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
                 {/* En-tête tappable */}
                 <Pressable style={styles.recapRow} onPress={() => toggleRow(i)}>
                   <View style={[styles.pastille, good ? styles.pastilleGood : styles.pastilleBad]}>
-                    <Text style={styles.pastilleText}>{good ? '✓' : '✗'}</Text>
+                    <Body weight="bold" size="md" color={colors.white}>{good ? '✓' : '✗'}</Body>
                   </View>
                   <View style={styles.recapBody}>
-                    <Body style={styles.recapTitle} numberOfLines={open ? undefined : 1}>
+                    <Body weight="semibold" size="md" color={colors.textDark} numberOfLines={open ? undefined : 1}>
                       {title}
                     </Body>
                   </View>
-                  <Text style={[styles.recapTag, good ? styles.tagGood : styles.tagBad]}>
+                  <Label weight="bold" size="xs" color={good ? colors.successText : colors.errorText}>
                     {good ? t('results.correct_label') : t('results.wrong_label')}
-                  </Text>
-                  <Text style={styles.chevron}>{open ? '⌄' : '›'}</Text>
+                  </Label>
+                  <Title size="lg" color={colors.textMuted}>{open ? '⌄' : '›'}</Title>
                 </Pressable>
 
                 {/* Détail déplié */}
@@ -655,24 +656,24 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
                   <View style={styles.detail}>
                     {correctText ? (
                       <View style={styles.ansGood}>
-                        <Text style={styles.ansGoodText}>
+                        <Label color={colors.successText}>
                           ✓ {t('results.misc.correctAnswer')} : {correctText}
-                        </Text>
+                        </Label>
                       </View>
                     ) : null}
                     {!good && yourText ? (
                       <View style={styles.ansBad}>
-                        <Text style={styles.ansBadText}>
+                        <Label color={colors.errorText}>
                           ✗ {t('results.misc.yourAnswer')} : {yourText}
-                        </Text>
+                        </Label>
                       </View>
                     ) : null}
                     {(item.explanation || item.explanation_en) ? (
                       <View style={styles.detailExplRow}>
                         <Icon icon={Lightbulb} size={14} color={colors.textMuted} />
-                        <Text style={[styles.detailExpl, styles.detailExplFlex]}>
+                        <Body size="xs" color={colors.textMuted} style={[styles.detailExpl, styles.detailExplFlex]}>
                           {lang === 'en' && item.explanation_en ? item.explanation_en : item.explanation}
-                        </Text>
+                        </Body>
                       </View>
                     ) : null}
                   </View>
@@ -687,7 +688,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
 
       {/* XP */}
       <View style={styles.xpBlock}>
-        <Label color={colors.cream} style={styles.xpLabel}>
+        <Label weight="semibold" color={colors.cream} style={styles.xpLabel}>
           {t('results.xpGained', { xp: result.xp_earned ?? 0 })}
           {result.speed_bonus ? ` (${t('results.speedBonus', { bonus: result.speed_bonus })})` : ''}
         </Label>
@@ -699,9 +700,9 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
       {/* BONUS THÈME (marathon) — points gagnés par séries thématiques */}
       {result.theme_streak_bonus > 0 ? (
         <GoldVeilBanner style={styles.themeBonus} radius={radius.pill}>
-          <Text style={styles.themeBonusText}>
+          <Title size="md" color={colors.gold400}>
             {t('results.themeBonus', { bonus: result.theme_streak_bonus })}
-          </Text>
+          </Title>
         </GoldVeilBanner>
       ) : null}
 
@@ -781,8 +782,8 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
 function Stat({ value, label }) {
   return (
     <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Title size="xl" color={colors.white}>{value}</Title>
+      <Body size="xs" color={colors.textOnDarkMuted} style={styles.statLabel}>{label}</Body>
     </View>
   );
 }
@@ -804,12 +805,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  recordText: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.md,
-    color: colors.gold400,
-  },
-
   progressBlock: { marginTop: spacing.xl, zIndex: 2 },
   progressCard: { alignItems: 'center' },
 
@@ -845,17 +840,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   stat: { flex: 1, alignItems: 'center', gap: spacing.xxs },
-  statValue: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl, // 24-ish → 22
-    color: colors.white,
-  },
-  statLabel: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.xs,
-    color: colors.textOnDarkMuted,
-    textAlign: 'center',
-  },
+  statLabel: { textAlign: 'center' },
 
   sectionTitle: { marginBottom: spacing.sm },
   recapCard: { gap: 0 },
@@ -882,39 +867,18 @@ const styles = StyleSheet.create({
   },
   pastilleGood: { backgroundColor: colors.green500 },
   pastilleBad: { backgroundColor: colors.red400 },
-  pastilleText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: fontSizes.md,
-    color: colors.white,
-  },
   recapBody: { flex: 1 },
-  recapTitle: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
-    color: colors.textDark,
-  },
-  recapTag: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs },
-  tagGood: { color: colors.successText },
-  tagBad: { color: colors.errorText },
-  chevron: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textMuted },
 
   // Détail déplié d'une carte du récap.
   detail: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
   ansGood: { backgroundColor: colors.pastelGreen, borderRadius: radius.sm, padding: spacing.sm },
-  ansGoodText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.successText },
   ansBad: { backgroundColor: colors.pastelRose, borderRadius: radius.sm, padding: spacing.sm },
-  ansBadText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.errorText },
-  detailExpl: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
-    fontStyle: 'italic',
-  },
+  detailExpl: { fontStyle: 'italic' },
   detailExplRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   detailExplFlex: { flex: 1 },
 
   xpBlock: { marginTop: spacing.xl },
-  xpLabel: { fontFamily: fonts.bodySemiBold, marginBottom: spacing.sm },
+  xpLabel: { marginBottom: spacing.sm },
   xpTrack: {
     height: 12,
     borderRadius: radius.pill,
@@ -937,9 +901,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   duelEmoji: { fontSize: 40 },
-  duelLabel: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.gold400 },
-  duelScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.white },
-  duelWaiting: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textOnDarkMuted },
 
   themeBonus: {
     marginTop: spacing.lg,
@@ -947,7 +908,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  themeBonusText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.gold400 },
 
   // Enveloppe animée (scale) — porte la marge parent hors du transform pour que
   // le « pop » reste centré sur le bandeau ; le voile d'or vit dans GoldVeilBanner.
@@ -972,11 +932,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 12,
   },
-  modeBadgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.sm, color: colors.white },
 
   // Écran « Calcul en cours… » (suspense 800 ms, blitz/marathon).
   calcWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
-  calcText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textOnDarkMuted },
 
   // Écran de résultat hors-ligne (partie mise en file, sync au retour réseau).
   offlineContent: { flex: 1, justifyContent: 'center', gap: spacing.xl },
@@ -992,22 +950,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderOnDark,
   },
-  offlineScoreValue: {
-    fontFamily: fonts.titleBlack,
-    fontSize: fontSizes.hero,
-    lineHeight: 72,
-    color: colors.gold500,
-  },
+  offlineScoreValue: { lineHeight: 72 },
   offlineDivider: {
     width: 40,
     height: 2,
     borderRadius: 1,
     backgroundColor: colors.gold500,
     marginVertical: spacing.sm,
-  },
-  offlineMeta: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl,
-    color: colors.white,
   },
 });
