@@ -178,8 +178,14 @@ export default function MiniLineChart({
   const selPoint = sel != null ? points[sel] : null;
   const tipRawTop = selPoint ? selPoint.y - tipH - 10 : 0;
   const tipTop = tipRawTop < 0 ? (selPoint ? selPoint.y + 12 : 0) : tipRawTop;
+  // Colonne des valeurs d'axe Y (à droite, présente UNIQUEMENT avec la grille) :
+  // on interdit au tooltip d'y empiéter, sinon il chevauche un libellé — cas le
+  // plus visible au DERNIER point (le plus à droite ET souvent proche du sommet).
+  // Le tooltip, centré sur le point, ne peut plus déborder à droite au-delà de la
+  // colonne des libellés. Sans grille → aucune colonne → borne historique inchangée.
+  const axisZone = showGrid ? padding + 30 : 0;
   const tipLeft = selPoint
-    ? Math.min(Math.max(selPoint.x - tipW / 2, 0), Math.max(w - tipW, 0))
+    ? Math.min(Math.max(selPoint.x - tipW / 2, 0), Math.max(w - tipW - axisZone, 0))
     : 0;
 
   return (
