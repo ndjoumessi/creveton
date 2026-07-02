@@ -24,14 +24,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Lightbulb } from 'lucide-react-native';
 import Icon from '../components/Icon';
-import { AnswerOption, LoadingScreen, ProgressDots, CircularTimer, useToast } from '../components';
+import { AnswerOption, LoadingScreen, ProgressDots, CircularTimer, useToast, Title, Heading, Body } from '../components';
 import { useGameStore } from '../store/gameStore';
 import { sessions as sessionsApi } from '../services/endpoints';
 import { patchQuestionSolution } from '../services/database';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { useTheme } from '../hooks/useTheme';
-import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
 
@@ -487,16 +487,16 @@ export default function QuizScreen({ navigation }) {
           <Text style={styles.quitText}>✕</Text>
         </Pressable>
         <View style={styles.qBadge}>
-          <Text style={styles.qBadgeText}>
+          <Heading weight="bold" size="md" color={colors.textOnDark}>
             {t('quiz.question', { current: currentIndex + 1, total })}
-          </Text>
+          </Heading>
         </View>
         {isTimed ? (
           // Mode mixte : score serveur-only → on masque le slot (cale-droite pour
           // garder le badge « Q x/N » centré, comme le bouton ✕ à gauche).
           <View style={styles.headerSpacer} />
         ) : (
-          <Text style={styles.score}>⚡ {displayScore} {t('quiz.pts')}</Text>
+          <Title weight="extrabold" size="lg" color={colors.gold500}>⚡ {displayScore} {t('quiz.pts')}</Title>
         )}
       </View>
 
@@ -529,7 +529,7 @@ export default function QuizScreen({ navigation }) {
       {/* Streak badge */}
       {correctStreak >= 3 && !answered ? (
         <Animated.View style={[styles.streak, { transform: [{ scale: streakScale }] }]}>
-          <Text style={styles.streakText}>{t('quiz.streak', { n: correctStreak })}</Text>
+          <Heading weight="bold" size="md" color={colors.green900}>{t('quiz.streak', { n: correctStreak })}</Heading>
         </Animated.View>
       ) : null}
 
@@ -538,7 +538,7 @@ export default function QuizScreen({ navigation }) {
         {question.media_url ? (
           <QuestionMedia uri={question.media_url} styles={styles} colors={colors} />
         ) : null}
-        <Text style={styles.question}>{displayText}</Text>
+        <Heading size={17} style={styles.question}>{displayText}</Heading>
         <View style={styles.goldBar} />
       </View>
 
@@ -582,7 +582,7 @@ export default function QuizScreen({ navigation }) {
           style={styles.skip}
           hitSlop={8}
         >
-          <Text style={styles.skipText}>{t('quiz.skip')}</Text>
+          <Body weight="medium" size="md" color={colors.textOnDarkFaint}>{t('quiz.skip')}</Body>
         </Pressable>
       ) : null}
 
@@ -607,14 +607,14 @@ export default function QuizScreen({ navigation }) {
               return (
                 <View style={styles.explainRow}>
                   <Icon icon={Lightbulb} size={16} color={colors.textDark} />
-                  <Text style={[styles.explainText, styles.explainTextFlex]}>{expl}</Text>
+                  <Body size="sm" color={colors.textDark} style={[styles.explainText, styles.explainTextFlex]}>{expl}</Body>
                 </View>
               );
             }
             return (
-              <Text style={styles.explainText}>
+              <Body size="sm" color={colors.textDark} style={styles.explainText}>
                 {answered.isCorrect ? t('quiz.goodAnswer') : t('quiz.misc.wrongAnswer')}
-              </Text>
+              </Body>
             );
           })()}
           <View style={styles.autoTrack}>
@@ -662,8 +662,6 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 12,
   },
-  qBadgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.textOnDark },
-  score: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.lg, color: colors.gold500 },
   headerSpacer: { width: 36 }, // équilibre le bouton ✕ → badge « Q x/N » centré
 
   timerWrap: { alignItems: 'center', marginTop: spacing.md, minHeight: 104, justifyContent: 'center' },
@@ -682,7 +680,6 @@ const makeStyles = (colors) => StyleSheet.create({
     zIndex: 5,
     ...shadow.gold,
   },
-  streakText: { fontFamily: fonts.titleBold, fontSize: fontSizes.md, color: colors.green900 },
 
   // D. Carte question — surface flottante (thémée), barre or sous le texte.
   card: {
@@ -692,7 +689,7 @@ const makeStyles = (colors) => StyleSheet.create({
     marginTop: spacing.lg,
     ...shadow.floating,
   },
-  question: { fontFamily: fonts.titleSemiBold, fontSize: 17, lineHeight: 26, color: colors.textDark },
+  question: { lineHeight: 26 },
   goldBar: { width: 40, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.sm },
   // Image optionnelle de la question (au-dessus de l'énoncé).
   qMediaWrap: {
@@ -710,7 +707,6 @@ const makeStyles = (colors) => StyleSheet.create({
   options: { marginTop: spacing.lg, gap: spacing.sm },
 
   skip: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: 'auto' },
-  skipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textOnDarkFaint },
 
   tapToSkip: { ...StyleSheet.absoluteFillObject },
 
@@ -725,7 +721,7 @@ const makeStyles = (colors) => StyleSheet.create({
     padding: spacing.lg,
     zIndex: 6,
   },
-  explainText: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.sm, color: colors.textDark, lineHeight: 20 },
+  explainText: { lineHeight: 20 },
   explainRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   explainTextFlex: { flex: 1 },
   autoTrack: {
