@@ -31,6 +31,8 @@ export default function EmptyState({
   return (
     <View style={[styles.container, style]}>
       {typeof icon === 'string' ? (
+        // intentional: emoji à pleine opacité (l'ancien état vide Challenges
+        // utilisait 0.9 — delta entériné, audit d'équivalence P1).
         <Text style={{ fontSize: iconSize }}>{icon}</Text>
       ) : (
         <Icon icon={icon} size={iconSize} color={colors.textMuted} strokeWidth={1.5} />

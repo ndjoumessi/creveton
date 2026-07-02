@@ -98,6 +98,9 @@ export default function MiniLineChart({
             x={width - padding}
             y={g.y - 2}
             fontSize={9}
+            // intentional: graduations en Outfit SemiBold (l'ancien ScoreChart de
+            // Stats les rendait en police système regular — delta entériné, audit
+            // d'équivalence P1 ; charte « chiffres en Outfit »).
             fontFamily={fonts.titleSemiBold}
             fill={colors.textFaint}
             textAnchor="end"
