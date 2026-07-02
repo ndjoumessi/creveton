@@ -37,6 +37,18 @@ const submit = (token, body) =>
 const detail = (token, id) =>
   request(app).get(`/api/v1/sessions/${id}`).set('Authorization', `Bearer ${token}`);
 
+// Garde-fou de MONTAGE — s'exécute TOUJOURS (aucune infra requise), contrairement
+// aux tests d'intégration ci-dessous qui se skippent sans Postgres/Redis. Une route
+// non montée (router.get absent, mauvais préfixe, oubli du router.use) répondrait 404
+// « Route introuvable » ; montée, `authenticate` rejette d'abord en 401. C'est
+// exactement le bug staging (404 malgré tests verts) que ce test attrape sans DB.
+test('route montée : GET /api/v1/sessions/:id sans token → 401 (pas 404)', async () => {
+  const res = await request(app).get('/api/v1/sessions/00000000-0000-4000-8000-000000000000');
+  expect(res.status).not.toBe(404);
+  expect(res.status).toBe(401);
+  expect(res.body.error.code).toBe('TOKEN_MISSING');
+});
+
 async function playSession() {
   const user = await H.createUser({ role: 'player', total_xp: 0, level: 1 });
   const token = H.tokenFor(user);
