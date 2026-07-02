@@ -8,7 +8,7 @@ const QUESTION_TYPES = ['mcq', 'true_false', 'open', 'order'];
 const QUESTION_STATUSES = ['draft', 'pending_review', 'approved', 'rejected', 'archived'];
 
 // blitz : 1 timer global (~60 s, tous thèmes/niveaux mélangés).
-// marathon : 1 timer global (~180 s), 20 questions mix, bonus thème consécutif.
+// marathon : 1 timer global (~120 s), 20 questions mix, bonus thème consécutif.
 const GAME_MODES = ['normal', 'tournament', 'challenge', 'blitz', 'marathon'];
 const SEXES = ['H', 'F', 'N'];
 const LANGS = ['fr', 'en'];
