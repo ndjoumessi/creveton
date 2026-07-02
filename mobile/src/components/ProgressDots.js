@@ -37,7 +37,7 @@ function Dot({ state, isCurrent, isUpcoming }) {
     bg = colors.white;
     size = 12;
   } else if (isUpcoming) {
-    bg = 'rgba(255,255,255,0.2)';
+    bg = colors.trackOnDark;
   } else {
     bg =
       state === 'correct'

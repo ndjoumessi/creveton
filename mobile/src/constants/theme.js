@@ -23,8 +23,10 @@ export const colors = {
 
   // — Fond clair & accent
   cream: '#fdf6e9',
+  red200: '#ffd2cd', // accent erreur du Toast (posé sur red600, figé)
   red400: '#e74c3c',
   red600: '#c0392b',
+  orange: '#f97316', // timer 'ring' : étape intermédiaire or → orange → rouge
 
   // — Neutres
   white: '#ffffff',
@@ -68,6 +70,41 @@ export const colors = {
 
   // — Voile clair (boutons discrets posés sur les bandeaux vert nuit)
   whiteVeil: 'rgba(255, 255, 255, 0.15)',
+
+  // — Voile vert (badge OTP : fond + bordure — pendant vert de goldVeil)
+  greenVeil: 'rgba(42, 138, 79, 0.12)',
+  greenVeilBorder: 'rgba(42, 138, 79, 0.22)',
+
+  // — Tints résultat (SessionCard : fond alpha 0.06 sous bordure 1px pleine,
+  //   couleur par taux de réussite). Pas de variante sombre : un voile aussi
+  //   léger fonctionne tel quel sur la surface de carte sombre (comportement
+  //   historique conservé).
+  tintSuccess: 'rgba(42, 138, 79, 0.06)',
+  tintGold: 'rgba(212, 160, 23, 0.06)',
+  tintError: 'rgba(231, 76, 60, 0.06)',
+
+  // — Pastels figés (pastilles d'icônes Profil/Stats/Accueil, fonds de réponse
+  //   du récap Résultats). Décoratifs, non sémantiques — JAMAIS surchargés en
+  //   sombre : l'icône green900 (marque, ne flippe pas) posée dessus doit
+  //   rester lisible dans les deux thèmes (successBg/errorBg, eux, flippent).
+  pastelGreen: '#e8f5ed',
+  pastelYellow: '#fef9c3',
+  pastelBlue: '#dbeafe',
+  pastelRed: '#fee2e2',
+  pastelIndigo: '#e0e7ff',
+  pastelViolet: '#f3e8ff',
+  pastelRose: '#fdecea', // fond « mauvaise réponse » (récap Résultats)
+
+  // — Pistes sur fond vert nuit (quiz/loading — composants figés sur sombre,
+  //   pas de variante dark)
+  trackOnDark: 'rgba(255, 255, 255, 0.2)', // anneau timer 'ring' + points à venir (ProgressDots)
+  trackOnDarkSoft: 'rgba(255, 255, 255, 0.08)', // piste 'watch' blitz
+  trackOnDarkFaint: 'rgba(255, 255, 255, 0.06)', // piste 'watch' marathon
+  goldTrack: 'rgba(232, 184, 48, 0.18)', // piste du spinner or (LoadingScreen)
+
+  // — Skeleton (le composant choisit lui-même la variante selon thème/prop `dark`)
+  skeletonOnLight: 'rgba(11, 46, 26, 0.08)', // = divider — pulse sur surfaces claires
+  skeletonOnDark: 'rgba(94, 202, 132, 0.14)',
 };
 
 // ════════════════════════════════════════════════════════════════════════

@@ -543,21 +543,21 @@ export default function ProfileScreen() {
 
       <View style={styles.body}>
         {/* C. MON COMPTE */}
-        {/* Pastilles d'icônes : pastels clairs FIXES (vert/bleu/jaune/rouge/indigo/violet).
-            Volontairement en dur — les tokens successBg/errorBg flippent foncé en dark,
-            rendant l'icône green900 invisible. TODO: ajouter token (pastels de pastille). */}
+        {/* Pastilles d'icônes : tokens `pastel*` (theme.js) — pastels clairs FIXES,
+            identiques en sombre (successBg/errorBg flippent foncé en dark, rendant
+            l'icône green900 invisible ; les pastel* ne flippent jamais). */}
         <Section title={t('profile.sections.account')}>
-          <SettingRow icon={User} iconBg="#e8f5ed" label={t('profile.fields.name')} value={user?.name} onPress={openEdit} />
-          <SettingRow icon={Mail} iconBg="#dbeafe" label={t('profile.fields.email')} value={user?.email} valueMuted />
-          <SettingRow icon={Smartphone} iconBg="#fef9c3" label={t('profile.fields.phone')} value={user?.phone} valueMuted />
-          <SettingRow icon={MapPin} iconBg="#fee2e2" label={t('profile.fields.city')} value={user?.ville} onPress={openEdit} isLast />
+          <SettingRow icon={User} iconBg={colors.pastelGreen} label={t('profile.fields.name')} value={user?.name} onPress={openEdit} />
+          <SettingRow icon={Mail} iconBg={colors.pastelBlue} label={t('profile.fields.email')} value={user?.email} valueMuted />
+          <SettingRow icon={Smartphone} iconBg={colors.pastelYellow} label={t('profile.fields.phone')} value={user?.phone} valueMuted />
+          <SettingRow icon={MapPin} iconBg={colors.pastelRed} label={t('profile.fields.city')} value={user?.ville} onPress={openEdit} isLast />
         </Section>
 
         {/* C. PRÉFÉRENCES */}
         <Section title={t('profile.sections.preferences')}>
           <SettingRow
             icon={Globe}
-            iconBg="#e8f5ed"
+            iconBg={colors.pastelGreen}
             label={t('profile.fields.language')}
             right={
               <View style={styles.langPills}>
@@ -582,7 +582,7 @@ export default function ProfileScreen() {
           />
           <SettingRow
             icon={isDark ? Moon : Sun}
-            iconBg="#e0e7ff"
+            iconBg={colors.pastelIndigo}
             label={t('profile.rows.appearance')}
             right={
               <View style={styles.themeToggle}>
@@ -599,7 +599,7 @@ export default function ProfileScreen() {
           />
           <SettingRow
             icon={Bell}
-            iconBg="#fef9c3"
+            iconBg={colors.pastelYellow}
             label={t('profile.rows.notifications')}
             right={
               <Switch
@@ -612,7 +612,7 @@ export default function ProfileScreen() {
           />
           <SettingRow
             icon={Gift}
-            iconBg="#f3e8ff"
+            iconBg={colors.pastelViolet}
             label={t('profile.referral.label')}
             isLast
             right={
@@ -717,7 +717,7 @@ export default function ProfileScreen() {
         <Section title={t('profile.sections.security')}>
           <SettingRow
             icon={Key}
-            iconBg="#dbeafe"
+            iconBg={colors.pastelBlue}
             label={t('profile.rows.changePassword')}
             value={!isOnline ? t('offline.banner') : undefined}
             valueMuted={!isOnline}

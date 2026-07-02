@@ -3,7 +3,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet } from 'react-native';
-import { radius as R } from '../constants/theme';
+import { colors, radius as R } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 export default function Skeleton({ width = '100%', height = 16, radius = R.sm, dark = false, style }) {
@@ -35,6 +35,6 @@ export default function Skeleton({ width = '100%', height = 16, radius = R.sm, d
 
 const styles = StyleSheet.create({
   base: {},
-  light: { backgroundColor: 'rgba(11,46,26,0.08)' },
-  dark: { backgroundColor: 'rgba(94,202,132,0.14)' },
+  light: { backgroundColor: colors.skeletonOnLight },
+  dark: { backgroundColor: colors.skeletonOnDark },
 });

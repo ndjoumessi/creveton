@@ -15,12 +15,12 @@ import { colors, fonts, spacing } from '../constants/theme';
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const GOLD = colors.gold500;
-const ORANGE = '#f97316';
+const ORANGE = colors.orange;
 const RED = colors.red400;
 
 // Variante 'watch' : trait et fond de piste distincts par mode.
 const WATCH_STROKE = { blitz: 4, marathon: 3 };
-const WATCH_TRACK = { blitz: 'rgba(255,255,255,0.08)', marathon: 'rgba(255,255,255,0.06)' };
+const WATCH_TRACK = { blitz: colors.trackOnDarkSoft, marathon: colors.trackOnDarkFaint };
 
 export default function CircularTimer({
   size = 80,
@@ -81,7 +81,7 @@ export default function CircularTimer({
         inputRange: [0, 0.2, 0.5, 1],
         outputRange: [RED, RED, ORANGE, GOLD],
       });
-  const trackStroke = watch ? WATCH_TRACK[mode] || WATCH_TRACK.blitz : 'rgba(255,255,255,0.2)';
+  const trackStroke = watch ? WATCH_TRACK[mode] || WATCH_TRACK.blitz : colors.trackOnDark;
 
   // Pulsation 'ring' : sous 5 s. Redémarre à chaque seconde (dép. `seconds`).
   useEffect(() => {
