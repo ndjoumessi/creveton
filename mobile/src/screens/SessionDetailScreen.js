@@ -19,7 +19,6 @@ import {
   Label,
   AppCard,
   ThemeBadge,
-  LevelBadge,
   AnswerOption,
   Skeleton,
   ErrorScreen,
@@ -29,7 +28,7 @@ import { parseApiError } from '../services/api';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
-import { themeEmoji, themeLabel, formatDateTime } from '../utils/format';
+import { levelLabel, formatDateTime } from '../utils/format';
 import { radius, spacing } from '../constants/theme';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -174,13 +173,17 @@ export default function SessionDetailScreen({ navigation, route }) {
                   </Body>
                 </View>
               )}
-              {data.level ? <LevelBadge level={data.level} variant="soft" /> : null}
+              {/* Difficulté de la partie (beginner/intermediate/expert) : PAS le
+                  niveau joueur — d'où une pill dédiée et non <LevelBadge>. Libellé
+                  localisé via les clés gameStart.levels.* (repli levelLabel FR). */}
+              {data.level ? (
+                <View style={styles.levelTag}>
+                  <Body weight="semibold" size="sm" color={colors.textBody}>
+                    {t(`gameStart.levels.${data.level}`, { defaultValue: levelLabel(data.level) })}
+                  </Body>
+                </View>
+              ) : null}
             </View>
-            {hasTheme ? (
-              <Body size="sm" color={colors.textMuted}>
-                {themeEmoji(data.theme)} {themeLabel(data.theme)}
-              </Body>
-            ) : null}
             <Label color={colors.textFaint} style={styles.date}>
               {formatDateTime(data.played_at)}
             </Label>
@@ -232,6 +235,16 @@ const makeStyles = (colors) =>
     headTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
     modeTag: {
       backgroundColor: colors.successBgSoft,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xxs,
+    },
+    // Pill difficulté : surface neutre + bordure (se distingue de la pastille
+    // colorée du thème, à côté de laquelle elle vit dans headTop).
+    levelTag: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
       borderRadius: radius.pill,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xxs,
