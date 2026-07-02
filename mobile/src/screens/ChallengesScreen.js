@@ -27,6 +27,7 @@ import {
   Title,
   Heading,
   Body,
+  Label,
   AppCard,
   AppButton,
   Avatar,
@@ -268,9 +269,9 @@ export default function ChallengesScreen({ navigation, route }) {
     if (st.error) {
       return (
         <View style={styles.stateBox}>
-          <Text style={styles.stateText}>{st.error}</Text>
+          <Label style={styles.stateText}>{st.error}</Label>
           <Pressable onPress={() => fetchTab(tab)} hitSlop={8}>
-            <Text style={styles.retryLink}>{t('common.retry')}</Text>
+            <Label weight="semibold" color={colors.green500}>{t('common.retry')}</Label>
           </Pressable>
         </View>
       );
@@ -290,13 +291,13 @@ export default function ChallengesScreen({ navigation, route }) {
               <Icon icon={Swords} size={22} color={colors.textOnDark} />
               <Title color={colors.textOnDark}>{t('challengesHub.title')}</Title>
             </View>
-            <Body style={styles.subtitle}>{t('challengesHub.subtitle')}</Body>
+            <Body weight="medium" size="sm" color={colors.gold400}>{t('challengesHub.subtitle')}</Body>
           </View>
           {activeCount > 0 ? (
             <View style={styles.countPill}>
-              <Text style={styles.countPillText}>
+              <Title size="xs" color={colors.textOnDark}>
                 {t('challengesHub.activeCount', { count: activeCount })}
-              </Text>
+              </Title>
             </View>
           ) : null}
         </View>
@@ -318,7 +319,7 @@ export default function ChallengesScreen({ navigation, route }) {
         {!isOnline ? (
           <View style={styles.offlineBanner}>
             <Icon icon={Swords} size={15} color={colors.green900} />
-            <Text style={styles.offlineBannerText}>{t('offline.challenges')}</Text>
+            <Label weight="semibold" color={colors.green900}>{t('offline.challenges')}</Label>
           </View>
         ) : null}
 
@@ -345,7 +346,7 @@ export default function ChallengesScreen({ navigation, route }) {
       {/* Bottom sheet — Nouveau challenge */}
       <BottomSheet visible={sheetOpen} onClose={resetSheet} title={t('challengesHub.sheet.title')}>
           {/* Thème — 2 rangées de 3 tuiles (lisibilité petits écrans) */}
-          <Text style={styles.fieldLabel}>{t('challengesHub.sheet.theme')}</Text>
+          <Label weight="semibold" size={11} style={styles.fieldLabel}>{t('challengesHub.sheet.theme')}</Label>
           <ChoiceChips
             layout="grid"
             haptic
@@ -355,7 +356,7 @@ export default function ChallengesScreen({ navigation, route }) {
           />
 
           {/* Difficulté — 3 pills pleine largeur (même motif que GameStartScreen) */}
-          <Text style={styles.fieldLabel}>{t('challengesHub.sheet.level')}</Text>
+          <Label weight="semibold" size={11} style={styles.fieldLabel}>{t('challengesHub.sheet.level')}</Label>
           <ChoiceChips
             haptic
             options={LEVELS.map((l) => ({
@@ -367,7 +368,7 @@ export default function ChallengesScreen({ navigation, route }) {
           />
 
           {/* Adversaire — aléatoire ou recherche d'un ami précis */}
-          <Text style={styles.fieldLabel}>{t('challengesHub.sheet.opponent')}</Text>
+          <Label weight="semibold" size={11} style={styles.fieldLabel}>{t('challengesHub.sheet.opponent')}</Label>
           <View style={styles.oppRow}>
             <Pressable
               onPress={() => {
@@ -379,9 +380,9 @@ export default function ChallengesScreen({ navigation, route }) {
               accessibilityRole="button"
               accessibilityState={{ selected: opponent === 'random' }}
             >
-              <Text style={[styles.oppChipText, opponent === 'random' && styles.oppChipTextActive]} numberOfLines={1}>
+              <Label color={colors.textDark} numberOfLines={1}>
                 {t('challengesHub.sheet.randomOpponent')}
-              </Text>
+              </Label>
             </Pressable>
             <Pressable
               onPress={() => {
@@ -392,9 +393,9 @@ export default function ChallengesScreen({ navigation, route }) {
               accessibilityRole="button"
               accessibilityState={{ selected: opponent === 'friend' }}
             >
-              <Text style={[styles.oppChipText, opponent === 'friend' && styles.oppChipTextActive]} numberOfLines={1}>
+              <Label color={colors.textDark} numberOfLines={1}>
                 {t('challengesHub.sheet.friend')}
-              </Text>
+              </Label>
             </Pressable>
           </View>
 
@@ -412,8 +413,8 @@ export default function ChallengesScreen({ navigation, route }) {
                   accessibilityLabel={t('challengesHub.sheet.changeFriend')}
                 >
                   <Avatar name={selectedFriend.name} size={32} uri={selectedFriend.avatar_url} />
-                  <Text style={styles.selectedFriendName} numberOfLines={1}>{selectedFriend.name}</Text>
-                  <Text style={styles.selectedFriendChange}>{t('common.close')}</Text>
+                  <Label weight="semibold" color={colors.textDark} style={styles.selectedFriendName} numberOfLines={1}>{selectedFriend.name}</Label>
+                  <Title size="lg" color={colors.textMuted} style={styles.selectedFriendChange}>{t('common.close')}</Title>
                 </Pressable>
               ) : (
                 <>
@@ -430,7 +431,7 @@ export default function ChallengesScreen({ navigation, route }) {
                     <ActivityIndicator style={styles.searchSpinner} color={colors.green500} />
                   ) : null}
                   {!searching && query.trim().length >= 2 && searchResults.length === 0 ? (
-                    <Text style={styles.searchEmpty}>{t('challengesHub.sheet.noResults')}</Text>
+                    <Label style={styles.searchEmpty}>{t('challengesHub.sheet.noResults')}</Label>
                   ) : null}
                   {searchResults.map((u) => (
                     <Pressable
@@ -443,8 +444,8 @@ export default function ChallengesScreen({ navigation, route }) {
                       accessibilityRole="button"
                     >
                       <Avatar name={u.name} size={32} uri={u.avatar_url} />
-                      <Text style={styles.resultName} numberOfLines={1}>{u.name}</Text>
-                      <Text style={styles.resultLevel}>{t('common.level')} {u.level}</Text>
+                      <Label weight="semibold" color={colors.textDark} style={styles.resultName} numberOfLines={1}>{u.name}</Label>
+                      <Label size="xs">{t('common.level')} {u.level}</Label>
                     </Pressable>
                   ))}
                 </>
@@ -473,12 +474,12 @@ function OpponentRow({ t, name, level, theme, right }) {
     <View style={styles.cardRow}>
       <Avatar name={name} size={44} />
       <View style={styles.cardMid}>
-        <Heading numberOfLines={1} style={styles.cardName}>
+        <Heading weight="bold" size="base" numberOfLines={1}>
           {name}
         </Heading>
         <View style={styles.cardMeta}>
           {level != null ? (
-            <Text style={styles.cardMetaText}>{t('challengesHub.card.level', { n: level })}</Text>
+            <Label size="xs">{t('challengesHub.card.level', { n: level })}</Label>
           ) : null}
           {theme ? (
             <>
@@ -500,7 +501,7 @@ function ReceivedCard({ t, item, onAccept, onDecline, disabled = false }) {
   return (
     <AppCard tone="light" padding="md" radius={radius.lg} style={[styles.card, styles.cardReceived]}>
       <OpponentRow t={t} name={name} level={item.opponent?.level} theme={item.theme} />
-      <Body muted style={styles.cardSub}>
+      <Body muted size="xs" style={styles.cardSub}>
         {t('challengesHub.card.sentAgo', { ago: timeAgo(item.created_at) })}
       </Body>
       <View style={styles.cardActions}>
@@ -520,16 +521,16 @@ function SentCard({ t, item, onCancel, disabled = false }) {
       <OpponentRow t={t} name={name} level={item.opponent?.level} theme={item.theme} />
       <View style={styles.sentFooter}>
         {item.your_score != null ? (
-          <Text style={styles.sentScore}>{t('challengesHub.card.myScore', { score: item.your_score })}</Text>
+          <Heading size="md">{t('challengesHub.card.myScore', { score: item.your_score })}</Heading>
         ) : null}
-        <Text style={styles.sentWaiting}>
+        <Label>
           {item.your_score != null ? '· ' : ''}{t('challengesHub.card.waiting')}
-        </Text>
+        </Label>
         <View style={styles.sentSpacer} />
         <Pressable onPress={() => onCancel(item)} disabled={disabled} hitSlop={8}>
-          <Text style={[styles.cancelLink, disabled && styles.cancelLinkDisabled]}>
+          <Label weight="semibold" color={colors.red600} style={disabled && styles.cancelLinkDisabled}>
             {t('challengesHub.actions.cancel')}
-          </Text>
+          </Label>
         </Pressable>
       </View>
     </AppCard>
@@ -550,13 +551,13 @@ function CompletedCard({ t, item }) {
       <View style={styles.completedRow}>
         <Text style={styles.completedEmoji}>{emoji}</Text>
         <View style={styles.cardMid}>
-          <Text style={[styles.completedOutcome, { color: labelColor }]}>
+          <Title size="base" color={labelColor}>
             {label}
-            <Text style={styles.completedVs}>  {t('challengesHub.card.vs')} {name}</Text>
-          </Text>
-          <Text style={styles.completedScores}>
+            <Label size="sm" color={colors.textBody}>  {t('challengesHub.card.vs')} {name}</Label>
+          </Title>
+          <Label style={styles.completedScores}>
             {item.your_score ?? 0} {t('challengesHub.card.vs')} {item.opponent_score ?? 0}
-          </Text>
+          </Label>
         </View>
       </View>
     </AppCard>
@@ -584,7 +585,6 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   headerTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
   headerTitleWrap: { flex: 1, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  subtitle: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.gold400 },
   countPill: {
     backgroundColor: colors.green700,
     borderRadius: radius.pill,
@@ -592,7 +592,6 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     paddingHorizontal: spacing.md,
     marginTop: spacing.xs,
   },
-  countPillText: { fontFamily: fonts.titleBold, fontSize: fontSizes.xs, color: colors.textOnDark },
 
   body: { flex: 1, backgroundColor: colors.cream, borderTopLeftRadius: 28, borderTopRightRadius: 28 },
   offlineBanner: {
@@ -608,13 +607,11 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
-  offlineBannerText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, color: colors.green900 },
   listContent: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md, flexGrow: 1 },
 
   // États de chargement / erreur de l'onglet.
   stateBox: { alignItems: 'center', justifyContent: 'center', paddingTop: spacing.xxxl, gap: spacing.sm },
-  stateText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center' },
-  retryLink: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, color: colors.green500 },
+  stateText: { textAlign: 'center' },
 
   card: { ...shadow.card },
   cardReceived: { borderLeftWidth: 4, borderLeftColor: colors.gold500 },
@@ -622,36 +619,27 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   cardCompleted: { borderLeftWidth: 4, borderLeftColor: colors.textMuted },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   cardMid: { flex: 1, gap: 2 },
-  cardName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.textDark },
   cardMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
-  cardMetaText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
   cardMetaDot: { color: colors.textFaint, fontSize: fontSizes.xs },
-  cardSub: { marginTop: spacing.sm, fontSize: fontSizes.xs },
+  cardSub: { marginTop: spacing.sm },
 
   cardActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   actionGhost: { flex: 1 },
   actionPrimary: { flex: 1.4 },
 
   sentFooter: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.md, flexWrap: 'wrap' },
-  sentScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.textDark },
   sentSpacer: { flex: 1 },
-  cancelLink: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, color: colors.red600 },
   cancelLinkDisabled: { opacity: 0.4 },
-  sentWaiting: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
 
   completedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   completedEmoji: { fontSize: 32 },
-  completedOutcome: { fontFamily: fonts.titleBold, fontSize: fontSizes.base },
-  completedVs: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
-  completedScores: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },
+  completedScores: { marginTop: 2 },
 
   // État vide : EmptyState partagé, ancré haut de liste (pas de padding bas).
   empty: { paddingTop: spacing.xxxl, paddingBottom: 0 },
 
   // Bottom sheet « Nouveau challenge » — conteneur/handle/titre → <BottomSheet>.
   fieldLabel: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 11,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     color: isDark ? colors.green300 : colors.textMuted,
@@ -675,8 +663,6 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     justifyContent: 'center',
   },
   oppChipActive: { borderColor: colors.gold400, borderWidth: 2 },
-  oppChipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textDark },
-  oppChipTextActive: { color: colors.textDark },
 
   // Recherche d'ami
   searchWrap: { marginTop: spacing.sm, gap: spacing.xs },
@@ -692,7 +678,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     color: colors.textDark,
   },
   searchSpinner: { marginTop: spacing.sm },
-  searchEmpty: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted, paddingVertical: spacing.sm },
+  searchEmpty: { paddingVertical: spacing.sm },
   resultRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -701,8 +687,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     paddingHorizontal: spacing.xs,
     borderRadius: radius.md,
   },
-  resultName: { flex: 1, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, color: colors.textDark },
-  resultLevel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
+  resultName: { flex: 1 },
   selectedFriend: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -714,8 +699,8 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     borderColor: colors.gold400,
     backgroundColor: colors.surfaceElevated,
   },
-  selectedFriendName: { flex: 1, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, color: colors.textDark },
-  selectedFriendChange: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textMuted, paddingHorizontal: spacing.xs },
+  selectedFriendName: { flex: 1 },
+  selectedFriendChange: { paddingHorizontal: spacing.xs },
 
   launchBtn: { marginTop: spacing.lg },
 });

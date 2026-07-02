@@ -40,7 +40,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Screen, Avatar, AppButton, BottomSheet, XpBar, useConfirm, useToast } from '../components';
+import { Screen, Avatar, AppButton, BottomSheet, XpBar, useConfirm, useToast, Title, Heading, Body, Label } from '../components';
 import FillBar from '../components/FillBar';
 import Icon from '../components/Icon';
 import { useReduceMotion } from '../hooks/useReduceMotion';
@@ -51,7 +51,7 @@ import { wallet, users } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { setLanguage } from '../i18n';
 import { SEXES } from '../constants/config';
-import { fonts, fontSizes, radius, spacing, shadow, motion, MIN_TOUCH } from '../constants/theme';
+import { fonts, radius, spacing, shadow, motion, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { formatFcfa, levelProgress, avatarUri } from '../utils/format';
@@ -86,8 +86,8 @@ function ProfStat({ value, label, divider, valueColor }) {
   return (
     <View style={styles.profStat}>
       {divider ? <View style={styles.profDivider} /> : null}
-      <Text style={[styles.profStatValue, valueColor && { color: valueColor }]}>{value}</Text>
-      <Text style={styles.profStatLabel}>{label}</Text>
+      <Title size="lg" color={valueColor || colors.textOnDark}>{value}</Title>
+      <Label size={11} color={colors.textOnDarkMuted}>{label}</Label>
     </View>
   );
 }
@@ -97,7 +97,7 @@ function Section({ title, children }) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionLabel}>{title}</Text>
+      <Title size="sm" color={colors.textMuted} style={styles.sectionLabel}>{title}</Title>
       <View style={styles.sectionCard}>{children}</View>
     </View>
   );
@@ -113,16 +113,16 @@ function SettingRow({ icon, iconBg, label, value, valueMuted, right, onPress, is
       <View style={[styles.rowIcon, { backgroundColor: iconBg || colors.cream }]}>
         <Icon icon={icon} size={18} color={colors.green900} />
       </View>
-      <Text style={styles.rowLabel}>{label}</Text>
+      <Label size={15} color={colors.textDark} style={styles.rowLabel}>{label}</Label>
       <View style={styles.rowRight}>
         {right != null ? (
           right
         ) : value != null ? (
-          <Text style={[styles.rowValue, valueMuted && styles.rowValueMuted]} numberOfLines={1}>
+          <Label color={colors.textBody} style={valueMuted && styles.rowValueMuted} numberOfLines={1}>
             {value || '—'}
-          </Text>
+          </Label>
         ) : null}
-        {onPress && right == null ? <Text style={styles.rowChevron}>›</Text> : null}
+        {onPress && right == null ? <Title size="lg" color={colors.textFaint}>›</Title> : null}
       </View>
     </View>
   );
@@ -508,12 +508,12 @@ export default function ProfileScreen() {
           </View>
         </Pressable>
 
-        <Text style={styles.headerName} numberOfLines={1}>
+        <Title weight="extrabold" size={24} color={colors.textOnDark} style={styles.headerName} numberOfLines={1}>
           {user?.name || t('profile.misc.defaultName')}
-        </Text>
-        <Text style={styles.headerLevel}>
+        </Title>
+        <Label weight="semibold" size="md" color={colors.gold400}>
           {`${t('profile.misc.level', { level })} — ${t(`profile.levelNames.${level}`)}`}
-        </Text>
+        </Label>
         <View style={styles.headerXpWrap}>
           <XpBar current={progress.current} max={progress.needed} height={4} />
         </View>
@@ -571,9 +571,9 @@ export default function ProfileScreen() {
                       onPress={() => changeLanguage(l.key)}
                       style={[styles.langPill, active && styles.langPillActive]}
                     >
-                      <Text style={[styles.langPillText, active && styles.langPillTextActive]}>
+                      <Label weight="bold" size="xs" color={active ? colors.green900 : colors.textBody}>
                         {l.key.toUpperCase()}
-                      </Text>
+                      </Label>
                     </Pressable>
                   );
                 })}
@@ -617,11 +617,11 @@ export default function ProfileScreen() {
             isLast
             right={
               <View style={styles.referralRight}>
-                <Text style={styles.referralCode} numberOfLines={1}>
+                <Title size="sm" style={styles.referralCode} numberOfLines={1}>
                   {user?.referral_code || 'CREV'}
-                </Text>
+                </Title>
                 <Pressable onPress={copyReferral} style={styles.copyBtn} hitSlop={6}>
-                  <Text style={styles.copyBtnText}>{t('profile.referral.copy')}</Text>
+                  <Label weight="bold" size="xs" color={colors.gold500}>{t('profile.referral.copy')}</Label>
                 </Pressable>
               </View>
             }
@@ -630,7 +630,7 @@ export default function ProfileScreen() {
 
         {/* D. Badges — dérivés du niveau. Un badge verrouillé montre sa progression
             (niveau courant / seuil requis) ; un tap en explique la condition. */}
-        <Text style={styles.sectionLabel}>{t('profile.badges.title')}</Text>
+        <Title size="sm" color={colors.textMuted} style={styles.sectionLabel}>{t('profile.badges.title')}</Title>
         <View style={styles.badgeGrid}>
           {badges.map((b) => {
             const isFresh = justUnlockedKeys.includes(b.key);
@@ -663,21 +663,20 @@ export default function ProfileScreen() {
                   ) : (
                     <Icon icon={Lock} size={22} color={colors.textFaint} />
                   )}
-                  <Text
-                    style={[
-                      styles.badgeLabel,
-                      b.unlocked ? styles.badgeLabelUnlocked : styles.badgeLabelLocked,
-                    ]}
+                  <Label
+                    weight="semibold"
+                    color={b.unlocked ? colors.gold500 : colors.textFaint}
+                    style={styles.badgeLabel}
                   >
                     {b.label}
-                  </Text>
+                  </Label>
                 </View>
                 {!b.unlocked ? (
                   <View style={styles.badgeProgress}>
                     <FillBar pct={pct} color={colors.gold500} height={4} />
-                    <Text style={styles.badgeProgressText}>
+                    <Label size="xs">
                       {t('profile.badges.levelProgress', { current: level, req: b.min })}
-                    </Text>
+                    </Label>
                   </View>
                 ) : null}
               </AnimatedPressable>
@@ -690,8 +689,8 @@ export default function ProfileScreen() {
           <View style={styles.walletLocked}>
             <Icon icon={Lock} size={22} color={colors.textMuted} />
             <View style={styles.walletLockBody}>
-              <Text style={styles.walletLockTitle}>{t('profile.wallet.title')}</Text>
-              <Text style={styles.walletLockText}>{t('profile.wallet.unavailable')}</Text>
+              <Heading size="md" color={colors.textMuted}>{t('profile.wallet.title')}</Heading>
+              <Body size="xs" muted style={styles.walletLockText}>{t('profile.wallet.unavailable')}</Body>
             </View>
           </View>
         ) : walletState === 'loading' ? null : (
@@ -699,9 +698,9 @@ export default function ProfileScreen() {
             <View>
               <View style={styles.walletLabelRow}>
                 <Icon icon={Wallet} size={14} color={colors.textMuted} />
-                <Text style={styles.walletLabel}>{t('profile.wallet.label')}</Text>
+                <Label>{t('profile.wallet.label')}</Label>
               </View>
-              <Text style={styles.walletBalance}>{formatFcfa(walletState.balance)}</Text>
+              <Title weight="extrabold" size="xl" style={styles.walletBalance}>{formatFcfa(walletState.balance)}</Title>
             </View>
             <AppButton
               variant="secondary"
@@ -755,13 +754,13 @@ export default function ProfileScreen() {
         style={styles.avatarSheet}
       >
         <Pressable style={styles.actionRow} onPress={() => pickAvatar('camera')}>
-          <Text style={styles.actionText}>{t('profile.avatar.camera')}</Text>
+          <Body weight="semibold" color={colors.textDark}>{t('profile.avatar.camera')}</Body>
         </Pressable>
         <Pressable style={styles.actionRow} onPress={() => pickAvatar('gallery')}>
-          <Text style={styles.actionText}>{t('profile.avatar.gallery')}</Text>
+          <Body weight="semibold" color={colors.textDark}>{t('profile.avatar.gallery')}</Body>
         </Pressable>
         <Pressable style={[styles.actionRow, styles.actionCancel]} onPress={() => setAvatarSheet(false)}>
-          <Text style={styles.actionCancelText}>{t('profile.avatar.cancel')}</Text>
+          <Body weight="medium" muted>{t('profile.avatar.cancel')}</Body>
         </Pressable>
       </BottomSheet>
 
@@ -786,7 +785,7 @@ export default function ProfileScreen() {
             {/* A. Header : drag handle + titre + ✕ */}
             <View style={styles.sheetHandle} />
             <View style={styles.sheetTitleRow}>
-              <Text style={styles.sheetTitle}>{t('profile.editModal.title')}</Text>
+              <Title size={20}>{t('profile.editModal.title')}</Title>
               <Pressable
                 onPress={closeEdit}
                 hitSlop={10}
@@ -794,7 +793,7 @@ export default function ProfileScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t('common.cancel')}
               >
-                <Text style={styles.sheetCloseText}>✕</Text>
+                <Body weight="semibold" size="lg" muted>✕</Body>
               </Pressable>
             </View>
 
@@ -805,7 +804,7 @@ export default function ProfileScreen() {
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.fieldGroup}>
-                <Text style={styles.inputLabel}>{t('profile.editModal.name')}</Text>
+                <Label size={11} style={styles.inputLabel}>{t('profile.editModal.name')}</Label>
                 <TextInput
                   value={nom}
                   onChangeText={setNom}
@@ -818,7 +817,7 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.inputLabel}>{t('profile.editModal.city')}</Text>
+                <Label size={11} style={styles.inputLabel}>{t('profile.editModal.city')}</Label>
                 <TextInput
                   value={ville}
                   onChangeText={setVille}
@@ -831,7 +830,7 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.inputLabel}>{t('profile.editModal.age')}</Text>
+                <Label size={11} style={styles.inputLabel}>{t('profile.editModal.age')}</Label>
                 <TextInput
                   value={age}
                   onChangeText={setAge}
@@ -846,15 +845,15 @@ export default function ProfileScreen() {
 
               {/* C. Sexe : pills (style inchangé) */}
               <View style={styles.fieldGroup}>
-                <Text style={styles.inputLabel}>{t('profile.editModal.gender')}</Text>
+                <Label size={11} style={styles.inputLabel}>{t('profile.editModal.gender')}</Label>
                 <View style={styles.pillRow}>
                   {SEXES.map((s) => {
                     const sel = s.key === sexe;
                     return (
                       <Pressable key={s.key} onPress={() => setSexe(s.key)} style={[styles.pill, sel && styles.pillActive]}>
-                        <Text style={[styles.pillText, sel && styles.pillTextActive]}>
+                        <Label weight={sel ? 'semibold' : 'medium'} color={sel ? colors.green900 : colors.textBody}>
                           {t(`profile.misc.gender.${s.key}`)}
-                        </Text>
+                        </Label>
                       </Pressable>
                     );
                   })}
@@ -908,8 +907,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  headerName: { fontFamily: fonts.titleExtraBold, fontSize: 24, color: colors.textOnDark, marginTop: spacing.xs },
-  headerLevel: { fontFamily: fonts.bodySemiBold, fontSize: 14, color: colors.gold400 },
+  headerName: { marginTop: spacing.xs },
   headerXpWrap: { width: '100%', paddingHorizontal: spacing.xl, marginTop: spacing.md },
 
   // B. Stats row
@@ -931,17 +929,11 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 1,
     backgroundColor: colors.borderOnDark,
   },
-  profStatValue: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textOnDark },
-  profStatLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textOnDarkMuted },
-
   body: { padding: spacing.lg },
 
   // Sections
   section: { marginBottom: spacing.lg },
   sectionLabel: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.sm,
-    color: colors.textMuted,
     letterSpacing: 0.5,
     marginBottom: spacing.sm,
     marginTop: spacing.xs,
@@ -963,11 +955,9 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   rowIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  rowLabel: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.textDark },
+  rowLabel: { flex: 1 },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, maxWidth: '55%' },
-  rowValue: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
   rowValueMuted: { color: colors.textMuted },
-  rowChevron: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textFaint },
 
   // Langue (pills inline)
   langPills: { flexDirection: 'row', gap: spacing.xs },
@@ -986,13 +976,11 @@ const makeStyles = (colors) => StyleSheet.create({
   // green900 se confondait avec la surface (cream→#0d1f14) → pastille « invisible ».
   // Or sur green900/cream = lisible dans les deux thèmes (cf. pills Sexe, même écran).
   langPillActive: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
-  langPillText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs, color: colors.textBody },
-  langPillTextActive: { color: colors.green900 },
   themeToggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
 
   // Code parrainage
   referralRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
-  referralCode: { fontFamily: fonts.titleBold, fontSize: fontSizes.sm, color: colors.textDark, flexShrink: 1 },
+  referralCode: { flexShrink: 1 },
   copyBtn: {
     minHeight: MIN_TOUCH, // cible tactile ≥44/48
     paddingVertical: 4,
@@ -1004,7 +992,6 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  copyBtnText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs, color: colors.gold500 },
 
   // D. Badges
   badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.lg },
@@ -1026,12 +1013,9 @@ const makeStyles = (colors) => StyleSheet.create({
   // opacité globale, pour que la barre de progression reste lisible.
   badgeLocked: { backgroundColor: colors.surface, borderColor: colors.border },
   badgeEmoji: { fontSize: 22 },
-  badgeLabel: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm, flexShrink: 1 },
-  badgeLabelUnlocked: { color: colors.gold500 },
-  badgeLabelLocked: { color: colors.textFaint },
+  badgeLabel: { flexShrink: 1 },
   // Progression sous un badge verrouillé : FillBar + « Niveau X/Y ».
   badgeProgress: { gap: spacing.xxs },
-  badgeProgressText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
 
   // E. Wallet
   walletLocked: {
@@ -1045,8 +1029,7 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: spacing.lg,
   },
   walletLockBody: { flex: 1 },
-  walletLockTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.textMuted },
-  walletLockText: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 1 },
+  walletLockText: { marginTop: 1 },
   walletCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1058,8 +1041,7 @@ const makeStyles = (colors) => StyleSheet.create({
     ...shadow.soft,
   },
   walletLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  walletLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
-  walletBalance: { fontFamily: fonts.titleExtraBold, fontSize: fontSizes.xl, color: colors.textDark, marginTop: 2 },
+  walletBalance: { marginTop: 2 },
 
   logout: { marginTop: spacing.sm },
 
@@ -1079,7 +1061,6 @@ const makeStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.border,
     marginBottom: spacing.sm,
   },
-  sheetTitle: { fontFamily: fonts.titleBold, fontSize: 20, color: colors.textDark },
   // Sheet d'édition (overlay) — ancré en bas, coins arrondis, ombre vers le haut.
   // Borné à 88% pour que le ScrollView défile sous le clavier.
   editSheet: {
@@ -1112,7 +1093,6 @@ const makeStyles = (colors) => StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: colors.border,
   },
-  sheetCloseText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg, color: colors.textMuted },
   sheetScrollContent: { paddingBottom: 40 },
 
   // Action sheet (photo)
@@ -1124,18 +1104,13 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.base, color: colors.textDark },
   actionCancel: { backgroundColor: 'transparent' },
-  actionCancelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textMuted },
 
   // Edit sheet fields
   fieldGroup: { marginBottom: spacing.lg },
   inputLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    color: colors.textMuted,
     marginBottom: 6,
   },
   input: {
@@ -1164,7 +1139,5 @@ const makeStyles = (colors) => StyleSheet.create({
   // Pill sélectionné = or (état actif autorisé) + texte green900 pour le contraste
   // (blanc sur or échouerait le ratio ≥ 4.5:1 de la charte).
   pillActive: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
-  pillText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
-  pillTextActive: { color: colors.green900, fontFamily: fonts.bodySemiBold },
   sheetActions: { marginTop: spacing.sm, gap: 10 },
 });
