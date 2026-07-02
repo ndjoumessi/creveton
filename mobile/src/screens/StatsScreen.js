@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { BarChart2, Trophy, Target, TrendingUp, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, EmptyState, XpBar, FillBar, Podium, SessionCard, MiniLineChart, SegmentedTabs } from '../components';
+import { Screen, Avatar, AppButton, Title, Heading, Body, Label, Skeleton, ErrorScreen, EmptyState, XpBar, FillBar, Podium, SessionCard, MiniLineChart, SegmentedTabs } from '../components';
 import Icon from '../components/Icon';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -131,9 +131,9 @@ export default function StatsScreen({ navigation }) {
         <View style={styles.headerRow}>
           <Avatar name={user?.name || ''} size={72} gold uri={avatarUri(user)} />
           <View style={styles.headerInfo}>
-            <Text style={styles.headerName} numberOfLines={1}>
+            <Heading weight="bold" size="xl" color={colors.textOnDark} style={styles.headerName} numberOfLines={1}>
               {user?.name || t('profile.misc.defaultName')}
-            </Text>
+            </Heading>
             <Body color={colors.gold400}>{t('stats.misc.headerLevel', { level })}</Body>
             <PendingSyncBadge style={styles.pendingSync} />
           </View>
@@ -141,10 +141,10 @@ export default function StatsScreen({ navigation }) {
         <View style={styles.xpRow}>
           <XpBar current={progress.current} max={progress.needed} />
           <View style={styles.xpLabels}>
-            <Text style={styles.xpLabel}>{fmt(progress.current)} {t('common.xp')}</Text>
-            <Text style={styles.xpLabel}>
+            <Label size="xs" color={colors.textOnDarkMuted}>{fmt(progress.current)} {t('common.xp')}</Label>
+            <Label size="xs" color={colors.textOnDarkMuted}>
               {progress.isMax ? t('stats.misc.levelMax') : `${fmt(progress.needed)} ${t('common.xp')}`}
-            </Text>
+            </Label>
           </View>
         </View>
       </View>
@@ -354,8 +354,8 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
                 <Text style={styles.kpiIconText}>{k.icon}</Text>
               )}
             </View>
-            <Text style={[styles.kpiValue, k.color ? { color: k.color } : null]}>{k.value}</Text>
-            <Text style={styles.kpiLabel}>{k.label}</Text>
+            <Title weight="extrabold" size={32} style={[styles.kpiValue, k.color ? { color: k.color } : null]}>{k.value}</Title>
+            <Label size="xs" style={styles.kpiLabel}>{k.label}</Label>
           </View>
         ))}
       </View>
@@ -363,7 +363,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
       {/* Évolution du score — courbe partagée MiniLineChart (mode « détaillé » :
           aire + graduations + points cerclés + valeur du dernier point). L'état
           vide et les libellés d'axe X restent locaux à l'écran. */}
-      <Text style={styles.sectionTitle}>{t('stats.misc.scoreEvolution')}</Text>
+      <Heading style={styles.sectionTitle}>{t('stats.misc.scoreEvolution')}</Heading>
       <View style={styles.card}>
         {(() => {
           const scoreValues = (stats.scoreEvolution || []).map((d) => d.score);
@@ -396,10 +396,10 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
                 formatValue={fmt}
               />
               <View style={styles.chartAxis}>
-                <Text style={styles.chartAxisLabel}>{n > 1 ? `J-${n - 1}` : ''}</Text>
-                <Text style={styles.chartAxisLabel}>
+                <Body size="xs" color={colors.textFaint}>{n > 1 ? `J-${n - 1}` : ''}</Body>
+                <Body size="xs" color={colors.textFaint}>
                   {n === 1 ? t('stats.misc.chartAxisPlayMore') : t('stats.misc.chartAxisLast')}
-                </Text>
+                </Body>
               </View>
             </View>
           );
@@ -407,11 +407,11 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
       </View>
 
       {/* Performance par thème */}
-      <Text style={styles.sectionTitle}>{t('stats.performanceByTheme')}</Text>
+      <Heading style={styles.sectionTitle}>{t('stats.performanceByTheme')}</Heading>
       <View style={styles.card}>
         {/* Tri local : Réussite / Parties (le critère actif affiche le sens ↑/↓) */}
         <View style={styles.sortRow}>
-          <Text style={styles.sortLabel}>{t('stats.themePerf.sortBy')}</Text>
+          <Label size="xs">{t('stats.themePerf.sortBy')}</Label>
           {[
             { key: 'rate', label: t('stats.themePerf.sortRate') },
             { key: 'games', label: t('stats.themePerf.sortGames') },
@@ -425,9 +425,9 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
               >
-                <Text style={[styles.sortToggleText, active && styles.sortToggleTextActive]}>
+                <Label weight="semibold" size="xs" color={active ? colors.textOnDark : colors.textBody}>
                   {opt.label} {active ? (sortDir === 'desc' ? '↓' : '↑') : '↕'}
-                </Text>
+                </Label>
               </Pressable>
             );
           })}
@@ -441,14 +441,14 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
           return (
             <View key={theme.key} style={[styles.themeRow, i === 0 && styles.themeRowFirst]}>
               <View style={styles.themeHead}>
-                <Text style={[styles.themeLabel, !played && styles.themeLabelMuted]}>
+                <Body weight="medium" size="md" style={[styles.themeLabel, !played && styles.themeLabelMuted]}>
                   {theme.emoji} {theme.label}
-                </Text>
+                </Body>
                 <View style={styles.themeMetaRow}>
-                  <Text style={styles.themeMeta}>{meta}</Text>
+                  <Label size="xs">{meta}</Label>
                   {/* Meilleur score RÉEL (max des parties complètes) — masqué si aucun. */}
                   {best != null ? (
-                    <Text style={styles.themeBest}>{t('stats.themePerf.best', { pts: fmt(best) })}</Text>
+                    <Label size={11}>{t('stats.themePerf.best', { pts: fmt(best) })}</Label>
                   ) : null}
                 </View>
               </View>
@@ -470,8 +470,8 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
         {mixGames > 0 ? (
           <View style={styles.themeRow}>
             <View style={styles.themeHead}>
-              <Text style={styles.themeLabel}>🎲 Mix</Text>
-              <Text style={styles.themeMeta}>{t('stats.misc.mix', { games: mixGames })}</Text>
+              <Body weight="medium" size="md" style={styles.themeLabel}>🎲 Mix</Body>
+              <Label size="xs">{t('stats.misc.mix', { games: mixGames })}</Label>
             </View>
           </View>
         ) : null}
@@ -480,7 +480,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
       {/* Historique — même carte SessionCard que l'Accueil et l'écran Historique
           (rendu unifié) ; `showIncomplete` conserve la pastille « Incomplet »
           des parties avortées (0 pt, 0 bonne réponse). */}
-      <Text style={styles.sectionTitle}>{t('stats.history')}</Text>
+      <Heading style={styles.sectionTitle}>{t('stats.history')}</Heading>
       <View style={styles.histList}>
         {recent.map((g, i) => (
           <SessionCard
@@ -556,18 +556,18 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
     <>
       {/* Ma position */}
       <View style={styles.myRankCard}>
-        <Text style={styles.myRankLabel}>{t('stats.leaderboard.myPosition')}</Text>
+        <Label size="xs">{t('stats.leaderboard.myPosition')}</Label>
         {myRank ? (
           <>
-            <Text style={[styles.myRankValue, { color: medalColor(myRank.rank, colors) }]}>
+            <Title weight="black" size="display" style={[styles.myRankValue, { color: medalColor(myRank.rank, colors) }]}>
               {t('common.rank', { n: fmt(myRank.rank) })}
-            </Text>
+            </Title>
             {totalPlayers ? (
-              <Text style={styles.myRankSub}>{t('stats.leaderboard.outOf', { count: fmt(totalPlayers) })}</Text>
+              <Body size="sm" muted>{t('stats.leaderboard.outOf', { count: fmt(totalPlayers) })}</Body>
             ) : (
-              <Text style={styles.myRankSub}>{t('stats.misc.globalRank')}</Text>
+              <Body size="sm" muted>{t('stats.misc.globalRank')}</Body>
             )}
-            <Text style={styles.myRankScore}>{fmt(myRank.score)} {t('stats.leaderboard.pts')}</Text>
+            <Title size="xl" color={colors.gold500} style={styles.myRankScore}>{fmt(myRank.score)} {t('stats.leaderboard.pts')}</Title>
             {/* Message motivant contextuel selon le rang */}
             {(() => {
               const r = myRank.rank;
@@ -577,11 +577,11 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
                   : r <= 10
                     ? { text: t('stats.leaderboard.rankTop10'), color: colors.green300 }
                     : { text: t('stats.leaderboard.rankOther'), color: colors.textMuted };
-              return <Text style={[styles.myRankMsg, { color: msg.color }]}>{msg.text}</Text>;
+              return <Body weight="semibold" size="sm" style={[styles.myRankMsg, { color: msg.color }]}>{msg.text}</Body>;
             })()}
           </>
         ) : (
-          <Text style={styles.myRankEmpty}>{t('stats.empty.rankNoPosition')}</Text>
+          <Body weight="medium" size="md" style={styles.myRankEmpty}>{t('stats.empty.rankNoPosition')}</Body>
         )}
       </View>
 
@@ -598,22 +598,22 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
                 key={r.user_id || r.rank}
                 style={[styles.rankRow, i === 0 && styles.rankRowFirst, isMe && styles.rankRowMe]}
               >
-                <Text style={styles.rankNum}>{r.rank}</Text>
+                <Heading weight="bold" size="lg" style={styles.rankNum}>{r.rank}</Heading>
                 <Avatar name={r.name || ''} size={36} uri={r.avatar_url || null} />
                 <View style={styles.rankMid}>
                   <View style={styles.rankNameRow}>
-                    <Text style={styles.rankName} numberOfLines={1}>
+                    <Body weight="semibold" size="md" color={colors.textDark} style={styles.rankName} numberOfLines={1}>
                       {r.name}
-                    </Text>
+                    </Body>
                     {isMe ? (
                       <View style={styles.mePill}>
-                        <Text style={styles.mePillText}>{t('stats.misc.mePill')}</Text>
+                        <Label weight="bold" size={10} color={colors.green900}>{t('stats.misc.mePill')}</Label>
                       </View>
                     ) : null}
                   </View>
-                  {r.ville ? <Text style={styles.rankVille}>{r.ville}</Text> : null}
+                  {r.ville ? <Body size="xs" muted>{r.ville}</Body> : null}
                 </View>
-                <Text style={styles.rankScore}>{fmt(r.score)}</Text>
+                <Heading size="md">{fmt(r.score)}</Heading>
               </View>
             );
           })}
@@ -635,18 +635,10 @@ const makeStyles = (colors) => StyleSheet.create({
   headerInfo: { flex: 1 },
   pendingSync: { marginTop: spacing.xs },
   headerName: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl,
-    color: colors.textOnDark,
     marginBottom: 2,
   },
   xpRow: { marginTop: spacing.lg, gap: spacing.xs },
   xpLabels: { flexDirection: 'row', justifyContent: 'space-between' },
-  xpLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.xs,
-    color: colors.textOnDarkMuted,
-  },
 
   // Tabs — bandeau du composant partagé SegmentedTabs (variant pills). Les
   // styles des pilules vivent dans SegmentedTabs ; ici on ne garde que le fond
@@ -686,24 +678,15 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   kpiIconText: { fontSize: 24 },
   kpiValue: {
-    fontFamily: fonts.titleExtraBold,
-    fontSize: 32,
-    color: colors.textDark,
     marginTop: spacing.md,
   },
   kpiLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.xs,
-    color: colors.textMuted,
     marginTop: 2,
   },
   skelGap: { marginTop: spacing.md },
   skelGapSm: { marginTop: spacing.sm },
 
   sectionTitle: {
-    fontFamily: fonts.titleSemiBold,
-    fontSize: fontSizes.lg,
-    color: colors.textDark,
     marginTop: spacing.xl,
     marginBottom: spacing.md,
   },
@@ -715,11 +698,6 @@ const makeStyles = (colors) => StyleSheet.create({
     justifyContent: 'space-between',
     width: CHART_W,
     marginTop: spacing.xs,
-  },
-  chartAxisLabel: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: fontSizes.xs,
-    color: colors.textFaint,
   },
   chartEmpty: { alignItems: 'center', paddingVertical: spacing.xl },
   chartEmptyEmoji: { fontSize: 32, marginBottom: spacing.sm },
@@ -735,11 +713,9 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   themeRowFirst: { borderTopWidth: 0, marginTop: 0, paddingTop: 0 },
   themeHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
-  themeLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textBody, flexShrink: 1 },
+  themeLabel: { flexShrink: 1 },
   themeLabelMuted: { color: colors.textMuted },
   themeMetaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 },
-  themeMeta: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
-  themeBest: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textMuted },
 
   // Tri local (Réussite / Parties)
   sortRow: {
@@ -749,7 +725,6 @@ const makeStyles = (colors) => StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
-  sortLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
   sortToggle: {
     minHeight: MIN_TOUCH,
     justifyContent: 'center',
@@ -760,8 +735,6 @@ const makeStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.surface,
   },
   sortToggleActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
-  sortToggleText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.xs, color: colors.textBody },
-  sortToggleTextActive: { color: colors.textOnDark },
 
   // Historique — cartes rendues par SessionCard (composant partagé avec l'Accueil).
   histList: { gap: spacing.sm },
@@ -777,30 +750,17 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     ...shadow.soft,
   },
-  myRankLabel: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.textMuted },
   myRankValue: {
-    fontFamily: fonts.titleBlack,
-    fontSize: fontSizes.display,
-    color: colors.textDark,
     marginVertical: 2,
   },
-  myRankSub: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.sm, color: colors.textMuted },
   myRankScore: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl,
-    color: colors.gold500,
     marginTop: spacing.sm,
   },
   myRankMsg: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.sm,
     marginTop: spacing.xs,
     textAlign: 'center',
   },
   myRankEmpty: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.md,
-    color: colors.textBody,
     textAlign: 'center',
     marginTop: spacing.sm,
   },
@@ -825,18 +785,12 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   rankNum: {
     width: 28,
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.lg,
-    color: colors.textDark,
     textAlign: 'center',
   },
   rankAvatarSkel: {},
   rankMid: { flex: 1 },
   rankNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   rankName: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
-    color: colors.textDark,
     flexShrink: 1,
   },
   mePill: {
@@ -845,9 +799,6 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 1,
   },
-  mePillText: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.green900 },
-  rankVille: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted },
-  rankScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.textDark },
 
   // États vides — EmptyState partagé (titre Bold/xl et interligne propres à l'écran).
   empty: { paddingHorizontal: spacing.lg },
