@@ -7,7 +7,7 @@ import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Info } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Title, Body, AppButton, ChoiceChips, useToast } from '../components';
+import { Screen, Title, Heading, Body, Label, AppButton, ChoiceChips, useToast } from '../components';
 import Icon from '../components/Icon';
 import {
   THEMES,
@@ -19,7 +19,7 @@ import {
 } from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
 import { useGameStore } from '../store/gameStore';
-import { themeGradients, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { themeGradients, fontSizes, radius, spacing } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { countQuestionsByTheme } from '../services/database';
@@ -259,11 +259,11 @@ export default function GameStartScreen({ navigation, route }) {
         >
           <Text style={styles.back}>←</Text>
         </Pressable>
-        <Title style={styles.headerTitle}>{t('gameStart.title')}</Title>
+        <Title size="xl">{t('gameStart.title')}</Title>
       </View>
 
       {/* Sélecteur de mode */}
-      <Text style={sectionStyle}>{t('gameStart.chooseMode')}</Text>
+      <Heading weight="bold" style={sectionStyle}>{t('gameStart.chooseMode')}</Heading>
       <View style={styles.modes}>
         {GAME_MODES.map((m) => {
           const active = m.key === mode;
@@ -275,14 +275,14 @@ export default function GameStartScreen({ navigation, route }) {
             >
               <Text style={styles.modeEmoji}>{m.emoji}</Text>
               <View style={styles.modeBody}>
-                <Text style={[styles.modeName, active && styles.modeNameActive]}>
+                <Heading weight="bold" size="base">
                   {t(`gameStart.modes.${m.key}.name`)}
-                </Text>
-                <Text style={styles.modeDesc} numberOfLines={1}>
+                </Heading>
+                <Body size="xs" muted style={styles.modeDesc} numberOfLines={1}>
                   {t(`gameStart.modes.${m.key}.desc`)}
-                </Text>
+                </Body>
               </View>
-              {active ? <Text style={styles.modeCheck}>✓</Text> : null}
+              {active ? <Body weight="bold" size="lg" color={colors.gold500}>✓</Body> : null}
             </Pressable>
           );
         })}
@@ -291,7 +291,7 @@ export default function GameStartScreen({ navigation, route }) {
       {/* Thème & niveau — masqués en mode mixte (tous thèmes/niveaux auto) */}
       {!isMixed ? (
         <>
-      <Text style={sectionStyle}>{t('gameStart.chooseTheme')}</Text>
+      <Heading weight="bold" style={sectionStyle}>{t('gameStart.chooseTheme')}</Heading>
       <View style={styles.grid}>
         {THEMES.map((th, i) => {
           const active = th.key === theme;
@@ -347,33 +347,33 @@ export default function GameStartScreen({ navigation, route }) {
                         },
                       ]}
                     >
-                      <Text style={styles.checkText}>✓</Text>
+                      <Body weight="bold" size="sm" color={colors.green900}>✓</Body>
                     </Animated.View>
                   ) : null}
                   <Text style={styles.themeEmoji}>{th.emoji}</Text>
-                  <Text style={styles.themeName}>
+                  <Heading weight="bold" size="base" color={colors.textOnDark} style={styles.themeName}>
                     {t(`gameStart.themes.${th.key}`, th.label)}
-                  </Text>
-                  <Text style={styles.themeMeta}>
+                  </Heading>
+                  <Body size="xs" color={colors.textOnDarkMuted}>
                     {t('gameStart.misc.questionsPerGame', { count: GAME.questionsPerSession })}
-                  </Text>
+                  </Body>
                 </LinearGradient>
               </Pressable>
               {themeCount === null ? null : themeCount > 0 ? (
-                <Text style={styles.themeOffline}>
+                <Body size={11} color={colors.textOnDarkMuted} style={styles.themeOffline}>
                   {t('gameStart.offlineCount', { count: themeCount })}
-                </Text>
+                </Body>
               ) : (
-                <Text style={styles.themeOfflineNone}>
+                <Label size={11} color={colors.red400} style={styles.themeOfflineNone}>
                   {t('gameStart.connectionRequired')}
-                </Text>
+                </Label>
               )}
             </Animated.View>
           );
         })}
       </View>
 
-      <Text style={sectionStyle}>{t('gameStart.chooseLevel')}</Text>
+      <Heading weight="bold" style={sectionStyle}>{t('gameStart.chooseLevel')}</Heading>
       <ChoiceChips
         options={LEVELS.map((l) => ({
           key: l.key,
@@ -402,12 +402,12 @@ export default function GameStartScreen({ navigation, route }) {
             },
           ]}
         >
-          <Body style={styles.recapText}>{recap}</Body>
+          <Body weight="medium" size="sm" muted style={styles.recapText}>{recap}</Body>
         </Animated.View>
       ) : (
         <View style={styles.hintRow}>
           <Icon icon={Info} size={16} color={hintColor} />
-          <Body style={hintStyle}>
+          <Body weight="medium" style={hintStyle}>
             {t('gameStart.misc.hint')}
           </Body>
         </View>
@@ -426,7 +426,7 @@ export default function GameStartScreen({ navigation, route }) {
       </Animated.View>
       {showPickHint ? (
         <Animated.View style={{ opacity: pickHintAnim }}>
-          <Body style={styles.pickHint}>{t('gameStart.pickThemeHint')}</Body>
+          <Body weight="medium" size="sm" color={colors.gold500} style={styles.pickHint}>{t('gameStart.pickThemeHint')}</Body>
         </Animated.View>
       ) : null}
       <AppButton
@@ -450,11 +450,7 @@ const COL_GAP = spacing.md;
 const makeStyles = (colors) => StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg },
   back: { fontSize: fontSizes.xxl, color: colors.textDark },
-  headerTitle: { fontSize: fontSizes.xl },
   section: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.lg,
-    color: colors.textDark,
     marginTop: spacing.md,
     marginBottom: spacing.md,
   },
@@ -487,23 +483,15 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.sm, color: colors.green900 },
   themeEmoji: { fontSize: 32 },
-  themeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.textOnDark, marginTop: spacing.xs },
-  themeMeta: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textOnDarkMuted },
+  themeName: { marginTop: spacing.xs },
   // Compteur de questions en cache : sous la carte, sur le fond écran (sombre) →
   // textOnDarkMuted (crème atténué, ≥4.5:1) plutôt que textMuted (vert-de-gris en sombre).
   themeOffline: {
-    fontFamily: fonts.bodyRegular,
-    fontSize: 11,
-    color: colors.textOnDarkMuted,
     marginTop: spacing.xs,
     paddingLeft: 2,
   },
   themeOfflineNone: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
-    color: colors.red400,
     marginTop: spacing.xs,
     paddingLeft: 2,
   },
@@ -524,10 +512,7 @@ const makeStyles = (colors) => StyleSheet.create({
   modeRowActive: { borderColor: colors.gold500, backgroundColor: colors.goldVeil },
   modeEmoji: { fontSize: 24 },
   modeBody: { flex: 1 },
-  modeName: { fontFamily: fonts.titleBold, fontSize: fontSizes.base, color: colors.textDark },
-  modeNameActive: { color: colors.textDark },
-  modeDesc: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 1 },
-  modeCheck: { fontFamily: fonts.bodyBold, fontSize: fontSizes.lg, color: colors.gold500 },
+  modeDesc: { marginTop: 1 },
 
   recap: {
     backgroundColor: colors.cream,
@@ -537,7 +522,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gold500,
   },
-  recapText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center' },
+  recapText: { textAlign: 'center' },
   hintRow: {
     marginTop: spacing.lg,
     flexDirection: 'row',
@@ -548,7 +533,6 @@ const makeStyles = (colors) => StyleSheet.create({
   hint: {
     textAlign: 'center',
     color: colors.textMuted,
-    fontFamily: fonts.bodyMedium,
   },
 
   cta: { marginTop: spacing.xl },
@@ -557,9 +541,6 @@ const makeStyles = (colors) => StyleSheet.create({
   pickHint: {
     marginTop: spacing.md,
     textAlign: 'center',
-    color: colors.gold500,
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.sm,
   },
   challenge: { marginTop: spacing.md },
 });
