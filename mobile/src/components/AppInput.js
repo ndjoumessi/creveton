@@ -1,7 +1,10 @@
 // AppInput — label flottant animé, états focus/error/success, helper text,
 // slot d'icône à droite (ex. œil pour mot de passe).
+// Theme-aware (useTheme + makeStyles) ; vocabulaire visuel aligné sur
+// AuthField : bordure (borderInput / red400 / green500), fond (white),
+// placeholder (textMuted), focus (green500).
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
   Animated,
   View,
@@ -10,7 +13,8 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
-import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 export default function AppInput({
   label,
@@ -25,6 +29,8 @@ export default function AppInput({
   style,
   ...props
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [focused, setFocused] = useState(false);
   const hasValue = value !== undefined && value !== null && String(value).length > 0;
   const float = useRef(new Animated.Value(hasValue ? 1 : 0)).current;
@@ -38,7 +44,7 @@ export default function AppInput({
   }, [focused, hasValue, float]);
 
   const borderColor = error
-    ? colors.errorBorder
+    ? colors.red400
     : success
       ? colors.successBorder
       : focused
@@ -51,7 +57,7 @@ export default function AppInput({
     outputRange: [fontSizes.base, fontSizes.xs],
   });
   const labelColor = error
-    ? colors.errorText
+    ? colors.red400
     : focused
       ? colors.green500
       : colors.textMuted;
@@ -75,7 +81,7 @@ export default function AppInput({
           onChangeText={onChangeText}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholderTextColor={colors.textFaint}
+          placeholderTextColor={colors.textMuted}
           style={[styles.input, label && styles.inputWithLabel, style]}
           {...props}
         />
@@ -94,7 +100,7 @@ export default function AppInput({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { marginBottom: spacing.lg },
   field: {
     minHeight: 56,
@@ -134,5 +140,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     marginLeft: spacing.xs,
   },
-  helperError: { color: colors.errorText },
+  helperError: { color: colors.red400 },
 });

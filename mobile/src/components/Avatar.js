@@ -1,17 +1,23 @@
-// Avatar — initiales sur pastille. Couleur dérivée d'un hash du nom (palette
-// verte) ; variante « gold » pour l'utilisateur courant (identité forte).
+// Avatar — initiales sur pastille. Couleur dérivée d'un hash du nom (verts de
+// marque + accents thème) ; variante « gold » pour l'utilisateur courant
+// (identité forte). Theme-aware : seul le fond d'attente de la photo suit le
+// thème ; la pastille d'initiales est théma-invariante (couleurs de marque
+// fixes → le texte reste crème dans les deux thèmes, d'où `lightColors`).
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
-import { colors, fonts } from '../constants/theme';
+import { fonts, lightColors, themeAccent } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
+// Mêmes accents que les cartes thème (themeAccent geographie/culture/science/
+// histoire) — l'ordre est figé : il détermine le hash → la couleur par joueur.
 const PALETTE = [
-  colors.green500,
-  colors.green700,
-  '#2d5a8e',
-  '#5b2d8e',
-  '#0f7b75',
-  '#8b4513',
+  lightColors.green500,
+  lightColors.green700,
+  themeAccent.geographie,
+  themeAccent.culture,
+  themeAccent.science,
+  themeAccent.histoire,
 ];
 
 function initialsOf(name = '') {
@@ -33,6 +39,7 @@ function hashColor(name = '') {
 }
 
 export default function Avatar({ name = '', size = 48, gold = false, uri = null, style }) {
+  const { colors } = useTheme();
   const dims = { width: size, height: size, borderRadius: size / 2 };
 
   // Si le chargement de la photo échoue (URL cassée, 404, hors-ligne), on
@@ -53,8 +60,8 @@ export default function Avatar({ name = '', size = 48, gold = false, uri = null,
     );
   }
 
-  const bg = gold ? colors.gold400 : hashColor(name);
-  const fg = gold ? colors.green900 : colors.cream;
+  const bg = gold ? lightColors.gold400 : hashColor(name);
+  const fg = gold ? lightColors.green900 : lightColors.cream;
   return (
     <View style={[styles.avatar, dims, { backgroundColor: bg }, style]}>
       <Text style={[styles.text, { color: fg, fontSize: size * 0.38 }]}>
