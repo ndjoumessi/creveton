@@ -720,7 +720,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
             {t('results.misc.progression')}
           </Heading>
           <AppCard tone="light" padding="md" radius={radius.xl}>
-            <Skeleton width="100%" height={80} radius={radius.md} />
+            <Skeleton width="100%" height={120} radius={radius.md} />
           </AppCard>
         </View>
       ) : progressScores.length >= 2 ? (
@@ -729,7 +729,27 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
             {t('results.misc.progression')}
           </Heading>
           <AppCard tone="light" padding="md" radius={radius.xl} style={styles.progressCard}>
-            <MiniLineChart data={progressScores} width={300} height={80} color={colors.gold500} />
+            {/* Même config riche que « Score evolution » (StatsScreen) : axe de
+                valeurs (showGrid), aire, points cerclés, dernier point mis en avant
+                (showLastValue), échelle sur les données réelles. Largeur responsive
+                (onLayout) au lieu du 300 fixe. Palette VERTE de la charte — l'or est
+                réservé aux récompenses (CDC), pas à une courbe de progression. Le
+                tap→tooltip est intégré au composant (P3), reduce-motion respecté. */}
+            <MiniLineChart
+              data={progressScores}
+              width="auto"
+              height={120}
+              color={colors.green500}
+              paddingTop={14}
+              paddingBottom={20}
+              fillArea
+              showGrid
+              outlinedDots
+              showLastValue
+              scaleToData
+              lastValueColor={colors.green700}
+              formatValue={(v) => Number(v).toLocaleString('fr-FR')}
+            />
           </AppCard>
         </View>
       ) : null}
