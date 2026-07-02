@@ -10,10 +10,9 @@ import {
   Text,
   Dimensions,
 } from 'react-native';
-import Svg, { Path, Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { BarChart2, Trophy, Target, TrendingUp, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, XpBar, FillBar } from '../components';
+import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, XpBar, FillBar, SessionCard, MiniLineChart } from '../components';
 import Icon from '../components/Icon';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -30,7 +29,7 @@ import {
   MIN_TOUCH,
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
-import { themeEmoji, themeLabel, levelLabel, timeAgo, levelProgress, avatarUri } from '../utils/format';
+import { levelProgress, avatarUri } from '../utils/format';
 import { medalEmoji, medalColor, SILVER, BRONZE } from '../utils/rank';
 import { hapticLight } from '../utils/haptics';
 
@@ -61,135 +60,6 @@ function rateColor(pct, c = colors, isDark = false) {
   if (pct >= 70) return isDark ? c.green300 : c.green500; // vert
   if (pct >= 40) return c.gold500; // ambre (≈ orange) — lisible sur les deux fonds
   return c.red400; // rouge — lisible sur les deux fonds
-}
-
-// Accent (bordure gauche historique) par mode de jeu.
-const MODE_ACCENT = { normal: colors.green500, blitz: colors.red400, marathon: colors.gold500 };
-// Emoji thème (réutilisé pour la méta d'une partie normale).
-const THEME_EMOJI = {
-  culture: '🎭',
-  geographie: '🗺️',
-  histoire: '📜',
-  industrie: '🏭',
-  sport: '⚽',
-  science: '🔬',
-};
-
-// ── Courbe d'évolution du score (SVG, ligne + aire + points) ───────────────
-function ScoreChart({ data }) {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  if (!data || data.length === 0) {
-    return (
-      <View style={styles.chartEmpty}>
-        <Text style={styles.chartEmptyEmoji}>📈</Text>
-        <Body muted style={styles.chartEmptyText}>
-          {t('stats.misc.chartEmpty')}
-        </Body>
-      </View>
-    );
-  }
-
-  const padL = 10;
-  const padR = 10;
-  const padT = 14;
-  const padB = 20;
-  const innerW = CHART_W - padL - padR;
-  const innerH = CHART_H - padT - padB;
-  const baseY = padT + innerH;
-
-  const values = data.map((d) => d.score);
-  const max = Math.max(...values);
-  const min = Math.min(...values);
-  const span = max - min || 1;
-  const n = data.length;
-
-  const points = data.map((d, i) => {
-    const x = padL + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
-    const y = padT + innerH - ((d.score - min) / span) * innerH;
-    return { x, y };
-  });
-  const polyline = points.map((p) => `${p.x},${p.y}`).join(' ');
-  const area =
-    `M ${points[0].x},${baseY} ` +
-    points.map((p) => `L ${p.x},${p.y}`).join(' ') +
-    ` L ${points[n - 1].x},${baseY} Z`;
-
-  // 4 graduations Y.
-  const grads = [0, 1, 2, 3].map((i) => {
-    const y = padT + (innerH * i) / 3;
-    const val = Math.round(max - (span * i) / 3);
-    return { y, val };
-  });
-
-  return (
-    <View style={styles.chartWrap}>
-      <Svg width={CHART_W} height={CHART_H}>
-        {grads.map((g, i) => (
-          <Line
-            key={`g${i}`}
-            x1={padL}
-            y1={g.y}
-            x2={CHART_W - padR}
-            y2={g.y}
-            stroke={colors.divider}
-            strokeWidth={1}
-          />
-        ))}
-        {grads.map((g, i) => (
-          <SvgText
-            key={`t${i}`}
-            x={CHART_W - padR}
-            y={g.y - 2}
-            fontSize={9}
-            fill={colors.textFaint}
-            textAnchor="end"
-          >
-            {fmt(g.val)}
-          </SvgText>
-        ))}
-        {n > 1 ? <Path d={area} fill={colors.green500} fillOpacity={0.15} /> : null}
-        {n > 1 ? (
-          <Polyline
-            points={polyline}
-            fill="none"
-            stroke={colors.green500}
-            strokeWidth={2.5}
-            strokeLinejoin="round"
-          />
-        ) : null}
-        {points.map((p, i) => (
-          <Circle
-            key={`p${i}`}
-            cx={p.x}
-            cy={p.y}
-            r={i === n - 1 ? 5 : 4}
-            fill={i === n - 1 ? colors.green500 : colors.white}
-            stroke={colors.green500}
-            strokeWidth={2}
-          />
-        ))}
-        {/* Valeur au-dessus du dernier point */}
-        <SvgText
-          x={points[n - 1].x}
-          y={points[n - 1].y - 9}
-          fontSize={11}
-          fontWeight="bold"
-          fill={colors.green700}
-          textAnchor={n === 1 ? 'middle' : 'end'}
-        >
-          {fmt(values[n - 1])}
-        </SvgText>
-      </Svg>
-      <View style={styles.chartAxis}>
-        <Text style={styles.chartAxisLabel}>{n > 1 ? `J-${n - 1}` : ''}</Text>
-        <Text style={styles.chartAxisLabel}>
-          {n === 1 ? t('stats.misc.chartAxisPlayMore') : t('stats.misc.chartAxisLast')}
-        </Text>
-      </View>
-    </View>
-  );
 }
 
 // Couleur de la barre de perf par thème (feu tricolore, doublée d'un libellé %) :
@@ -499,10 +369,50 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
         ))}
       </View>
 
-      {/* Évolution du score */}
+      {/* Évolution du score — courbe partagée MiniLineChart (mode « détaillé » :
+          aire + graduations + points cerclés + valeur du dernier point). L'état
+          vide et les libellés d'axe X restent locaux à l'écran. */}
       <Text style={styles.sectionTitle}>{t('stats.misc.scoreEvolution')}</Text>
       <View style={styles.card}>
-        <ScoreChart data={stats.scoreEvolution} />
+        {(() => {
+          const scoreValues = (stats.scoreEvolution || []).map((d) => d.score);
+          const n = scoreValues.length;
+          if (n === 0) {
+            return (
+              <View style={styles.chartEmpty}>
+                <Text style={styles.chartEmptyEmoji}>📈</Text>
+                <Body muted style={styles.chartEmptyText}>
+                  {t('stats.misc.chartEmpty')}
+                </Body>
+              </View>
+            );
+          }
+          return (
+            <View style={styles.chartWrap}>
+              <MiniLineChart
+                data={scoreValues}
+                width={CHART_W}
+                height={CHART_H}
+                color={colors.green500}
+                paddingTop={14}
+                paddingBottom={20}
+                fillArea
+                showGrid
+                outlinedDots
+                showLastValue
+                scaleToData
+                lastValueColor={colors.green700}
+                formatValue={fmt}
+              />
+              <View style={styles.chartAxis}>
+                <Text style={styles.chartAxisLabel}>{n > 1 ? `J-${n - 1}` : ''}</Text>
+                <Text style={styles.chartAxisLabel}>
+                  {n === 1 ? t('stats.misc.chartAxisPlayMore') : t('stats.misc.chartAxisLast')}
+                </Text>
+              </View>
+            </View>
+          );
+        })()}
       </View>
 
       {/* Performance par thème */}
@@ -576,11 +486,13 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
         ) : null}
       </View>
 
-      {/* Historique */}
+      {/* Historique — même carte SessionCard que l'Accueil et l'écran Historique
+          (rendu unifié) ; `showIncomplete` conserve la pastille « Incomplet »
+          des parties avortées (0 pt, 0 bonne réponse). */}
       <Text style={styles.sectionTitle}>{t('stats.history')}</Text>
       <View style={styles.histList}>
         {recent.map((g, i) => (
-          <HistoryRow key={String(g.session_id || i)} game={g} />
+          <SessionCard key={String(g.session_id || i)} game={g} showIncomplete />
         ))}
       </View>
       {/* Corps Stats = surface CLAIRE (Screen dark=false) → variant plein (comme
@@ -593,72 +505,6 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
         style={styles.historyBtn}
       />
     </>
-  );
-}
-
-function HistoryRow({ game }) {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  // L'historique (toView) expose `question_count` ; on tolère `total_questions`.
-  const total = Number(game.question_count ?? game.total_questions) || 0;
-  const correct = Number(game.correct_count) || 0;
-  const score = Number(game.score) || 0;
-  const rate = total > 0 ? Math.round((correct / total) * 100) : null;
-  // Partie avortée / échouée : 0 pt ET 0 bonne réponse → grisée + « Incomplet ».
-  const incomplete = score === 0 && correct === 0;
-
-  // BUG : thème/niveau null en blitz/marathon → libellé du mode à la place.
-  const meta =
-    game.mode === 'blitz'
-      ? { emoji: '⚡', label: t('gameStart.modes.blitz.name') }
-      : game.mode === 'marathon'
-        ? { emoji: '🏃', label: t('gameStart.modes.marathon.name') }
-        : {
-            emoji: THEME_EMOJI[game.theme] || themeEmoji(game.theme),
-            label: `${themeLabel(game.theme)} · ${levelLabel(game.level)}`,
-          };
-
-  const accent = MODE_ACCENT[game.mode] || colors.green500;
-
-  let badge = null;
-  if (rate !== null) {
-    if (rate >= 70) badge = { icon: '✓', color: colors.green500, bg: colors.successBg };
-    else if (rate >= 40) badge = { icon: '○', color: colors.gold500, bg: colors.goldVeil };
-    else badge = { icon: '✕', color: colors.red400, bg: colors.errorBg };
-  }
-
-  return (
-    <View style={[styles.histCard, incomplete && styles.histCardIncomplete]}>
-      <View style={[styles.histBand, { backgroundColor: incomplete ? colors.border : accent }]} />
-      <View style={styles.histBody}>
-        <View style={styles.histTop}>
-          <Text style={styles.histEmoji}>{meta.emoji}</Text>
-          <Text style={styles.histTitle} numberOfLines={1}>
-            {meta.label}
-          </Text>
-          <Text style={styles.histAgo}>{timeAgo(game.played_at)}</Text>
-        </View>
-        <View style={styles.histBottom}>
-          <Text style={styles.histScore}>{fmt(score)} {t('common.pts')}</Text>
-          {rate !== null && !incomplete ? (
-            <Text style={styles.histCorrect}>✓ {correct}/{total}</Text>
-          ) : null}
-          {game.xp_earned ? (
-            <Text style={styles.histXp}>⚡ +{fmt(game.xp_earned)} {t('common.xp')}</Text>
-          ) : null}
-        </View>
-      </View>
-      {incomplete ? (
-        <View style={styles.histIncompleteBadge}>
-          <Text style={styles.histIncompleteText}>{t('stats.misc.incomplete')}</Text>
-        </View>
-      ) : badge ? (
-        <View style={[styles.histBadge, { backgroundColor: badge.bg }]}>
-          <Text style={[styles.histBadgeText, { color: badge.color }]}>{badge.icon}</Text>
-        </View>
-      ) : null}
-    </View>
   );
 }
 
@@ -974,52 +820,9 @@ const makeStyles = (colors) => StyleSheet.create({
   sortToggleText: { fontFamily: fonts.bodySemiBold, fontSize: fontSizes.xs, color: colors.textBody },
   sortToggleTextActive: { color: colors.textOnDark },
 
-  // Historique
+  // Historique — cartes rendues par SessionCard (composant partagé avec l'Accueil).
   histList: { gap: spacing.sm },
   historyBtn: { marginTop: spacing.md },
-  histCard: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    backgroundColor: colors.white,
-    borderRadius: radius.md,
-    overflow: 'hidden',
-    ...shadow.soft,
-  },
-  histCardIncomplete: { backgroundColor: colors.surfaceCream, opacity: 0.85 },
-  histBand: { width: 4 },
-  histBody: { flex: 1, padding: spacing.md, gap: spacing.xs },
-  histTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  histEmoji: { fontSize: 18 },
-  histTitle: {
-    flex: 1,
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
-    color: colors.textDark,
-  },
-  histAgo: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted },
-  histBottom: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  histScore: { fontFamily: fonts.titleBold, fontSize: fontSizes.lg, color: colors.textDark },
-  histCorrect: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
-  histXp: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.sm, color: colors.gold500 },
-  histBadge: {
-    width: 32,
-    alignSelf: 'center',
-    aspectRatio: 1,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  histBadgeText: { fontFamily: fonts.titleBold, fontSize: fontSizes.base },
-  histIncompleteBadge: {
-    alignSelf: 'center',
-    backgroundColor: colors.border,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    marginRight: spacing.md,
-  },
-  histIncompleteText: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textMuted },
 
   // Ma position
   myRankCard: {

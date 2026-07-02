@@ -1,6 +1,8 @@
 // SessionCard — carte « partie jouée » enrichie, partagée par l'accueil
-// (« Dernières parties ») et l'écran Historique. Thème-aware (useTheme), tokens
-// only. Extrait et enrichi de l'ancien `LastGameRow` de HomeScreen.
+// (« Dernières parties »), l'écran Historique et l'onglet Stats. Thème-aware
+// (useTheme), tokens only. Extrait et enrichi de l'ancien `LastGameRow` de
+// HomeScreen. Prop opt-in `showIncomplete` (Stats) : partie avortée (0 pt,
+// 0 bonne réponse) → carte grisée neutre + pastille « Incomplet ».
 //
 // Enrichissements :
 //   · surface neutre + tint très léger (alpha 0.06) + bordure 1px pleine, couleur par
@@ -51,7 +53,7 @@ function barColor(rate, colors) {
   return colors.red400;
 }
 
-export default function SessionCard({ game, style }) {
+export default function SessionCard({ game, style, showIncomplete = false }) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -62,8 +64,14 @@ export default function SessionCard({ game, style }) {
   const score = Number(game.score) || 0;
   const rate = total > 0 ? Math.round((correct / total) * 100) : null;
 
+  // Partie avortée / échouée : 0 pt ET 0 bonne réponse → carte grisée neutre +
+  // pastille « Incomplet » (pas de ton rouge : abandon ≠ échec). Opt-in
+  // (`showIncomplete`, utilisé par Stats) — défaut false : rendu inchangé
+  // pour l'Accueil et l'écran Historique.
+  const incomplete = showIncomplete && score === 0 && correct === 0;
+
   // Ton de surface : bordure 1px pleine + tint faible, keyé sur le taux de réussite.
-  const tone = surfaceTone(rate, colors);
+  const tone = incomplete ? null : surfaceTone(rate, colors);
 
   // Blitz/marathon : thème null → repli sur l'emoji + le nom du mode.
   const emoji = game.theme ? themeEmoji(game.theme) : MODE_EMOJI[game.mode] || '🎯';
@@ -98,7 +106,7 @@ export default function SessionCard({ game, style }) {
 
   return (
     <View
-      style={[styles.card, tone, style]}
+      style={[styles.card, tone, incomplete && styles.cardIncomplete, style]}
     >
       <View style={styles.row}>
         <Text style={styles.emoji}>{emoji}</Text>
@@ -109,7 +117,7 @@ export default function SessionCard({ game, style }) {
           <Text style={styles.sub} numberOfLines={1}>
             {timeAgo(game.played_at)}
           </Text>
-          {rate !== null ? (
+          {rate !== null && !incomplete ? (
             <Text style={styles.detail} numberOfLines={1}>
               ✓ {correct}/{total}
               {game.xp_earned ? ` · ⚡ +${fmt(game.xp_earned)}` : ''}
@@ -117,7 +125,11 @@ export default function SessionCard({ game, style }) {
           ) : null}
         </View>
         <View style={styles.right}>
-          {badge ? (
+          {incomplete ? (
+            <View style={styles.incompleteBadge}>
+              <Text style={styles.incompleteText}>{t('stats.misc.incomplete')}</Text>
+            </View>
+          ) : badge ? (
             <View style={[styles.badge, badge.kind === 'top' ? styles.badgeTop : styles.badgeGood]}>
               <Text
                 style={[
@@ -136,7 +148,7 @@ export default function SessionCard({ game, style }) {
       </View>
 
       {/* Barre de progression pleine largeur, épinglée au bord bas de la carte. */}
-      {rate !== null ? (
+      {rate !== null && !incomplete ? (
         <View style={styles.barTrack}>
           <Animated.View
             style={[styles.barFill, { width: barWidth, backgroundColor: barColor(rate, colors) }]}
@@ -199,6 +211,15 @@ const makeStyles = (colors) =>
     badgeText: { fontFamily: fonts.bodyBold, fontSize: 10, letterSpacing: 0.4 },
     badgeTextTop: { color: colors.green900 }, // vert profond sur or → contraste fort (motif CTA)
     badgeTextGood: { color: colors.successText },
+    // Partie avortée (opt-in `showIncomplete`) : carte grisée + pastille neutre.
+    cardIncomplete: { opacity: 0.85 },
+    incompleteBadge: {
+      backgroundColor: colors.border,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+    },
+    incompleteText: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textMuted },
     barTrack: {
       position: 'absolute',
       left: 0,
