@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Logo, AppButton, AuthField, ChoiceChips } from '../components';
+import { Logo, AppButton, AuthField, ChoiceChips, Title, Heading, Body, Label } from '../components';
 import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
@@ -30,7 +30,7 @@ import {
   isValidPassword,
 } from '../utils/validation';
 import { SEXES, LANGS } from '../constants/config';
-import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 const STEPS = [
@@ -158,8 +158,8 @@ export default function RegisterScreen({ navigation }) {
             ))}
           </View>
 
-          <Text style={styles.stepN}>{t('auth.register.misc.stepCounter', { n: STEPS[step].n })}</Text>
-          <Text style={styles.title}>{t(STEPS[step].titleKey)}</Text>
+          <Label size="xs" color={colors.gold500}>{t('auth.register.misc.stepCounter', { n: STEPS[step].n })}</Label>
+          <Title size="xl" style={styles.title}>{t(STEPS[step].titleKey)}</Title>
 
           {step === 0 ? (
             <>
@@ -171,10 +171,10 @@ export default function RegisterScreen({ navigation }) {
                 autoCapitalize="words"
                 textContentType="name"
               />
-              <Text style={styles.fieldLabel}>{t('auth.register.phone')}</Text>
+              <Label color={colors.textBody} style={styles.fieldLabel}>{t('auth.register.phone')}</Label>
               <View style={styles.phoneRow}>
                 <View style={styles.prefix}>
-                  <Text style={styles.prefixText}>+237</Text>
+                  <Body weight="bold" color={colors.textOnDark}>+237</Body>
                 </View>
                 <View style={[styles.phoneField, errors.phone && styles.phoneFieldError]}>
                   <PhoneInput
@@ -184,7 +184,7 @@ export default function RegisterScreen({ navigation }) {
                   />
                 </View>
               </View>
-              {errors.phone ? <Text style={styles.err}>{errors.phone}</Text> : null}
+              {errors.phone ? <Label size="xs" color={colors.red400} style={styles.err}>{errors.phone}</Label> : null}
             </>
           ) : null}
 
@@ -222,11 +222,11 @@ export default function RegisterScreen({ navigation }) {
 
           {step === 2 ? (
             <>
-              <Text style={styles.fieldLabel}>{t('auth.register.city')}</Text>
+              <Label color={colors.textBody} style={styles.fieldLabel}>{t('auth.register.city')}</Label>
               <Pressable style={styles.select} onPress={() => setCityOpen(true)}>
-                <Text style={[styles.selectText, !ville && styles.selectPlaceholder]}>
+                <Body weight="medium" color={colors.textDark} style={!ville && styles.selectPlaceholder}>
                   {ville || t('auth.register.placeholder.city')}
-                </Text>
+                </Body>
                 <Text style={styles.chevron}>▾</Text>
               </Pressable>
 
@@ -238,7 +238,7 @@ export default function RegisterScreen({ navigation }) {
                 style={styles.ageField}
               />
 
-              <Text style={styles.fieldLabel}>{t('auth.register.gender')}</Text>
+              <Label color={colors.textBody} style={styles.fieldLabel}>{t('auth.register.gender')}</Label>
               <ChoiceChips
                 options={SEXES.map((o) => ({
                   ...o,
@@ -248,7 +248,7 @@ export default function RegisterScreen({ navigation }) {
                 onChange={setSexe}
               />
 
-              <Text style={[styles.fieldLabel, styles.mt]}>{t('auth.register.language')}</Text>
+              <Label color={colors.textBody} style={[styles.fieldLabel, styles.mt]}>{t('auth.register.language')}</Label>
               <ChoiceChips options={LANGS} value={lang} onChange={setLang} />
             </>
           ) : null}
@@ -256,10 +256,10 @@ export default function RegisterScreen({ navigation }) {
           {isLast && !isOnline ? (
             <View style={styles.errRow}>
               <Icon icon={WifiOff} size={14} color={colors.red400} />
-              <Text style={styles.err}>{t('offline.loginRequired')}</Text>
+              <Label size="xs" color={colors.red400} style={styles.err}>{t('offline.loginRequired')}</Label>
             </View>
           ) : null}
-          {errors._global ? <Text style={styles.err}>{errors._global}</Text> : null}
+          {errors._global ? <Label size="xs" color={colors.red400} style={styles.err}>{errors._global}</Label> : null}
 
           <AppButton
             title={isLast ? t('auth.register.create') : t('auth.register.next')}
@@ -271,7 +271,7 @@ export default function RegisterScreen({ navigation }) {
             style={styles.submit}
           />
           <Pressable style={styles.backBtn} onPress={onBack} hitSlop={8}>
-            <Text style={styles.backText}>{t('auth.register.back')}</Text>
+            <Label size="md">{t('auth.register.back')}</Label>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -280,7 +280,7 @@ export default function RegisterScreen({ navigation }) {
       <Modal visible={cityOpen} transparent animationType="slide" onRequestClose={() => setCityOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setCityOpen(false)}>
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>{t('auth.register.misc.cityPickerTitle')}</Text>
+            <Heading style={styles.modalTitle}>{t('auth.register.misc.cityPickerTitle')}</Heading>
             <FlatList
               data={CITIES}
               keyExtractor={(c) => c}
@@ -292,8 +292,8 @@ export default function RegisterScreen({ navigation }) {
                     setCityOpen(false);
                   }}
                 >
-                  <Text style={styles.cityText}>{item}</Text>
-                  {ville === item ? <Text style={styles.cityCheck}>✓</Text> : null}
+                  <Body weight="medium" color={colors.textDark}>{item}</Body>
+                  {ville === item ? <Body weight="bold" color={colors.green500}>✓</Body> : null}
                 </Pressable>
               )}
             />
@@ -328,14 +328,8 @@ const makeStyles = (colors) => StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radius.xxl, padding: 24, ...shadow.floating },
   progress: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   seg: { flex: 1, height: 6, borderRadius: radius.pill },
-  stepN: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.gold500 },
-  title: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl, color: colors.textDark, marginBottom: spacing.lg },
-  fieldLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.sm,
-    color: colors.textBody,
-    marginBottom: spacing.sm,
-  },
+  title: { marginBottom: spacing.lg },
+  fieldLabel: { marginBottom: spacing.sm },
   mt: { marginTop: spacing.md },
   phoneRow: { flexDirection: 'row', gap: spacing.sm },
   prefix: {
@@ -346,13 +340,12 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  prefixText: { fontFamily: fonts.bodyBold, fontSize: fontSizes.base, color: colors.textOnDark },
   phoneField: { flex: 1 },
   phoneFieldError: {},
   phoneInner: { marginBottom: 0 },
   ageField: { marginTop: spacing.xs },
   errRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  err: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.xs, color: colors.red400, marginBottom: spacing.md },
+  err: { marginBottom: spacing.md },
   select: {
     height: 52,
     borderRadius: radius.md,
@@ -365,12 +358,10 @@ const makeStyles = (colors) => StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.lg,
   },
-  selectText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textDark },
   selectPlaceholder: { color: colors.textMuted },
   chevron: { fontSize: fontSizes.base, color: colors.textMuted },
   submit: { marginTop: spacing.lg },
   backBtn: { alignItems: 'center', marginTop: spacing.md },
-  backText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textMuted },
   modalBackdrop: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
   modalSheet: {
     backgroundColor: colors.white,
@@ -380,7 +371,7 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingHorizontal: spacing.lg,
     maxHeight: '60%',
   },
-  modalTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.textDark, marginBottom: spacing.md },
+  modalTitle: { marginBottom: spacing.md },
   cityRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -389,6 +380,4 @@ const makeStyles = (colors) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  cityText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textDark },
-  cityCheck: { fontFamily: fonts.bodyBold, fontSize: fontSizes.base, color: colors.green500 },
 });
