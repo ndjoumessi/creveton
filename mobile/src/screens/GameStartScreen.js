@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Info } from 'lucide-react-native';
+import { Info, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Screen, Title, Heading, Body, Label, AppButton, ChoiceChips, useToast } from '../components';
 import Icon from '../components/Icon';
@@ -364,9 +364,12 @@ export default function GameStartScreen({ navigation, route }) {
                   {t('gameStart.offlineCount', { count: themeCount })}
                 </Body>
               ) : (
-                <Label size={11} color={colors.red400} style={styles.themeOfflineNone}>
-                  {t('gameStart.connectionRequired')}
-                </Label>
+                <View style={styles.offlineBadge}>
+                  <Icon icon={WifiOff} size={11} color={colors.red600} />
+                  <Label size={11} weight="semibold" color={colors.red600}>
+                    {t('gameStart.connectionRequired')}
+                  </Label>
+                </View>
               )}
             </Animated.View>
           );
@@ -491,9 +494,19 @@ const makeStyles = (colors) => StyleSheet.create({
     marginTop: spacing.xs,
     paddingLeft: 2,
   },
-  themeOfflineNone: {
+  // Badge « Connexion requise » : pill compacte, paire figée red200/red600 (comme
+  // l'accent d'erreur du Toast) → lisible sur fond cream (clair) ET sombre, sans
+  // rouge plein agressif. Icône WifiOff + texte semibold, calé à gauche sous la carte.
+  offlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
     marginTop: spacing.xs,
-    paddingLeft: 2,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    backgroundColor: colors.red200,
   },
 
   modes: { gap: spacing.sm },
