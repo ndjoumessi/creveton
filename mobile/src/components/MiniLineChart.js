@@ -160,10 +160,13 @@ export default function MiniLineChart({
   // l'anti-collision verticale échouait, le tooltip retombait sur une ligne de grille
   // et chevauchait son libellé. On réduit donc le nombre de libellés quand la hauteur
   // manque, jusqu'à garantir un créneau libre (vérifié par simulation pour tipH≤28) :
-  //   innerH ≥ 150 → 4 libellés · ≥ 100 → 3 (Stats h=140) · sinon → 2 min/max (Results h=120).
-  // Précision d'échelle réduite sur les petits graphiques, mais plus de chevauchement
-  // — compromis assumé (cf. brief : « la solution la plus simple qui l'élimine »).
-  const gradDivs = showGrid ? (innerH >= 150 ? 3 : innerH >= 100 ? 2 : 1) : 0; // libellés = divs+1
+  //   innerH ≥ 156 → 4 libellés · ≥ 130 → 3 · sinon → 2 min/max.
+  // Results (h=120) ET Stats (h=140) tombent tous deux sur 2 libellés : avec la marge
+  // d'exclusion VISIBLE (LABEL_HALF 14 ci-dessous), 3 libellés sur h=140 restaient trop
+  // serrés pour garantir un vrai espace au tooltip (la garde le posait AU RAS du libellé
+  // du bas → résidu observé). Précision d'échelle réduite (min/max), mais plus de
+  // chevauchement — compromis assumé (cf. brief : « la solution la plus simple »).
+  const gradDivs = showGrid ? (innerH >= 156 ? 3 : innerH >= 130 ? 2 : 1) : 0; // libellés = divs+1
   const grads = showGrid
     ? Array.from({ length: gradDivs + 1 }, (_, i) => ({
         y: padT + (innerH * i) / gradDivs,
@@ -196,10 +199,13 @@ export default function MiniLineChart({
   // l'emplacement dégagé le PLUS PROCHE (déplacement minimal), en restant à l'écran.
   // Actif uniquement avec la grille (sinon aucun libellé d'axe).
   if (selPoint && showGrid && tipH > 0) {
-    // Demi-hauteur d'exclusion : serrée au plus près du texte réel (~9px à fontSize 9)
-    // pour maximiser les interstices exploitables entre libellés (cf. réduction à 3
-    // graduations ci-dessus) → la garde trouve un créneau même sur h=120.
-    const LABEL_HALF = 8;
+    // Demi-hauteur d'exclusion = demi-texte réel (~6px) + MARGE VISIBLE (~8px). Une
+    // position « sans collision » garde donc ≥8px de vrai espace au libellé, ombre du
+    // tooltip incluse. À 8px, la garde trouvait un créneau mais le posait AU RAS du
+    // libellé (≈0px de marge réelle → visuellement collé : c'est le résidu observé sur
+    // Stats). Vérifié : 2 libellés + LABEL_HALF 14 → aucun placement flush sur h=120/140
+    // (tipH jusqu'à 32).
+    const LABEL_HALF = 14;
     const maxTop = Math.max(height - tipH, 0);
     const clampV = (top) => Math.min(Math.max(top, 0), maxTop);
     // Centre vertical approx. du texte de graduation (baseline g.y-2, fontSize 9).
