@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import Icon from '../components/Icon';
-import { AppButton, Skeleton, SessionCard, ErrorScreen } from '../components';
+import { AppButton, Skeleton, SessionCard, ErrorScreen, EmptyState } from '../components';
 import { users as usersApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { THEMES, LEVELS } from '../constants/config';
@@ -196,27 +196,28 @@ export default function SessionsHistoryScreen({ navigation }) {
     // Filtre actif mais aucune partie ne correspond (des parties existent).
     if (filtered.length === 0 && rows && rows.length > 0 && filtering) {
       return (
-        <View style={styles.empty}>
-          <Text style={styles.emptyEmoji}>🔍</Text>
-          <Text style={styles.emptyTitle}>{t('sessionsHistory.noMatch', 'Aucune partie pour ce filtre')}</Text>
-        </View>
+        <EmptyState
+          icon="🔍"
+          title={t('sessionsHistory.noMatch', 'Aucune partie pour ce filtre')}
+          style={styles.empty}
+          titleStyle={styles.emptyTitle}
+        />
       );
     }
 
     // Aucune partie jouée du tout → état vide + invite à jouer.
     if (filtered.length === 0) {
       return (
-        <View style={styles.empty}>
-          <Text style={styles.emptyEmoji}>🎮</Text>
-          <Text style={styles.emptyTitle}>{t('sessionsHistory.empty', 'Aucune partie jouée')}</Text>
-          <AppButton
-            title={t('sessionsHistory.playNow', 'Jouer maintenant')}
-            variant="primary"
-            size="lg"
-            onPress={() => navigation.navigate('Play')}
-            style={styles.emptyBtn}
-          />
-        </View>
+        <EmptyState
+          icon="🎮"
+          title={t('sessionsHistory.empty', 'Aucune partie jouée')}
+          ctaLabel={t('sessionsHistory.playNow', 'Jouer maintenant')}
+          onCta={() => navigation.navigate('Play')}
+          ctaSize="lg"
+          ctaFullWidth
+          style={styles.empty}
+          titleStyle={styles.emptyTitle}
+        />
       );
     }
 
@@ -329,14 +330,7 @@ const makeStyles = (colors) =>
     skelList: { paddingHorizontal: spacing.lg, gap: spacing.sm },
     skelCard: {},
 
-    // États vides
-    empty: { alignItems: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg },
-    emptyEmoji: { fontSize: 56, marginBottom: spacing.md },
-    emptyTitle: {
-      fontFamily: fonts.titleBold,
-      fontSize: fontSizes.lg,
-      color: colors.textDark,
-      textAlign: 'center',
-    },
-    emptyBtn: { marginTop: spacing.xl, alignSelf: 'stretch' },
+    // États vides — EmptyState partagé (titre en graisse Bold propre à l'écran).
+    empty: { paddingHorizontal: spacing.lg },
+    emptyTitle: { fontFamily: fonts.titleBold },
   });

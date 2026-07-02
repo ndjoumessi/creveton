@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Logo, AppButton, AuthField } from '../components';
+import { Logo, AppButton, AuthField, ChoiceChips } from '../components';
 import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
@@ -30,7 +30,7 @@ import {
   isValidPassword,
 } from '../utils/validation';
 import { SEXES, LANGS } from '../constants/config';
-import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 const STEPS = [
@@ -239,7 +239,7 @@ export default function RegisterScreen({ navigation }) {
               />
 
               <Text style={styles.fieldLabel}>{t('auth.register.gender')}</Text>
-              <Pills
+              <ChoiceChips
                 options={SEXES.map((o) => ({
                   ...o,
                   label: t(`auth.register.gender${o.key === 'H' ? 'M' : o.key}`),
@@ -249,7 +249,7 @@ export default function RegisterScreen({ navigation }) {
               />
 
               <Text style={[styles.fieldLabel, styles.mt]}>{t('auth.register.language')}</Text>
-              <Pills options={LANGS} value={lang} onChange={setLang} />
+              <ChoiceChips options={LANGS} value={lang} onChange={setLang} />
             </>
           ) : null}
 
@@ -321,27 +321,6 @@ function PhoneInput({ defaultValue, onChangeText, placeholder }) {
   );
 }
 
-function Pills({ options, value, onChange }) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  return (
-    <View style={styles.pills}>
-      {options.map((o) => {
-        const active = o.key === value;
-        return (
-          <Pressable
-            key={o.key}
-            onPress={() => onChange(o.key)}
-            style={[styles.pill, active && styles.pillActive]}
-          >
-            <Text style={[styles.pillText, active && styles.pillTextActive]}>{o.label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 const makeStyles = (colors) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.green900 },
   kav: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.lg },
@@ -389,20 +368,6 @@ const makeStyles = (colors) => StyleSheet.create({
   selectText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.textDark },
   selectPlaceholder: { color: colors.textMuted },
   chevron: { fontSize: fontSizes.base, color: colors.textMuted },
-  pills: { flexDirection: 'row', gap: spacing.sm },
-  pill: {
-    flex: 1,
-    minHeight: MIN_TOUCH,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.borderInput,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pillActive: { backgroundColor: colors.green900, borderColor: colors.green900 },
-  pillText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted },
-  pillTextActive: { color: colors.textOnDark },
   submit: { marginTop: spacing.lg },
   backBtn: { alignItems: 'center', marginTop: spacing.md },
   backText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.md, color: colors.textMuted },

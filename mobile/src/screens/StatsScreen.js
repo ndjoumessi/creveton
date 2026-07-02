@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { BarChart2, Trophy, Target, TrendingUp, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, XpBar, FillBar, Podium, SessionCard, MiniLineChart, SegmentedTabs } from '../components';
+import { Screen, Avatar, AppButton, Body, Skeleton, ErrorScreen, EmptyState, XpBar, FillBar, Podium, SessionCard, MiniLineChart, SegmentedTabs } from '../components';
 import Icon from '../components/Icon';
 import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
@@ -287,14 +287,18 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
   // État vide LÉGITIME : nouveau joueur, aucune partie (online, sans erreur).
   if (history && history.length === 0) {
     return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyEmoji}>🎮</Text>
-        <Text style={styles.emptyTitle}>{t('stats.empty.statsTitle')}</Text>
-        <Body muted style={styles.emptyText}>
-          {t('stats.empty.statsText')}
-        </Body>
-        <AppButton title={t('stats.empty.play')} variant="primary" size="lg" onPress={onPlay} style={styles.emptyBtn} />
-      </View>
+      <EmptyState
+        icon="🎮"
+        title={t('stats.empty.statsTitle')}
+        message={t('stats.empty.statsText')}
+        ctaLabel={t('stats.empty.play')}
+        onCta={onPlay}
+        ctaSize="lg"
+        ctaFullWidth
+        style={styles.empty}
+        titleStyle={styles.emptyTitle}
+        messageStyle={styles.emptyText}
+      />
     );
   }
 
@@ -523,14 +527,18 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
 
   if (data.length === 0) {
     return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyEmoji}>🏆</Text>
-        <Text style={styles.emptyTitle}>{t('stats.empty.rankTitle')}</Text>
-        <Body muted style={styles.emptyText}>
-          {t('stats.empty.rankText')}
-        </Body>
-        <AppButton title={t('stats.empty.play')} variant="primary" size="lg" onPress={onPlay} style={styles.emptyBtn} />
-      </View>
+      <EmptyState
+        icon="🏆"
+        title={t('stats.empty.rankTitle')}
+        message={t('stats.empty.rankText')}
+        ctaLabel={t('stats.empty.play')}
+        onCta={onPlay}
+        ctaSize="lg"
+        ctaFullWidth
+        style={styles.empty}
+        titleStyle={styles.emptyTitle}
+        messageStyle={styles.emptyText}
+      />
     );
   }
 
@@ -834,15 +842,8 @@ const makeStyles = (colors) => StyleSheet.create({
   rankVille: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted },
   rankScore: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.md, color: colors.textDark },
 
-  // États vides
-  empty: { alignItems: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg },
-  emptyEmoji: { fontSize: 56, marginBottom: spacing.md },
-  emptyTitle: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl,
-    color: colors.textDark,
-    marginBottom: spacing.sm,
-  },
-  emptyText: { textAlign: 'center', lineHeight: 20 },
-  emptyBtn: { marginTop: spacing.xl, alignSelf: 'stretch' },
+  // États vides — EmptyState partagé (titre Bold/xl et interligne propres à l'écran).
+  empty: { paddingHorizontal: spacing.lg },
+  emptyTitle: { fontFamily: fonts.titleBold, fontSize: fontSizes.xl },
+  emptyText: { lineHeight: 20 },
 });

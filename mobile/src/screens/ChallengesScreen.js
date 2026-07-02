@@ -16,14 +16,11 @@ import {
   TextInput,
   FlatList,
   Pressable,
-  Modal,
-  Alert,
   ActivityIndicator,
   RefreshControl,
   StyleSheet,
 } from 'react-native';
 import { Swords } from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../components/Icon';
 import {
   Screen,
@@ -33,8 +30,13 @@ import {
   AppCard,
   AppButton,
   Avatar,
+  BottomSheet,
   ThemeBadge,
   SegmentedTabs,
+  ChoiceChips,
+  EmptyState,
+  FAB,
+  useConfirm,
   useToast,
 } from '../components';
 import { THEMES, LEVELS } from '../constants/config';
@@ -42,7 +44,7 @@ import { challenges, users } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { useGameStore } from '../store/gameStore';
 import { timeAgo } from '../utils/format';
-import { fonts, fontSizes, radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { hapticLight } from '../utils/haptics';
@@ -55,9 +57,9 @@ export default function ChallengesScreen({ navigation, route }) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors, isDark), [colors, isDark]);
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const { isOnline } = useNetworkStatus();
   const toast = useToast();
+  const confirm = useConfirm();
   const startGame = useGameStore((s) => s.startGame);
 
   const [tab, setTab] = useState('received');
@@ -159,58 +161,46 @@ export default function ChallengesScreen({ navigation, route }) {
     setSelectedFriend(null);
   };
 
-  const declineChallenge = (item) => {
-    Alert.alert(
-      t('challengesHub.actions.decline'),
-      t('challengesHub.confirmDecline'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('challengesHub.actions.decline'),
-          style: 'destructive',
-          onPress: async () => {
-            hapticLight();
-            try {
-              await challenges.decline(item.challenge_id);
-              setData((d) => ({
-                ...d,
-                received: d.received.filter((c) => c.challenge_id !== item.challenge_id),
-              }));
-              toast.show({ type: 'info', message: t('challengesHub.notify.declined') });
-            } catch (e) {
-              toast.show({ type: 'error', message: parseApiError(e).message });
-            }
-          },
-        },
-      ]
-    );
+  const declineChallenge = async (item) => {
+    const ok = await confirm({
+      title: t('challengesHub.actions.decline'),
+      message: t('challengesHub.confirmDecline'),
+      confirmLabel: t('challengesHub.actions.decline'),
+      destructive: true,
+    });
+    if (!ok) return;
+    hapticLight();
+    try {
+      await challenges.decline(item.challenge_id);
+      setData((d) => ({
+        ...d,
+        received: d.received.filter((c) => c.challenge_id !== item.challenge_id),
+      }));
+      toast.show({ type: 'info', message: t('challengesHub.notify.declined') });
+    } catch (e) {
+      toast.show({ type: 'error', message: parseApiError(e).message });
+    }
   };
 
-  const cancelSent = (item) => {
-    Alert.alert(
-      t('challengesHub.actions.cancel'),
-      t('challengesHub.confirmCancel'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('challengesHub.actions.cancel'),
-          style: 'destructive',
-          onPress: async () => {
-            hapticLight();
-            try {
-              await challenges.cancel(item.challenge_id);
-              setData((d) => ({
-                ...d,
-                sent: d.sent.filter((c) => c.challenge_id !== item.challenge_id),
-              }));
-              toast.show({ type: 'info', message: t('challengesHub.notify.cancelled') });
-            } catch (e) {
-              toast.show({ type: 'error', message: parseApiError(e).message });
-            }
-          },
-        },
-      ]
-    );
+  const cancelSent = async (item) => {
+    const ok = await confirm({
+      title: t('challengesHub.actions.cancel'),
+      message: t('challengesHub.confirmCancel'),
+      confirmLabel: t('challengesHub.actions.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    hapticLight();
+    try {
+      await challenges.cancel(item.challenge_id);
+      setData((d) => ({
+        ...d,
+        sent: d.sent.filter((c) => c.challenge_id !== item.challenge_id),
+      }));
+      toast.show({ type: 'info', message: t('challengesHub.notify.cancelled') });
+    } catch (e) {
+      toast.show({ type: 'error', message: parseApiError(e).message });
+    }
   };
 
   const acceptChallenge = async (item) => {
@@ -346,73 +336,35 @@ export default function ChallengesScreen({ navigation, route }) {
       </View>
 
       {/* FAB — nouveau défi (ouvre le bottom sheet). Désactivé hors ligne. */}
-      <Pressable
-        style={[styles.fab, !isOnline && styles.fabDisabled]}
-        onPress={isOnline ? openSheet : undefined}
+      <FAB
+        onPress={openSheet}
         disabled={!isOnline}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: !isOnline }}
         accessibilityLabel={t('challengesHub.launchCta')}
-      >
-        <Text style={styles.fabIcon}>+</Text>
-      </Pressable>
+      />
 
       {/* Bottom sheet — Nouveau challenge */}
-      <Modal visible={sheetOpen} transparent animationType="slide" onRequestClose={resetSheet}>
-        <Pressable style={styles.sheetBackdrop} onPress={resetSheet} />
-        <View style={[styles.sheet, { paddingBottom: spacing.xxl + insets.bottom }]}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>{t('challengesHub.sheet.title')}</Text>
-
+      <BottomSheet visible={sheetOpen} onClose={resetSheet} title={t('challengesHub.sheet.title')}>
           {/* Thème — 2 rangées de 3 tuiles (lisibilité petits écrans) */}
           <Text style={styles.fieldLabel}>{t('challengesHub.sheet.theme')}</Text>
-          <View style={styles.themeGrid}>
-            {THEMES.map((th) => {
-              const active = th.key === theme;
-              return (
-                <Pressable
-                  key={th.key}
-                  onPress={() => {
-                    hapticLight();
-                    setTheme(th.key);
-                  }}
-                  style={[styles.themeChip, active && styles.themeChipActive]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Text style={styles.themeChipEmoji}>{th.emoji}</Text>
-                  <Text style={[styles.themeChipText, active && styles.themeChipTextActive]} numberOfLines={1}>
-                    {th.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <ChoiceChips
+            layout="grid"
+            haptic
+            options={THEMES.map((th) => ({ key: th.key, label: th.label, emoji: th.emoji }))}
+            value={theme}
+            onChange={setTheme}
+          />
 
           {/* Difficulté — 3 pills pleine largeur (même motif que GameStartScreen) */}
           <Text style={styles.fieldLabel}>{t('challengesHub.sheet.level')}</Text>
-          <View style={styles.levels}>
-            {LEVELS.map((l) => {
-              const active = l.key === level;
-              return (
-                <Pressable
-                  key={l.key}
-                  onPress={() => {
-                    hapticLight();
-                    setLevel(l.key);
-                  }}
-                  style={[styles.levelPill, active && styles.levelPillActive]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Text style={[styles.levelText, active && styles.levelTextActive]}>
-                    {t(`gameStart.levels.${l.key}`, l.label)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <ChoiceChips
+            haptic
+            options={LEVELS.map((l) => ({
+              key: l.key,
+              label: t(`gameStart.levels.${l.key}`, l.label),
+            }))}
+            value={level}
+            onChange={setLevel}
+          />
 
           {/* Adversaire — aléatoire ou recherche d'un ami précis */}
           <Text style={styles.fieldLabel}>{t('challengesHub.sheet.opponent')}</Text>
@@ -509,8 +461,7 @@ export default function ChallengesScreen({ navigation, route }) {
             style={styles.launchBtn}
             onPress={launch}
           />
-        </View>
-      </Modal>
+      </BottomSheet>
     </Screen>
   );
 }
@@ -616,20 +567,15 @@ function EmptyChallenges({ t, tab, onLaunch }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <View style={styles.empty}>
-      <Text style={styles.emptyEmoji}>⚔️</Text>
-      <Heading style={styles.emptyTitle}>{t('challengesHub.empty.title')}</Heading>
-      <Body muted style={styles.emptyText}>
-        {t(`challengesHub.empty.${tab}`, t('challengesHub.empty.sub'))}
-      </Body>
-      <AppButton
-        variant="primary"
-        title={t('challengesHub.launchCta')}
-        onPress={onLaunch}
-        fullWidth={false}
-        style={styles.emptyBtn}
-      />
-    </View>
+    <EmptyState
+      icon="⚔️"
+      iconSize={64}
+      title={t('challengesHub.empty.title')}
+      message={t(`challengesHub.empty.${tab}`, t('challengesHub.empty.sub'))}
+      ctaLabel={t('challengesHub.launchCta')}
+      onCta={onLaunch}
+      style={styles.empty}
+    />
   );
 }
 
@@ -649,21 +595,6 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   countPillText: { fontFamily: fonts.titleBold, fontSize: fontSizes.xs, color: colors.textOnDark },
 
   body: { flex: 1, backgroundColor: colors.cream, borderTopLeftRadius: 28, borderTopRightRadius: 28 },
-  fab: {
-    position: 'absolute',
-    right: 24,
-    bottom: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.gold500,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 20,
-    ...shadow.gold,
-  },
-  fabDisabled: { opacity: 0.45 },
-  fabIcon: { fontFamily: fonts.titleBold, fontSize: 30, color: colors.textOnDark, marginTop: -2 },
   offlineBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -714,24 +645,10 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   completedVs: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textBody },
   completedScores: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },
 
-  empty: { alignItems: 'center', paddingTop: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.sm },
-  emptyEmoji: { fontSize: 64, opacity: 0.9 },
-  emptyTitle: { fontFamily: fonts.titleSemiBold, fontSize: fontSizes.lg, color: colors.textDark },
-  emptyText: { textAlign: 'center' },
-  emptyBtn: { marginTop: spacing.md },
+  // État vide : EmptyState partagé, ancré haut de liste (pas de padding bas).
+  empty: { paddingTop: spacing.xxxl, paddingBottom: 0 },
 
-  // Bottom sheet « Nouveau challenge »
-  sheetBackdrop: { flex: 1, backgroundColor: colors.overlay },
-  sheet: {
-    backgroundColor: colors.surfaceCream,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.xs,
-  },
-  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.sm },
-  sheetTitle: { fontFamily: fonts.titleBold, fontSize: 20, color: colors.textDark, marginBottom: spacing.xs },
+  // Bottom sheet « Nouveau challenge » — conteneur/handle/titre → <BottomSheet>.
   fieldLabel: {
     fontFamily: fonts.bodySemiBold,
     fontSize: 11,
@@ -742,43 +659,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     marginBottom: spacing.xs,
   },
 
-  // Thème — grille 2×3
-  themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  themeChip: {
-    flexBasis: '30%',
-    flexGrow: 1,
-    minWidth: 96,
-    minHeight: MIN_TOUCH, // cible tactile ≥44/48
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-  },
-  themeChipActive: { backgroundColor: colors.green900, borderColor: colors.gold400, borderWidth: 2 },
-  themeChipEmoji: { fontSize: 20 },
-  themeChipText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textDark },
-  themeChipTextActive: { color: colors.textOnDark },
-
-  // Difficulté — 3 pills pleine largeur
-  levels: { flexDirection: 'row', gap: spacing.sm },
-  levelPill: {
-    flex: 1,
-    height: 46,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  levelPillActive: { backgroundColor: colors.green900, borderColor: colors.gold400, borderWidth: 2 },
-  levelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textDark },
-  levelTextActive: { color: colors.textOnDark },
+  // Thème (grille 2×3) & difficulté (3 pills) : composant partagé ChoiceChips.
 
   // Adversaire — random + recherche d'ami
   oppRow: { flexDirection: 'row', gap: spacing.sm },

@@ -7,7 +7,7 @@ import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Info } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Title, Body, AppButton, useToast } from '../components';
+import { Screen, Title, Body, AppButton, ChoiceChips, useToast } from '../components';
 import Icon from '../components/Icon';
 import {
   THEMES,
@@ -19,7 +19,7 @@ import {
 } from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
 import { useGameStore } from '../store/gameStore';
-import { themeGradients, fonts, fontSizes, radius, spacing, MIN_TOUCH } from '../constants/theme';
+import { themeGradients, fonts, fontSizes, radius, spacing } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { countQuestionsByTheme } from '../services/database';
@@ -374,22 +374,14 @@ export default function GameStartScreen({ navigation, route }) {
       </View>
 
       <Text style={sectionStyle}>{t('gameStart.chooseLevel')}</Text>
-      <View style={styles.levels}>
-        {LEVELS.map((l) => {
-          const active = l.key === level;
-          return (
-            <Pressable
-              key={l.key}
-              onPress={() => setLevel(l.key)}
-              style={[styles.levelPill, active && styles.levelPillActive]}
-            >
-              <Text style={[styles.levelText, active && styles.levelTextActive]}>
-                {t(`gameStart.levels.${l.key}`, l.label)}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <ChoiceChips
+        options={LEVELS.map((l) => ({
+          key: l.key,
+          label: t(`gameStart.levels.${l.key}`, l.label),
+        }))}
+        value={level}
+        onChange={setLevel}
+      />
         </>
       ) : null}
 
@@ -536,21 +528,6 @@ const makeStyles = (colors) => StyleSheet.create({
   modeNameActive: { color: colors.textDark },
   modeDesc: { fontFamily: fonts.bodyRegular, fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 1 },
   modeCheck: { fontFamily: fonts.bodyBold, fontSize: fontSizes.lg, color: colors.gold500 },
-
-  levels: { flexDirection: 'row', gap: spacing.sm },
-  levelPill: {
-    flex: 1,
-    minHeight: MIN_TOUCH,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  levelPillActive: { backgroundColor: colors.green900, borderColor: colors.gold400 },
-  levelText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.textDark },
-  levelTextActive: { color: colors.textOnDark },
 
   recap: {
     backgroundColor: colors.cream,

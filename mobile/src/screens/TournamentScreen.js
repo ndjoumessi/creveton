@@ -5,7 +5,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, FlatList, StyleSheet, Pressable, Modal } from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { Users, Clock, Calendar, Timer } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import {
@@ -21,6 +21,8 @@ import {
   StatusBadge,
   FillBar,
   SegmentedTabs,
+  EmptyState,
+  useConfirm,
   useToast,
 } from '../components';
 import { tournaments as tournamentsApi } from '../services/endpoints';
@@ -53,16 +55,15 @@ export default function TournamentScreen() {
   const { t: tr } = useTranslation();
   const { isOnline } = useNetworkStatus();
   const toast = useToast();
+  const confirm = useConfirm();
   const navigation = useNavigation();
   const [tab, setTab] = useState('active');
-  // Inscription en cours (désactive le bouton de confirmation le temps de l'appel).
+  // Inscription en cours (ignore les taps le temps de l'appel).
   const [joining, setJoining] = useState(false);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
-  // Tournoi en attente de confirmation d'inscription (null = modale fermée).
-  const [confirm, setConfirm] = useState(null);
 
   const load = useCallback(
     async (tabKey, { isRefresh = false } = {}) => {
@@ -95,23 +96,24 @@ export default function TournamentScreen() {
     load(tab, { isRefresh: true });
   };
 
-  const onJoin = (t) => {
+  // Confirmation native (useConfirm) puis POST /tournaments/:id/join (gratuit →
+  // 201 confirmed) et bascule sur la manche live. Erreurs (complet, fermé, flag
+  // payant…) → toast du message API.
+  const onJoin = async (t) => {
+    if (joining) return;
     hapticLight();
-    setConfirm(t);
-  };
-
-  // POST /tournaments/:id/join (gratuit → 201 confirmed) puis bascule sur la
-  // manche live. Erreurs (complet, fermé, flag payant…) → toast du message API.
-  const confirmJoin = async () => {
-    const target = confirm;
-    if (!target || joining) return;
+    const ok = await confirm({
+      title: tr('tournaments.confirmJoin.title'),
+      message: `${tr('tournaments.confirmJoin.message', { name: t.name })}\n\n${tr('tournaments.confirmJoin.reward')}`,
+      confirmLabel: tr('tournaments.confirmJoin.confirm'),
+      cancelLabel: tr('tournaments.confirmJoin.cancel'),
+    });
+    if (!ok) return;
     setJoining(true);
     try {
-      await tournamentsApi.join(target.id);
-      setConfirm(null);
-      navigation.navigate('TournamentLive', { tournamentId: target.id });
+      await tournamentsApi.join(t.id);
+      navigation.navigate('TournamentLive', { tournamentId: t.id });
     } catch (e) {
-      setConfirm(null);
       toast.show({ type: 'error', message: parseApiError(e).message || tr('tournamentLive.joinError') });
     } finally {
       setJoining(false);
@@ -140,10 +142,13 @@ export default function TournamentScreen() {
       {/* Corps clair */}
       <View style={styles.body}>
         {!isOnline ? (
-          <View style={styles.offlineBox}>
-            <Text style={styles.offlineEmoji}>🏆</Text>
-            <Heading style={styles.offlineTitle}>{tr('offline.tournaments')}</Heading>
-          </View>
+          <EmptyState
+            icon="🏆"
+            iconSize={48}
+            title={tr('offline.tournaments')}
+            style={styles.offlineBox}
+            titleStyle={styles.offlineTitle}
+          />
         ) : loading ? (
           <View style={styles.loading}>
             {[0, 1, 2].map((i) => (
@@ -167,48 +172,18 @@ export default function TournamentScreen() {
             showsVerticalScrollIndicator={false}
             refreshing={items.length > 0 && refreshing}
             onRefresh={onRefresh}
-            ListEmptyComponent={<EmptyTournaments />}
+            ListEmptyComponent={
+              <EmptyState
+                icon="🏆"
+                title={tr('tournaments.empty')}
+                message={tr('tournaments.emptySubtitle')}
+                style={styles.empty}
+              />
+            }
             renderItem={({ item }) => <TournamentCard t={item} onJoin={onJoin} />}
           />
         )}
       </View>
-
-      {/* Confirmation d'inscription */}
-      <Modal
-        visible={!!confirm}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setConfirm(null)}
-      >
-        <Pressable style={styles.confirmBackdrop} onPress={() => setConfirm(null)} />
-        <View style={styles.confirmWrap} pointerEvents="box-none">
-          <View style={styles.confirmCard}>
-            <Text style={styles.confirmEmoji}>🏆</Text>
-            <Heading style={styles.confirmTitle}>
-              {tr('tournaments.confirmJoin.message', { name: confirm?.name })}
-            </Heading>
-            <Body muted style={styles.confirmText}>
-              {tr('tournaments.confirmJoin.reward')}
-            </Body>
-            <View style={styles.confirmActions}>
-              <AppButton
-                variant="primary"
-                title={tr('tournaments.confirmJoin.confirm')}
-                fullWidth
-                disabled={joining}
-                onPress={confirmJoin}
-              />
-              <AppButton
-                variant="ghost"
-                title={tr('tournaments.confirmJoin.cancel')}
-                fullWidth
-                style={styles.confirmCancel}
-                onPress={() => setConfirm(null)}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
     </Screen>
   );
 }
@@ -314,21 +289,6 @@ function TournamentCard({ t, onJoin }) {
   );
 }
 
-function EmptyTournaments() {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { t: tr } = useTranslation();
-  return (
-    <View style={styles.empty}>
-      <Text style={styles.emptyEmoji}>🏆</Text>
-      <Heading style={styles.emptyTitle}>{tr('tournaments.empty')}</Heading>
-      <Body muted style={styles.emptyText}>
-        {tr('tournaments.emptySubtitle')}
-      </Body>
-    </View>
-  );
-}
-
 const makeStyles = (colors) => StyleSheet.create({
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.md },
   banner: {
@@ -347,9 +307,9 @@ const makeStyles = (colors) => StyleSheet.create({
   body: { flex: 1, backgroundColor: colors.cream },
   loading: { padding: spacing.lg, gap: spacing.md },
   skeleton: { marginBottom: spacing.xs },
-  offlineBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
-  offlineEmoji: { fontSize: 48 },
-  offlineTitle: { textAlign: 'center', color: colors.textMuted },
+  // Hors-ligne : EmptyState centré verticalement, titre atténué.
+  offlineBox: { flex: 1, justifyContent: 'center', paddingVertical: spacing.xl, gap: spacing.md },
+  offlineTitle: { color: colors.textMuted },
 
   list: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
 
@@ -393,32 +353,6 @@ const makeStyles = (colors) => StyleSheet.create({
 
   cta: { marginTop: spacing.xs },
 
-  // Modale de confirmation
-  confirmBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.overlay },
-  confirmWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  confirmCard: {
-    width: '100%',
-    maxWidth: 380,
-    backgroundColor: colors.white,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    alignItems: 'center',
-    gap: spacing.sm,
-    ...shadow.card,
-  },
-  confirmEmoji: { fontSize: 44 },
-  confirmTitle: { color: colors.textDark, textAlign: 'center' },
-  confirmText: { textAlign: 'center' },
-  confirmActions: { width: '100%', marginTop: spacing.lg, gap: spacing.sm },
-  confirmCancel: { marginTop: 0 },
-
-  empty: { alignItems: 'center', paddingTop: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.sm },
-  emptyEmoji: { fontSize: 56 },
-  emptyTitle: { color: colors.textDark },
-  emptyText: { textAlign: 'center' },
+  // État vide : EmptyState partagé, ancré haut de liste (pas de padding bas).
+  empty: { paddingTop: spacing.xxxl, paddingBottom: 0 },
 });

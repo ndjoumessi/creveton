@@ -6,12 +6,15 @@ export { Title, Heading, Body, Label } from './Text';
 // Layout
 export { default as Screen } from './Screen';
 export { default as AppCard } from './AppCard';
+export { default as BottomSheet } from './BottomSheet';
 
 // Contrôles
 export { default as AppButton } from './AppButton';
 export { default as AppInput } from './AppInput';
 export { default as AuthField } from './AuthField';
 export { default as SegmentedTabs } from './SegmentedTabs';
+export { default as ChoiceChips } from './ChoiceChips';
+export { default as FAB } from './FAB';
 
 // Identité / badges
 export { default as Logo } from './Logo';
@@ -23,10 +26,12 @@ export { default as StatusBadge } from './StatusBadge';
 // États
 export { default as LoadingScreen } from './LoadingScreen';
 export { default as ErrorScreen } from './ErrorScreen';
+export { default as EmptyState } from './EmptyState';
 export { default as Skeleton } from './Skeleton';
 
 // Feedback
 export { ToastProvider, useToast } from './Toast';
+export { default as ConfirmDialog, useConfirm } from './ConfirmDialog';
 
 // Jeu
 export { default as ProgressDots } from './ProgressDots';

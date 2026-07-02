@@ -9,7 +9,6 @@ import {
   Pressable,
   Text,
   Animated,
-  Modal,
   Switch,
   Share,
   ActivityIndicator,
@@ -41,7 +40,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Screen, Avatar, AppButton, XpBar, useToast } from '../components';
+import { Screen, Avatar, AppButton, BottomSheet, XpBar, useConfirm, useToast } from '../components';
 import FillBar from '../components/FillBar';
 import Icon from '../components/Icon';
 import { useReduceMotion } from '../hooks/useReduceMotion';
@@ -140,6 +139,7 @@ export default function ProfileScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const toast = useToast();
+  const confirm = useConfirm();
   const reduceMotion = useReduceMotion();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -735,32 +735,35 @@ export default function ProfileScreen() {
           title={t('profile.logout')}
           fullWidth
           style={styles.logout}
-          onPress={() =>
-            Alert.alert(t('profile.logoutTitle'), t('profile.logoutMessage'), [
-              { text: t('common.cancel'), style: 'cancel' },
-              { text: t('profile.logout'), style: 'destructive', onPress: logout },
-            ])
-          }
+          onPress={async () => {
+            const ok = await confirm({
+              title: t('profile.logoutTitle'),
+              message: t('profile.logoutMessage'),
+              confirmLabel: t('profile.logout'),
+              destructive: true,
+            });
+            if (ok) logout();
+          }}
         />
       </View>
 
       {/* Action sheet — photo de profil */}
-      <Modal visible={avatarSheet} transparent animationType="slide" onRequestClose={() => setAvatarSheet(false)}>
-        <Pressable style={styles.sheetBackdrop} onPress={() => setAvatarSheet(false)} />
-        <View style={[styles.sheet, { paddingBottom: spacing.xxl + insets.bottom }]}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>{t('profile.avatar.sheetTitle')}</Text>
-          <Pressable style={styles.actionRow} onPress={() => pickAvatar('camera')}>
-            <Text style={styles.actionText}>{t('profile.avatar.camera')}</Text>
-          </Pressable>
-          <Pressable style={styles.actionRow} onPress={() => pickAvatar('gallery')}>
-            <Text style={styles.actionText}>{t('profile.avatar.gallery')}</Text>
-          </Pressable>
-          <Pressable style={[styles.actionRow, styles.actionCancel]} onPress={() => setAvatarSheet(false)}>
-            <Text style={styles.actionCancelText}>{t('profile.avatar.cancel')}</Text>
-          </Pressable>
-        </View>
-      </Modal>
+      <BottomSheet
+        visible={avatarSheet}
+        onClose={() => setAvatarSheet(false)}
+        title={t('profile.avatar.sheetTitle')}
+        style={styles.avatarSheet}
+      >
+        <Pressable style={styles.actionRow} onPress={() => pickAvatar('camera')}>
+          <Text style={styles.actionText}>{t('profile.avatar.camera')}</Text>
+        </Pressable>
+        <Pressable style={styles.actionRow} onPress={() => pickAvatar('gallery')}>
+          <Text style={styles.actionText}>{t('profile.avatar.gallery')}</Text>
+        </Pressable>
+        <Pressable style={[styles.actionRow, styles.actionCancel]} onPress={() => setAvatarSheet(false)}>
+          <Text style={styles.actionCancelText}>{t('profile.avatar.cancel')}</Text>
+        </Pressable>
+      </BottomSheet>
 
       </Screen>
 
@@ -1065,14 +1068,9 @@ const makeStyles = (colors) => StyleSheet.create({
   // Overlay d'édition : couvre l'écran, ancre la feuille en bas.
   editOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end' },
   sheetBackdrop: { flex: 1, backgroundColor: colors.overlay },
-  sheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.sm,
-  },
+  // Overrides du <BottomSheet> photo : feuille blanche (les rangées d'action
+  // sont crème dessus), interligne sm comme avant.
+  avatarSheet: { backgroundColor: colors.white, gap: spacing.sm },
   sheetHandle: {
     alignSelf: 'center',
     width: 40,
