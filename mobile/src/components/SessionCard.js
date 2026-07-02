@@ -41,9 +41,9 @@ function scoreColor(score, colors, isDark) {
 // Aucune « side-stripe » : bordure complète, pas de borderLeft/Right coloré.
 function surfaceTone(rate, colors) {
   if (rate === null) return null;
-  if (rate < 40) return { borderColor: colors.red400, backgroundColor: 'rgba(231,76,60,0.06)' };
-  if (rate < 70) return { borderColor: colors.gold500, backgroundColor: 'rgba(212,160,23,0.06)' };
-  return { borderColor: colors.green500, backgroundColor: 'rgba(42,138,79,0.06)' };
+  if (rate < 40) return { borderColor: colors.red400, backgroundColor: colors.tintError };
+  if (rate < 70) return { borderColor: colors.gold500, backgroundColor: colors.tintGold };
+  return { borderColor: colors.green500, backgroundColor: colors.tintSuccess };
 }
 
 // Couleur de la barre de progression selon le taux de réussite (remplissage).

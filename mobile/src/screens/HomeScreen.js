@@ -52,10 +52,11 @@ import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { formatDateTime, avatarUri } from '../utils/format';
 
 // Pastels des tuiles d'icônes de stats (décoratif, non sémantique).
+// Import statique de `colors` → valeurs claires figées dans les deux thèmes.
 const ICON_BG = {
   games: colors.successBg, // #dcfce7
-  avg: '#fef9c3',
-  rate: '#dbeafe',
+  avg: colors.pastelYellow,
+  rate: colors.pastelBlue,
   streak: colors.errorBg, // #fee2e2
 };
 

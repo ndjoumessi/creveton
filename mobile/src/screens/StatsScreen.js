@@ -302,13 +302,14 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
     );
   }
 
-  // Pastilles d'icônes : pastels clairs FIXES sur les 4 tuiles (vert/jaune/bleu/rouge)
-  // — successBg/errorBg flippaient foncé en dark, rendant l'icône green900 invisible.
+  // Pastilles d'icônes : tokens `pastel*` (theme.js) — pastels clairs FIXES sur les
+  // 4 tuiles (vert/jaune/bleu/rouge), jamais surchargés en sombre (successBg/errorBg
+  // flippaient foncé en dark, rendant l'icône green900 invisible).
   const KPI = [
-    { icon: Target, bg: '#e8f5ed', value: fmt(stats.totalGames), label: t('stats.kpi.games') },
+    { icon: Target, bg: colors.pastelGreen, value: fmt(stats.totalGames), label: t('stats.kpi.games') },
     {
       icon: '⭐',
-      bg: '#fef9c3',
+      bg: colors.pastelYellow,
       value: fmt(stats.avgScore),
       // Valeur en couleur de texte thème-aware : green900 ne flippe pas et
       // disparaissait sur la carte KPI sombre (colors.white → #162a1e en dark).
@@ -317,14 +318,14 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
     },
     {
       icon: TrendingUp,
-      bg: '#dbeafe',
+      bg: colors.pastelBlue,
       value: `${stats.successRate}%`,
       color: rateColor(stats.successRate, colors, isDark),
       label: t('stats.kpi.successRate'),
     },
     {
       icon: '🔥',
-      bg: '#fee2e2',
+      bg: colors.pastelRed,
       // Streak max DÉRIVÉ de l'historique (streak_max persisté par partie), pas
       // du profil (souvent vide). 🔥 en préfixe seulement si > 0.
       value: stats.maxStreak > 0 ? `🔥 ${fmt(stats.maxStreak)}` : stats.maxStreak === 0 ? '0' : '—',

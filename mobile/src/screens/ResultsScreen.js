@@ -900,9 +900,9 @@ const styles = StyleSheet.create({
 
   // Détail déplié d'une carte du récap.
   detail: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
-  ansGood: { backgroundColor: '#e8f5ed', borderRadius: radius.sm, padding: spacing.sm },
+  ansGood: { backgroundColor: colors.pastelGreen, borderRadius: radius.sm, padding: spacing.sm },
   ansGoodText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.successText },
-  ansBad: { backgroundColor: '#fdecea', borderRadius: radius.sm, padding: spacing.sm },
+  ansBad: { backgroundColor: colors.pastelRose, borderRadius: radius.sm, padding: spacing.sm },
   ansBadText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.errorText },
   detailExpl: {
     fontFamily: fonts.bodyRegular,

@@ -33,7 +33,7 @@ function GoldSpinner({ size = 56, strokeWidth = 5 }) {
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="rgba(232,184,48,0.18)"
+          stroke={colors.goldTrack}
           strokeWidth={strokeWidth}
           fill="none"
         />

@@ -21,7 +21,7 @@ export const useToast = () => useContext(ToastContext);
 
 const TYPES = {
   success: { bg: colors.green700, icon: CheckCircle2, accent: colors.green300 },
-  error: { bg: colors.red600, icon: AlertCircle, accent: '#ffd2cd' },
+  error: { bg: colors.red600, icon: AlertCircle, accent: colors.red200 },
   info: { bg: colors.green900, icon: Info, accent: colors.gold400 },
 };
 
