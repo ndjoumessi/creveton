@@ -210,13 +210,15 @@ export default function MiniLineChart({
   const lastLabelY =
     n > 0 && points[n - 1].y - 9 >= 12 ? points[n - 1].y - 9 : (n > 0 ? points[n - 1].y + 16 : 0);
 
-  // Le libellé « valeur du dernier point » (showLastValue) fait DOUBLON avec le libellé
-  // de graduation du HAUT quand le dernier point vaut le max : il est alors plaqué au
-  // sommet, et la colonne d'axe affiche DÉJÀ cette valeur (en textFaint, haut-droite —
-  // c'est le « 525 » fantôme résiduel observé sur Results h=120). Le fix précédent ne
-  // faisait que déplacer showLastValue sous le point ; les deux « 525 » coexistaient.
-  // On masque donc showLastValue dans ce cas : le libellé d'axe reste l'unique valeur.
-  const lastAtTopGrad = showGrid && n > 0 && data[n - 1] === max;
+  // Le libellé « valeur du dernier point » (showLastValue) fait DOUBLON avec un
+  // libellé de graduation quand la valeur du dernier point coïncide avec une valeur
+  // AFFICHÉE sur l'axe (max, min ou intermédiaire — d'abord observé au max « 525 »
+  // fantôme, puis symétriquement au min « 225 » sur Results h=120) : la colonne d'axe
+  // affiche déjà cette valeur à la même hauteur. On masque alors showLastValue —
+  // le libellé d'axe reste l'unique référence. Hors coïncidence : affiché comme avant
+  // (avec la bascule anti-miroir lastLabelY ci-dessus).
+  const lastAtGrad =
+    showGrid && n > 0 && grads.some((g) => g.val === Math.round(data[n - 1]));
 
   return (
     <View style={autoWidth ? styles.wrapAuto : styles.wrap} onLayout={onWrapLayout}>
@@ -291,7 +293,7 @@ export default function MiniLineChart({
           />
         ) : null}
         {/* Valeur au-dessus du dernier point (masquée si son tooltip est ouvert). */}
-        {showLastValue && sel !== n - 1 && !lastAtTopGrad ? (
+        {showLastValue && sel !== n - 1 && !lastAtGrad ? (
           <SvgText
             x={points[n - 1].x}
             y={lastLabelY}
