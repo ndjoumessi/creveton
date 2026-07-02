@@ -360,7 +360,10 @@ export default function HomeScreen({ navigation }) {
                   icon="⭐"
                   iconBg={ICON_BG.avg}
                   value={fmtNum(stats.avgScore)}
-                  valueColor={stats.avgScore > 500 ? colors.green700 : colors.green900}
+                  // Pas de valueColor fixe : le <Title> par défaut est textDark
+                  // (thème-aware). green900 (fixe) disparaissait sur la carte KPI
+                  // sombre en dark mode (colors.white → surface sombre) — même
+                  // correctif que StatsScreen (kpi avgScore = colors.textDark).
                   label={t('home.myStats.avgScore')}
                   sub={stats.totalGames > 0 ? t('home.misc.outOfGames', { count: stats.totalGames }) : null}
                 />
