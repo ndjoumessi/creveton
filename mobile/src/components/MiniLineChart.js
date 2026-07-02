@@ -21,11 +21,15 @@
 // Theme-aware : palette via useTheme (identique en mode clair à l'ancien rendu).
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, Animated, StyleSheet } from 'react-native';
+import { View, Text, PanResponder, Animated, StyleSheet } from 'react-native';
 import Svg, { Path, Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { fonts, motion, radius, zIndex } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useReduceMotion } from '../hooks/useReduceMotion';
+
+// Seuil (px) en deçà duquel un geste est considéré comme un TAP (et non un scroll).
+// Au-delà sur X ou Y, on ne sélectionne rien : le mouvement appartient au parent.
+const TAP_SLOP = 8;
 
 export default function MiniLineChart({
   data = [],
@@ -50,6 +54,45 @@ export default function MiniLineChart({
   const [selected, setSelected] = useState(null);
   const [tipSize, setTipSize] = useState(null);
   const tipOpacity = useRef(new Animated.Value(0)).current;
+
+  // Coordonnées courantes des points, lues par le PanResponder (créé une seule
+  // fois, sinon closure périmée). Réassignées à chaque rendu, plus bas.
+  const pointsRef = useRef([]);
+  // PanResponder de la surcouche tactile — remplace les Pressables plein-écran qui
+  // captaient tout le geste et bloquaient le scroll parent. Clé du fix :
+  //   · onStartShouldSetPanResponder=true    → on devient responder au TOUCHER
+  //     (pour pouvoir détecter un tap au relâchement),
+  //   · onMoveShouldSetPanResponder(Capture)=false → on ne retient JAMAIS le
+  //     mouvement : dès que le doigt glisse, le ScrollView parent récupère le geste,
+  //   · onPanResponderTerminationRequest=true → on cède volontiers au parent.
+  // Résultat : tap statique = tooltip ; tout drag (vertical) = scroll de la page.
+  const panRef = useRef(null);
+  if (!panRef.current) {
+    panRef.current = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponderCapture: () => false,
+      onPanResponderTerminationRequest: () => true,
+      onPanResponderRelease: (evt, gesture) => {
+        // Geste ayant bougé au-delà du seuil → c'était un scroll, on ne fait rien.
+        if (Math.abs(gesture.dx) > TAP_SLOP || Math.abs(gesture.dy) > TAP_SLOP) return;
+        const pts = pointsRef.current;
+        if (!pts.length) return;
+        // Point le plus proche du x touché (même UX que les anciennes bandes :
+        // taper n'importe où dans la colonne sélectionne le point de cette colonne).
+        const x = evt.nativeEvent.locationX;
+        let best = 0;
+        let bestDist = Infinity;
+        for (let i = 0; i < pts.length; i += 1) {
+          const d = Math.abs(pts[i].x - x);
+          if (d < bestDist) { bestDist = d; best = i; }
+        }
+        setSelected((cur) => (cur === best ? null : best));
+      },
+      onPanResponderTerminate: () => {},
+    });
+  }
 
   const n = data.length;
   // Sélection défensive : si la donnée rétrécit, on retombe sur « rien ».
@@ -104,6 +147,7 @@ export default function MiniLineChart({
     const y = padT + innerH - ((v - min) / span) * innerH;
     return { x, y };
   });
+  pointsRef.current = points; // vu par le PanResponder (closure créée une fois)
   const polyline = points.map((p) => `${p.x},${p.y}`).join(' ');
   const area =
     `M ${points[0].x},${baseY} ` +
@@ -224,18 +268,25 @@ export default function MiniLineChart({
           </SvgText>
         ) : null}
       </Svg>
-      {/* Surcouche tactile invisible (aucun rendu visuel). */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-        {points.map((p, i) => (
-          <Pressable
-            key={i}
-            style={[styles.band, { left: bands[i].left, width: bands[i].width }]}
-            onPress={() => setSelected(sel === i ? null : i)}
-            accessibilityRole="button"
-            accessibilityLabel={`Point ${i + 1} sur ${n} : ${formatValue(data[i])} points`}
-            accessibilityState={{ selected: sel === i }}
-          />
-        ))}
+      {/* Surcouche tactile invisible : le PanResponder gère le tap (voir plus haut).
+          Il ne retient pas le mouvement → le scroll vertical du ScrollView parent
+          passe librement même quand le doigt démarre sur le graphe. */}
+      <View style={StyleSheet.absoluteFill} {...panRef.current.panHandlers}>
+        {/* Éléments d'accessibilité par point : annoncés par le lecteur d'écran,
+            mais pointerEvents=none → ils ne captent aucun tactile (géré par le
+            PanResponder parent), donc aucune interférence avec le scroll. */}
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          {points.map((p, i) => (
+            <View
+              key={i}
+              style={[styles.band, { left: bands[i].left, width: bands[i].width }]}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`Point ${i + 1} sur ${n} : ${formatValue(data[i])} points`}
+              accessibilityState={{ selected: sel === i }}
+            />
+          ))}
+        </View>
       </View>
       {/* Tooltip du point sélectionné (valeur seule : data = nombres nus). */}
       {sel != null ? (
