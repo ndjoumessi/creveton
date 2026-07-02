@@ -93,9 +93,32 @@ Space Grotesk pour Body/Label), **theme-aware**. Props opt-in `size` (clé de `f
 nombre px) et `weight` (poids dans la famille du variant) — **defaults inchangés** (rétro-compat
 stricte), valeur inconnue ignorée sans crash. Ex. `<Title size="lg">⚡ 120 pts</Title>`,
 `<Heading size={17}>…</Heading>`, `<Body weight="semibold" size="md">…</Body>`. Règle charte :
-chiffres importants = Outfit ≥ 700 (Title/`weight="bold"+`). **Migration** : `TournamentLiveScreen`
-fait (0 `<Text>` brut) ; ~200 usages `fontFamily:` locaux subsistent ailleurs → migrer **écran
-par écran** au fil de l'eau (pas de chantier global), toujours pixel-identical.
+chiffres importants = Outfit ≥ 700 (Title/`weight="bold"+`).
+
+**Migration — TERMINÉE (été 2026).** Tous les écrans théma-aware sont migrés : `<Text>` brut →
+variants Text.js, `size`/`weight`/`color` portés en props, clés purement typographiques retirées
+des StyleSheet, rendu **pixel-identical**. 14 écrans : `TournamentLiveScreen` (pilote), `Profile`,
+`Results`, `Challenges`, `GameStart`, `Quiz`, `Register`, `Tournament`, `OTP`, `Login`,
+`ChangePassword`, `Home`, `Stats`, `SessionsHistory`. Les seuls `<Text>` bruts restants sont des
+**glyphes/emojis sans `fontFamily`** (flèches ←/✕/▾, chevrons, emojis d'icônes) : les convertir
+imposerait une police → laissés bruts volontairement.
+
+**Résiduels `fontFamily:` légitimes — liste fermée** (ne PAS les prendre pour des oublis) :
+1. **`TextInput`** — ne peut pas être un variant `<Text>`. → `ProfileScreen` (`input`),
+   `ChallengesScreen` (recherche d'ami), `OTPScreen` (cases `box`).
+2. **Styles passés à `EmptyState`** — thématisation par écran d'un composant partagé (prop
+   `titleStyle`). → `SessionsHistoryScreen` / `StatsScreen` (`emptyTitle`).
+3. **`SplashScreen`** — écran **volontairement figé sombre** (même famille que CircularTimer /
+   LoadingScreen / Toast, cf. « Thème & tokens » ci-dessus) : n'utilise pas `useTheme` **par
+   conception**. Ses 3 `Animated.Text` (nom/slogan/tagline) restent sur tokens statiques, hors du
+   système de variants (les variants Text.js appellent `useTheme()` → y basculer réintroduirait la
+   théma-awareness que cet écran évite délibérément).
+
+**Cas `Animated.Text`.** Les variants sont des `RNText` **sans `forwardRef`** → incompatibles avec
+`Animated.createAnimatedComponent` + `useNativeDriver: true`. Pattern retenu : envelopper un variant
+**statique** dans un `Animated.View` portant **uniquement** la prop animée (`opacity`/`scale`),
+marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-identical). Exemple :
+`ResultsScreen` (score, titre de perf, ligne de comparaison).
 
 ## Conventions & règles à respecter
 
