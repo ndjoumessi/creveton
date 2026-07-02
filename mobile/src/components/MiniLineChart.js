@@ -177,13 +177,54 @@ export default function MiniLineChart({
   const tipH = tipSize?.height ?? 0;
   const selPoint = sel != null ? points[sel] : null;
   const tipRawTop = selPoint ? selPoint.y - tipH - 10 : 0;
-  const tipTop = tipRawTop < 0 ? (selPoint ? selPoint.y + 12 : 0) : tipRawTop;
-  // Colonne des valeurs d'axe Y (à droite, présente UNIQUEMENT avec la grille) :
-  // on interdit au tooltip d'y empiéter, sinon il chevauche un libellé — cas le
-  // plus visible au DERNIER point (le plus à droite ET souvent proche du sommet).
-  // Le tooltip, centré sur le point, ne peut plus déborder à droite au-delà de la
-  // colonne des libellés. Sans grille → aucune colonne → borne historique inchangée.
-  const axisZone = showGrid ? padding + 30 : 0;
+  let tipTop = tipRawTop < 0 ? (selPoint ? selPoint.y + 12 : 0) : tipRawTop;
+
+  // Anti-collision VERTICALE avec les libellés de graduation. Quand la valeur du
+  // point touché est proche/égale à une graduation, le point est sur cette ligne de
+  // grille → le tooltip (calé sur le Y du point) tomberait pile sur le libellé de
+  // cette graduation (texte fantôme illisible). On repère les zones Y occupées par
+  // les libellés et, en cas de recouvrement, on repositionne le tooltip sur
+  // l'emplacement dégagé le PLUS PROCHE (déplacement minimal), en restant à l'écran.
+  // Actif uniquement avec la grille (sinon aucun libellé d'axe).
+  if (selPoint && showGrid && tipH > 0) {
+    const LABEL_HALF = 13; // demi-hauteur de la zone d'exclusion autour du centre du libellé
+    const maxTop = Math.max(height - tipH, 0);
+    const clampV = (top) => Math.min(Math.max(top, 0), maxTop);
+    // Centre vertical approx. du texte de graduation (baseline g.y-2, fontSize 9).
+    const labelCenters = grads.map((g) => g.y - 6);
+    const collides = (top) =>
+      labelCenters.some((ly) => top < ly + LABEL_HALF && top + tipH > ly - LABEL_HALF);
+    if (collides(tipTop)) {
+      // Candidats : juste au-dessus / en dessous de chaque libellé, puis l'autre
+      // côté du point. On garde le 1er sans collision, trié par proximité à tipTop.
+      const candidates = [];
+      labelCenters.forEach((ly) => {
+        candidates.push(ly - LABEL_HALF - tipH - 4);
+        candidates.push(ly + LABEL_HALF + 4);
+      });
+      candidates.push(selPoint.y + 12, selPoint.y - tipH - 10);
+      const clear = candidates
+        .map(clampV)
+        .filter((top) => !collides(top))
+        .sort((a, b) => Math.abs(a - tipTop) - Math.abs(b - tipTop));
+      if (clear.length) tipTop = clear[0];
+      // Aucun créneau vertical libre (libellés très denses / tooltip très haut) :
+      // on conserve tipTop — la protection horizontale ci-dessous garde de toute
+      // façon le tooltip à gauche de la colonne des libellés (pas de texte-sur-texte).
+    }
+  }
+
+  // Colonne des valeurs d'axe Y (à droite, présente UNIQUEMENT avec la grille) : on
+  // interdit au tooltip d'y empiéter, sinon il chevauche un libellé. Largeur calculée
+  // sur le libellé RÉELLEMENT le plus large (la plus grande valeur de graduation)
+  // — ~5,5px/caractère à fontSize 9 + marge — au lieu d'une marge fixe qui pouvait
+  // être trop courte selon les valeurs. Le tooltip reste ainsi TOUJOURS à gauche de
+  // la colonne, quelle que soit sa position verticale. Sans grille → borne inchangée.
+  const maxLabelChars = grads.reduce(
+    (m, g) => Math.max(m, String(formatValue(g.val)).length),
+    0
+  );
+  const axisZone = showGrid ? padding + Math.ceil(maxLabelChars * 5.5) + 8 : 0;
   const tipLeft = selPoint
     ? Math.min(Math.max(selPoint.x - tipW / 2, 0), Math.max(w - tipW - axisZone, 0))
     : 0;
