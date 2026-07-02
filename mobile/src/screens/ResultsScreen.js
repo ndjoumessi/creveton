@@ -42,7 +42,7 @@ import { TIMED_MODES } from '../constants/config';
 import { hapticSuccess, hapticLight } from '../utils/haptics';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { getOptionText, normalizeLang } from '../utils/i18n';
-import { colors, fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
+import { colors, radius, spacing, motion } from '../constants/theme';
 
 // Android : LayoutAnimation nécessite ce flag (no-op sous Fabric / iOS).
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -554,27 +554,34 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
         <Label color={colors.textOnDarkMuted} style={styles.scoreLabel}>
           {t('results.finalScore')}
         </Label>
-        <Animated.Text style={[styles.score, { transform: [{ scale: scorePulse }] }]}>
-          {displayScore}
-        </Animated.Text>
+        <Animated.View style={{ transform: [{ scale: scorePulse }], marginBottom: spacing.xs }}>
+          <Title weight="black" size="hero" color={colors.gold500} style={styles.score}>
+            {displayScore}
+          </Title>
+        </Animated.View>
         <Label color={colors.textOnDarkMuted}>
           {t('results.misc.heroSubtitle', { correct, total, pct })}
         </Label>
-        <Animated.Text style={[styles.perfTitle, { color: perfColor, opacity: perfFade }]}>
-          {t(`results.perf.${perfTier}`)}
-        </Animated.Text>
+        <Animated.View style={{ opacity: perfFade }}>
+          <Title size="xl" style={[styles.perfTitle, { color: perfColor }]}>
+            {t(`results.perf.${perfTier}`)}
+          </Title>
+        </Animated.View>
         {comparison ? (
-          <Animated.Text
-            style={[
-              styles.compareLine,
-              comparison.dir === 'up' ? styles.compareUp : styles.compareDown,
-              { opacity: compareFade },
-            ]}
-          >
-            {comparison.dir === 'up'
-              ? t('results.compare.up', { pts: comparison.pts })
-              : t('results.compare.down', { pts: comparison.pts })}
-          </Animated.Text>
+          <Animated.View style={{ opacity: compareFade }}>
+            <Body
+              weight="semibold"
+              size="md"
+              style={[
+                styles.compareLine,
+                comparison.dir === 'up' ? styles.compareUp : styles.compareDown,
+              ]}
+            >
+              {comparison.dir === 'up'
+                ? t('results.compare.up', { pts: comparison.pts })
+                : t('results.compare.down', { pts: comparison.pts })}
+            </Body>
+          </Animated.View>
         ) : null}
         {modeBadge ? (
           <View style={styles.modeBadge}>
@@ -812,25 +819,17 @@ const styles = StyleSheet.create({
   trophy: { fontSize: 72, marginBottom: spacing.sm },
   scoreLabel: { marginBottom: spacing.xs },
   perfTitle: {
-    fontFamily: fonts.titleBold,
-    fontSize: fontSizes.xl,
     textAlign: 'center',
     marginTop: spacing.sm,
   },
   compareLine: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.md,
     textAlign: 'center',
     marginTop: spacing.xxs,
   },
   compareUp: { color: colors.green500 },
   compareDown: { color: colors.textMuted },
   score: {
-    fontFamily: fonts.titleBlack,
-    fontSize: fontSizes.hero, // 64
     lineHeight: 72,
-    color: colors.gold500,
-    marginBottom: spacing.xs,
   },
 
   statsRow: {
