@@ -728,7 +728,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
           <Heading color={colors.cream} style={styles.sectionTitle}>
             {t('results.misc.progression')}
           </Heading>
-          <AppCard tone="light" padding="md" radius={radius.xl} style={styles.progressCard}>
+          <AppCard tone="light" padding="md" radius={radius.xl}>
             {/* Même config riche que « Score evolution » (StatsScreen) : axe de
                 valeurs (showGrid), aire, points cerclés, dernier point mis en avant
                 (showLastValue), échelle sur les données réelles. Largeur responsive
@@ -833,7 +833,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   progressBlock: { marginTop: spacing.xl, zIndex: 2 },
-  progressCard: { alignItems: 'center' },
 
   hero: { alignItems: 'center', paddingVertical: spacing.lg, zIndex: 2 },
   trophy: { fontSize: 72, marginBottom: spacing.sm },
