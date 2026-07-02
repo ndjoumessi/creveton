@@ -183,7 +183,7 @@
       "marathon": "Marathon · {{minutes}} min · {{count}} questions · mix"
     },
     "pickThemeHint": "← Choisis un thème pour commencer",
-    "offlineCount": "{{count}} questions hors ligne",
+    "availableOffline": "Disponible hors ligne",
     "onlineOnly": "En ligne uniquement"
   },
   "quiz": {

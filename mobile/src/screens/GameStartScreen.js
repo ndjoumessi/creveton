@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Info, CloudDownload } from 'lucide-react-native';
+import { Info, CloudDownload, CloudCheck } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Screen, Title, Heading, Body, Label, AppButton, ChoiceChips, useToast } from '../components';
 import Icon from '../components/Icon';
@@ -362,9 +362,17 @@ export default function GameStartScreen({ navigation, route }) {
                 </LinearGradient>
               </Pressable>
               {themeCount === null ? null : themeCount > 0 ? (
-                <Body size={11} color={colors.textOnDarkMuted} style={styles.themeOffline}>
-                  {t('gameStart.offlineCount', { count: themeCount })}
-                </Body>
+                // Questions en cache local : le thème est jouable hors ligne. Pill
+                // verte (tonalité disponibilité/succès) + CloudCheck — le pendant
+                // positif du badge « En ligne uniquement » ci-dessous. On n'affiche
+                // plus le compte exact : l'utilisateur veut juste savoir « jouable
+                // hors ligne ou pas », pas comparer des quantités.
+                <View style={styles.availableBadge}>
+                  <Icon icon={CloudCheck} size={11} color={colors.green700} />
+                  <Label size={11} weight="semibold" color={colors.green700}>
+                    {t('gameStart.availableOffline')}
+                  </Label>
+                </View>
               ) : (
                 // Aucune question en cache local pour ce thème : il se charge à la
                 // demande depuis le serveur (jouable en ligne, mais pas de secours
@@ -496,11 +504,24 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   themeEmoji: { fontSize: 32 },
   themeName: { marginTop: spacing.xs },
-  // Compteur de questions en cache : sous la carte, sur le fond écran (sombre) →
-  // textOnDarkMuted (crème atténué, ≥4.5:1) plutôt que textMuted (vert-de-gris en sombre).
-  themeOffline: {
+  // Badge « Disponible hors ligne » : pendant vert du badge rouge ci-dessous, même
+  // géométrie de pill. Trio figé pastelGreen/green500/green700 (aucune surcharge
+  // dark → identique dans les deux thèmes, comme red200/400/600). Texte green700 sur
+  // pastelGreen : ~9:1 (excellent, clair ET sombre). La bordure green500 donne la
+  // forme en mode CLAIR, où pastelGreen sur crème contraste peu ; en sombre la pill
+  // claire ressort déjà nettement sur le fond vert nuit.
+  availableBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
     marginTop: spacing.xs,
-    paddingLeft: 2,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    backgroundColor: colors.pastelGreen,
+    borderWidth: 1,
+    borderColor: colors.green500,
   },
   // Badge « Connexion requise » : pill compacte, paire figée red200/red600 (comme
   // l'accent d'erreur du Toast), sans rouge plein agressif. Icône CloudDownload + texte
