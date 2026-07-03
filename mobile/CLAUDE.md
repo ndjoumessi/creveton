@@ -149,17 +149,18 @@ marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-id
 - EAS Free : quota de builds Android/mois (reset le 1er). La limite réelle appliquée par
   EAS peut être < 30 ; si le cloud refuse (`used its Android builds from the Free plan this
   month`), passer en build local.
-- **`npx EINVALIDTAGNAME` / `E400` au lancement du build local — le vrai coupable n'est PAS
-  un npm trop vieux.** C'est un **npm 6.4.1 hérité dans `/usr/local`** (ancien `libnpx`) placé
-  **avant nvm dans le `PATH`** : quand eas-cli **spawn** `npx` (sous-process, sans les alias
-  shell), il tombe sur ce npm 6.4.1 qui rejette l'argument base64 du job → échec avant Gradle.
-  Les `npm --version` interactifs (aliasés vers nvm) sont **trompeurs** ; vérifier avec
-  `which -a npx`. **Fix, sans toucher au npm système** : prioriser le bin nvm dans le `PATH`
-  du build pour que le `npx` spawné soit le moderne :
-  `export PATH="$HOME/.nvm/versions/node/<version-active>/bin:$PATH"`.
-  (La note précédente « npm < 10.9 → upgrade npm » était trompeuse ; upgrader/downgrader le
-  npm nvm n'a aucun effet, ce n'est pas lui qui est spawné. Nettoyage durable possible plus
-  tard : supprimer/upgrader le npm 6.4.1 de `/usr/local` — non fait pour l'instant.)
+- **`npx EINVALIDTAGNAME` / `E400` au lancement du build local — RÉSOLU (2026-07-04).**
+  Cause : un **npm 6.4.1 hérité dans `/usr/local`** dont le symlink `/usr/local/bin/npx`
+  (placé **avant nvm dans le `PATH`**) pointait encore dessus, alors que `node`/`npm`
+  avaient déjà été réalignés sur nvm (04-06). Quand eas-cli **spawn** `npx` (sous-process,
+  sans les alias shell), il tombait sur ce 6.4.1 qui rejette l'argument base64 du job →
+  échec avant Gradle. **Fix appliqué** : le symlink `npx` a été réaligné sur nvm, exactement
+  comme `node`/`npm` — `sudo ln -sf /Users/nelson/.nvm/versions/node/v20.20.2/bin/npx
+  /usr/local/bin/npx` (chirurgical ; l'arbre 6.4.1 reste sur disque, intact). Le `npx`
+  spawné résout désormais vers npm 11.x → **le préfixe `PATH` nvm au moment du build n'est
+  plus nécessaire.** Vérif si besoin : `which -a npx` + `/usr/local/bin/npx --version`
+  (doit afficher 11.x, pas 6.4.1). (Les `npm --version` interactifs, aliasés vers nvm,
+  restent trompeurs : c'est le `npx` **spawné** qu'il faut vérifier.)
 - **Upload source-maps Sentry** : en local, la tâche Gradle `…SentryUpload` échoue faute
   d'identifiants (`An organization ID or slug is required`). Pour un APK de test :
   `export SENTRY_DISABLE_AUTO_UPLOAD=true` (l'app reste fonctionnelle ; source-maps
@@ -171,7 +172,6 @@ marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-id
   ```bash
   cd mobile
   export ANDROID_HOME=~/Library/Android/sdk
-  export PATH="$HOME/.nvm/versions/node/<version-active>/bin:$PATH"   # npx moderne, pas /usr/local
   export SENTRY_DISABLE_AUTO_UPLOAD=true
   eas build --local --platform android --profile preview --non-interactive
   ```
