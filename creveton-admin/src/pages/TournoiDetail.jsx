@@ -4,7 +4,7 @@ import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft, Play, X, Trophy, Users, Calendar, Crown, Medal, Award, Target, UserPlus,
+  ArrowLeft, Play, X, Trophy, Users, Calendar, Crown, Award, Target,
 } from 'lucide-react';
 import { Icon } from '../components/Icon';
 import tournamentsService from '../services/tournaments.service';
@@ -15,10 +15,9 @@ import { num, fcfa, dateFr, pct } from '../utils/format';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
+import ParticipantsPanel from '../components/ParticipantsPanel';
 import { Skeleton } from '../components/Skeleton';
 import { notify } from '../components/Toast';
-
-const MEDAL_COLORS = ['#d4a017', '#9aa3ad', '#b27a44'];
 
 function HeroStatusBadge({ status }) {
   const { t } = useTranslation();
@@ -42,6 +41,22 @@ export default function TournoiDetail() {
   const participants = useMemo(() => data?.participants || [], [data]);
   const stats = data?.stats || null;
   const podium = useMemo(() => participants.slice(0, 3), [participants]);
+  // Vue projetée pour ParticipantsPanel : null tant que les données ne sont pas
+  // chargées (déclenche le skeleton du panneau), array ensuite.
+  const panelParticipants = useMemo(
+    () => (data
+      ? participants.map((p) => ({
+        id: p.id,
+        userId: p.user_id,
+        name: p.name,
+        avatarUrl: p.avatar_url,
+        rank: p.rank,
+        score: p.score,
+        payout: p.payout,
+      }))
+      : null),
+    [data, participants],
+  );
   const isClosed = tour && ['closed', 'paid'].includes(tour.status);
   const canAdd = tour && !['cancelled', 'paid'].includes(tour.status);
   const canRemove = tour && ['open', 'scheduled'].includes(tour.status);
@@ -100,6 +115,15 @@ export default function TournoiDetail() {
     }
   }, [selectedUser, adding, id, t, closeEnroll, refetch]);
 
+  const requestRemove = useCallback((p) => setConfirm({
+    fn: () => tournamentsService.removeParticipant(id, p.userId),
+    label: t('tournaments.detail.participantRemoved'),
+    title: t('tournaments.detail.removeTitle'),
+    body: t('tournaments.detail.removeBody', { name: p.name }),
+    confirmLabel: t('tournaments.actions.remove'),
+    danger: true,
+  }), [id, t]);
+
   const runConfirm = async () => {
     if (!confirm) return;
     setBusy(true);
@@ -151,6 +175,9 @@ export default function TournoiDetail() {
   const emoji = cfg?.icon || '🏆';
   const fillPct = tour.max_players ? Math.min(100, Math.round((tour.registered_players / tour.max_players) * 100)) : 0;
   const themeLabel = t(`questions.themes.${tour.theme}`, themeLabels[tour.theme] || tour.theme || t('tournaments.detail.mixedThemes'));
+  // Nb d'inscrits : sert à neutraliser les scores (« — » au lieu de « 0 » quand
+  // personne n'est inscrit, un « 0 » se lisant comme un vrai score).
+  const inscrits = stats?.registered ?? tour.registered_players ?? 0;
 
   return (
     <>
@@ -246,7 +273,7 @@ export default function TournoiDetail() {
         <div className="td-kpi">
           <div className="td-kpi-icon"><Award size={20} /></div>
           <div>
-            <span className="td-kpi-n">{num(stats?.avg_score ?? 0)}</span>
+            <span className="td-kpi-n">{inscrits === 0 ? '—' : num(stats?.avg_score ?? 0)}</span>
             <span className="td-kpi-l">{t('tournaments.detail.avgScore')}</span>
           </div>
         </div>
@@ -260,7 +287,7 @@ export default function TournoiDetail() {
         <div className="td-kpi">
           <div className="td-kpi-icon"><Trophy size={20} /></div>
           <div>
-            <span className="td-kpi-n">{num(stats?.top_score ?? 0)}</span>
+            <span className="td-kpi-n">{inscrits === 0 ? '—' : num(stats?.top_score ?? 0)}</span>
             <span className="td-kpi-l">{t('tournaments.detail.topScore')}</span>
           </div>
         </div>
@@ -346,35 +373,19 @@ export default function TournoiDetail() {
       </div>
 
       {/* ── Participants ──────────────────────────────────────── */}
-      <div className="card card-pad td-section">
-        <div className="td-pts-head">
-          <div>
-            <h3 className="card-title">
-              {isClosed ? t('tournaments.detail.participantsFinal') : t('tournaments.detail.participants')}
-              {participants.length > 0 && (
-                <span className="td-pts-count">{participants.length}</span>
-              )}
-            </h3>
-            <p className="card-sub">
-              {tour.status === 'running'
-                ? t('tournaments.detail.autoRefresh')
-                : t('tournaments.detail.registeredHere')}
-            </p>
-          </div>
-          {canAdd && (
-            <button
-              className={`btn btn-sm ${enrollOpen ? 'btn-ghost' : 'btn-gold'} td-enroll-cta`}
-              onClick={() => { setEnrollOpen(!enrollOpen); if (enrollOpen) clearSearch(); }}
-            >
-              {enrollOpen
-                ? <><X size={13} /> Fermer</>
-                : <><UserPlus size={14} /> {t('tournaments.detail.addParticipant')}</>}
+      {/* Flux d'enrôlement (recherche annuaire → sélection → confirmation) —
+          inchangé, sorti dans sa propre carte, ouvert par la CTA du panneau. */}
+      {canAdd && enrollOpen && (
+        <div className="card card-pad td-enroll-card">
+          <div className="td-pts-head" style={{ marginBottom: 12 }}>
+            <div>
+              <h3 className="card-title">{t('tournaments.detail.addParticipant')}</h3>
+              <p className="card-sub">{t('tournaments.detail.searchPlaceholder')}</p>
+            </div>
+            <button className="btn btn-sm btn-ghost td-enroll-cta" onClick={closeEnroll}>
+              <X size={13} /> {t('common.close', 'Fermer')}
             </button>
-          )}
-        </div>
-
-        {/* Enroll panel */}
-        {canAdd && enrollOpen && (
+          </div>
           <div className="td-enroll-panel">
             {selectedUser ? (
               <div className="tour-selected-user">
@@ -418,81 +429,18 @@ export default function TournoiDetail() {
               </div>
             )}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Table or empty */}
-        {participants.length === 0 ? (
-          <EmptyState
-            icon={Users}
-            title={t('tournaments.detail.noParticipantsTitle')}
-            message={t('tournaments.detail.noParticipantsMessage')}
-            action={canAdd && !enrollOpen && (
-              <button className="btn btn-gold btn-sm" onClick={() => setEnrollOpen(true)}>
-                <UserPlus size={14} /> {t('tournaments.detail.addParticipant')}
-              </button>
-            )}
-          />
-        ) : (
-          <div className="table-wrap" style={{ marginTop: 8 }}>
-            <table className="data">
-              <thead>
-                <tr>
-                  <th>{t('tournaments.detail.rank')}</th>
-                  <th>{t('tournaments.detail.player')}</th>
-                  <th>{t('tournaments.detail.city')}</th>
-                  <th>Niveau</th>
-                  <th>{t('tournaments.detail.score')}</th>
-                  {isClosed && <th>{t('tournaments.detail.gain')}</th>}
-                  <th>{t('tournaments.detail.registeredAt')}</th>
-                  {canRemove && <th>{t('tournaments.detail.actions')}</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {participants.map((p) => (
-                  <tr key={p.id}>
-                    <td>
-                      <span
-                        className="tour-rank"
-                        style={p.rank <= 3 ? { background: MEDAL_COLORS[p.rank - 1], color: '#fff' } : undefined}
-                      >
-                        {p.rank}{p.rank <= 3 && <Medal size={11} />}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="row" style={{ gap: 9 }}>
-                        <Avatar name={p.name} src={p.avatar_url} size="sm" />
-                        <span className="cell-strong">{p.name}</span>
-                      </div>
-                    </td>
-                    <td className="muted">{p.ville || '—'}</td>
-                    <td><span className="td-level">Niv.&nbsp;{p.level}</span></td>
-                    <td className="cell-strong">{num(p.score)}</td>
-                    {isClosed && <td>{p.payout > 0 ? fcfa(p.payout) : '—'}</td>}
-                    <td className="muted">{dateFr(p.joined_at)}</td>
-                    {canRemove && (
-                      <td>
-                        <button
-                          className="btn btn-sm btn-danger-ghost"
-                          onClick={() => setConfirm({
-                            fn: () => tournamentsService.removeParticipant(id, p.user_id),
-                            label: t('tournaments.detail.participantRemoved'),
-                            title: t('tournaments.detail.removeTitle'),
-                            body: t('tournaments.detail.removeBody', { name: p.name }),
-                            confirmLabel: t('tournaments.actions.remove'),
-                            danger: true,
-                          })}
-                        >
-                          {t('tournaments.actions.remove')}
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <ParticipantsPanel
+        participants={panelParticipants}
+        totalSlots={tour.max_players || 0}
+        isClosed={!!isClosed}
+        canAdd={!!canAdd}
+        canRemove={!!canRemove}
+        onInvite={() => setEnrollOpen(true)}
+        onRemove={requestRemove}
+      />
 
       {/* Confirmation modal */}
       <Modal

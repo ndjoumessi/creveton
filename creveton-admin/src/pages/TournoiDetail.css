@@ -280,6 +280,9 @@
 
 .td-enroll-cta { white-space: nowrap; flex-shrink: 0; }
 
+/* Carte d'enrôlement autonome (au-dessus du panneau participants) */
+.td-enroll-card { margin-bottom: 16px; }
+
 /* Panneau d'inscription togglable */
 .td-enroll-panel {
   margin-top: 16px;

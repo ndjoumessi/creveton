@@ -1006,7 +1006,14 @@
       "removeTitle": "Retirer ce participant ?",
       "removeBody": "Retirer {{name}} de ce tournoi ?",
       "actions": "Actions",
-      "noResults": "Aucun joueur trouvé"
+      "noResults": "Aucun joueur trouvé",
+      "filterPlaceholder": "Filtrer les participants…",
+      "resultCount_one": "{{count}} résultat",
+      "resultCount_other": "{{count}} résultats",
+      "noResultsMessage": "Aucun participant ne correspond à « {{query}} ».",
+      "slotsSummary": "{{count}} / {{total}} inscrits",
+      "registeredCount_one": "{{count}} inscrit",
+      "registeredCount_other": "{{count}} inscrits"
     },
     "notification": "vient de rejoindre",
     "types": {

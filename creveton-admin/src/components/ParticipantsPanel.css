@@ -1,0 +1,224 @@
+/* ParticipantsPanel — Cockpit Émeraude
+   Aucune variable dupliquée : on consomme les tokens globaux de src/index.css
+   (--surface, --border, --muted, --ink, --green*, --gold, --cream, --bg-mute,
+   --radius-*, --shadow, --t-fast). Surface/bordure/rayon/ombre viennent de la
+   classe `.card` (surface plate par défaut, cf. DESIGN.md) ; ce fichier ne gère
+   que la mise en page interne du panneau. Polices Space Grotesk / Outfit
+   conservées telles quelles (conformes à la charte). */
+
+.cve-panel {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* En-tête */
+.cve-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cve-panel__heading { min-width: 0; }
+
+.cve-panel__title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.cve-panel__subtitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 4px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.cve-panel__cta { white-space: nowrap; flex-shrink: 0; }
+
+/* Recherche (filtre client) */
+.cve-panel__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cve-panel__search-icon {
+  position: absolute;
+  left: 13px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.cve-input--with-icon {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 40px 10px 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color var(--t-fast);
+}
+.cve-input--with-icon:focus { border-color: var(--green500); }
+.cve-input--with-icon:disabled { opacity: 0.55; cursor: not-allowed; }
+.cve-input--with-icon::placeholder { color: var(--muted); }
+
+.cve-panel__search-clear {
+  position: absolute;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.cve-panel__search-clear:hover { background: var(--bg-mute); color: var(--ink); }
+
+.cve-panel__result-count {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: -6px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Liste des participants */
+.cve-participant-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.cve-participant-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.cve-participant-row:hover {
+  background: var(--bg-mute);
+  border-color: var(--border);
+}
+
+.cve-participant-row__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+
+.cve-participant-row__name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cve-participant-row__rank {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cve-participant-row__gain {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.cve-participant-row__score {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--green700);
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.cve-participant-row__score-unit {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.cve-participant-row__remove { flex-shrink: 0; }
+
+/* État vide (différencié via l'icône + le libellé passés en props) */
+.cve-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 44px 16px;
+  gap: 6px;
+  color: var(--muted);
+}
+.cve-empty-state__icon { color: var(--green500); margin-bottom: 6px; opacity: 0.85; }
+.cve-empty-state__title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 15.5px;
+  color: var(--ink);
+  margin: 0;
+}
+.cve-empty-state__description {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  color: var(--muted);
+  max-width: 340px;
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+/* Skeleton — réutilise la classe globale .skeleton (shimmer + reduced-motion) */
+.cve-participant-row--skeleton:hover {
+  background: transparent;
+  border-color: transparent;
+}
+.cve-skel-avatar { width: 36px; height: 36px; border-radius: var(--radius-pill); flex-shrink: 0; }
+.cve-skel-line { flex: 1; height: 14px; }
+
+/* Responsive */
+@media (max-width: 480px) {
+  .cve-panel__header { flex-wrap: wrap; }
+  .cve-panel__cta { width: 100%; justify-content: center; }
+}
+
+/* Dark mode : les tokens globaux basculent seuls (--surface/--border/--ink/
+   --muted/--bg-mute + --green* ont déjà leur variante [data-theme="dark"]).
+   Le score passe en vert clair pour rester lisible sur surface sombre. */
+[data-theme="dark"] .cve-participant-row__score { color: var(--green300); }
+[data-theme="dark"] .cve-empty-state__icon { color: var(--green300); }
+[data-theme="dark"] .cve-input--with-icon:focus { border-color: var(--green300); }
