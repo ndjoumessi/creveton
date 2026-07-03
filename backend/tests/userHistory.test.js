@@ -87,6 +87,43 @@ t('une partie soumise apparaît dans l’historique avec score + streak_max', as
   expect(g.played_at).toBeTruthy();
 });
 
+t('answered_count distingue partie jouée-mais-ratée (>0) et abandonnée (0)', async () => {
+  const { token, questions } = await setup(5);
+  const wrong = (q) => (q.correct_index === 0 ? 1 : 0); // index sûrement faux
+
+  // A — jouée en entier, TOUTES fausses : 0 correcte, 0 pt, mais 5 réponses données.
+  await submit(token, {
+    mode: 'normal', theme: 'geographie', level: 'beginner', started_at: '2026-06-20T10:00:00Z',
+    answers: questions.map((q) => ({ question_id: q.id, selected_index: wrong(q), elapsed_ms: 2000, skipped: false })),
+  });
+  // B — abandonnée d'emblée : toutes sautées (selected_index null / skipped).
+  await submit(token, {
+    mode: 'normal', theme: 'geographie', level: 'beginner', started_at: '2026-06-21T10:00:00Z',
+    answers: questions.map((q) => ({ question_id: q.id, selected_index: null, elapsed_ms: 0, skipped: true })),
+  });
+  // C — 2 répondues (dont 1 juste), 3 sautées.
+  await submit(token, {
+    mode: 'normal', theme: 'geographie', level: 'beginner', started_at: '2026-06-22T10:00:00Z',
+    answers: questions.map((q, i) => (i < 2
+      ? { question_id: q.id, selected_index: i === 0 ? q.correct_index : wrong(q), elapsed_ms: 2000, skipped: false }
+      : { question_id: q.id, selected_index: null, elapsed_ms: 0, skipped: true })),
+  });
+
+  const r = await history(token, { limit: 10 });
+  expect(r.status).toBe(200);
+  expect(r.body.data).toHaveLength(3);
+
+  // Le cœur du fix : deux parties à 0 pt / 0 bonne réponse existent (A jouée-ratée,
+  // B abandonnée), mais answered_count les distingue (5 vs 0).
+  const zeros = r.body.data.filter((g) => g.correct_count === 0 && g.score === 0 && g.question_count === 5);
+  expect(zeros).toHaveLength(2);
+  expect(zeros.map((g) => g.answered_count).sort((x, y) => x - y)).toEqual([0, 5]);
+
+  // C — partie partiellement jouée : 1 correcte, 2 réponses données.
+  const c = r.body.data.find((g) => g.correct_count === 1);
+  expect(c.answered_count).toBe(2);
+});
+
 t('plusieurs parties → ordre récent → ancien + pagination cursor', async () => {
   const { token, questions } = await setup(2);
   const play = (startedAt) =>

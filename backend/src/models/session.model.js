@@ -20,6 +20,15 @@ function toView(row) {
     score: row.score,
     correct_count: row.correct_count,
     question_count: row.question_count,
+    // Nombre de réponses RÉELLEMENT données (non skip/timeout). Une réponse
+    // sautée porte selected_index = null (cf. gameService.persistedAnswers). Sert
+    // à distinguer une partie abandonnée (answered_count = 0) d'une partie jouée
+    // mais entièrement ratée (answered_count > 0, correct_count = 0). Dérivé du
+    // JSONB `answers` déjà chargé (SELECT *) → aucun coût de requête, couvre
+    // aussi les parties historiques sans backfill.
+    answered_count: Array.isArray(row.answers)
+      ? row.answers.filter((a) => a && a.selected_index != null).length
+      : null,
     streak_max: row.streak_max ?? 0,
     xp_earned: row.xp_earned,
     played_at: row.played_at,
