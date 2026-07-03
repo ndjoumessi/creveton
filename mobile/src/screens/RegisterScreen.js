@@ -64,6 +64,7 @@ export default function RegisterScreen({ navigation }) {
 
   const [step, setStep] = useState(0);
   const [showPwd, setShowPwd] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [ville, setVille] = useState('');
   const [sexe, setSexe] = useState('N');
   const [lang, setLang] = useState('fr');
@@ -214,8 +215,9 @@ export default function RegisterScreen({ navigation }) {
                 defaultValue={values.current.confirm}
                 onChangeText={(t) => (values.current.confirm = t)}
                 error={errors.confirm}
-                secureTextEntry={!showPwd}
+                secureTextEntry={!showConfirm}
                 autoCapitalize="none"
+                rightToggle={{ active: showConfirm, onToggle: () => setShowConfirm((v) => !v) }}
               />
             </>
           ) : null}
