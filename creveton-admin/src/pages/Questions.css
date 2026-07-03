@@ -1135,7 +1135,7 @@
 }
 .q-lang-badge--both { background: #e3f3ea; color: var(--green700); }
 .q-lang-badge--fr { background: var(--bg-mute); color: var(--muted); }
-.q-lang-badge--en { background: #fef3d7; color: var(--pastel-amber-fg); }
+.q-lang-badge--en { background: var(--pastel-amber); color: var(--pastel-amber-fg); }
 
 /* Section EN du drawer + état non traduit */
 .q-section-label--bi { display: flex; align-items: center; gap: 8px; }

@@ -1008,7 +1008,7 @@ export default function Utilisateurs() {
         {tempPassword ? (
           <div className="stack" style={{ gap: 14 }}>
             <p style={{ fontSize: 14 }}>{t('users.misc.accountCreatedPanel')}</p>
-            <div className="card-pad" style={{ background: '#ecfdf3', borderRadius: 10, textAlign: 'center', fontFamily: 'Outfit', fontWeight: 700, fontSize: 18, color: '#15803d' }}>{tempPassword}</div>
+            <div className="card-pad" style={{ background: '#f0fdf4', borderRadius: 10, textAlign: 'center', fontFamily: 'Outfit', fontWeight: 700, fontSize: 18, color: '#15803d' }}>{tempPassword}</div>
             <p className="muted" style={{ fontSize: 12.5 }}>{t('users.misc.mustChangePassword')}</p>
           </div>
         ) : <InviteForm onSubmit={submitInvite} />}

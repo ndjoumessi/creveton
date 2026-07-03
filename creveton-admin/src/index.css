@@ -37,8 +37,8 @@
      ont une règle `[data-theme="dark"]` la gardent (elle surcharge directement).
      NE PAS fusionner de teintes proches — chaque valeur distincte = un token.
      Laissés HORS palette volontairement (décision, pas un oubli) : teintes bespoke
-     non dupliquées — ambres `#fef3d7`/`#fdf0c8`/`#fffbeb`, rouges/verts doux
-     `#fef2f2`/`#fff5f5`/`#f0fdf4`/`#ecfdf3`, vert clair `#86efac` (prio-low /
+     non dupliquées — ambres `#fdf0c8`/`#fffbeb`, rouges/verts doux
+     `#fef2f2`/`#fff5f5`/`#f0fdf4`, vert clair `#86efac` (prio-low /
      dot running), fg `#c0392b`, bordures pastel `#b6e8c6`/`#c2d8fb`/`#fde68a`/
      `#f7c9c4` ; `#b45309` en usage médaille/compte-à-rebours (Classement bronze,
      Dashboard countdown) et survols neutres `#f3f4f6` (chrome, non-badge) restent
