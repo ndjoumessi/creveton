@@ -232,6 +232,7 @@ export default function SessionsHistoryScreen({ navigation }) {
           <SessionCard
             game={item}
             style={styles.card}
+            showIncomplete
             onPress={() => navigation.navigate('SessionDetail', { sessionId: item.session_id || item.id })}
           />
         )}

@@ -398,6 +398,7 @@ export default function HomeScreen({ navigation }) {
                   <SessionCard
                     key={String(g.session_id || i)}
                     game={g}
+                    showIncomplete
                     onPress={() => navigation.navigate('SessionDetail', { sessionId: g.session_id || g.id })}
                   />
                 ))}

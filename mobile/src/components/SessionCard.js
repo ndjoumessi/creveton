@@ -1,8 +1,8 @@
 // SessionCard — carte « partie jouée » enrichie, partagée par l'accueil
 // (« Dernières parties »), l'écran Historique et l'onglet Stats. Thème-aware
 // (useTheme), tokens only. Extrait et enrichi de l'ancien `LastGameRow` de
-// HomeScreen. Prop opt-in `showIncomplete` (Stats) : partie avortée (0 pt,
-// 0 bonne réponse) → carte grisée neutre + pastille « Incomplet ».
+// HomeScreen. Prop opt-in `showIncomplete` (Accueil, Stats, Historique) : partie
+// avortée (0 pt, 0 bonne réponse) → carte grisée neutre + pastille « Incomplet ».
 //
 // Enrichissements :
 //   · surface neutre + tint très léger (alpha 0.06) + bordure 1px pleine, couleur par
@@ -74,8 +74,8 @@ export default function SessionCard({ game, style, showIncomplete = false, onPre
 
   // Partie avortée / échouée : 0 pt ET 0 bonne réponse → carte grisée neutre +
   // pastille « Incomplet » (pas de ton rouge : abandon ≠ échec). Opt-in
-  // (`showIncomplete`, utilisé par Stats) — défaut false : rendu inchangé
-  // pour l'Accueil et l'écran Historique.
+  // (`showIncomplete`, activé sur Accueil / Stats / Historique) — défaut false
+  // (rétro-compat : un appelant sans la prop garde le rendu standard).
   const incomplete = showIncomplete && score === 0 && correct === 0;
 
   // Ton de surface : bordure 1px pleine + tint faible, keyé sur le taux de réussite.
