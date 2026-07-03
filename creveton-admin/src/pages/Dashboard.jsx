@@ -507,10 +507,13 @@ export default function Dashboard() {
   }
 
   const apiLatency = health && typeof health._latencyMs === 'number' ? health._latencyMs : null;
-  // Statut système dérivé du SEUL appel /health : s'il échoue (ou n'a jamais
-  // abouti), on n'a aucune confirmation d'opérabilité → « Indisponible » partout.
-  const sysDown = !!healthError || !health;
-  const sysStateLabel = t(sysDown ? 'dashboard.system.down' : 'dashboard.system.operational');
+  // Statut PAR SERVICE. API joignable = on a reçu une réponse /health valide.
+  // DB/Redis dérivés des checks renvoyés par le backend (health.checks.{db,redis})
+  // — si l'API est injoignable, on ne peut rien affirmer → tout « Indisponible ».
+  const apiDown = !!healthError || !health;
+  const dbDown = apiDown || health?.checks?.db !== 'up';
+  const redisDown = apiDown || health?.checks?.redis !== 'up';
+  const sysLabel = (down) => t(down ? 'dashboard.system.down' : 'dashboard.system.operational');
 
   return (
     <>
@@ -681,9 +684,9 @@ export default function Dashboard() {
           <h3 className="card-title">{t('dashboard.misc.systemTitle')}</h3>
           <p className="card-sub" style={{ marginBottom: 6 }}>{t('dashboard.misc.systemSub')}</p>
           <div className="dash-sys-lines">
-            <SysLine icon={<Server size={15} />} label={t('dashboard.system.api')} latency={apiLatency} stateLabel={sysStateLabel} down={sysDown} />
-            <SysLine icon={<Database size={15} />} label={t('dashboard.system.database')} stateLabel={sysStateLabel} down={sysDown} />
-            <SysLine icon={<Zap size={15} />} label={t('dashboard.system.redis')} stateLabel={sysStateLabel} down={sysDown} />
+            <SysLine icon={<Server size={15} />} label={t('dashboard.system.api')} latency={apiLatency} stateLabel={sysLabel(apiDown)} down={apiDown} />
+            <SysLine icon={<Database size={15} />} label={t('dashboard.system.database')} stateLabel={sysLabel(dbDown)} down={dbDown} />
+            <SysLine icon={<Zap size={15} />} label={t('dashboard.system.redis')} stateLabel={sysLabel(redisDown)} down={redisDown} />
           </div>
           <div className="dash-sys-foot">
             <div className="dash-sys-frow">
