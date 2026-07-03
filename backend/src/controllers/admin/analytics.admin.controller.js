@@ -23,4 +23,14 @@ const financesDaily = asyncHandler(async (req, res) => {
   return ok(res, await financeService.daily(req.query.days || 30));
 });
 
-module.exports = { analytics, financesSummary, financesDaily };
+/** GET /admin/analytics/reports/sessions?group_by=theme|level|mode&from=&to= */
+const reportsSessions = asyncHandler(async (req, res) => {
+  return ok(res, await analyticsService.sessionsReport(req.query));
+});
+
+/** GET /admin/analytics/reports/revenue?from=&to= — transactions par type. */
+const reportsRevenue = asyncHandler(async (req, res) => {
+  return ok(res, await analyticsService.revenueReport(req.query));
+});
+
+module.exports = { analytics, financesSummary, financesDaily, reportsSessions, reportsRevenue };

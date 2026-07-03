@@ -73,6 +73,19 @@ const adminAnalytics = Joi.object({
   metrics: Joi.string().optional(),
 });
 
+/** GET /admin/analytics/reports/sessions — GROUP BY parties (thème|niveau|mode). */
+const adminSessionsReport = Joi.object({
+  group_by: Joi.string().valid('theme', 'level', 'mode').default('theme'),
+  from: Joi.date().iso().optional(),
+  to: Joi.date().iso().greater(Joi.ref('from')).optional(),
+});
+
+/** GET /admin/analytics/reports/revenue — GROUP BY transactions par type. */
+const adminRevenueReport = Joi.object({
+  from: Joi.date().iso().optional(),
+  to: Joi.date().iso().greater(Joi.ref('from')).optional(),
+});
+
 /** POST /admin/users/:id/message — message admin → joueur. */
 const adminMessage = Joi.object({
   subject: Joi.string().max(200).allow('').default(''),
@@ -116,6 +129,8 @@ module.exports = {
   adminSuspend,
   adminBan,
   adminAnalytics,
+  adminSessionsReport,
+  adminRevenueReport,
   adminMessage,
   adminRole,
   adminInvite,
