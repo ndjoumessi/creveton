@@ -86,6 +86,14 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // --- Routes API versionnées ---
 app.use(env.apiPrefix, routes);
 
+// --- Sentry : capture des erreurs (après les routes, avant nos handlers) ---
+// Gardé par SENTRY_DSN → inerte sans DSN et jamais actif en test (aucun DSN).
+// setupExpressErrorHandler observe l'erreur puis la laisse passer : notre
+// errorHandler reste l'autorité qui formate l'enveloppe { error: {...} }.
+if (process.env.SENTRY_DSN) {
+  require('@sentry/node').setupExpressErrorHandler(app);
+}
+
 // --- 404 + gestion d'erreurs (toujours en dernier) ---
 app.use(notFound);
 app.use(errorHandler);

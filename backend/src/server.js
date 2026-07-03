@@ -1,5 +1,8 @@
 'use strict';
 
+// Sentry EN PREMIER (avant tout module applicatif) — inerte sans SENTRY_DSN.
+require('./instrument');
+
 const http = require('http');
 
 const app = require('./app');
