@@ -72,11 +72,17 @@ export default function SessionCard({ game, style, showIncomplete = false, onPre
   const score = Number(game.score) || 0;
   const rate = total > 0 ? Math.round((correct / total) * 100) : null;
 
-  // Partie avortée / échouée : 0 pt ET 0 bonne réponse → carte grisée neutre +
-  // pastille « Incomplet » (pas de ton rouge : abandon ≠ échec). Opt-in
-  // (`showIncomplete`, activé sur Accueil / Stats / Historique) — défaut false
-  // (rétro-compat : un appelant sans la prop garde le rendu standard).
-  const incomplete = showIncomplete && score === 0 && correct === 0;
+  // Partie ABANDONNÉE (aucune réponse donnée) → carte grisée neutre + pastille
+  // « Incomplet ». On se base sur l'ENGAGEMENT (answered_count : réponses réelles,
+  // non skip/timeout) et NON sur le succès : une partie jouée en entier mais
+  // entièrement ratée (answered_count > 0, 0 bonne réponse) n'est PAS incomplète,
+  // c'est un vrai 0 %. Repli legacy (score/correct) si answered_count absent
+  // (ancienne réponse serveur / cache) pour ne pas régresser. Opt-in
+  // (`showIncomplete`, activé sur Accueil / Stats / Historique) — défaut false.
+  const answered = game.answered_count;
+  const incomplete = showIncomplete && (answered != null
+    ? Number(answered) === 0
+    : score === 0 && correct === 0);
 
   // Ton de surface : bordure 1px pleine + tint faible, keyé sur le taux de réussite.
   const tone = incomplete ? null : surfaceTone(rate, colors);

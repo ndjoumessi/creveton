@@ -41,10 +41,15 @@ export function computeStats(history) {
 
   const totalGames = history.length;
 
-  // Sessions « complètes » : on exclut les parties avortées (0 pt ET 0 bonne
-  // réponse) du score moyen ET du taux de réussite — elles fausseraient ces
-  // moyennes — mais elles restent comptées dans le total de parties.
-  const isIncomplete = (g) => num(g.score) === 0 && num(g.correct_count) === 0;
+  // Sessions « complètes » : on exclut du score moyen ET du taux de réussite les
+  // parties ABANDONNÉES (aucune réponse donnée) — elles fausseraient ces moyennes —
+  // mais elles restent comptées dans le total de parties. On se base sur
+  // l'engagement (answered_count) et NON sur le succès : une partie jouée en entier
+  // mais entièrement ratée EST une partie complète (0 %) et doit peser sur le taux
+  // de réussite. Repli legacy (score/correct) si answered_count absent.
+  const isIncomplete = (g) => (g.answered_count != null
+    ? num(g.answered_count) === 0
+    : num(g.score) === 0 && num(g.correct_count) === 0);
   const complete = history.filter((g) => !isIncomplete(g));
 
   const avgScore = complete.length
