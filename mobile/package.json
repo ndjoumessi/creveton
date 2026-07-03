@@ -48,6 +48,7 @@
   },
   "private": true,
   "devDependencies": {
+    "eas-cli-local-build-plugin": "^20.1.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~10.0.0",
     "sharp": "^0.35.2"

@@ -145,12 +145,38 @@ marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-id
 
 ## Build local APK (quand EAS cloud quota épuisé)
 
-- EAS Free : 30 builds Android/mois, reset le 1er.
-- Bug `npx EINVALIDTAGNAME` : npm < 10.9 — fix : `npm install -g npm@latest`.
+- EAS Free : quota de builds Android/mois (reset le 1er). La limite réelle appliquée par
+  EAS peut être < 30 ; si le cloud refuse (`used its Android builds from the Free plan this
+  month`), passer en build local.
+- **`npx EINVALIDTAGNAME` / `E400` au lancement du build local — le vrai coupable n'est PAS
+  un npm trop vieux.** C'est un **npm 6.4.1 hérité dans `/usr/local`** (ancien `libnpx`) placé
+  **avant nvm dans le `PATH`** : quand eas-cli **spawn** `npx` (sous-process, sans les alias
+  shell), il tombe sur ce npm 6.4.1 qui rejette l'argument base64 du job → échec avant Gradle.
+  Les `npm --version` interactifs (aliasés vers nvm) sont **trompeurs** ; vérifier avec
+  `which -a npx`. **Fix, sans toucher au npm système** : prioriser le bin nvm dans le `PATH`
+  du build pour que le `npx` spawné soit le moderne :
+  `export PATH="$HOME/.nvm/versions/node/<version-active>/bin:$PATH"`.
+  (La note précédente « npm < 10.9 → upgrade npm » était trompeuse ; upgrader/downgrader le
+  npm nvm n'a aucun effet, ce n'est pas lui qui est spawné. Nettoyage durable possible plus
+  tard : supprimer/upgrader le npm 6.4.1 de `/usr/local` — non fait pour l'instant.)
+- **Upload source-maps Sentry** : en local, la tâche Gradle `…SentryUpload` échoue faute
+  d'identifiants (`An organization ID or slug is required`). Pour un APK de test :
+  `export SENTRY_DISABLE_AUTO_UPLOAD=true` (l'app reste fonctionnelle ; source-maps
+  uploadables séparément plus tard).
 - `ANDROID_HOME` requis : `export ANDROID_HOME=~/Library/Android/sdk`.
-- Commande : `cd mobile && eas build --local --platform android --profile preview`.
-- APK sorti dans `mobile/build-<TIMESTAMP>.apk` (~81–85 Mo).
-- Skill dédié installé : `expo-eas-local-build`.
+- devDep requise (résolue par `npx` sans repasser en mode install) :
+  `eas-cli-local-build-plugin` — épinglée dans `mobile/package.json`.
+- Commande complète :
+  ```bash
+  cd mobile
+  export ANDROID_HOME=~/Library/Android/sdk
+  export PATH="$HOME/.nvm/versions/node/<version-active>/bin:$PATH"   # npx moderne, pas /usr/local
+  export SENTRY_DISABLE_AUTO_UPLOAD=true
+  eas build --local --platform android --profile preview --non-interactive
+  ```
+- APK sorti dans `mobile/build-<TIMESTAMP>.apk` (~81–86 Mo).
+- Skill dédié : `expo-eas-local-build` (non présent sur ce poste au dernier build — la recette
+  ci-dessus fait foi).
 
 ## Références
 
