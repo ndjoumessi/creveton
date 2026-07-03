@@ -10,6 +10,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sessions as sessionsApi } from '../services/endpoints';
+import { parseApiError } from '../services/api';
 
 // Identifiant local unique sans Math.random (déterministe + compteur).
 let seq = 0;
@@ -46,8 +47,18 @@ export const useOfflineQueue = create(
             await sessionsApi.submit(item.payload);
             removeSession(item.id);
             synced += 1;
-          } catch {
-            failed += 1; // on garde la partie en file pour un prochain essai
+          } catch (e) {
+            // SESSION_ALREADY_SUBMITTED (409) = la partie a DÉJÀ été enregistrée
+            // serveur (souvent : soumission en ligne réussie mais expirée côté
+            // client → mise en file à tort). On la retire de la file comme un
+            // succès, sinon elle rejoue et re-409 à chaque reconnexion (file
+            // empoisonnée). Tout autre échec reste en file pour un prochain essai.
+            if (parseApiError(e).code === 'SESSION_ALREADY_SUBMITTED') {
+              removeSession(item.id);
+              synced += 1;
+            } else {
+              failed += 1;
+            }
           }
         }
         return { synced, failed };

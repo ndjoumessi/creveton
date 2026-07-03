@@ -44,8 +44,13 @@ export const sessions = {
   // → { correct, correct_index, explanation, points_earned, speed_bonus, streak, session_id }
   answer: (payload) =>
     api.post('/sessions/answer', payload).then((r) => r.data),
+  // Timeout relevé à 30 s (défaut axios 15 s) : une soumission lente-mais-réussie
+  // (réseau lent) ne doit pas expirer côté client, sinon la partie — déjà
+  // enregistrée serveur — est mise en file à tort puis rejouée en 409
+  // (SESSION_ALREADY_SUBMITTED). Réduit ces faux timeouts ; le rejeu de file passe
+  // aussi par ici. Un vrai échec réseau remonte toujours (mise en file légitime).
   submit: (payload) =>
-    api.post('/sessions/submit', payload).then((r) => r.data),
+    api.post('/sessions/submit', payload, { timeout: 30000 }).then((r) => r.data),
   // Détail d'une partie jouée (en-tête + review[] par question). Le joueur ne
   // peut consulter que ses propres parties (403 sinon). → GET /sessions/:id
   detail: (id) => api.get(`/sessions/${id}`).then((r) => r.data),
