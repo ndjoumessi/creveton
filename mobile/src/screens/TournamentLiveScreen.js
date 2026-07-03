@@ -406,7 +406,7 @@ const makeStyles = (colors) => StyleSheet.create({
     padding: 20,
     marginTop: spacing.lg,
   },
-  question: { lineHeight: 26, color: colors.green900 },
+  question: { lineHeight: 26, color: colors.textDark },
   underline: { width: 32, height: 3, borderRadius: 2, backgroundColor: colors.gold500, marginTop: spacing.md },
 
   // Boutons réponse — rendus par <AnswerOption /> (états/feedback inclus).

@@ -345,11 +345,15 @@ const makeStyles = (colors) => StyleSheet.create({
     textAlign: 'center',
     fontFamily: fonts.titleBold,
     fontSize: fontSizes.xl,
-    color: colors.green900,
+    // Chiffre : textDark (thème-aware). Tous les fonds de case (base/filled/error)
+    // flippent désormais → le chiffre reste lisible en clair ET sombre.
+    color: colors.textDark,
   },
   boxFilled: {
     borderColor: colors.green500,
-    backgroundColor: colors.successBgSoft,
+    // successBg (flippe : clair→sombre) et non successBgSoft (figé clair) : sinon
+    // en sombre le chiffre textDark (clair) tombait sur un fond figé clair → invisible.
+    backgroundColor: colors.successBg,
   },
   boxFocused: {
     borderColor: colors.green700,

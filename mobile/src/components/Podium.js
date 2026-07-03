@@ -169,10 +169,13 @@ const makeStyles = (colors) =>
     compactScore: {
       fontFamily: fonts.titleBold,
       fontSize: fontSizes.base,
-      color: colors.green700,
+      // textDark (thème-aware) et non green700 figé : sur fond crème qui flip en
+      // sombre, un vert profond figé devenait illisible (foncé sur foncé). La
+      // graisse titleBold garde le score distinct des noms.
+      color: colors.textDark,
       marginTop: 2,
     },
-    compactScoreFirst: { color: colors.green700, fontSize: fontSizes.lg },
+    compactScoreFirst: { color: colors.textDark, fontSize: fontSizes.lg },
     compactGap: { marginTop: spacing.sm },
 
     // — card (Stats · onglet Classement)
