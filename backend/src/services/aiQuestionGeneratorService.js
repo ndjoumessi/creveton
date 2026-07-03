@@ -106,9 +106,15 @@ function fireAutoTranslate(id) {
 async function generateDrafts({ theme, level, count, createdBy }) {
   const samples = await questionModel.sampleForGeneration(theme, level, 4);
   const prompt = buildGenerationPrompt({ theme, level, count, samples });
+  // Sortie longue (jusqu'à ~8000 tokens pour 20 questions structurées) → bien
+  // plus lente qu'une correction de texte. On surcharge le timeout du correcteur
+  // (15 s) par un timeout dédié qui grandit avec la taille du lot : base 40 s
+  // + 4 s/question, plafonné à 120 s (< la limite proxy Railway de 300 s).
+  const timeoutMs = Math.min(120_000, 40_000 + count * 4_000);
   const raw = await callAnthropic(prompt, {
     maxTokens: Math.min(8000, 400 * count + 500),
     meta: { generate: true, theme, level, count },
+    timeoutMs,
   });
 
   let parsed;

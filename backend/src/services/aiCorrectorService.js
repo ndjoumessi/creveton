@@ -10,22 +10,26 @@ const questionModel = require('../models/question.model');
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-sonnet-4-6';
+// Timeout PAR DÉFAUT calibré pour le correcteur/traducteur de texte : réponse
+// courte (une phrase, maxTokens ~600) → rapide. Surchargeable par appel via
+// `opts.timeoutMs` pour les usages à sortie longue (génération de questions).
 const TIMEOUT_MS = 15_000;
 
 /**
  * Appel bas niveau Anthropic. Renvoie le texte brut (trim) du premier bloc.
  * @param {string} prompt
- * @param {{ maxTokens?: number, meta?: object }} [opts]
+ * @param {{ maxTokens?: number, meta?: object, timeoutMs?: number }} [opts]
+ *   `timeoutMs` surcharge le timeout d'abandon (défaut 15 s, adapté au correcteur).
  * @throws {ApiError} AI_NOT_CONFIGURED | AI_TIMEOUT | AI_UNAVAILABLE
  */
-async function callAnthropic(prompt, { maxTokens = 600, meta = {} } = {}) {
+async function callAnthropic(prompt, { maxTokens = 600, meta = {}, timeoutMs = TIMEOUT_MS } = {}) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new ApiError('AI_NOT_CONFIGURED');
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   let res;
   try {
     res = await fetch(ANTHROPIC_URL, {

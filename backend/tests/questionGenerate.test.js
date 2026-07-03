@@ -22,6 +22,7 @@ jest.mock('../src/services/aiCorrectorService', () => {
 const H = require('./helpers/integration');
 const request = require('supertest');
 const app = require('../src/app');
+const aiCorrector = require('../src/services/aiCorrectorService'); // mocké ci-dessus
 
 /**
  * Tests d'intégration — génération assistée IA + workflow de relecture des
@@ -102,6 +103,24 @@ t('generate → crée des brouillons (draft + ai_generated), skip invalides/doub
   // Invisibles pour l'app : aucun approved créé.
   const { rows } = await H.db.query("SELECT count(*)::int AS n FROM questions WHERE status='approved'");
   expect(rows[0].n).toBe(0);
+});
+
+t('generate → timeout dédié (> 15 s du correcteur) passé à callAnthropic', async () => {
+  const admin = await H.createUser({ role: 'admin', phone: '+237690003005' });
+  mockGen.items = [q({ text_fr: 'Q timeout ?' })];
+  aiCorrector.callAnthropic.mockClear();
+  await request(app)
+    .post(`${P}/admin/questions/generate`)
+    .set('Authorization', `Bearer ${H.tokenFor(admin)}`)
+    .send({ theme: 'geographie', level: 'beginner', count: 10 });
+
+  expect(aiCorrector.callAnthropic).toHaveBeenCalledWith(
+    expect.any(String),
+    expect.objectContaining({ timeoutMs: expect.any(Number) }),
+  );
+  const opts = aiCorrector.callAnthropic.mock.calls.at(-1)[1];
+  expect(opts.timeoutMs).toBeGreaterThan(15000); // ≠ le timeout court du correcteur
+  expect(opts.timeoutMs).toBe(80000); // 40s + 4s × 10 questions
 });
 
 t('generate sans clé Anthropic → 503 AI_NOT_CONFIGURED', async () => {
