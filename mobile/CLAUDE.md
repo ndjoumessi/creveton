@@ -38,13 +38,13 @@ Pas de simulateur dispo ici : valider via `expo export` (build) + `expo start --
   - `sync.js` — delta sync CDC §2.8 (snapshot complet au 1er lancement via `/questions/all`, puis `/questions/delta`), non bloquant ; `handleForceSync` (push silencieux).
   - `notifications.js`, `socket.js`.
 - `store/` — `authStore`, `questionsStore`, `gameStore`, `leaderboardStore`, `networkStore` (état réseau), `offlineQueue` (parties jouées hors ligne, persistée AsyncStorage) (zustand).
-- `components/` — bibliothèque partagée, tout ré-exporté par `components/index.js`. Voir **« Bibliothèque de composants partagés »** plus bas : **réutiliser avant de coder un nouvel écran**.
-- `navigation/` — `AppNavigator` (AuthStack si non authentifié, sinon MainStack) → `AuthStack` (Splash/Register/OTP/Login), `MainStack` (Tabs + Quiz/Results/Challenge/SessionsHistory/ChangePassword/TournamentLive), `BottomTabs` (Accueil/Jouer/Tournois/Défis/Stats/Profil).
-- `screens/` — **16 écrans** :
+- `components/` — bibliothèque partagée, l'essentiel ré-exporté par `components/index.js` (sauf `Icon`/`NetworkWatcher`/`OfflineBanner`, importés en direct). Voir **« Bibliothèque de composants partagés »** plus bas : **réutiliser avant de coder un nouvel écran**.
+- `navigation/` — `AppNavigator` (AuthStack si non authentifié, sinon MainStack) → `AuthStack` (Splash/Register/OTP/Login), `MainStack` (Tabs + SessionsHistory/SessionDetail/ChangePassword/Quiz/Results/Challenge/TournamentLive), `BottomTabs` (Accueil/Jouer/Tournois/Défis/Stats/Profil).
+- `screens/` — **17 écrans** :
   - Auth : `SplashScreen` (ouverture animée → Login), `LoginScreen`, `RegisterScreen` (inscription 3 étapes), `OTPScreen` (6 chiffres, timer, renvoi).
   - Tabs : `HomeScreen` (tableau de bord : Jouer, tournois, podium, stats), `GameStartScreen` (onglet Jouer : grille thèmes + niveau + mode), `TournamentScreen` (liste tournois par statut + inscription), `ChallengesScreen` (hub duels 1v1 : onglets + bottom sheet « Nouveau défi »), `StatsScreen` (« Mes stats » KPI/courbe/historique + « Classement »), `ProfileScreen` (photo, réglages, badges, wallet, déconnexion).
   - Stack jeu : `QuizScreen` (quiz immersif : timer, feedback, explication), `ResultsScreen` (révélation célébrative : trophée, XP, partage).
-  - Stack secondaire : `SessionsHistoryScreen` (historique paginé + filtres), `ChangePasswordScreen`, `TournamentLiveScreen` (manche temps réel via socket), `ChallengeScreen` (stub de redirection vers `Challenges`).
+  - Stack secondaire : `SessionsHistoryScreen` (historique paginé + filtres), `SessionDetailScreen` (relecture d'une partie via `GET /sessions/:id` : en-tête score/XP + review par question, options colorées en lecture seule, atteint en tapant une `SessionCard` depuis Accueil/Stats/Historique), `ChangePasswordScreen`, `TournamentLiveScreen` (manche temps réel via socket), `ChallengeScreen` (stub de redirection vers `Challenges`).
 - `hooks/` — `usePushNotifications`, `useTheme`, `useTournamentSocket`, `useNetworkStatus` (lit `networkStore`).
 - `utils/` — `format.js` (FCFA, dates fr, **courbe XP**), `validation.js`, `haptics.js`, `i18n.js` (`getQuestionText`/`getOptionText`/`normalizeLang` — localisation du contenu des questions).
 
@@ -74,6 +74,7 @@ le pattern `const { colors } = useTheme(); const styles = useMemo(() => makeStyl
 - `Avatar({ name, size?, gold?, uri? })` — initiales colorées (hash → `themeAccent`) ou photo. → Home, Stats, Challenges, Profile.
 - `Podium({ players, variant:'compact'|'card', loading? })` → Home (compact), Stats (card). `MiniLineChart({ data, width, height, color, fillArea?, showGrid?, scaleToData?, showLastValue?, … })` → Results (défauts inertes), Stats (courbe enrichie). `SessionCard({ game, showIncomplete? })` → Home, Stats, SessionsHistory. `FAB({ onPress, icon?, accessibilityLabel, disabled? })` → Challenges.
 - `Logo`, `ThemeBadge`, `LevelBadge`, `StatusBadge`, `XpBar`, `FillBar`, `Confetti`, `GoldVeilBanner`, `SectionHeader`, `Screen`, `NetworkWatcher`.
+- `Icon({ icon, size?, color?, strokeWidth? })` — fin wrapper des icônes **Lucide** (taille/couleur/épaisseur cohérentes, `color` = token theme obligatoire). Importé **en direct** (`components/Icon`), hors barrel — comme `NetworkWatcher`/`OfflineBanner`. → BottomTabs + la plupart des écrans.
 
 > **Pas de `LeaderboardRow`** : volontairement non extrait (rendus Stats clair/riche et TournamentLive sombre/anonymisé trop divergents, 1 occurrence chacun).
 
