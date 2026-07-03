@@ -97,6 +97,18 @@ régénérer avec `/impeccable document`.
   ILIKE, exclut soi-même + comptes non `active`/supprimés, projection réduite
   (`id,name,avatar_url,level,total_xp` — jamais `phone`/`email`), `q` ≥ 2 caractères (sinon 400),
   limit défaut 10 / max 20. Sert à cibler un ami pour un défi côté mobile.
+- **Support admin (tickets + signalements)** : sous-système **admin-only**, monté sur
+  `/admin/support/*` (`routes/admin/support.admin.routes.js`, schémas Joi inline →
+  `support.admin.controller` → `supportService` → `support.model`). Permissions dédiées
+  (`admin.middleware.js`) : `support:read` (moderator), `support:manage` / `support:assign`
+  (admin). **Tickets** : `status` open→in_progress→resolved/closed, `priority`
+  urgent/normal/low, `type` account/question/bug/other. `POST /tickets/:id/reply`
+  (`supportService.replyTicket`) porte la **seule** logique métier — ajoute un message
+  `sender_role='admin'` puis transitionne le statut (`resolve` → resolved, sinon
+  open → in_progress) ; le reste du service est du pass-through model. **Signalements de
+  questions** : `GET /reports`, `/reports/summary`, `PATCH /reports/:id/status`
+  (pending/ignored/resolved). `GET /kpis` agrège les compteurs. Tests :
+  `backend/tests/support.test.js`.
 - **Anti-triche** : `/sessions/submit` ≥ 3 réponses < 500 ms (`scoreService.CHEAT_MIN_MS`)
   → `CHEAT_DETECTED`, **sauf en `blitz`/`marathon`** (cadence rapide voulue ; garde-fou =
   timer global 62 s) ; `/sessions/answer` (feedback immédiat, mode `normal` only) une
