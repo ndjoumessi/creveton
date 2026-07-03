@@ -151,6 +151,59 @@ async function listReports({ status = null, page = 1, limit = 20 } = {}) {
   return { reports: rows.map(stripTotal), total };
 }
 
+/**
+ * Synthèse d'agrégats des signalements pour le tableau de bord modération :
+ *  - `by_reason` : nombre de signalements par motif (wrong_answer, typo, …) ;
+ *  - `by_status` : nombre par état de traitement (pending, ignored, resolved) ;
+ *  - `top_questions` : questions les plus signalées (question_id + libellé FR +
+ *    total de signalements + signalements encore en attente), triées « pending
+ *    first » (les plus urgentes à traiter d'abord) ;
+ *  - `total` : nombre total de signalements.
+ * `limit` borne uniquement `top_questions`. Agrégats calculés en SQL (GROUP BY /
+ * COUNT / FILTER), exécutés en parallèle.
+ */
+async function getReportsSummary({ limit = 5 } = {}) {
+  const [byReason, byStatus, topQuestions, totals] = await Promise.all([
+    db.query(
+      `SELECT reason, count(*)::int AS count
+         FROM question_reports
+        GROUP BY reason
+        ORDER BY count DESC, reason ASC`
+    ),
+    db.query(
+      `SELECT status, count(*)::int AS count
+         FROM question_reports
+        GROUP BY status
+        ORDER BY count DESC, status ASC`
+    ),
+    db.query(
+      `SELECT r.question_id,
+              q.text_fr AS question_text,
+              count(*)::int AS report_count,
+              count(*) FILTER (WHERE r.status = 'pending')::int AS pending_count
+         FROM question_reports r
+         LEFT JOIN questions q ON q.id = r.question_id
+        GROUP BY r.question_id, q.text_fr
+        ORDER BY pending_count DESC, report_count DESC, max(r.created_at) DESC
+        LIMIT $1`,
+      [limit]
+    ),
+    db.query(
+      `SELECT count(*)::int AS total,
+              count(*) FILTER (WHERE status = 'pending')::int AS pending
+         FROM question_reports`
+    ),
+  ]);
+
+  return {
+    by_reason: byReason.rows,
+    by_status: byStatus.rows,
+    top_questions: topQuestions.rows,
+    total: totals.rows[0].total,
+    pending: totals.rows[0].pending,
+  };
+}
+
 async function updateReportStatus(id, status) {
   const { rows } = await db.query(
     `UPDATE question_reports SET status = $2 WHERE id = $1
@@ -188,6 +241,7 @@ module.exports = {
   assignTicket,
   addMessage,
   listReports,
+  getReportsSummary,
   updateReportStatus,
   getSupportKpis,
 };

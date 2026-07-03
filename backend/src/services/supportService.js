@@ -43,6 +43,7 @@ module.exports = {
   updateTicketStatus: supportModel.updateTicketStatus,
   assignTicket: supportModel.assignTicket,
   listReports: supportModel.listReports,
+  getReportsSummary: supportModel.getReportsSummary,
   updateReportStatus: supportModel.updateReportStatus,
   getSupportKpis: supportModel.getSupportKpis,
   // Logique métier.

@@ -796,6 +796,47 @@ Retrait d'urgence (< 30 s) : déclenche un push silencieux FCM/APNs `force_sync`
 
 ---
 
+### Support & signalements
+
+> Console admin `/admin/support/*` (tickets, fil de messages, signalements de questions, KPIs). Permission minimale : `support:read` (lecture) / `support:manage` (écriture) — hiérarchie `moderator < admin`.
+
+#### GET /admin/support/reports/summary
+
+Agrégats des signalements de questions par les joueurs, pour le tableau de bord modération. Permission `support:read`.
+
+**Query** : `?limit=5` — borne uniquement `top_questions` (défaut `5`, min `1`, max `50`).
+
+**Réponse `200`**
+
+```json
+{
+  "by_reason": [
+    { "reason": "wrong_answer", "count": 2 },
+    { "reason": "typo", "count": 1 },
+    { "reason": "offensive", "count": 1 }
+  ],
+  "by_status": [
+    { "status": "pending", "count": 2 },
+    { "status": "resolved", "count": 1 },
+    { "status": "ignored", "count": 1 }
+  ],
+  "top_questions": [
+    {
+      "question_id": "b1f2…",
+      "question_text": "Quelle est la capitale du Cameroun ?",
+      "report_count": 3,
+      "pending_count": 2
+    }
+  ],
+  "total": 4,
+  "pending": 2
+}
+```
+
+> `by_reason` (motifs : `wrong_answer`, `typo`, `offensive`, `duplicate`, `other`) et `by_status` (`pending`, `ignored`, `resolved`) couvrent **tous** les signalements. `top_questions` est trié « pending first » (`pending_count` desc, puis `report_count` desc) — les questions les plus urgentes à traiter en tête. `total` / `pending` = compteurs globaux.
+
+---
+
 ## 13. Temps réel — Socket.io
 
 Namespace tournois temps réel. Connexion authentifiée par JWT (handshake `auth: { token }`).

@@ -192,6 +192,69 @@ t('PATCH /support/reports/:id/status : 200 (admin)', async () => {
   expect(r.body.status).toBe('resolved');
 });
 
+// 10b — synthèse des signalements (agrégats par motif / statut / top questions).
+t('GET /support/reports/summary : 200 (moderator) — agrégats par motif/statut + top', async () => {
+  const { player, moderator, admin, modAuth } = await actors();
+  const q1 = await H.createApprovedQuestion();
+  const q2 = await H.createApprovedQuestion();
+  // q1 : 3 signalements (2 wrong_answer pending, 1 typo resolved).
+  await makeReport(q1.id, player.id, { reason: 'wrong_answer', status: 'pending' });
+  await makeReport(q1.id, moderator.id, { reason: 'wrong_answer', status: 'pending' });
+  await makeReport(q1.id, admin.id, { reason: 'typo', status: 'resolved' });
+  // q2 : 1 signalement (offensive, ignored).
+  await makeReport(q2.id, player.id, { reason: 'offensive', status: 'ignored' });
+
+  const r = await request(app).get(`${P}/reports/summary`).set('Authorization', modAuth);
+  expect(r.status).toBe(200);
+
+  // Total.
+  expect(r.body.total).toBe(4);
+  expect(r.body.pending).toBe(2);
+
+  // Par motif.
+  const reasonMap = Object.fromEntries(r.body.by_reason.map((x) => [x.reason, x.count]));
+  expect(reasonMap.wrong_answer).toBe(2);
+  expect(reasonMap.typo).toBe(1);
+  expect(reasonMap.offensive).toBe(1);
+
+  // Par statut.
+  const statusMap = Object.fromEntries(r.body.by_status.map((x) => [x.status, x.count]));
+  expect(statusMap.pending).toBe(2);
+  expect(statusMap.resolved).toBe(1);
+  expect(statusMap.ignored).toBe(1);
+
+  // Top questions : q1 en tête (pending_count le plus élevé), avec libellé.
+  expect(Array.isArray(r.body.top_questions)).toBe(true);
+  expect(r.body.top_questions.length).toBe(2);
+  const top = r.body.top_questions[0];
+  expect(top.question_id).toBe(q1.id);
+  expect(top.report_count).toBe(3);
+  expect(top.pending_count).toBe(2);
+  expect(top.question_text).toBe(q1.text_fr);
+});
+
+// 10c — la limite borne le top questions.
+t('GET /support/reports/summary?limit=1 : 200 — top_questions borné à 1', async () => {
+  const { player, moderator, modAuth } = await actors();
+  const q1 = await H.createApprovedQuestion();
+  const q2 = await H.createApprovedQuestion();
+  await makeReport(q1.id, player.id, { reason: 'wrong_answer', status: 'pending' });
+  await makeReport(q2.id, moderator.id, { reason: 'typo', status: 'pending' });
+
+  const r = await request(app).get(`${P}/reports/summary?limit=1`).set('Authorization', modAuth);
+  expect(r.status).toBe(200);
+  expect(r.body.total).toBe(2);
+  expect(r.body.top_questions.length).toBe(1);
+});
+
+// 10d — RBAC : player refusé.
+t('GET /support/reports/summary : 403 si player (pas moderator)', async () => {
+  const { playerAuth } = await actors();
+  const r = await request(app).get(`${P}/reports/summary`).set('Authorization', playerAuth);
+  expect(r.status).toBe(403);
+  expect(r.body.error.code).toBe('FORBIDDEN');
+});
+
 // 11
 t('GET /support/tickets : 403 si player (pas moderator)', async () => {
   const { playerAuth } = await actors();

@@ -69,6 +69,12 @@ const listReports = asyncHandler(async (req, res) => {
   return ok(res, { data: reports, total, page, limit });
 });
 
+/** GET /admin/support/reports/summary — agrégats des signalements (par motif,
+ *  par statut, top questions signalées). */
+const getReportsSummary = asyncHandler(async (req, res) => {
+  return ok(res, await supportService.getReportsSummary({ limit: req.query.limit }));
+});
+
 /** PATCH /admin/support/reports/:id/status — traite un signalement. */
 const updateReportStatus = asyncHandler(async (req, res) => {
   const report = await supportService.updateReportStatus(req.params.id, req.body.status);
@@ -91,6 +97,7 @@ module.exports = {
   updateTicketStatus,
   assignTicket,
   listReports,
+  getReportsSummary,
   updateReportStatus,
   getKpis,
 };

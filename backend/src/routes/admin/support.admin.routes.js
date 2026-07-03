@@ -51,6 +51,10 @@ const listReportsQuery = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(20),
 });
 
+const reportsSummaryQuery = Joi.object({
+  limit: Joi.number().integer().min(1).max(50).default(5),
+});
+
 const reportStatusBody = Joi.object({
   status: Joi.string().valid(...REPORT_STATUS).required(),
 });
@@ -65,6 +69,7 @@ router.patch('/tickets/:id/assign', requirePermission('support:assign'), validat
 
 // ── Signalements de questions ────────────────────────────────────────────────
 router.get('/reports', requirePermission('support:read'), validate(listReportsQuery, 'query'), ctrl.listReports);
+router.get('/reports/summary', requirePermission('support:read'), validate(reportsSummaryQuery, 'query'), ctrl.getReportsSummary);
 router.patch('/reports/:id/status', requirePermission('support:manage'), validate(idParam, 'params'), validate(reportStatusBody), ctrl.updateReportStatus);
 
 // ── KPIs ─────────────────────────────────────────────────────────────────────
