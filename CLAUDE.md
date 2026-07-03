@@ -206,3 +206,10 @@ Serveur socket.io monté dans `backend/src/sockets/index.js` (adossé à
 `main` est la branche par défaut (commits directs, monorepo → un seul `git push` couvre
 backend + admin + mobile). Ne commiter que ce que la tâche produit : les changements
 `mobile/` non liés restent hors des commits admin.
+
+**Déploiement staging** — deux pipelines **indépendants**, détaillés dans
+**[`docs/deploy.md`](docs/deploy.md)** (à lire avant toute intervention sur
+`deploy-staging.yml` ou les réglages Railway) : backend `creveton` via GitHub Actions
+(gate CI, auto-deploy natif Railway **désactivé**) ; admin `creveton-admin-staging` via
+auto-deploy natif Railway (`Wait for CI` actif, pas de workflow). Règle : **un seul
+mécanisme de déploiement actif par service**.
