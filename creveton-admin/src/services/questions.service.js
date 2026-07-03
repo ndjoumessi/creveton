@@ -97,7 +97,10 @@ export function translateQuestion(id, targetLang) {
  * met quelques secondes) ; la clé Anthropic reste côté serveur.
  */
 export function generate({ theme, level, count }) {
-  return api.post('/admin/questions/generate', { theme, level, count }).then((r) => r.data);
+  // Génération d'un lot = sortie IA longue (jusqu'à ~120 s côté serveur) : on
+  // surcharge le timeout axios par défaut (15 s) pour cette requête seulement,
+  // sinon le navigateur abandonnerait avant la réponse (130 s > plafond serveur).
+  return api.post('/admin/questions/generate', { theme, level, count }, { timeout: 130000 }).then((r) => r.data);
 }
 
 /** GET /admin/questions/drafts — brouillons IA en attente de relecture. */
