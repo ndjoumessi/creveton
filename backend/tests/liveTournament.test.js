@@ -46,6 +46,10 @@ const makeQuestions = (n) =>
 t('start tire les questions et passe le tournoi en running', async () => {
   const tour = await createTournament();
   await makeQuestions(5);
+  const user = await H.createUser({ role: 'player' });
+  const user2 = await H.createUser({ role: 'player' });
+  await addParticipant(tour.id, user.id);
+  await addParticipant(tour.id, user2.id);
 
   const res = await svc.start(tour.id, { count: 3, timePerQSec: 10 });
   expect(res).toMatchObject({ total: 3, status: 'running' });
@@ -53,9 +57,25 @@ t('start tire les questions et passe le tournoi en running', async () => {
   const { rows } = await H.db.query('SELECT status FROM tournaments WHERE id = $1', [tour.id]);
   expect(rows[0].status).toBe('running');
 
-  const user = await H.createUser({ role: 'player' });
   const state = await svc.currentState(tour.id, user.id);
   expect(state).toMatchObject({ status: 'running', index: -1, total: 3, question: null });
+});
+
+t('start refuse en dessous du minimum de joueurs → TOURNAMENT_NOT_OPEN', async () => {
+  // Miroir de adminServices.test.js « start exige le minimum de joueurs » :
+  // le chemin live doit appliquer la même garde MIN_PLAYERS_TO_START.
+  const tour = await createTournament();
+  await makeQuestions(3);
+  const solo = await H.createUser({ role: 'player' });
+  await addParticipant(tour.id, solo.id); // 1 seul inscrit < MIN_PLAYERS_TO_START (=2)
+
+  await expect(svc.start(tour.id, { count: 3, timePerQSec: 10 }))
+    .rejects.toMatchObject({ code: 'TOURNAMENT_NOT_OPEN' });
+
+  // Aucun état partiel : le tournoi reste ouvert (pas passé en running).
+  const { rows } = await H.db.query('SELECT status FROM tournaments WHERE id = $1', [tour.id]);
+  expect(rows[0].status).toBe('open');
+  expect(await svc.currentState(tour.id, solo.id)).toBeNull();
 });
 
 t('start refuse si la banque de questions est insuffisante', async () => {
@@ -102,7 +122,9 @@ t('réponse hors timing (mauvais index) → ANSWER_TOO_LATE', async () => {
   const tour = await createTournament();
   await makeQuestions(2);
   const alice = await H.createUser({ role: 'player' });
+  const bob = await H.createUser({ role: 'player' });
   await addParticipant(tour.id, alice.id);
+  await addParticipant(tour.id, bob.id);
   await svc.start(tour.id, { count: 2, timePerQSec: 30 });
   await svc.showQuestion(tour.id, 0);
   await expect(svc.recordAnswer({ tournamentId: tour.id, userId: alice.id, index: 1, selectedIndex: 1 }))
@@ -150,6 +172,11 @@ t('finish persiste score + XP + game_sessions et clôture le tournoi', async () 
 t('POST /tournaments/:id/start : 403 pour un joueur, 200 pour un admin', async () => {
   const tour = await createTournament();
   await makeQuestions(3);
+  // ≥ MIN_PLAYERS_TO_START inscrits pour franchir la garde nombre de joueurs.
+  const p1 = await H.createUser({ role: 'player' });
+  const p2 = await H.createUser({ role: 'player' });
+  await addParticipant(tour.id, p1.id);
+  await addParticipant(tour.id, p2.id);
 
   const player = await H.createUser({ role: 'player' });
   const forbidden = await request(app)

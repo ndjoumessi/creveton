@@ -7,6 +7,9 @@ const logger = require('../config/logger');
 const ApiError = require('../utils/ApiError');
 const scoreService = require('./scoreService');
 const leaderboardService = require('./leaderboardService');
+// Réutilise la garde MIN_PLAYERS_TO_START du chemin admin (pas de valeur en dur).
+// Pas de cycle : tournamentService n'importe PAS liveTournamentService.
+const tournamentService = require('./tournamentService');
 const pushService = require('./pushService');
 const tournamentModel = require('../models/tournament.model');
 const questionModel = require('../models/question.model');
@@ -113,6 +116,14 @@ async function start(tournamentId, { count, timePerQSec }) {
 
   // Set des inscrits : seuls eux peuvent répondre (les autres sont spectateurs).
   const userIds = await tournamentModel.participantUserIds(tournamentId);
+
+  // Garde nombre de joueurs, alignée sur le chemin admin (tournamentService.start).
+  // À placer AVANT setStatus/writeState pour ne pas laisser d'état partiel.
+  if (userIds.length < tournamentService.MIN_PLAYERS_TO_START) {
+    throw new ApiError('TOURNAMENT_NOT_OPEN', {
+      message: `Minimum ${tournamentService.MIN_PLAYERS_TO_START} joueurs requis (actuellement ${userIds.length}).`,
+    });
+  }
 
   await tournamentModel.setStatus(tournamentId, 'running');
   await writeState(tournamentId, state);
