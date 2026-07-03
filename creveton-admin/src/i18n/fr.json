@@ -883,7 +883,8 @@
       "startsToday": "Aujourd'hui à {{time}}",
       "startsTomorrow": "Demain à {{time}}",
       "startsInDays": "dans {{n}} j",
-      "overdue": "En retard"
+      "overdue": "En retard",
+      "minPlayers": "{{min}} joueurs min · {{n}} inscrit(s)"
     },
     "statuses": {
       "scheduled": "Programmé",

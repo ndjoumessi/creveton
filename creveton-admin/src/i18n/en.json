@@ -883,7 +883,8 @@
       "startsToday": "Today at {{time}}",
       "startsTomorrow": "Tomorrow at {{time}}",
       "startsInDays": "in {{n}}d",
-      "overdue": "Overdue"
+      "overdue": "Overdue",
+      "minPlayers": "{{min}} players min · {{n}} joined"
     },
     "statuses": {
       "scheduled": "Scheduled",

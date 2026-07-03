@@ -37,9 +37,17 @@
 @media (max-width: 1100px) { .tour-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 700px) { .tour-grid { grid-template-columns: 1fr; } }
 
-.tour-card { display: flex; flex-direction: column; overflow: hidden; padding: 0; transition: transform 0.15s, box-shadow 0.15s; }
+.tour-card { display: flex; flex-direction: column; overflow: hidden; padding: 0; transition: transform 0.15s var(--ease-out, ease), box-shadow 0.15s, opacity 0.15s, filter 0.15s; }
 .tour-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 .tour-card.is-preview { box-shadow: var(--shadow); }
+/* Tournois terminaux dé-emphasés : le passé n'entre pas en concurrence avec le
+   vivant. L'annulé (historique pur) est grisé et révélé au survol → deux cartes
+   homonymes (une active, une annulée) deviennent sans ambiguïté. */
+.tour-card.is-terminal { opacity: 0.82; }
+.tour-card.is-cancelled { opacity: 0.6; }
+.tour-card.is-cancelled .tour-card-head { filter: grayscale(0.65) brightness(0.93); }
+.tour-card.is-terminal:hover, .tour-card.is-cancelled:hover { opacity: 1; }
+.tour-card.is-cancelled:hover .tour-card-head { filter: none; }
 .tour-card-head { height: 96px; display: flex; align-items: center; justify-content: center; position: relative; color: rgba(255,255,255,0.95); }
 .tour-card-emoji { font-size: 48px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.28)); }
 .tour-status { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; padding: 4px 10px; border-radius: var(--radius-pill); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
@@ -106,8 +114,20 @@
 .tour-cd--gold { color: #8a6d12; }
 .tour-cd--green { color: var(--green500); }
 
-.tour-card-foot { display: flex; gap: 8px; padding: 0 18px 18px; }
-.tour-card-foot .btn { flex: 1; justify-content: center; }
+.tour-card-foot { display: flex; flex-direction: column; gap: 8px; padding: 0 18px 18px; }
+.tour-card-foot > .btn { width: 100%; justify-content: center; }
+.tour-foot-actions { display: flex; gap: 8px; }
+.tour-foot-actions > .btn { flex: 1; justify-content: center; }
+/* Garde-fou « joueurs insuffisants » : chip ambre (attention, pas erreur rouge ;
+   distinct de l'or CTA rare). Sens doublé : icône + libellé, jamais que couleur. */
+.tour-mingate {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600;
+  color: #b45309; background: rgba(180, 83, 9, 0.09);
+  border: 1px solid rgba(180, 83, 9, 0.22); border-radius: var(--radius-sm);
+  padding: 5px 9px;
+}
+[data-theme="dark"] .tour-mingate { color: var(--gold400, #e6b84d); background: rgba(180, 83, 9, 0.20); border-color: rgba(180, 83, 9, 0.38); }
 .tour-card-detail { flex: 1; }
 
 /* ── Carte « Créer » ── */

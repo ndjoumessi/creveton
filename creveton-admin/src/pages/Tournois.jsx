@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Plus, Trophy, BarChart3, LayoutGrid, List, Lock, Play, X, Users,
   Calendar, Clock, ChevronLeft, ChevronRight, Eye, Wallet, Award,
-  Info, Tag, Palette, Hash, Check,
+  Info, Tag, Palette, Hash, Check, AlertTriangle,
 } from 'lucide-react';
 import { Icon } from '../components/Icon';
 import tournamentsService from '../services/tournaments.service';
@@ -35,6 +35,18 @@ const TYPE_DEFAULTS = {
 };
 const TYPE_ORDER = ['free', 'flash', 'mini', 'grand', 'premium'];
 const TYPE_LABELS = { free: 'Gratuit', flash: 'Flash', mini: 'Mini', grand: 'Grand', premium: 'Premium' };
+
+// Minimum de joueurs pour lancer un tournoi — aligné sur le backend
+// (tournamentService.MIN_PLAYERS_TO_START = 2, règle fixe). En dessous, le bouton
+// « Démarrer » est désactivé côté carte (garde-fou proactif, plus de toast tardif).
+const MIN_PLAYERS = 2;
+
+// Ordre d'affichage par statut : les tournois VIVANTS d'abord, les TERMINAUX
+// (clôturé/payé/annulé) relégués en fin de grille/liste. Évite qu'un tournoi
+// annulé côtoie un homonyme programmé et se lise comme un badge contradictoire.
+const STATUS_RANK = { running: 0, open: 1, scheduled: 2, closed: 3, paid: 4, cancelled: 5 };
+const byStatusRank = (a, b) => (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9);
+const isTerminal = (s) => s === 'closed' || s === 'paid' || s === 'cancelled';
 
 // Redistribution des gains (CDC §2.4) : 1er 50 % · 2e 25 % · 3e 15 % ·
 // 4e–5e 5 % (Grand uniquement) · commission Creveton 10 %.
@@ -88,8 +100,14 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
   const overdue = !preview && si?.past && (tour.status === 'scheduled' || tour.status === 'open');
   const pct = tour.max_players ? Math.min(100, Math.round((tour.registered_players / tour.max_players) * 100)) : 0;
   const emoji = (themeBadgeColors[tour.theme] && themeBadgeColors[tour.theme].icon) || '🏆';
+  const registered = num(tour.registered_players || 0);
+  const canStart = registered >= MIN_PLAYERS;
+  // Cartes terminales (clôturé/payé/annulé) dé-emphasées ; l'annulé, historique
+  // pur, est grisé (révélé au survol). Clarifie les homonymes actif/annulé.
+  const cls = !preview && tour.status === 'cancelled' ? 'is-cancelled'
+    : !preview && isTerminal(tour.status) ? 'is-terminal' : '';
   return (
-    <div className={`card tour-card ${preview ? 'is-preview' : ''}`}>
+    <div className={`card tour-card ${preview ? 'is-preview' : ''} ${cls}`}>
       <div className="tour-card-head" style={{ background: themeGradient(tour.theme) }}>
         <span className="tour-card-emoji">{emoji}</span>
         <StatusBadge status={tour.status || 'scheduled'} />
@@ -131,8 +149,15 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
         <div className="tour-card-foot">
           {(tour.status === 'scheduled' || tour.status === 'open') && (
             <>
-              <button className="btn btn-sm btn-success" onClick={() => onStart(tour)}><Play size={13} /> {t('tournaments.actions.start')}</button>
-              <button className="btn btn-sm btn-danger-ghost" onClick={() => onCancel(tour)}><X size={13} /> {t('tournaments.actions.cancel')}</button>
+              {!canStart && (
+                <span className="tour-mingate">
+                  <AlertTriangle size={13} /> {t('tournaments.card.minPlayers', { min: MIN_PLAYERS, n: registered })}
+                </span>
+              )}
+              <div className="tour-foot-actions">
+                <button className="btn btn-sm btn-success" onClick={() => onStart(tour)} disabled={!canStart}><Play size={13} /> {t('tournaments.actions.start')}</button>
+                <button className="btn btn-sm btn-danger-ghost" onClick={() => onCancel(tour)}><X size={13} /> {t('tournaments.actions.cancel')}</button>
+              </div>
             </>
           )}
           {tour.status === 'running' && (
@@ -336,6 +361,9 @@ export default function Tournois() {
 
   const tournaments = useMemo(() => (data && data.data) || [], [data]);
   const stats = useMemo(() => (data && data.stats) || null, [data]);
+  // Ordre d'affichage : vivants d'abord, terminaux en fin (tri stable → l'ordre
+  // serveur par date est préservé au sein d'un même statut). Cartes ET liste.
+  const ordered = useMemo(() => [...tournaments].sort(byStatusRank), [tournaments]);
 
   // Détection de nouvelles inscriptions (toast via polling 30 s).
   const prevReg = useRef(null);
@@ -442,7 +470,13 @@ export default function Tournois() {
           <div onClick={(e) => e.stopPropagation()}>
             {(tour.status === 'scheduled' || tour.status === 'open') && (
               <div className="row nowrap" style={{ gap: 6 }}>
-                <button className="btn btn-sm btn-success" onClick={() => doStart(tour)} aria-label={t('tournaments.actions.start')}><Play size={13} /></button>
+                <button
+                  className="btn btn-sm btn-success"
+                  onClick={() => doStart(tour)}
+                  disabled={num(tour.registered_players || 0) < MIN_PLAYERS}
+                  title={num(tour.registered_players || 0) < MIN_PLAYERS ? t('tournaments.card.minPlayers', { min: MIN_PLAYERS, n: num(tour.registered_players || 0) }) : t('tournaments.actions.start')}
+                  aria-label={t('tournaments.actions.start')}
+                ><Play size={13} /></button>
                 <button className="btn btn-sm btn-danger-ghost" onClick={() => doCancel(tour)} aria-label={t('tournaments.actions.cancel')}><X size={13} /></button>
               </div>
             )}
@@ -505,7 +539,7 @@ export default function Tournois() {
         <div className="tour-grid">{[0, 1, 2].map((i) => <Skeleton key={i} w="100%" h={300} r={14} />)}</div>
       ) : view === 'cards' ? (
         <div className="tour-grid">
-          {tournaments.map((tour) => (
+          {ordered.map((tour) => (
             <TournamentCard key={tour.id} t={tour} onOpen={openDetail} onStart={doStart} onCancel={doCancel} />
           ))}
           <button className="card tour-create" onClick={() => setCreating(true)}>
@@ -519,7 +553,7 @@ export default function Tournois() {
       ) : (
         <DataTable
           columns={listColumns}
-          data={tournaments}
+          data={ordered}
           onRowClick={openDetail}
           emptyMessage={t('tournaments.empty.message')}
         />
