@@ -367,6 +367,11 @@ export default function Tournois() {
   const navigate = useNavigate();
   const { data, loading, refetch } = useApiData(() => tournamentsService.list(), [], { pollMs: 30000 });
   const [view, setView] = useState('cards');
+  // Portée d'affichage : « active » (défaut, désencombre le tableau de bord) masque
+  // les tournois terminaux (clôturé/payé/annulé) ; « all » restaure tout (avec la
+  // dé-emphase déjà en place). Filtre client pur — aucun statut n'existe en base
+  // pour « archivé », inutile de toucher au schéma. Compteurs live sur chaque onglet.
+  const [scope, setScope] = useState('active');
   const [showStats, setShowStats] = useState(false);
   const [creating, setCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -376,6 +381,15 @@ export default function Tournois() {
   // Ordre d'affichage : vivants d'abord, terminaux en fin (tri stable → l'ordre
   // serveur par date est préservé au sein d'un même statut). Cartes ET liste.
   const ordered = useMemo(() => [...tournaments].sort(byStatusRank), [tournaments]);
+  // Nombre de tournois vivants (non terminaux) — alimente le compteur de l'onglet.
+  const activeCount = useMemo(() => tournaments.filter((tour) => !isTerminal(tour.status)).length, [tournaments]);
+  // Liste réellement affichée selon la portée. « active » masque les terminaux.
+  const visible = useMemo(
+    () => (scope === 'active' ? ordered.filter((tour) => !isTerminal(tour.status)) : ordered),
+    [ordered, scope],
+  );
+  // Des terminaux existent mais sont masqués → l'invite « Voir tous » a du sens.
+  const hiddenTerminal = tournaments.length - activeCount;
 
   // Détection de nouvelles inscriptions (toast via polling 30 s).
   const prevReg = useRef(null);
@@ -539,8 +553,16 @@ export default function Tournois() {
         </div>
       )}
 
-      {/* Switch vue */}
+      {/* Barre d'outils : portée (Actifs/Tous) à gauche, bascule de vue à droite. */}
       <div className="tour-toolbar">
+        <div className="tour-view-switch tour-scope-switch">
+          <button className={`tour-view-btn ${scope === 'active' ? 'is-active' : ''}`} onClick={() => setScope('active')}>
+            {t('tournaments.scope.active')} <span className="tour-scope-count">{activeCount}</span>
+          </button>
+          <button className={`tour-view-btn ${scope === 'all' ? 'is-active' : ''}`} onClick={() => setScope('all')}>
+            {t('tournaments.scope.all')} <span className="tour-scope-count">{tournaments.length}</span>
+          </button>
+        </div>
         <div className="tour-view-switch">
           <button className={`tour-view-btn ${view === 'cards' ? 'is-active' : ''}`} onClick={() => setView('cards')}><LayoutGrid size={15} /> {t('tournaments.views.cards')}</button>
           <button className={`tour-view-btn ${view === 'list' ? 'is-active' : ''}`} onClick={() => setView('list')}><List size={15} /> {t('tournaments.views.list')}</button>
@@ -551,7 +573,7 @@ export default function Tournois() {
         <div className="tour-grid">{[0, 1, 2].map((i) => <Skeleton key={i} w="100%" h={300} r={14} />)}</div>
       ) : view === 'cards' ? (
         <div className="tour-grid">
-          {ordered.map((tour) => (
+          {visible.map((tour) => (
             <TournamentCard key={tour.id} t={tour} onOpen={openDetail} onStart={doStart} onCancel={doCancel} />
           ))}
           <button className="card tour-create" onClick={() => setCreating(true)}>
@@ -559,13 +581,28 @@ export default function Tournois() {
             <span className="tour-create-title">{t('tournaments.card.createNew')}</span>
             <span className="tour-create-sub">{t('tournaments.card.freeOnly')}</span>
           </button>
+          {/* Aucun tournoi actif mais des terminaux masqués → invite à les révéler. */}
+          {scope === 'active' && visible.length === 0 && hiddenTerminal > 0 && (
+            <button className="tour-scope-hint" onClick={() => setScope('all')}>
+              {t('tournaments.scope.hiddenHint', { n: hiddenTerminal })}
+            </button>
+          )}
         </div>
-      ) : tournaments.length === 0 ? (
-        <div className="card"><EmptyState icon={Trophy} title={t('tournaments.empty.title')} message={t('tournaments.empty.message')} action={<button className="btn btn-primary" onClick={() => setCreating(true)}><Plus size={16} /> {t('tournaments.actions.createShort')}</button>} /></div>
+      ) : visible.length === 0 ? (
+        <div className="card">
+          <EmptyState
+            icon={Trophy}
+            title={scope === 'active' && hiddenTerminal > 0 ? t('tournaments.empty.noActiveTitle') : t('tournaments.empty.title')}
+            message={scope === 'active' && hiddenTerminal > 0 ? t('tournaments.empty.noActiveMessage', { n: hiddenTerminal }) : t('tournaments.empty.message')}
+            action={scope === 'active' && hiddenTerminal > 0
+              ? <button className="btn btn-primary" onClick={() => setScope('all')}><Eye size={16} /> {t('tournaments.scope.showAll')}</button>
+              : <button className="btn btn-primary" onClick={() => setCreating(true)}><Plus size={16} /> {t('tournaments.actions.createShort')}</button>}
+          />
+        </div>
       ) : (
         <DataTable
           columns={listColumns}
-          data={ordered}
+          data={visible}
           onRowClick={openDetail}
           emptyMessage={t('tournaments.empty.message')}
         />

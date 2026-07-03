@@ -26,11 +26,19 @@
 @media (max-width: 760px) { .tour-stats { grid-template-columns: repeat(2, 1fr); gap: 14px; } .tour-stats-item:nth-child(2n+1) { border-left: none; padding-left: 0; } }
 
 /* ── Toolbar + switch vue ── */
-.tour-toolbar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+.tour-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .tour-view-switch { display: inline-flex; gap: 2px; background: var(--bg-mute); border-radius: 9px; padding: 3px; }
 .tour-view-btn { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; padding: 6px 14px; border-radius: var(--radius-sm); transition: var(--t-fast); }
 .tour-view-btn.is-active { background: var(--green900); color: var(--gold); box-shadow: 0 1px 3px rgba(11,46,26,0.25); }
 .tour-view-btn.is-active svg { color: var(--gold); }
+
+/* Onglet de portée (Actifs/Tous) — compteur live pour dire ce qui est filtré. */
+.tour-scope-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--bg-soft, rgba(11,46,26,0.08)); color: var(--muted); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tour-view-btn.is-active .tour-scope-count { background: rgba(255,255,255,0.16); color: var(--gold); }
+
+/* Invite « Voir les N terminés » quand la portée « Actifs » masque tout. */
+.tour-scope-hint { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; border: 1px dashed var(--border); border-radius: var(--radius); background: transparent; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer; transition: var(--t-fast); }
+.tour-scope-hint:hover { color: var(--green700); border-color: var(--green300, #7fc79a); background: var(--bg-mute); }
 
 /* ── Grille de cartes ── */
 .tour-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }

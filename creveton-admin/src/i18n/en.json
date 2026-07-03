@@ -861,6 +861,12 @@
       "cards": "Cards",
       "list": "List"
     },
+    "scope": {
+      "active": "Active",
+      "all": "All",
+      "showAll": "Show all tournaments",
+      "hiddenHint": "{{n}} finished tournament(s) hidden — show all"
+    },
     "card": {
       "players": "players",
       "reward": "Rewards",
@@ -1013,7 +1019,9 @@
     "empty": {
       "title": "No tournaments",
       "subtitle": "Launch your first free tournament to engage the community.",
-      "message": "Create your first free tournament."
+      "message": "Create your first free tournament.",
+      "noActiveTitle": "No active tournaments",
+      "noActiveMessage": "{{n}} finished tournament(s) are hidden. Show all tournaments to view them."
     },
     "placeholder": {
       "name": "Grand National Quiz",

@@ -861,6 +861,12 @@
       "cards": "Cards",
       "list": "Liste"
     },
+    "scope": {
+      "active": "Actifs",
+      "all": "Tous",
+      "showAll": "Voir tous les tournois",
+      "hiddenHint": "{{n}} tournoi(s) terminé(s) masqué(s) — voir tous"
+    },
     "card": {
       "players": "joueurs",
       "reward": "Récompenses",
@@ -1013,7 +1019,9 @@
     "empty": {
       "title": "Aucun tournoi",
       "subtitle": "Lancez votre premier tournoi gratuit pour animer la communauté.",
-      "message": "Créez votre premier tournoi gratuit."
+      "message": "Créez votre premier tournoi gratuit.",
+      "noActiveTitle": "Aucun tournoi actif",
+      "noActiveMessage": "{{n}} tournoi(s) terminé(s) sont masqués. Affichez tous les tournois pour les consulter."
     },
     "placeholder": {
       "name": "Grand Quiz National",
