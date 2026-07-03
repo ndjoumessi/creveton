@@ -1,10 +1,13 @@
 name: Deploy Staging
 
+# Déclenché après une CI verte sur main (gate : on ne déploie que si les tests
+# passent), ou manuellement via l'onglet Actions (workflow_dispatch) pour tester.
 on:
   workflow_run:
     workflows: [CI]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: deploy-staging
@@ -14,13 +17,26 @@ jobs:
   deploy:
     name: Deploy to Railway (staging)
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # workflow_run : ne déploie que si la CI a réussi.
+    # workflow_dispatch : pas de workflow_run associé → la garde est neutralisée.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment: staging
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to Railway
-        uses: bervProject/railway-deploy@main
+      - uses: actions/setup-node@v4
         with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: ${{ vars.RAILWAY_SERVICE || 'creveton' }}
+          node-version: 22
+
+      # CLI Railway officiel, version ÉPINGLÉE (l'ancien setup suivait une action
+      # tierce en @main → cassée par une release amont : « railway: not found »).
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli@5.23.3
+
+      # Auth non-interactive via RAILWAY_TOKEN (token de projet, scope l'env).
+      # --ci : streame les logs de build puis sort (échoue le job si le build échoue).
+      - name: Deploy to Railway
+        run: railway up --service "$RAILWAY_SERVICE" --ci
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE || 'creveton' }}
