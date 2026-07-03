@@ -1,0 +1,86 @@
+# Déploiement — Staging
+
+État réel des **deux** pipelines de déploiement staging (backend et admin). Ils
+sont **indépendants** : deux services Railway distincts, deux mécanismes de
+déclenchement différents. Lire ceci avant de toucher à `deploy-staging.yml` ou
+aux réglages Railway.
+
+Projet Railway : `fad03484-e491-4b46-8ae1-477b8e96d672`.
+
+| Surface | Service Railway | URL staging | Qui déploie |
+|---|---|---|---|
+| **Backend** (API) | `creveton` | https://creveton-staging.up.railway.app | **GitHub Actions** (`deploy-staging.yml`) |
+| **Admin** (console React) | `creveton-admin-staging` | https://creveton-admin-staging.up.railway.app | **Auto-deploy natif Railway** |
+
+## Backend — via GitHub Actions (gate CI)
+
+Fichier : **`.github/workflows/deploy-staging.yml`**.
+
+```
+push main → CI (ci.yml) → si CI verte → workflow_run → deploy-staging.yml
+          → railway up --service creveton --ci → service `creveton`
+```
+
+- Déclencheur : `workflow_run` sur le workflow **CI**, branche `main`, `types: [completed]`,
+  gardé par `if: github.event.workflow_run.conclusion == 'success'`. **On ne déploie
+  donc jamais un backend dont la CI a échoué.**
+- Déclenchement **manuel** possible : `workflow_dispatch` (onglet Actions → « Deploy
+  Staging » → Run workflow, ou `gh workflow run deploy-staging.yml`). La garde `if`
+  laisse passer `workflow_dispatch` (pas de `workflow_run` associé).
+- Déploiement : **CLI Railway officiel épinglé** `@railway/cli@5.23.3`, commande
+  `railway up --service "$RAILWAY_SERVICE" --ci`. Le `--ci` streame les logs de build
+  puis sort en **échec si le build casse** (pas de faux positif silencieux).
+- Auth : secret repo **`RAILWAY_TOKEN`** (token de projet, scope l'environnement).
+  Service configurable via la variable repo `RAILWAY_SERVICE` (défaut `creveton`).
+- **Auto-deploy natif Railway sur `creveton` : DÉSACTIVÉ** (Railway → service `creveton`
+  → Settings → Source → « Auto deploy is disabled »). C'est ce workflow, et lui seul,
+  qui déploie le backend. Cette désactivation est **volontaire** : sans elle, le backend
+  se déploierait deux fois par push (natif + workflow).
+
+### Historique / pourquoi cette config
+
+Le workflow utilisait l'action tierce `bervProject/railway-deploy@main` (non épinglée),
+cassée par une release amont : `railway: not found`, `railway_token` rejeté. Résultat :
+**échec silencieux depuis le 23 juin**, puis workflow désactivé manuellement. Réparé au
+commit **`226b54b`** (CLI officiel épinglé + `--ci` + `workflow_dispatch` + réactivation),
+vérifié en live (« Deploy complete »).
+
+## Admin — via auto-deploy natif Railway
+
+- `push main` → Railway (intégration GitHub native du service `creveton-admin-staging`)
+  build `creveton-admin/` et déploie. **Aucun** workflow GitHub Actions custom pour l'admin.
+- **`Wait for CI` natif Railway est ACTIF** sur ce service : Railway attend que les checks
+  CI GitHub passent avant de déployer. C'est un réglage **côté Railway**, distinct de la
+  garde `if:` du workflow backend.
+
+## ⚠️ Point de vigilance — le toggle natif « Wait for CI »
+
+Le service backend `creveton` avait déjà, **avant** toute intervention, le toggle natif
+Railway **« Wait for CI » activé**. C'est ce qui masquait la panne : même avec le workflow
+`deploy-staging.yml` en échec, Railway déployait quand même le backend (après CI verte),
+donc rien ne semblait cassé côté utilisateur.
+
+**Conséquence à retenir :** si quelqu'un **réactive un jour l'auto-deploy natif du backend
+`creveton`**, il faut **aussi** vérifier l'état de « Wait for CI » sur ce service —
+sinon on retombe dans un **double déploiement** (natif Railway **+** workflow GitHub
+Actions), potentiellement silencieux. La règle : **un seul mécanisme actif par service.**
+
+- Backend `creveton` : auto-deploy natif **OFF** → seul le workflow déploie.
+- Admin `creveton-admin-staging` : auto-deploy natif **ON** (Wait for CI) → pas de workflow.
+
+## Vérifier qu'un seul déploiement backend se déclenche
+
+Sur un push `main` qui touche le backend (ou n'importe quel push, le workflow se déclenche
+quand même) :
+
+1. **GitHub Actions** : un run `CI`, puis **exactement un** run `Deploy Staging`
+   (`gh run list --workflow deploy-staging.yml --limit 3`). Le run `Deploy Staging`
+   imprime une **URL de build Railway unique** dans son log (`railway up` → « Build Logs: … »).
+2. **Railway** : l'historique de déploiement du service `creveton` doit montrer **un seul**
+   déploiement, tracé « via CLI » (le `railway up` du workflow), **aucun** déploiement
+   « via GitHub » (puisque l'auto-deploy natif est OFF). Vérif rapide en local :
+   `railway deployments --service creveton` (nécessite `railway login`).
+
+Si l'historique Railway montre **deux** déploiements pour un même commit (un « via GitHub »
++ un « via CLI »), c'est que l'auto-deploy natif du backend a été réactivé → voir le point
+de vigilance ci-dessus.
