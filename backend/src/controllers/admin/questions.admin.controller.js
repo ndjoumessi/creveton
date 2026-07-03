@@ -8,6 +8,7 @@ const questionModel = require('../../models/question.model');
 const questionMediaService = require('../../services/questionMediaService');
 const aiCorrectorService = require('../../services/aiCorrectorService');
 const importService = require('../../services/importService');
+const questionGenerator = require('../../services/aiQuestionGeneratorService');
 const pushService = require('../../services/pushService');
 const userModel = require('../../models/user.model');
 const questionEvent = require('../../models/questionEvent.model');
@@ -57,6 +58,31 @@ const create = asyncHandler(async (req, res) => {
   const question = await questionService.createByAdmin(req.body, req.user.id);
   fireAutoTranslate(question);
   return created(res, question);
+});
+
+/**
+ * POST /admin/questions/generate — génère un lot de brouillons IA (status='draft',
+ * source='ai_generated'), invisibles pour l'app. L'auto-traduction FR→EN de chaque
+ * brouillon est déclenchée en fire-and-forget par le service.
+ */
+const generate = asyncHandler(async (req, res) => {
+  const result = await questionGenerator.generateDrafts({ ...req.body, createdBy: req.user.id });
+  return ok(res, result);
+});
+
+/** GET /admin/questions/drafts — brouillons IA en attente de relecture. */
+const listDrafts = asyncHandler(async (req, res) => {
+  return ok(res, await questionService.listDrafts(req.query));
+});
+
+/** POST /admin/questions/drafts/:id/approve — publie le brouillon (draft → approved). */
+const approveDraft = asyncHandler(async (req, res) => {
+  return ok(res, await questionService.approveDraft(req.params.id, req.user.id));
+});
+
+/** POST /admin/questions/drafts/:id/reject — rejette le brouillon (soft delete). */
+const rejectDraft = asyncHandler(async (req, res) => {
+  return ok(res, await questionService.rejectDraft(req.params.id, req.body.reason, req.user.id));
 });
 
 /** PATCH /admin/questions/:id (+ auto-traduction non bloquante si langue manquante) */
@@ -204,4 +230,4 @@ const forceSync = asyncHandler(async (req, res) => {
   return res.status(202).json({ pushed: result.pushed, devices_targeted: devices });
 });
 
-module.exports = { list, get, create, update, translate, transition, remove, uploadImage, deleteImage, improveText, importCsv, forceSync, globalStats, stats, history };
+module.exports = { list, get, create, update, translate, transition, remove, uploadImage, deleteImage, improveText, importCsv, forceSync, globalStats, stats, history, generate, listDrafts, approveDraft, rejectDraft };

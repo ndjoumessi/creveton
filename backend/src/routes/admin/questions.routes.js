@@ -12,6 +12,20 @@ const router = express.Router();
 router.get('/', requirePermission('questions:read'), validate(schemas.adminList, 'query'), ctrl.list);
 // `/stats` AVANT `/:id` (sinon « stats » serait interprété comme un id).
 router.get('/stats', requirePermission('questions:read'), ctrl.globalStats);
+
+// Génération assistée IA + relecture des brouillons. `/generate` et `/drafts`
+// AVANT `/:id` (sinon capturés comme un id). L'édition d'un brouillon réutilise
+// PATCH /:id ; approbation/rejet ont leurs endpoints dédiés ci-dessous.
+router.post('/generate', requirePermission('questions:create'), validate(schemas.adminGenerate), ctrl.generate);
+router.get('/drafts', requirePermission('questions:read'), validate(schemas.adminDrafts, 'query'), ctrl.listDrafts);
+router.post('/drafts/:id/approve', requirePermission('questions:transition'), ctrl.approveDraft);
+router.post(
+  '/drafts/:id/reject',
+  requirePermission('questions:transition'),
+  validate(schemas.adminRejectDraft),
+  ctrl.rejectDraft
+);
+
 router.get('/:id', requirePermission('questions:read'), ctrl.get);
 router.get('/:id/stats', requirePermission('questions:read'), ctrl.stats);
 router.get('/:id/history', requirePermission('questions:read'), ctrl.history);

@@ -405,6 +405,46 @@ async function listForAdmin({ status, theme, level, q, limit = 20, cursor }) {
   };
 }
 
+/**
+ * GET /admin/questions/drafts — brouillons IA en attente de relecture (paginé
+ * par offset encodé dans `cursor`). Édition = PATCH /admin/questions/:id classique.
+ */
+async function listDrafts({ theme, level, limit = 50, cursor } = {}) {
+  const offset = Math.max(0, parseInt(cursor, 10) || 0);
+  const { rows, total } = await questionModel.listDrafts({ theme, level, limit, offset });
+  const hasMore = offset + rows.length < total;
+  return {
+    data: rows.map((r) => questionModel.toAdminView(r)),
+    page: { limit, total, next_cursor: hasMore ? String(offset + limit) : null, has_more: hasMore },
+  };
+}
+
+/**
+ * Approuve un brouillon IA → publié. La relecture humaine dans l'écran des
+ * brouillons EST la modération : on passe directement draft → approved (le
+ * workflow standard draft → pending_review → approved reste pour les autres).
+ */
+async function approveDraft(id, actorId = null) {
+  const existing = await questionModel.findByIdAny(id);
+  if (!existing || existing.deleted_at || existing.status !== 'draft' || existing.source !== 'ai_generated') {
+    throw new ApiError('QUESTION_NOT_FOUND');
+  }
+  const row = await questionModel.setStatus(id, 'approved');
+  await audit({ questionId: id, event: 'approved', actorId, meta: { from: 'draft', to: 'approved', ai: true } });
+  return questionModel.toAdminView(row);
+}
+
+/** Rejette un brouillon IA : soft delete (archived + deleted_at), audit 'rejected'. */
+async function rejectDraft(id, reason = null, actorId = null) {
+  const existing = await questionModel.findByIdAny(id);
+  if (!existing || existing.deleted_at || existing.status !== 'draft' || existing.source !== 'ai_generated') {
+    throw new ApiError('QUESTION_NOT_FOUND');
+  }
+  await questionModel.softDelete(id);
+  await audit({ questionId: id, event: 'rejected', actorId, reason: reason ?? null, meta: { from: 'draft', to: 'archived', ai: true } });
+  return { ok: true };
+}
+
 module.exports = {
   getQuestionSet,
   getDelta,
@@ -422,6 +462,9 @@ module.exports = {
   transitionStatus,
   softDeleteByAdmin,
   listForAdmin,
+  listDrafts,
+  approveDraft,
+  rejectDraft,
   statsForQuestion,
   globalStats,
   historyForQuestion,

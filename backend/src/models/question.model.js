@@ -647,10 +647,54 @@ async function byRate(direction = 'asc', limit = 5) {
   }));
 }
 
+/**
+ * Brouillons générés par IA en attente de relecture (source='ai_generated',
+ * status='draft', non supprimés). Invisibles pour l'app (sync ne sert que
+ * `approved`). Paginé par created_at DESC. Renvoie { rows, total }.
+ */
+async function listDrafts({ theme = null, level = null, limit = 50, offset = 0 }) {
+  const where = ['source = $1', "status = 'draft'", 'deleted_at IS NULL'];
+  const params = ['ai_generated'];
+  if (theme) {
+    params.push(theme);
+    where.push(`theme = $${params.length}`);
+  }
+  if (level) {
+    params.push(level);
+    where.push(`level = $${params.length}`);
+  }
+  const whereSql = where.join(' AND ');
+  const { rows } = await db.query(
+    `SELECT * FROM questions WHERE ${whereSql}
+      ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset]
+  );
+  const { rows: c } = await db.query(`SELECT count(*)::int AS total FROM questions WHERE ${whereSql}`, params);
+  return { rows, total: c[0].total };
+}
+
+/**
+ * Échantillon de questions approuvées d'un thème (préférence au niveau demandé),
+ * pour calibrer le TON et le STYLE lors de la génération IA. Renvoie l'énoncé, les
+ * options, l'explication et le niveau.
+ */
+async function sampleForGeneration(theme, level, limit = 4) {
+  const { rows } = await db.query(
+    `SELECT text_fr, options, explanation, level FROM questions
+      WHERE deleted_at IS NULL AND status = 'approved' AND theme = $1
+      ORDER BY (level = $2) DESC, random()
+      LIMIT $3`,
+    [theme, level, limit]
+  );
+  return rows;
+}
+
 module.exports = {
   PLAYER_COLUMNS,
   toPlayerView,
   toAdminView,
+  listDrafts,
+  sampleForGeneration,
   findPlayerByIds,
   pickRandom,
   choiceDistribution,

@@ -261,4 +261,13 @@ async function autoTranslate(questionId, sourceLang = 'fr') {
   };
 }
 
-module.exports = { improveText, autoTranslate, buildPrompt, buildTranslatePrompt, buildQuestionTranslatePrompt };
+module.exports = {
+  improveText,
+  autoTranslate,
+  buildPrompt,
+  buildTranslatePrompt,
+  buildQuestionTranslatePrompt,
+  // Primitives réutilisables du proxy Anthropic (génération de questions, etc.).
+  callAnthropic,
+  parseJsonResponse,
+};

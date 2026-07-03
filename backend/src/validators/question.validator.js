@@ -89,6 +89,27 @@ const adminList = Joi.object({
   cursor: Joi.string().optional(),
 });
 
+/** POST /admin/questions/generate — génération IA d'un lot de brouillons. */
+const adminGenerate = Joi.object({
+  theme: Joi.string().valid(...THEMES).required(),
+  level: Joi.string().valid(...LEVELS).required(),
+  // Borné à 20 par appel : pas de gros batch en un seul call (risque d'erreur groupée).
+  count: Joi.number().integer().min(1).max(20).default(10),
+});
+
+/** GET /admin/questions/drafts — brouillons IA en attente de relecture. */
+const adminDrafts = Joi.object({
+  theme: Joi.string().valid(...THEMES).optional(),
+  level: Joi.string().valid(...LEVELS).optional(),
+  limit: Joi.number().integer().min(1).max(100).default(50),
+  cursor: Joi.string().optional(),
+});
+
+/** POST /admin/questions/drafts/:id/reject — rejet d'un brouillon (motif optionnel). */
+const adminRejectDraft = Joi.object({
+  reason: Joi.string().max(500).allow('', null).optional(),
+});
+
 /** POST /admin/questions/improve-text — correcteur IA */
 const improveText = Joi.object({
   text: Joi.string().min(3).max(600).required(),
@@ -104,4 +125,4 @@ const translate = Joi.object({
   target_lang: Joi.string().valid('en', 'fr').required(),
 });
 
-module.exports = { list, delta, all, solutions, adminCreate, adminUpdate, adminTransition, forceSync, adminList, improveText, translate };
+module.exports = { list, delta, all, solutions, adminCreate, adminUpdate, adminTransition, forceSync, adminList, improveText, translate, adminGenerate, adminDrafts, adminRejectDraft };
