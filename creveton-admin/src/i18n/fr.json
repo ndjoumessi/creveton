@@ -1816,6 +1816,9 @@
     "ticket": {
       "assignedTo": "Assigné à",
       "unassigned": "Non assigné",
+      "unassign": "Désassigner",
+      "assignAria": "Assigner le ticket à un membre",
+      "assignUpdated": "Assignation mise à jour",
       "playedGames": "{{count}} parties",
       "level": "Niveau {{n}}",
       "conversation": "Conversation",

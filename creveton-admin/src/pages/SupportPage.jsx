@@ -18,6 +18,7 @@ import useThemeStore from '../store/themeStore';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import Avatar from '../components/Avatar';
+import FilterSelect from '../components/FilterSelect';
 import Drawer from '../components/Drawer';
 import EmptyState from '../components/EmptyState';
 import { Skeleton } from '../components/Skeleton';
@@ -143,6 +144,15 @@ export default function SupportPage() {
     const m = members.find((x) => String(x.id).startsWith(prefix));
     return m ? m.id : '';
   }, [selected, members]);
+  // Membre assigné (objet) pour afficher son NOM plutôt que l'UUID tronqué.
+  const currentAssignee = useMemo(
+    () => members.find((x) => x.id === currentAssigneeId) || null,
+    [members, currentAssigneeId],
+  );
+  // Libellé lisible de l'assigné : nom du membre si résolu, sinon l'id tronqué
+  // renvoyé par le service, sinon « Non assigné ».
+  const assigneeLabel = currentAssignee?.name
+    || (selected?.assigned_to ? String(selected.assigned_to) : t('support.ticket.unassigned'));
 
   // Graphes (réels, dérivés de stats()).
   const daily = useMemo(
@@ -206,7 +216,7 @@ export default function SupportPage() {
   const assign = useCallback(async (id, assignedTo) => {
     try {
       await supportService.assignTicket(id, assignedTo);
-      notify.success('Assignation mise à jour');
+      notify.success(t('support.ticket.assignUpdated'));
       await loadTickets();
       await mergeDetail(id);
     } catch {
@@ -507,29 +517,13 @@ export default function SupportPage() {
                 <span className="sup-dhead-id">{selected.id}</span>
                 <span className="sup-dstatus">{t(`support.statuses.${selected.status}`)}</span>
                 <span className={`sup-dprio sup-dprio--${selected.priority}`}>{t(`support.priorities.${selected.priority}`)}</span>
+                {/* En-tête sombre : rappel LECTURE SEULE de l'assigné (le
+                    sélecteur interactif vit dans le corps clair du drawer, où le
+                    FilterSelect partagé s'affiche correctement — son état actif
+                    est vert nuit, illisible sur cet en-tête green900). */}
                 <span className="sup-dassign">
                   {t('support.ticket.assignedTo')}{': '}
-                  {members.length > 0 ? (
-                    <select
-                      value={currentAssigneeId}
-                      onChange={(e) => assign(selected.id, e.target.value || null)}
-                      style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 6, padding: '2px 6px', fontSize: 13, fontFamily: 'inherit' }}
-                    >
-                      <option value="" style={{ color: '#111' }}>{t('support.ticket.unassigned')}</option>
-                      {members.map((m) => (
-                        <option key={m.id} value={m.id} style={{ color: '#111' }}>{m.name || m.id}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      defaultValue=""
-                      placeholder="UUID du membre"
-                      title={selected.assigned_to ? `${t('support.ticket.assignedTo')}: ${selected.assigned_to}` : t('support.ticket.unassigned')}
-                      onBlur={(e) => { const v = e.target.value.trim(); if (v) assign(selected.id, v); }}
-                      style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 6, padding: '2px 6px', fontSize: 13, width: 180 }}
-                    />
-                  )}
+                  <strong>{assigneeLabel}</strong>
                 </span>
               </div>
               <div className="sup-dplayer">
@@ -543,6 +537,29 @@ export default function SupportPage() {
             </div>
 
             <div className="sup-dsubject">{selected.subject}</div>
+
+            {/* Assignation à un modérateur/admin (corps clair du drawer). */}
+            <div className="sup-assign">
+              <span className="sup-assign-label">{t('support.ticket.assignedTo')}</span>
+              {members.length > 0 ? (
+                <div className="sup-assign-ctl">
+                  {currentAssignee && <Avatar name={currentAssignee.name} size="sm" />}
+                  <FilterSelect
+                    options={members.map((m) => ({ value: m.id, label: m.name || m.id }))}
+                    value={currentAssigneeId}
+                    onChange={(v) => assign(selected.id, v || null)}
+                    placeholder={t('support.ticket.unassigned')}
+                    ariaLabel={t('support.ticket.assignAria')}
+                    clearLabel={t('support.ticket.unassign')}
+                  />
+                </div>
+              ) : (
+                // Modérateur : GET /admin/team (admin-only) échoue ET l'assignation
+                // requiert la permission admin → contrôle indisponible, on affiche
+                // l'assigné en lecture seule plutôt qu'une saisie qui finirait en 403.
+                <span className="sup-assign-ro">{assigneeLabel}</span>
+              )}
+            </div>
 
             {/* Fil de conversation. */}
             <div>

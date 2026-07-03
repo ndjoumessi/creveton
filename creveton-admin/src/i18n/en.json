@@ -1816,6 +1816,9 @@
     "ticket": {
       "assignedTo": "Assigned to",
       "unassigned": "Unassigned",
+      "unassign": "Unassign",
+      "assignAria": "Assign ticket to a member",
+      "assignUpdated": "Assignment updated",
       "playedGames": "{{count}} games",
       "level": "Level {{n}}",
       "conversation": "Conversation",

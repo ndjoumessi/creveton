@@ -234,6 +234,33 @@
   color: var(--ink);
 }
 
+/* Assignation (corps clair du drawer). Ligne label + sélecteur FilterSelect. */
+.sup-assign {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sup-assign-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sup-assign-ctl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+}
+.sup-assign-ro {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+}
+
 /* Fil de conversation. */
 .sup-thread-title {
   font-family: 'Space Grotesk', sans-serif;
