@@ -24,6 +24,8 @@ import {
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
 
+import * as Sentry from '@sentry/react-native';
+
 import './src/i18n';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ToastProvider } from './src/components';
@@ -38,10 +40,23 @@ import OfflineBanner from './src/components/OfflineBanner';
 import NetworkWatcher from './src/components/NetworkWatcher';
 import { colors } from './src/constants/theme';
 
+// Sentry (crash/erreur analytics) — le plus tôt possible dans le cycle de vie.
+// INERTE tant qu'aucun DSN n'est fourni : sans EXPO_PUBLIC_SENTRY_DSN ou en dev
+// (__DEV__), aucun événement n'est envoyé. DSN et environnement viennent de
+// variables d'env (EXPO_PUBLIC_*), jamais en dur. Le compte Sentry n'existe pas
+// encore ; il ne manque plus que la clé.
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
+Sentry.init({
+  dsn: SENTRY_DSN, // undefined ⇒ SDK no-op (rien n'est envoyé)
+  enabled: !__DEV__ && !!SENTRY_DSN,
+  environment: process.env.EXPO_PUBLIC_SENTRY_ENV || 'production',
+  tracesSampleRate: 0, // tracing off au départ (capture d'erreurs uniquement)
+});
+
 // Garde le splash natif visible pendant l'initialisation.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-export default function App() {
+function App() {
   const [ready, setReady] = useState(false);
 
   // Notifications push : enregistrement du token (après auth) + deep link sur tap.
@@ -107,3 +122,6 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+// Sentry.wrap : capture les erreurs de rendu React + touch/nav (no-op sans DSN).
+export default Sentry.wrap(App);

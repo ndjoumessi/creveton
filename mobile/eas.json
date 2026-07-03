@@ -17,7 +17,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://creveton-staging.up.railway.app/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://creveton-staging.up.railway.app/api/v1",
+        "EXPO_PUBLIC_SENTRY_ENV": "staging"
       }
     },
     "production": {
@@ -26,7 +27,8 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://creveton-staging.up.railway.app/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://creveton-staging.up.railway.app/api/v1",
+        "EXPO_PUBLIC_SENTRY_ENV": "production"
       }
     }
   },
