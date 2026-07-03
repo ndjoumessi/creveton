@@ -106,8 +106,18 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
   // pur, est grisé (révélé au survol). Clarifie les homonymes actif/annulé.
   const cls = !preview && tour.status === 'cancelled' ? 'is-cancelled'
     : !preview && isTerminal(tour.status) ? 'is-terminal' : '';
+  // Carte entière cliquable → détail (accès cohérent depuis n'importe quel statut,
+  // sans bouton superflu ; parité avec le clic-ligne de la vue liste). Les actions
+  // du pied stoppent la propagation pour ne pas ouvrir le détail par accident.
+  const openProps = preview ? {} : {
+    role: 'button',
+    tabIndex: 0,
+    onClick: () => onOpen(tour),
+    onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(tour); } },
+    'aria-label': t('tournaments.card.openDetailAria', { name: tour.name || t('tournaments.card.placeholderName') }),
+  };
   return (
-    <div className={`card tour-card ${preview ? 'is-preview' : ''} ${cls}`}>
+    <div className={`card tour-card ${preview ? 'is-preview' : ''} ${cls} ${preview ? '' : 'is-clickable'}`} {...openProps}>
       <div className="tour-card-head" style={{ background: themeGradient(tour.theme) }}>
         <span className="tour-card-emoji">{emoji}</span>
         <StatusBadge status={tour.status || 'scheduled'} />
@@ -146,7 +156,7 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
       </div>
 
       {!preview && tour.status !== 'cancelled' && (
-        <div className="tour-card-foot">
+        <div className="tour-card-foot" onClick={(e) => e.stopPropagation()}>
           {(tour.status === 'scheduled' || tour.status === 'open') && (
             <>
               {!canStart && (

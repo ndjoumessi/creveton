@@ -48,6 +48,9 @@
 .tour-card.is-cancelled .tour-card-head { filter: grayscale(0.65) brightness(0.93); }
 .tour-card.is-terminal:hover, .tour-card.is-cancelled:hover { opacity: 1; }
 .tour-card.is-cancelled:hover .tour-card-head { filter: none; }
+/* Carte cliquable → détail. Focus clavier visible (or, sur fond clair). */
+.tour-card.is-clickable { cursor: pointer; }
+.tour-card.is-clickable:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .tour-card-head { height: 96px; display: flex; align-items: center; justify-content: center; position: relative; color: rgba(255,255,255,0.95); }
 .tour-card-emoji { font-size: 48px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.28)); }
 .tour-status { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px; padding: 4px 10px; border-radius: var(--radius-pill); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
@@ -108,11 +111,13 @@
 
 .tour-card-rewards { font-size: 13.5px; font-weight: 600; color: var(--green700); }
 .tour-card-date { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
-.tour-card-cd { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+/* Proximité de date : chip tinté (plus visible et cohérent que du texte coloré).
+   Rouge = en retard / aujourd'hui · or = ≤ 7 j · vert = plus loin. */
+.tour-card-cd { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; font-size: 11.5px; padding: 2px 8px; border-radius: var(--radius-sm); }
 /* Décompte coloré : aujourd'hui rouge · ≤ 7 j or · au-delà vert */
-.tour-cd--red { color: var(--red); }
-.tour-cd--gold { color: #8a6d12; }
-.tour-cd--green { color: var(--green500); }
+.tour-cd--red { color: var(--red); background: rgba(231, 76, 60, 0.10); }
+.tour-cd--gold { color: #8a6d12; background: rgba(212, 160, 23, 0.12); }
+.tour-cd--green { color: var(--green500); background: rgba(42, 138, 79, 0.10); }
 
 .tour-card-foot { display: flex; flex-direction: column; gap: 8px; padding: 0 18px 18px; }
 .tour-card-foot > .btn { width: 100%; justify-content: center; }

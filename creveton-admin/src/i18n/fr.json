@@ -884,7 +884,8 @@
       "startsTomorrow": "Demain à {{time}}",
       "startsInDays": "dans {{n}} j",
       "overdue": "En retard",
-      "minPlayers": "{{min}} joueurs min · {{n}} inscrit(s)"
+      "minPlayers": "{{min}} joueurs min · {{n}} inscrit(s)",
+      "openDetailAria": "Voir le détail du tournoi {{name}}"
     },
     "statuses": {
       "scheduled": "Programmé",

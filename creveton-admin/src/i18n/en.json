@@ -884,7 +884,8 @@
       "startsTomorrow": "Tomorrow at {{time}}",
       "startsInDays": "in {{n}}d",
       "overdue": "Overdue",
-      "minPlayers": "{{min}} players min · {{n}} joined"
+      "minPlayers": "{{min}} players min · {{n}} joined",
+      "openDetailAria": "View details for tournament {{name}}"
     },
     "statuses": {
       "scheduled": "Scheduled",
