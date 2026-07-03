@@ -30,6 +30,34 @@
   --ink: #0b2e1a;
   --muted: #646b77; /* AA corps : 4.83:1 sur --bg, 4.88:1 sur --bg-mute (était #6b7280 = 4.35:1, échec) */
   --fg-faint: #6b7380; /* AA corps sur surfaces blanches (placeholders/méta) : 4.78:1 (était #9ca3af = 2.5:1) */
+  /* ── Palette PASTEL (source de vérité unique — badges de thème/catégorie, pilules
+     de statut, niveaux, tags). Miroir CSS des maps de `constants/theme.js`
+     (themeBadgeColors / *StatusColors). Valeurs FIGÉES clair-invariantes : les
+     classes sans surcharge dark rendaient déjà ces valeurs en sombre ; celles qui
+     ont une règle `[data-theme="dark"]` la gardent (elle surcharge directement).
+     NE PAS fusionner de teintes proches — chaque valeur distincte = un token.
+     Laissés HORS palette volontairement (décision, pas un oubli) : teintes bespoke
+     non dupliquées — ambres `#fef3d7`/`#fdf0c8`/`#fffbeb`, rouges/verts doux
+     `#fef2f2`/`#fff5f5`/`#f0fdf4`/`#ecfdf3`, vert clair `#86efac` (prio-low /
+     dot running), fg `#c0392b`, bordures pastel `#b6e8c6`/`#c2d8fb`/`#fde68a`/
+     `#f7c9c4` ; `#b45309` en usage médaille/compte-à-rebours (Classement bronze,
+     Dashboard countdown) et survols neutres `#f3f4f6` (chrome, non-badge) restent
+     littéraux ; overrides dark `rgba(231,76,60,…)` ; systèmes non-badge propres
+     (dots priorité/type `SupportPage.jsx`, jauge de force `Parametres.css`) ; et
+     tableaux saturés avatar/gauge/charts (`format.js`/`Gauge.jsx`/`chartTheme.js`). */
+  --pastel-violet: #f3edff;  --pastel-violet-fg: #8b5cf6;  /* culture */
+  --pastel-blue:   #e6f0ff;  --pastel-blue-fg:   #3b82f6;  --pastel-blue-fg-strong: #2563eb; /* géo / info / mod */
+  --pastel-orange: #fff4e0;  --pastel-orange-fg: #f59e0b;  /* histoire */
+  --pastel-mint:   #e3fbef;  --pastel-mint-fg:   #10b981;  /* industrie */
+  --pastel-rose:   #fdeceb;  --pastel-rose-fg:   #e74c3c;  /* sport / danger doux */
+  --pastel-cyan:   #e6fafc;  --pastel-cyan-fg:   #0891b2;  /* science */
+  --pastel-green:  #dcfce7;  --pastel-green-fg:  #15803d;  /* approuvé / actif / succès */
+  --pastel-red:    #fee2e2;  --pastel-red-fg:    #dc2626;  /* rejeté / erreur */
+  --pastel-amber:  #fef3c7;  --pastel-amber-fg:  #a16207;  /* en attente */
+  --pastel-neutral: #f3f4f6; --pastel-neutral-fg: #6b7280; /* brouillon / niveau 1 (badges only) */
+  --pastel-amber-fg-deep: #b45309; /* texte ambre foncé récurrent (suspendu, clôturé, non-vérifié) */
+  --pastel-red-fg-deep:   #b91c1c; /* texte rouge foncé récurrent (urgent, rejeté) */
+  --pastel-red-fg-dark:   #fca5a5; /* texte rouge des surcharges dark */
   /* Surfaces sombres structurelles (sidebar/header) — flippées en thème nuit. */
   --bg-sidebar: #0b2e1a;
   --bg-header: #0b2e1a;
@@ -201,7 +229,7 @@ input, select, textarea { font-family: inherit; }
 .btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
 .btn-danger:hover { background: #cf3b2c; border-color: #cf3b2c; }
 .btn-danger-ghost { background: transparent; border-color: var(--red); color: var(--red); }
-.btn-danger-ghost:hover { background: #fdeceb; }
+.btn-danger-ghost:hover { background: var(--pastel-rose); }
 .btn-ghost { background: transparent; border-color: var(--green900); color: var(--green900); }
 .btn-ghost:hover { background: rgba(11, 46, 26, 0.05); }
 .btn-ghost-soft { background: transparent; border-color: transparent; color: var(--muted); }
@@ -215,7 +243,7 @@ input, select, textarea { font-family: inherit; }
 .icon-btn:hover { background: #f9fafb; color: var(--ink); border-color: #d1d5db; }
 .icon-action { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--muted); transition: all var(--t-fast); }
 .icon-action:hover { background: #f3f4f6; color: var(--ink); }
-.icon-action.danger:hover { background: #fdeceb; color: var(--red); }
+.icon-action.danger:hover { background: var(--pastel-rose); color: var(--red); }
 
 /* ===================== Cards ===================== */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
@@ -234,16 +262,16 @@ input, select, textarea { font-family: inherit; }
 .kpi:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
 .kpi--green { border-top-color: var(--green500); }
 .kpi--gold { border-top-color: var(--gold); }
-.kpi--blue { border-top-color: #3b82f6; }
-.kpi--violet { border-top-color: #8b5cf6; }
+.kpi--blue { border-top-color: var(--pastel-blue-fg); }
+.kpi--violet { border-top-color: var(--pastel-violet-fg); }
 .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .kpi-label { color: var(--muted); font-family: 'Space Grotesk'; font-size: 13px; font-weight: 500; }
 .kpi-value { font-family: 'Outfit'; font-weight: 800; font-size: 44px; color: var(--ink); line-height: 1.05; letter-spacing: -0.6px; font-variant-numeric: tabular-nums; }
 .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; flex: none; }
 .kpi-icon.green { background: #e3f3ea; color: var(--green500); }
 .kpi-icon.gold { background: #fcf3da; color: var(--gold); }
-.kpi-icon.blue { background: #e6f0ff; color: #3b82f6; }
-.kpi-icon.violet { background: #f3edff; color: #8b5cf6; }
+.kpi-icon.blue { background: var(--pastel-blue); color: var(--pastel-blue-fg); }
+.kpi-icon.violet { background: var(--pastel-violet); color: var(--pastel-violet-fg); }
 .kpi-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
 .kpi-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 600; font-family: 'Outfit'; }
 .kpi-delta.up { color: var(--green500); }
@@ -432,8 +460,8 @@ table.data tbody tr:last-child td { border-bottom: none; }
 
 /* Option review (questions / parties) */
 .opt-review { display: flex; align-items: center; gap: 9px; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; font-size: 14px; background: var(--surface); }
-.opt-review.correct { background: #f0fdf4; border-color: var(--green500); color: #15803d; font-weight: 600; }
-.opt-review.wrong { background: #fdeceb; border-color: var(--red); color: #b91c1c; }
+.opt-review.correct { background: #f0fdf4; border-color: var(--green500); color: var(--pastel-green-fg); font-weight: 600; }
+.opt-review.wrong { background: var(--pastel-rose); border-color: var(--red); color: var(--pastel-red-fg-deep); }
 
 /* Explication (cream + bordure or) */
 .explain { background: var(--cream); border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; padding: 12px 14px; font-size: 13.5px; color: #6b5b2a; }
@@ -629,7 +657,7 @@ table.data tbody tr:last-child td { border-bottom: none; }
 [data-theme="dark"] .kpi-icon.violet { background: rgba(139,92,246,0.18); color: #c4b5fd; }
 [data-theme="dark"] .badge-level { background: rgba(42,138,79,0.18); color: var(--green300); }
 [data-theme="dark"] .opt-review.correct { background: rgba(42,138,79,0.12); color: var(--green300); }
-[data-theme="dark"] .opt-review.wrong { background: rgba(231,76,60,0.12); color: #fca5a5; }
+[data-theme="dark"] .opt-review.wrong { background: rgba(231,76,60,0.12); color: var(--pastel-red-fg-dark); }
 [data-theme="dark"] .danger-zone { background: rgba(231,76,60,0.08); border-color: rgba(231,76,60,0.35); }
 
 /* ── Dark-mode form control: unchecked checkbox only (:not(.on) so the checked

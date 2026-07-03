@@ -16,7 +16,7 @@ import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
 import { useAuthStore } from '../store/authStore';
 import { USER_STATUS_KEYS } from '../constants/enums';
-import { themeBadgeColors, levelLabels } from '../constants/theme';
+import { pastels, themeBadgeColors, levelLabels } from '../constants/theme';
 import {
   num, dateFr, dateTimeFr, dateLocale, isToday, dayKey, lastDays,
 } from '../utils/format';
@@ -38,11 +38,11 @@ const FALLBACK_VILLES = ['Douala', 'Yaoundé', 'Bafoussam', 'Garoua', 'Kribi', '
 // Bandes d'XP cumulées + métadonnées de niveau (1 → 5).
 const LEVEL_XP = [0, 200, 500, 1200, 3000];
 const LEVEL_META = [
-  { name: 'Novice', color: '#6b7280', bg: '#f3f4f6', icon: '🌱' },
-  { name: 'Apprenti', color: '#3b82f6', bg: '#e6f0ff', icon: '📘' },
-  { name: 'Joueur', color: '#2a8a4f', bg: '#dcfce7', icon: '🎮' },
-  { name: 'Expert', color: '#f59e0b', bg: '#fff4e0', icon: '🔥' },
-  { name: 'Champion', color: '#d4a017', bg: '#fdf6e3', icon: '👑' },
+  { name: 'Novice', color: pastels.neutralFg, bg: pastels.neutral, icon: '🌱' },
+  { name: 'Apprenti', color: pastels.blueFg, bg: pastels.blue, icon: '📘' },
+  { name: 'Joueur', color: '#2a8a4f', bg: pastels.green, icon: '🎮' }, // fg = green500 (identité)
+  { name: 'Expert', color: pastels.orangeFg, bg: pastels.orange, icon: '🔥' },
+  { name: 'Champion', color: '#d4a017', bg: '#fdf6e3', icon: '👑' }, // or/crème bespoke (identité)
 ];
 const levelMeta = (lvl) => LEVEL_META[Math.min(Math.max(Number(lvl) || 1, 1), 5) - 1];
 
@@ -61,7 +61,7 @@ const DAY = 86400000;
 
 /** Config de thème depuis une clé réelle (parties), avec repli gracieux. */
 function themeCfgByKey(key) {
-  return themeBadgeColors[key] || { label: key || 'Thème', icon: '🎯', bg: '#f3f4f6', fg: '#6b7280' };
+  return themeBadgeColors[key] || { label: key || 'Thème', icon: '🎯', bg: pastels.neutral, fg: pastels.neutralFg };
 }
 
 /** Vrai si un compte est administrateur (badge doré). */

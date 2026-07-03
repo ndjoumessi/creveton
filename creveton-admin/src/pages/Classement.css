@@ -366,11 +366,11 @@
 [data-theme="dark"] .lb-score { color: var(--green300); }
 [data-theme="dark"] .lb-you-badge { color: var(--gold400); }
 /* Niveau badge — couleur par niveau (remplace inline styles). */
-.lb-level--1 { background: #f3f4f6; color: #6b7280; }
-.lb-level--2 { background: #e6f0ff; color: #3b82f6; }
-.lb-level--3 { background: #e3fbef; color: #10b981; }
-.lb-level--4 { background: #fff4e0; color: #a16207; }
-.lb-level--5 { background: #f3edff; color: #8b5cf6; }
+.lb-level--1 { background: var(--pastel-neutral); color: var(--pastel-neutral-fg); }
+.lb-level--2 { background: var(--pastel-blue); color: var(--pastel-blue-fg); }
+.lb-level--3 { background: var(--pastel-mint); color: var(--pastel-mint-fg); }
+.lb-level--4 { background: var(--pastel-orange); color: var(--pastel-amber-fg); }
+.lb-level--5 { background: var(--pastel-violet); color: var(--pastel-violet-fg); }
 /* Dark mode (hue-preserving). */
 [data-theme="dark"] .lb-level--1 { background: rgba(107,114,128,0.18); color: var(--muted); }
 [data-theme="dark"] .lb-level--2 { background: rgba(59,130,246,0.18);  color: #93c5fd; }

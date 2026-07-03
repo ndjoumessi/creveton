@@ -243,11 +243,11 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
+  background: var(--pastel-red);
+  border: 1px solid var(--pastel-red-fg-dark);
   border-radius: 12px;
   padding: 11px 14px;
-  color: #b91c1c;
+  color: var(--pastel-red-fg-deep);
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 13.5px;
@@ -450,13 +450,13 @@
 [data-theme="dark"] .ses-bar { background: var(--bg-mute); }
 
 /* ── Dark-mode semantic badge tints (hue-preserving) ── */
-[data-theme="dark"] .ses-ans-badge--ko { background: rgba(231,76,60,0.18); color: #fca5a5; }
+[data-theme="dark"] .ses-ans-badge--ko { background: rgba(231,76,60,0.18); color: var(--pastel-red-fg-dark); }
 [data-theme="dark"] .ses-ans-badge--skip { background: rgba(212,160,23,0.16); color: var(--gold400); }
 [data-theme="dark"] .ses-ans-bonus { background: rgba(212,160,23,0.16); color: var(--gold400); }
-[data-theme="dark"] .ses-cheat { background: rgba(231,76,60,0.10); border-color: rgba(231,76,60,0.35); color: #fca5a5; }
+[data-theme="dark"] .ses-cheat { background: rgba(231,76,60,0.10); border-color: rgba(231,76,60,0.35); color: var(--pastel-red-fg-dark); }
 /* Lignes de review (réponses) : vert/rouge sombres → tons clairs sur surface sombre. */
 [data-theme="dark"] .ses-ans-line--ok, [data-theme="dark"] .ses-ans-line--good { color: var(--green300); }
-[data-theme="dark"] .ses-ans-line--ko { color: #fca5a5; }
+[data-theme="dark"] .ses-ans-line--ko { color: var(--pastel-red-fg-dark); }
 /* Badge réponse correcte : aligné sur --ko/--skip (tint vert hue-preserving). */
 [data-theme="dark"] .ses-ans-badge--ok { background: rgba(42,138,79,0.18); color: var(--green300); }
 /* Tints d'accent des réponses : remontées pour rester lisibles sur surface sombre. */

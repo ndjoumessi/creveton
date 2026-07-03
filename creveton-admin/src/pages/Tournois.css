@@ -84,23 +84,23 @@
 .tour-card-head .tour-status--running .tour-status-dot   { background: #86efac; }
 .tour-card-head .tour-status--closed .tour-status-dot    { background: #fcd34d; }
 .tour-card-head .tour-status--paid .tour-status-dot      { background: #fde68a; }
-.tour-card-head .tour-status--cancelled .tour-status-dot { background: #fca5a5; }
+.tour-card-head .tour-status--cancelled .tour-status-dot { background: var(--pastel-red-fg-dark); }
 .tour-status.is-live { animation: tourPulse 1.6s infinite; }
 .tour-status.is-live .tour-status-dot { animation: tourPulse 1.2s infinite; }
 /* Statut badge — tints rgba hue-preserving (vue liste). Sur card-head, .tour-card-head .tour-status écrase via spécificité. */
 .tour-status--scheduled, .tour-status--unknown { color: var(--muted);      background: var(--bg-mute); }
-.tour-status--open      { color: #2563eb;          background: rgba(37,99,235,0.10); }
+.tour-status--open      { color: var(--pastel-blue-fg-strong);          background: rgba(37,99,235,0.10); }
 .tour-status--running   { color: var(--green500);  background: rgba(42,138,79,0.10); }
-.tour-status--closed    { color: #b45309;           background: rgba(180,83,9,0.10); }
+.tour-status--closed    { color: var(--pastel-amber-fg-deep);           background: rgba(180,83,9,0.10); }
 .tour-status--paid      { color: #8a6d12;           background: rgba(212,160,23,0.10); }
 .tour-status--cancelled { color: var(--red);        background: rgba(231,76,60,0.10); }
 /* Thème badge — couleur par thème (remplace inline styles). */
-.tour-theme--culture    { background: #f3edff; color: #8b5cf6; }
-.tour-theme--geographie { background: #e6f0ff; color: #3b82f6; }
-.tour-theme--histoire   { background: #fff4e0; color: #f59e0b; }
-.tour-theme--industrie  { background: #e3fbef; color: #10b981; }
-.tour-theme--sport      { background: #fdeceb; color: #e74c3c; }
-.tour-theme--science    { background: #e6fafc; color: #0891b2; }
+.tour-theme--culture    { background: var(--pastel-violet); color: var(--pastel-violet-fg); }
+.tour-theme--geographie { background: var(--pastel-blue); color: var(--pastel-blue-fg); }
+.tour-theme--histoire   { background: var(--pastel-orange); color: var(--pastel-orange-fg); }
+.tour-theme--industrie  { background: var(--pastel-mint); color: var(--pastel-mint-fg); }
+.tour-theme--sport      { background: var(--pastel-rose); color: var(--pastel-rose-fg); }
+.tour-theme--science    { background: var(--pastel-cyan); color: var(--pastel-cyan-fg); }
 @keyframes tourPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 
 .tour-card-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
@@ -136,7 +136,7 @@
 .tour-mingate {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600;
-  color: #b45309; background: rgba(180, 83, 9, 0.09);
+  color: var(--pastel-amber-fg-deep); background: rgba(180, 83, 9, 0.09);
   border: 1px solid rgba(180, 83, 9, 0.22); border-radius: var(--radius-sm);
   padding: 5px 9px;
 }

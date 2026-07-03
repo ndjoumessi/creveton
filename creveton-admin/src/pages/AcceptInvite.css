@@ -218,7 +218,7 @@
 }
 .rg-form-sub {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--pastel-neutral-fg);
   margin: 0 0 28px;
 }
 
@@ -284,7 +284,7 @@
 }
 .rg-invite-banner-label {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--pastel-neutral-fg);
   font-weight: 500;
 }
 .rg-invite-banner-token {
@@ -296,7 +296,7 @@
 }
 .rg-invite-banner-note {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--pastel-neutral-fg);
   line-height: 1.45;
   margin: 7px 0 0;
 }
@@ -334,7 +334,7 @@
   padding: 18px;
   text-align: center;
 }
-.rg-alert-text { margin: 0 0 10px; font-size: 14px; color: #b91c1c; }
+.rg-alert-text { margin: 0 0 10px; font-size: 14px; color: var(--pastel-red-fg-deep); }
 .rg-alert-link {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
@@ -373,7 +373,7 @@
   border-top: 1px solid #e9ede9;
   text-align: center;
   font-size: 13.5px;
-  color: #6b7280;
+  color: var(--pastel-neutral-fg);
 }
 .rg-login-link {
   font-family: 'Space Grotesk', sans-serif;
@@ -397,7 +397,7 @@
   border-color: #2a8a4f;
   box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.12);
 }
-.rg-right .pwd-eye { color: #6b7280; }
+.rg-right .pwd-eye { color: var(--pastel-neutral-fg); }
 
 /* ════════════ Responsive (≤ 768px) ════════════ */
 @media (max-width: 768px) {

@@ -79,7 +79,7 @@
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 22px; height: 22px; padding: 0 7px;
   border-radius: 999px;
-  background: #fff4e0; color: #b45309;
+  background: var(--pastel-orange); color: var(--pastel-amber-fg-deep);
   font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px;
   font-variant-numeric: tabular-nums;
 }
@@ -237,8 +237,8 @@
 .dash-kpi2-ic { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; flex: none; }
 .dash-kpi2--green .dash-kpi2-ic { background: #e3f3ea; color: var(--green500); }
 .dash-kpi2--gold .dash-kpi2-ic { background: #fcf3da; color: var(--gold); }
-.dash-kpi2--blue .dash-kpi2-ic { background: #e6f0ff; color: #3b82f6; }
-.dash-kpi2--violet .dash-kpi2-ic { background: #f3edff; color: #8b5cf6; }
+.dash-kpi2--blue .dash-kpi2-ic { background: var(--pastel-blue); color: var(--pastel-blue-fg); }
+.dash-kpi2--violet .dash-kpi2-ic { background: var(--pastel-violet); color: var(--pastel-violet-fg); }
 .dash-kpi2-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .dash-kpi2-val { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .dash-kpi2-lbl { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: var(--muted); }
@@ -327,7 +327,7 @@
 .dash-tour-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 3px; font-size: 12px; color: var(--muted); }
 .dash-tour-cd { color: #b45309; font-weight: 600; }
 /* Décompte coloré : aujourd'hui rouge · ≤ 7 j or · au-delà vert */
-.dash-cd--red { color: var(--red, #e74c3c); }
+.dash-cd--red { color: var(--red, var(--pastel-rose-fg)); }
 .dash-cd--gold { color: #b45309; }
 .dash-cd--green { color: #2a8a4f; }
 .dash-tour-players { font-variant-numeric: tabular-nums; }

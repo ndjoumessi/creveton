@@ -93,12 +93,12 @@
 /* Statut avec point */
 .u-status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .u-status-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
-.u-st-active { color: #15803d; }
+.u-st-active { color: var(--pastel-green-fg); }
 .u-st-active .u-status-dot { background: #22c55e; animation: u-pulse 1.8s ease-in-out infinite; }
-.u-st-susp { color: #b45309; }
-.u-st-susp .u-status-dot { background: #f59e0b; }
-.u-st-ban { color: #dc2626; }
-.u-st-ban .u-status-dot { background: #dc2626; }
+.u-st-susp { color: var(--pastel-amber-fg-deep); }
+.u-st-susp .u-status-dot { background: var(--pastel-orange-fg); }
+.u-st-ban { color: var(--pastel-red-fg); }
+.u-st-ban .u-status-dot { background: var(--pastel-red-fg); }
 .u-st-inactive { color: var(--muted); }
 .u-st-inactive .u-status-dot { background: #9ca3af; }
 @keyframes u-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); } 50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); } }
@@ -106,8 +106,8 @@
 /* Badge rôle */
 .u-role-badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .u-role-super { background: #fdf6e3; color: #b8860b; }
-.u-role-admin { background: #dcfce7; color: #15803d; }
-.u-role-mod { background: #e6f0ff; color: #2563eb; }
+.u-role-admin { background: var(--pastel-green); color: var(--pastel-green-fg); }
+.u-role-mod { background: var(--pastel-blue); color: var(--pastel-blue-fg-strong); }
 .u-role-player { background: var(--bg-mute); color: var(--muted); }
 
 /* Actions + menu contextuel */
@@ -143,7 +143,7 @@
   width: 100%;
 }
 .u-menu button:hover { background: #f0f7f0; }
-.u-menu button.danger { color: #dc2626; }
+.u-menu button.danger { color: var(--pastel-red-fg); }
 .u-menu button.danger:hover { background: #fef2f2; }
 
 /* ─────────────── Drawer : hero header (Cockpit Émeraude) ─────────────── */
@@ -222,24 +222,24 @@
   cursor: pointer;
 }
 .u-copy-pill:hover { background: #f0f7f0; }
-.u-verified { color: #15803d; font-weight: 600; }
-.u-unverified { color: #b45309; font-weight: 600; }
-.u-suspension { font-size: 13px; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 9px 12px; }
+.u-verified { color: var(--pastel-green-fg); font-weight: 600; }
+.u-unverified { color: var(--pastel-amber-fg-deep); font-weight: 600; }
+.u-suspension { font-size: 13px; color: var(--pastel-amber-fg-deep); background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 9px 12px; }
 
 /* Onglet Progression */
 .u-level-hero { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 .u-level-medal { width: 80px; height: 80px; border-radius: 22px; display: grid; place-items: center; font-size: 38px; }
 /* Niveaux 1–5 — bg + couleur par niveau (remplace inline styles LevelPill + medal). */
-.u-level--1 { background: #f3f4f6; color: #6b7280; }
-.u-level--2 { background: #e6f0ff; color: #3b82f6; }
-.u-level--3 { background: #dcfce7; color: #2a8a4f; }
-.u-level--4 { background: #fff4e0; color: #f59e0b; }
+.u-level--1 { background: var(--pastel-neutral); color: var(--pastel-neutral-fg); }
+.u-level--2 { background: var(--pastel-blue); color: var(--pastel-blue-fg); }
+.u-level--3 { background: var(--pastel-green); color: #2a8a4f; }
+.u-level--4 { background: var(--pastel-orange); color: var(--pastel-orange-fg); }
 .u-level--5 { background: #fdf6e3; color: #d4a017; }
 /* Barre XP mini (largeur = inline %, fond = couleur niveau). */
-.u-level-bar--1 { background: #6b7280; }
-.u-level-bar--2 { background: #3b82f6; }
+.u-level-bar--1 { background: var(--pastel-neutral-fg); }
+.u-level-bar--2 { background: var(--pastel-blue-fg); }
 .u-level-bar--3 { background: #2a8a4f; }
-.u-level-bar--4 { background: #f59e0b; }
+.u-level-bar--4 { background: var(--pastel-orange-fg); }
 .u-level-bar--5 { background: #d4a017; }
 .u-level-hero-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 24px; color: var(--ink); }
 
@@ -268,27 +268,27 @@
 .u-hist-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
 .u-hist-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid #ccc; border-radius: 12px; padding: 12px 14px; }
 /* Fill thème progression (bg = fg thème, largeur = inline %). */
-.u-theme-fill--culture    { background: #8b5cf6; }
-.u-theme-fill--geographie { background: #3b82f6; }
-.u-theme-fill--histoire   { background: #f59e0b; }
-.u-theme-fill--industrie  { background: #10b981; }
-.u-theme-fill--sport      { background: #e74c3c; }
-.u-theme-fill--science    { background: #0891b2; }
-.u-theme-fill--unknown    { background: #6b7280; }
+.u-theme-fill--culture    { background: var(--pastel-violet-fg); }
+.u-theme-fill--geographie { background: var(--pastel-blue-fg); }
+.u-theme-fill--histoire   { background: var(--pastel-orange-fg); }
+.u-theme-fill--industrie  { background: var(--pastel-mint-fg); }
+.u-theme-fill--sport      { background: var(--pastel-rose-fg); }
+.u-theme-fill--science    { background: var(--pastel-cyan-fg); }
+.u-theme-fill--unknown    { background: var(--pastel-neutral-fg); }
 /* Carte historique — bordure gauche par thème. */
-.u-hist-card--culture    { border-left-color: #8b5cf6; }
-.u-hist-card--geographie { border-left-color: #3b82f6; }
-.u-hist-card--histoire   { border-left-color: #f59e0b; }
-.u-hist-card--industrie  { border-left-color: #10b981; }
-.u-hist-card--sport      { border-left-color: #e74c3c; }
-.u-hist-card--science    { border-left-color: #0891b2; }
-.u-hist-card--unknown    { border-left-color: #6b7280; }
+.u-hist-card--culture    { border-left-color: var(--pastel-violet-fg); }
+.u-hist-card--geographie { border-left-color: var(--pastel-blue-fg); }
+.u-hist-card--histoire   { border-left-color: var(--pastel-orange-fg); }
+.u-hist-card--industrie  { border-left-color: var(--pastel-mint-fg); }
+.u-hist-card--sport      { border-left-color: var(--pastel-rose-fg); }
+.u-hist-card--science    { border-left-color: var(--pastel-cyan-fg); }
+.u-hist-card--unknown    { border-left-color: var(--pastel-neutral-fg); }
 .u-hist-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
 .u-hist-theme { font-weight: 600; font-size: 13.5px; color: var(--ink); }
 .u-hist-mark { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
-.u-mark-good { background: #dcfce7; color: #15803d; }
-.u-mark-bad { background: #fee2e2; color: #dc2626; }
-.u-mark-mid { background: #fff4e0; color: #b45309; }
+.u-mark-good { background: var(--pastel-green); color: var(--pastel-green-fg); }
+.u-mark-bad { background: var(--pastel-red); color: var(--pastel-red-fg); }
+.u-mark-mid { background: var(--pastel-orange); color: var(--pastel-amber-fg-deep); }
 .u-hist-mid { font-size: 13px; color: var(--muted); }
 .u-hist-bot { font-size: 12px; color: var(--fg-faint); margin-top: 3px; }
 
@@ -312,7 +312,7 @@
 /* Footer fiche */
 .u-foot { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 .u-foot-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.u-foot-danger { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: #fff5f5; border: 1px solid #fee2e2; border-radius: 12px; padding: 10px 12px; }
+.u-foot-danger { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: #fff5f5; border: 1px solid var(--pastel-red); border-radius: 12px; padding: 10px 12px; }
 .u-foot-role { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 .u-foot-role .select { min-width: 150px; }
 
@@ -334,7 +334,7 @@
 [data-theme="dark"] .u-suspension { background: rgba(212,160,23,0.10); border-color: rgba(212,160,23,0.35); color: var(--gold400); }
 /* Score traffic-light scale: hue-preserving tints keep green/amber/red meaning. */
 [data-theme="dark"] .u-mark-good { background: rgba(42,138,79,0.18); color: var(--green300); }
-[data-theme="dark"] .u-mark-bad { background: rgba(231,76,60,0.18); color: #fca5a5; }
+[data-theme="dark"] .u-mark-bad { background: rgba(231,76,60,0.18); color: var(--pastel-red-fg-dark); }
 [data-theme="dark"] .u-mark-mid { background: rgba(212,160,23,0.16); color: var(--gold400); }
 /* % perf par thème : vert quasi-noir (#0b2e1a) → clair sur surface sombre. */
 [data-theme="dark"] .u-theme-pct { color: var(--ink); }
