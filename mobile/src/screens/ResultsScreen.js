@@ -32,7 +32,7 @@ import {
   GoldVeilBanner,
   useToast,
 } from '../components';
-import { Lightbulb, WifiOff } from 'lucide-react-native';
+import { Lightbulb, WifiOff, Check } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import { useGameStore } from '../store/gameStore';
 import { useQuestionsStore } from '../store/questionsStore';
@@ -70,7 +70,7 @@ function optionText(options, idx, lang) {
 
 export default function ResultsScreen({ route, navigation }) {
   const { t } = useTranslation();
-  const { ok, error, queued } = route.params || {};
+  const { ok, error, queued, alreadySubmitted } = route.params || {};
   const [replaying, setReplaying] = useState(false);
   // On fige le résultat affiché : « Rejouer » réinitialise le store (startGame)
   // avant de naviguer ; sans ça, l'écran clignoterait en erreur le temps du replace.
@@ -166,16 +166,20 @@ export default function ResultsScreen({ route, navigation }) {
   // calculés localement, identiques au recalcul serveur au rejeu de la file
   // (cf. gameStore.computeLocalResult). Sinon (localResult null), on masque les
   // chiffres plutôt que d'en inventer.
-  if (queued) {
+  // Partie déjà enregistrée serveur (409 SESSION_ALREADY_SUBMITTED sur le chemin en
+  // ligne) OU mise en file hors-ligne : dans les deux cas le score est sauvegardé,
+  // on affiche le récap local calculé côté client (pas d'erreur). Le libellé
+  // distingue « déjà enregistrée » (en ligne) de « hors ligne » (sera rejouée).
+  if (queued || alreadySubmitted) {
     return (
       <Screen dark contentStyle={styles.offlineContent}>
         <View style={styles.offlineHero}>
-          <Icon icon={WifiOff} size={48} color={colors.gold500} />
+          <Icon icon={alreadySubmitted ? Check : WifiOff} size={48} color={colors.gold500} />
           <Heading color={colors.cream} style={styles.offlineTitle}>
-            {t('offline.savedOffline')}
+            {alreadySubmitted ? t('results.alreadySaved') : t('offline.savedOffline')}
           </Heading>
           <Body color={colors.textOnDarkMuted} style={styles.offlineSubtitle}>
-            {t('offline.savedOfflineMessage')}
+            {alreadySubmitted ? t('results.alreadySavedMessage') : t('offline.savedOfflineMessage')}
           </Body>
         </View>
 

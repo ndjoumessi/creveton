@@ -209,6 +209,8 @@
     }
   },
   "results": {
+    "alreadySaved": "Game already saved",
+    "alreadySavedMessage": "This game had already been saved on the server. Your score is counted.",
     "finalScore": "Final score",
     "maxPts": "/ 1000 pts max",
     "correct": "Correct ✓",

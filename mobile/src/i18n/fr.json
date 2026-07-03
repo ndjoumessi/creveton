@@ -209,6 +209,8 @@
     }
   },
   "results": {
+    "alreadySaved": "Partie déjà enregistrée",
+    "alreadySavedMessage": "Cette partie avait déjà été sauvegardée sur le serveur. Ton score est bien pris en compte.",
     "finalScore": "Score final",
     "maxPts": "/ 1000 pts max",
     "correct": "Bonnes ✓",

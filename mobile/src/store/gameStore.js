@@ -250,6 +250,14 @@ export const useGameStore = create((set, get) => ({
       if (__DEV__) {
         console.log('[sessions/submit] error:', err.code, err.message);
       }
+      // Déjà soumise avec succès côté serveur (verrou d'idempotence) : le score EST
+      // enregistré. On NE file PAS (inutile) et on affiche le résultat local calculé
+      // côté client — identique au recalcul serveur — plutôt qu'une erreur trompeuse.
+      if (err.code === 'SESSION_ALREADY_SUBMITTED') {
+        const localResult = computeLocalResult({ mode, level, answers, questions: get().questions });
+        set({ submitting: false, localResult });
+        return { ok: true, alreadySubmitted: true };
+      }
       // Échec réseau/timeout malgré un état « en ligne » → on met en file plutôt
       // que de perdre la partie (sera rejouée au prochain retour réseau).
       if (err.code === 'NETWORK_ERROR' || err.code === 'TIMEOUT') {
