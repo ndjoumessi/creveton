@@ -32,8 +32,9 @@ function adaptTicket(tk) {
     ...tk,
     // Profil joueur non renvoyé par le backend → nom = player_id tronqué.
     player: { name: shortId(tk.player_id) },
-    // Assigné : UUID tronqué (lookup nom à venir) ; null = non assigné.
-    assigned_to: tk.assigned_to ? shortId(tk.assigned_to) : null,
+    // Assigné : UUID complet conservé ; le nom lisible est résolu côté page via
+    // la liste d'équipe (GET /admin/team renvoie `name`). null = non assigné.
+    assigned_to: tk.assigned_to || null,
   };
   if (Array.isArray(tk.messages)) out.messages = tk.messages.map(adaptMessage);
   return out;

@@ -135,24 +135,19 @@ export default function SupportPage() {
 
   // Membres assignables ; vide si l'endpoint a échoué (modérateur) → saisie libre.
   const members = useMemo(() => (membersData && membersData.data) || [], [membersData]);
-  // `assigned_to` est tronqué (8 car. + …) côté service : on retrouve l'id complet
-  // du membre par préfixe pour pré-sélectionner le <select> ('' = non assigné).
-  const currentAssigneeId = useMemo(() => {
-    const a = selected?.assigned_to;
-    if (!a) return '';
-    const prefix = String(a).replace(/…$/, '');
-    const m = members.find((x) => String(x.id).startsWith(prefix));
-    return m ? m.id : '';
-  }, [selected, members]);
-  // Membre assigné (objet) pour afficher son NOM plutôt que l'UUID tronqué.
+  // `assigned_to` = UUID complet du membre assigné ('' = non assigné) ; sert tel
+  // quel de valeur au <select> (options indexées sur `m.id`).
+  const currentAssigneeId = selected?.assigned_to || '';
+  // Membre assigné (objet) pour afficher son NOM plutôt que l'UUID.
   const currentAssignee = useMemo(
     () => members.find((x) => x.id === currentAssigneeId) || null,
     [members, currentAssigneeId],
   );
-  // Libellé lisible de l'assigné : nom du membre si résolu, sinon l'id tronqué
-  // renvoyé par le service, sinon « Non assigné ».
+  // Libellé lisible de l'assigné : nom du membre si résolu (liste d'équipe
+  // chargée), sinon l'id abrégé (membre hors liste / liste indisponible),
+  // sinon « Non assigné ».
   const assigneeLabel = currentAssignee?.name
-    || (selected?.assigned_to ? String(selected.assigned_to) : t('support.ticket.unassigned'));
+    || (currentAssigneeId ? `${currentAssigneeId.slice(0, 8)}…` : t('support.ticket.unassigned'));
 
   // Graphes (réels, dérivés de stats()).
   const daily = useMemo(
