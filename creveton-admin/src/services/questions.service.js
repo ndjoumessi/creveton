@@ -91,6 +91,33 @@ export function translateQuestion(id, targetLang) {
   return api.post(`/admin/questions/${id}/translate`, { target_lang: targetLang }).then((r) => r.data);
 }
 
+/**
+ * POST /admin/questions/generate — génère un lot de brouillons IA.
+ * → { requested, created[], skipped_duplicates, skipped_invalid }. Bloquant (l'IA
+ * met quelques secondes) ; la clé Anthropic reste côté serveur.
+ */
+export function generate({ theme, level, count }) {
+  return api.post('/admin/questions/generate', { theme, level, count }).then((r) => r.data);
+}
+
+/** GET /admin/questions/drafts — brouillons IA en attente de relecture. */
+export function listDrafts(params = {}) {
+  return withMock(
+    () => api.get('/admin/questions/drafts', { params: cleanParams({ limit: 100, ...params }) }).then((r) => r.data),
+    () => page([]),
+  );
+}
+
+/** POST /admin/questions/drafts/:id/approve — publie le brouillon (draft → approved). */
+export function approveDraft(id) {
+  return api.post(`/admin/questions/drafts/${id}/approve`).then((r) => r.data);
+}
+
+/** POST /admin/questions/drafts/:id/reject — rejette le brouillon (soft delete). */
+export function rejectDraft(id, reason) {
+  return api.post(`/admin/questions/drafts/${id}/reject`, { reason }).then((r) => r.data);
+}
+
 /** POST /admin/questions/force-sync (push silencieux). */
 export function forceSync(questionIds) {
   return withMock(
@@ -127,4 +154,5 @@ export default {
   list, create, update, transition, remove, importCsv, forceSync,
   uploadImage, deleteImage, improveText, translateQuestion,
   globalStats, questionStats, questionHistory,
+  generate, listDrafts, approveDraft, rejectDraft,
 };

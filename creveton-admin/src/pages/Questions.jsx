@@ -12,7 +12,9 @@ import {
 import { Icon } from '../components/Icon';
 import Papa from 'papaparse';
 import questionsService from '../services/questions.service';
-import { useApiData } from '../hooks/useApiData';
+import { useApiData, triggerRefresh } from '../hooks/useApiData';
+import GenerateModal from '../components/GenerateModal';
+import DraftsReview from '../components/DraftsReview';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
 import { themeLabels, levelLabels, questionStatusColors } from '../constants/theme';
 import { pct, dateFr } from '../utils/format';
@@ -1408,6 +1410,7 @@ export default function Questions() {
   const period = params.get('period') || '';
   const [searchInput, setSearchInput] = useState(params.get('q') || '');
   const [showImport, setShowImport] = useState(false);
+  const [showGenerate, setShowGenerate] = useState(false); // modale « Générer (IA) »
   const [creating, setCreating] = useState(false);
   const [prefill, setPrefill] = useState(null);
   // Distingue Dupliquer (ajoute « (Copie) ») d'Éditer (préremplit sans suffixe).
@@ -1555,6 +1558,9 @@ export default function Questions() {
         setData((d) => (d && Array.isArray(d.data)
           ? { ...d, data: d.data.map((row) => (row.id === editingId ? { ...row, ...merged } : row)) }
           : d));
+        // Édition d'un brouillon IA depuis l'écran « Brouillons » : rafraîchit cette
+        // vue (elle écoute REFRESH_EVENT) pour refléter la correction.
+        if (prefill?.status === 'draft' && prefill?.source === 'ai_generated') triggerRefresh();
         notify.success(t('questions.notify.updated'));
       } else {
         // CRÉATION / DUPLICATION → POST (flux inchangé).
@@ -1810,6 +1816,7 @@ export default function Questions() {
                 <BarChart3 size={16} /> {t('questions.globalStats')}
               </button>
               <button className="btn btn-ghost" onClick={() => setShowImport(true)}><Upload size={16} /> {t('questions.importCsv')}</button>
+              <button className="btn btn-ghost" onClick={() => setShowGenerate(true)}><Sparkles size={16} /> {t('questions.generate.cta')}</button>
               <button className="btn btn-primary" onClick={startCreate}><Plus size={16} /> {t('questions.newQuestion')}</button>
             </>
           )}
@@ -1838,6 +1845,9 @@ export default function Questions() {
             <button type="button" className={`q-view-btn ${view === 'kanban' ? 'is-active' : ''}`} onClick={() => setView('kanban')}>
               <LayoutGrid size={15} /> {t('questions.viewKanban')}
             </button>
+            <button type="button" className={`q-view-btn ${view === 'drafts' ? 'is-active' : ''}`} onClick={() => setView('drafts')}>
+              <FileText size={15} /> {t('questions.drafts.title')}
+            </button>
           </div>
           {view === 'table' && (
             <div className="q-density" title={t('questions.a11y.density')}>
@@ -1850,6 +1860,14 @@ export default function Questions() {
         </div>
       </div>
 
+      {view === 'drafts' ? (
+        <DraftsReview
+          onEditDraft={startEdit}
+          onClose={() => setView('table')}
+          onOpenGenerate={() => setShowGenerate(true)}
+        />
+      ) : (
+      <>
       {/* Filtres — card premium (recherche · selects custom · accès rapide · statut) */}
       <div className="q-filters card">
         {/* Ligne 1 : recherche */}
@@ -2061,6 +2079,16 @@ export default function Questions() {
           </div>
         </div>
       )}
+      </>
+      )}
+
+      {/* Modal de génération assistée IA */}
+      <GenerateModal
+        open={showGenerate}
+        onClose={() => setShowGenerate(false)}
+        onGenerated={() => triggerRefresh()}
+        onReview={() => setView('drafts')}
+      />
 
       {/* Modal de création / édition par étapes */}
       <CreateModal open={creating} onClose={closeCreate} onCreate={saveQuestion} submitting={submitting} prefill={prefill} duplicate={duplicating} />
