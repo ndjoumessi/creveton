@@ -113,7 +113,9 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
     role: 'button',
     tabIndex: 0,
     onClick: () => onOpen(tour),
-    onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(tour); } },
+    // Ne réagit qu'aux touches sur la carte ELLE-MÊME (pas quand le focus est sur un
+    // bouton du pied — sinon Entrée/Espace déclencherait l'action ET l'ouverture).
+    onKeyDown: (e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen(tour); } },
     'aria-label': t('tournaments.card.openDetailAria', { name: tour.name || t('tournaments.card.placeholderName') }),
   };
   return (
