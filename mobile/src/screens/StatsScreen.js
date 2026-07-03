@@ -12,9 +12,8 @@ import {
 } from 'react-native';
 import { BarChart2, Trophy, Target, TrendingUp, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Avatar, AppButton, Title, Heading, Body, Label, Skeleton, ErrorScreen, EmptyState, XpBar, FillBar, Podium, SessionCard, MiniLineChart, SegmentedTabs } from '../components';
+import { Screen, Avatar, AppButton, Title, Heading, Body, Label, Skeleton, ErrorScreen, EmptyState, XpBar, FillBar, Podium, SessionCard, MiniLineChart, SegmentedTabs, PendingSyncBadge } from '../components';
 import Icon from '../components/Icon';
-import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';

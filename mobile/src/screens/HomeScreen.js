@@ -33,8 +33,8 @@ import {
   SectionHeader,
   SessionCard,
   Podium,
+  PendingSyncBadge,
 } from '../components';
-import PendingSyncBadge from '../components/PendingSyncBadge';
 import { useAuthStore } from '../store/authStore';
 import { useLeaderboardStore } from '../store/leaderboardStore';
 import { useStatsStore } from '../store/statsStore';

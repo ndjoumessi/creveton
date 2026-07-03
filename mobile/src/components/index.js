@@ -28,6 +28,7 @@ export { default as LoadingScreen } from './LoadingScreen';
 export { default as ErrorScreen } from './ErrorScreen';
 export { default as EmptyState } from './EmptyState';
 export { default as Skeleton } from './Skeleton';
+export { default as PendingSyncBadge } from './PendingSyncBadge';
 
 // Feedback
 export { ToastProvider, useToast } from './Toast';
