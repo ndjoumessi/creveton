@@ -84,3 +84,14 @@ quand même) :
 Si l'historique Railway montre **deux** déploiements pour un même commit (un « via GitHub »
 + un « via CLI »), c'est que l'auto-deploy natif du backend a été réactivé → voir le point
 de vigilance ci-dessus.
+
+## Backlog / known issues (pré-release)
+
+Points fonctionnels à traiter **avant release publique**, non liés au déploiement lui-même
+mais suivis ici faute de doc release dédiée :
+
+- **[#2](https://github.com/ndjoumessi/creveton/issues/2)** — garde `MIN_PLAYERS_TO_START`
+  manquante dans `liveTournamentService.start()` (`POST /tournaments/:id/start`). Le chemin
+  admin (`POST /admin/tournaments/:id/start`) applique bien le minimum (≥ 2 joueurs), mais le
+  chemin temps réel peut démarrer une manche avec 0/1 inscrit. La constante elle-même est
+  déjà correcte (`= 2`) ; seul le garde sur ce chemin manque.
