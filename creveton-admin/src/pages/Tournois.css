@@ -99,7 +99,7 @@
 .tour-theme--geographie { background: var(--pastel-blue); color: var(--pastel-blue-fg); }
 .tour-theme--histoire   { background: var(--pastel-orange); color: var(--pastel-orange-fg); }
 .tour-theme--industrie  { background: var(--pastel-mint); color: var(--pastel-mint-fg); }
-.tour-theme--sport      { background: var(--pastel-rose); color: var(--pastel-rose-fg); }
+.tour-theme--sport      { background: var(--pastel-red); color: var(--pastel-rose-fg); }
 .tour-theme--science    { background: var(--pastel-cyan); color: var(--pastel-cyan-fg); }
 @keyframes tourPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 

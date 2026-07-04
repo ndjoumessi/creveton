@@ -67,7 +67,7 @@
 }
 .team-menu button:hover { background: #f0f7f0; }
 .team-menu button.danger { color: var(--pastel-red-fg); }
-.team-menu button.danger:hover { background: #fef2f2; }
+.team-menu button.danger:hover { background: var(--pastel-red); }
 /* Action « à venir » (suspension : pas d'endpoint backend) — désactivée, non cliquable. */
 .team-menu button.team-soon { opacity: 0.5; cursor: not-allowed; }
 .team-menu button.team-soon:hover { background: none; }

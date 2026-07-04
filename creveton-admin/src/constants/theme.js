@@ -36,7 +36,7 @@ export const pastels = {
   blue: '#e6f0ff', blueFg: '#3b82f6', blueFgStrong: '#2563eb', // géo / info / mod
   orange: '#fff4e0', orangeFg: '#f59e0b', // histoire
   mint: '#e3fbef', mintFg: '#10b981', // industrie
-  rose: '#fdeceb', roseFg: '#e74c3c', // sport / danger doux
+  roseFg: '#e74c3c', // sport — couleur saturée d'identité (fond rose replié dans red)
   cyan: '#e6fafc', cyanFg: '#0891b2', // science
   green: '#dcfce7', greenFg: '#15803d', // approuvé / actif / succès
   red: '#fee2e2', redFg: '#dc2626', // rejeté / erreur
@@ -54,7 +54,7 @@ export const themeBadgeColors = {
   geographie: { bg: pastels.blue, fg: pastels.blueFg, label: 'Géographie', icon: '🌍' },
   histoire: { bg: pastels.orange, fg: pastels.orangeFg, label: 'Histoire', icon: '🏛️' },
   industrie: { bg: pastels.mint, fg: pastels.mintFg, label: 'Industrie', icon: '🏭' },
-  sport: { bg: pastels.rose, fg: pastels.roseFg, label: 'Sport', icon: '⚽' },
+  sport: { bg: pastels.red, fg: pastels.roseFg, label: 'Sport', icon: '⚽' },
   science: { bg: pastels.cyan, fg: pastels.cyanFg, label: 'Science', icon: '🔬' },
 };
 
