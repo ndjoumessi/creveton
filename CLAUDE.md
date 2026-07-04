@@ -143,6 +143,16 @@ régénérer avec `/impeccable document`.
   (lots de 30) : `backend/scripts/translate-questions-en.js` (énoncés+options) et
   `translate-explanations-en.js` ; sur staging via `DATABASE_URL="…" node …` (TCP proxy
   Railway, proxy supprimé immédiatement après).
+- **Génération assistée de questions** (`src/services/aiQuestionGeneratorService.js`,
+  `generateDrafts({ theme, level, count })` ; `POST /admin/questions/generate`, perm
+  `questions:create`, `count` ≤ 20/appel) : un appel IA par lot, chaque item inséré en
+  **`status='draft'` + `source='ai_generated'`** (INVISIBLE côté app — le delta sync ne sert
+  que `approved`), relecture humaine obligatoire (`approveDraft`/`rejectDraft`) ; auto-traduction
+  FR→EN fire-and-forget par draft. **Ancrage régional** (prompt, revue 07-2026) : ~la moitié du
+  lot biaisée vers du contenu Cameroun/Afrique centrale (le reste universel), **jamais** de fait
+  régional inventé (dans le doute → fait universel vérifiable), + variation de la position de la
+  bonne réponse. ⚠️ **Review** : le contenu régional augmente la surface d'erreurs
+  plausibles-mais-fausses (dates/records) → vérifier chaque fait régional à la main.
 
 ## Frontend (`creveton-admin/`) — conventions
 
