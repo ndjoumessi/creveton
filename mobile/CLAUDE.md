@@ -148,7 +148,12 @@ marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-id
 
 - EAS Free : quota de builds Android/mois (reset le 1er). La limite réelle appliquée par
   EAS peut être < 30 ; si le cloud refuse (`used its Android builds from the Free plan this
-  month`), passer en build local.
+  month`), passer en build local. **⚠️ Le workflow CI `Mobile — EAS Build` lance un
+  build cloud à CHAQUE push sur `main`** → il consomme le quota gratuit tout seul ; même
+  après le reset du 1er, le cloud peut être épuisé en quelques jours (constaté 2026-07-04,
+  quota juillet mangé les 1–2). Sonder avant de supposer le cloud dispo : un submit
+  `eas build … --no-wait` échoue en **pré-vol** si le quota est épuisé, **sans consommer**
+  de build.
 - **`npx EINVALIDTAGNAME` / `E400` au lancement du build local — RÉSOLU (2026-07-04).**
   Cause : un **npm 6.4.1 hérité dans `/usr/local`** dont le symlink `/usr/local/bin/npx`
   (placé **avant nvm dans le `PATH`**) pointait encore dessus, alors que `node`/`npm`
@@ -156,7 +161,8 @@ marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-id
   sans les alias shell), il tombait sur ce 6.4.1 qui rejette l'argument base64 du job →
   échec avant Gradle. **Fix appliqué** : le symlink `npx` a été réaligné sur nvm, exactement
   comme `node`/`npm` — `sudo ln -sf /Users/nelson/.nvm/versions/node/v20.20.2/bin/npx
-  /usr/local/bin/npx` (chirurgical ; l'arbre 6.4.1 reste sur disque, intact). Le `npx`
+  /usr/local/bin/npx` (chirurgical ; l'arbre 6.4.1 a **depuis** été supprimé complètement (2026-07-04 ; `node-gyp`
+  voisin intact) — build local **vc4** revalidé end-to-end sans aucun contournement `PATH`). Le `npx`
   spawné résout désormais vers npm 11.x → **le préfixe `PATH` nvm au moment du build n'est
   plus nécessaire.** Vérif si besoin : `which -a npx` + `/usr/local/bin/npx --version`
   (doit afficher 11.x, pas 6.4.1). (Les `npm --version` interactifs, aliasés vers nvm,
