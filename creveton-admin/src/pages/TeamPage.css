@@ -89,10 +89,10 @@
 .team-dh-avatar--admin { box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(42, 138, 79, 0.28); }
 .team-dh-avatar--moderator { box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(59, 130, 246, 0.28); }
 .team-dh-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
-.team-dh-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; letter-spacing: -0.2px; }
+.team-dh-name { font-family: var(--font-body); font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; letter-spacing: -0.2px; }
 .team-dh-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .team-dh-badges .team-status { color: rgba(255, 255, 255, 0.88); }
-.team-dh-contact { display: flex; flex-wrap: wrap; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: rgba(255, 255, 255, 0.62); word-break: break-word; }
+.team-dh-contact { display: flex; flex-wrap: wrap; gap: 6px; font-family: var(--font-body); font-size: 13px; color: rgba(255, 255, 255, 0.62); word-break: break-word; }
 
 /* Onglets */
 .team-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
@@ -103,18 +103,18 @@
   transition: color var(--t-fast), border-color var(--t-fast);
 }
 .team-tab:hover { color: var(--ink); }
-.team-tab.active { color: var(--gold); border-bottom-color: var(--gold); font-family: 'Outfit', sans-serif; }
+.team-tab.active { color: var(--gold); border-bottom-color: var(--gold); font-family: var(--font-display); }
 .team-tab-body { padding-bottom: 4px; }
 
-.team-section-title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13.5px; color: var(--ink); margin-bottom: 10px; }
+.team-section-title { font-family: var(--font-display); font-weight: 600; font-size: 13.5px; color: var(--ink); margin-bottom: 10px; }
 .team-empty-note { font-size: 13px; }
 
 /* Onglet Profil — liste clé/valeur */
 .team-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin: 0; }
 .team-kv > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .team-kv-full { grid-column: 1 / -1; }
-.team-kv dt { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
-.team-kv dd { margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 15px; color: var(--ink); word-break: break-word; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.team-kv dt { font-family: var(--font-body); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.team-kv dd { margin: 0; font-family: var(--font-body); font-weight: 500; font-size: 15px; color: var(--ink); word-break: break-word; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .team-role-desc { font-size: 12.5px; color: var(--muted); font-weight: 400; }
 .team-phone { display: inline-flex; align-items: center; gap: 6px; }
 
@@ -124,7 +124,7 @@
 .team-matrix-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
 .team-matrix { width: 100%; border-collapse: collapse; font-size: 13px; }
 .team-matrix th, .team-matrix td { padding: 9px 12px; text-align: center; border-bottom: 1px solid var(--border); }
-.team-matrix thead th { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted); background: var(--surface-2); }
+.team-matrix thead th { font-family: var(--font-body); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted); background: var(--surface-2); }
 .team-matrix tbody tr:last-child th, .team-matrix tbody tr:last-child td { border-bottom: none; }
 .team-matrix th[scope="row"] { text-align: left; font-weight: 600; color: var(--ink); white-space: nowrap; }
 .team-matrix thead th:first-child { text-align: left; }
@@ -173,14 +173,14 @@
 .team-role-choice.on { border-color: var(--green500); background: #f0f7f0; }
 .team-role-choice input { position: absolute; opacity: 0; pointer-events: none; }
 .team-role-choice-head { display: flex; align-items: center; gap: 8px; }
-.team-role-choice-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); }
+.team-role-choice-name { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--ink); }
 .team-role-choice-desc { font-size: 12.5px; color: var(--muted); }
 .team-role-choice-hint { font-size: 11.5px; color: var(--fg-faint); font-style: italic; }
 
 /* Colonne aperçu */
 .team-invite-preview { display: flex; flex-direction: column; gap: 16px; }
 .team-preview-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
-.team-preview-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
+.team-preview-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--ink); }
 .team-preview-greeting { font-size: 14px; font-weight: 600; color: var(--ink); margin-top: 12px; }
 .team-preview-body { font-size: 13.5px; color: var(--muted); margin: 6px 0 14px; line-height: 1.5; }
 .team-preview-cta { width: 100%; justify-content: center; opacity: 0.7; cursor: not-allowed; }

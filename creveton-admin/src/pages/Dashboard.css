@@ -16,7 +16,7 @@
   gap: 7px; padding: 30px 12px; text-align: center; color: var(--muted);
   font-size: 13px;
 }
-.dash-empty-title { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--ink); font-size: 14.5px; }
+.dash-empty-title { font-family: var(--font-display); font-weight: 600; color: var(--ink); font-size: 14.5px; }
 
 /* ── Lien doré (or rare : ≤10% — réservé au CTA de l'activité) ── */
 .dash-gold-link {
@@ -34,7 +34,7 @@
 
 .dash-live {
   display: inline-flex; align-items: center; gap: 6px;
-  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 11px;
+  font-family: var(--font-body); font-weight: 600; font-size: 11px;
   letter-spacing: 0.5px; text-transform: uppercase;
   color: var(--green500);
   background: #e3f3ea; border-radius: 999px; padding: 3px 9px;
@@ -66,7 +66,7 @@
 .dash-feed-ic { margin-right: 5px; font-size: 13px; vertical-align: -1px; }
 .dash-feed-time {
   margin-left: auto; flex: none; font-size: 11px; color: var(--muted); white-space: nowrap;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   background: var(--bg-mute); border-radius: 999px; padding: 2px 8px;
 }
 
@@ -80,7 +80,7 @@
   min-width: 22px; height: 22px; padding: 0 7px;
   border-radius: 999px;
   background: var(--pastel-orange); color: var(--pastel-amber-fg-deep);
-  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px;
+  font-family: var(--font-display); font-weight: 700; font-size: 12.5px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -98,7 +98,7 @@
 .dash-q-text { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4; }
 .dash-q-meta { margin-top: 9px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dash-q-level {
-  font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600;
+  font-family: var(--font-body); font-size: 11px; font-weight: 600;
   letter-spacing: 0.3px; color: var(--muted);
   background: var(--bg-mute); border-radius: 7px; padding: 3px 8px;
 }
@@ -128,7 +128,7 @@
 .dash-sys-state.is-up .dash-sys-dot { background: var(--green300); }
 .dash-sys-state.is-down .dash-sys-dot { background: var(--red); }
 .dash-sys-ms {
-  flex: none; margin-left: 8px; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 11px;
+  flex: none; margin-left: 8px; font-family: var(--font-display); font-weight: 600; font-size: 11px;
   color: rgba(255, 255, 255, 0.7); font-variant-numeric: tabular-nums;
   background: rgba(255, 255, 255, 0.08); border-radius: 999px; padding: 2px 8px;
 }
@@ -137,7 +137,7 @@
 .dash-sys-frow { display: flex; align-items: center; gap: 9px; }
 .dash-sys-flabel { color: rgba(255, 255, 255, 0.6); font-size: 12.5px; }
 .dash-sys-fval { margin-left: auto; color: rgba(255, 255, 255, 0.9); font-size: 12.5px; }
-.dash-sys-fval--num { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+.dash-sys-fval--num { font-family: var(--font-display); font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
 .dash-online-dot {
   width: 9px; height: 9px; border-radius: 50%; background: var(--green500);
   box-shadow: 0 0 0 0 rgba(42, 138, 79, 0.5); animation: dash-pulse 1.7s infinite; flex: none;
@@ -154,7 +154,7 @@
 .dash-pills { display: inline-flex; gap: 3px; background: var(--bg-mute); border-radius: 999px; padding: 3px; }
 .dash-pill {
   border: none; background: transparent; cursor: pointer;
-  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px;
+  font-family: var(--font-body); font-weight: 600; font-size: 12.5px;
   color: var(--muted); padding: 5px 13px; border-radius: 999px;
   transition: all var(--t-fast);
 }
@@ -169,9 +169,9 @@
 .dash-tip {
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
   padding: 9px 11px; box-shadow: 0 10px 30px rgba(16, 24, 40, 0.12);
-  font-family: 'Space Grotesk', sans-serif; font-size: 12.5px;
+  font-family: var(--font-body); font-size: 12.5px;
 }
-.dash-tip-day { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+.dash-tip-day { font-family: var(--font-display); font-weight: 600; color: var(--ink); margin-bottom: 5px; }
 .dash-tip-row { display: flex; align-items: center; gap: 6px; color: var(--text); }
 .dash-tip-sw { width: 9px; height: 9px; border-radius: 3px; flex: none; }
 
@@ -193,13 +193,13 @@
   width: 24px; height: 24px; flex: none;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 999px;
-  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px;
+  font-family: var(--font-display); font-weight: 700; font-size: 12.5px;
   color: var(--muted); background: var(--bg-mute); font-variant-numeric: tabular-nums;
 }
 .dash-rank--medal { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
-.dash-top-name { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dash-top-city { font-family: 'Space Grotesk', sans-serif; font-weight: 400; color: var(--muted); font-size: 12px; }
-.dash-top-score { margin-left: auto; flex: none; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 14px; color: var(--green700); font-variant-numeric: tabular-nums; }
+.dash-top-name { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-top-city { font-family: var(--font-body); font-weight: 400; color: var(--muted); font-size: 12px; }
+.dash-top-score { margin-left: auto; flex: none; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--green700); font-variant-numeric: tabular-nums; }
 
 /* Donut répartition thèmes. */
 .dash-donut-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
@@ -208,13 +208,13 @@
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center; pointer-events: none;
 }
-.dash-donut-num { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 26px; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
-.dash-donut-lbl { font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.dash-donut-num { font-family: var(--font-display); font-weight: 800; font-size: 26px; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.dash-donut-lbl { font-family: var(--font-body); font-size: 11.5px; color: var(--muted); margin-top: 2px; }
 
 .dash-donut-legend { flex: 1; min-width: 160px; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
 .dash-donut-legend li { display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .dash-donut-leg-label { color: var(--text); }
-.dash-donut-leg-pct { margin-left: auto; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dash-donut-leg-pct { margin-left: auto; font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
 .dash-donut-leg-count { flex: none; min-width: 34px; text-align: right; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 @media (max-width: 560px) {
@@ -240,8 +240,8 @@
 .dash-kpi2--blue .dash-kpi2-ic { background: var(--pastel-blue); color: var(--pastel-blue-fg); }
 .dash-kpi2--violet .dash-kpi2-ic { background: var(--pastel-violet); color: var(--pastel-violet-fg); }
 .dash-kpi2-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.dash-kpi2-val { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1.1; font-variant-numeric: tabular-nums; }
-.dash-kpi2-lbl { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: var(--muted); }
+.dash-kpi2-val { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.dash-kpi2-lbl { font-family: var(--font-body); font-size: 11px; color: var(--muted); }
 
 /* ── Toggle son du feed ── */
 .dash-sound {
@@ -257,13 +257,13 @@
 .dash-feed-filter {
   display: inline-flex; align-items: center; gap: 6px; border: none;
   border-bottom: 2px solid transparent; background: transparent; color: var(--muted);
-  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px;
+  font-family: var(--font-body); font-weight: 600; font-size: 12.5px;
   padding: 6px 2px; margin-bottom: -1px; cursor: pointer; transition: var(--t-fast);
 }
 .dash-feed-filter:hover { color: var(--ink); }
 .dash-feed-filter.is-active { color: var(--gold); border-bottom-color: var(--gold); }
 .dash-feed-filter-n {
-  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 11px;
+  font-family: var(--font-display); font-weight: 700; font-size: 11px;
   background: var(--bg-mute); color: var(--muted); border-radius: 999px; padding: 0 6px;
   min-width: 16px; text-align: center;
 }
@@ -273,7 +273,7 @@
 .dash-activity-foot { margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .dash-more-btn {
   border: 1px solid var(--border); background: var(--surface); color: var(--green700);
-  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px;
+  font-family: var(--font-body); font-weight: 600; font-size: 12.5px;
   padding: 6px 14px; border-radius: 999px; cursor: pointer; transition: var(--t-fast);
 }
 .dash-more-btn:hover { background: var(--surface-2); color: var(--green500); }
@@ -283,7 +283,7 @@
 .dash-mod-sort { display: inline-flex; gap: 2px; background: var(--bg-mute); border-radius: 999px; padding: 3px; }
 .dash-mod-sort-btn {
   border: none; background: transparent; cursor: pointer; color: var(--muted);
-  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 11.5px;
+  font-family: var(--font-body); font-weight: 600; font-size: 11.5px;
   padding: 4px 10px; border-radius: 999px; transition: var(--t-fast);
 }
 .dash-mod-sort-btn:hover { color: var(--ink); }
@@ -300,20 +300,20 @@
   text-decoration: none; transition: var(--t-fast);
 }
 .dash-health-cell:hover { border-color: var(--green300); background: var(--surface-2); }
-.dash-health-num { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 26px; color: var(--green700); line-height: 1; font-variant-numeric: tabular-nums; }
+.dash-health-num { font-family: var(--font-display); font-weight: 800; font-size: 26px; color: var(--green700); line-height: 1; font-variant-numeric: tabular-nums; }
 .dash-health-num--warn { color: var(--red); }
 .dash-health-num--easy { color: var(--gold); }
-.dash-health-lbl { font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; color: var(--muted); }
+.dash-health-lbl { font-family: var(--font-body); font-size: 11.5px; color: var(--muted); }
 @media (max-width: 480px) { .dash-health-grid { grid-template-columns: 1fr; } }
 
-.dash-health-pool-title { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); margin-bottom: 10px; }
+.dash-health-pool-title { font-family: var(--font-body); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); margin-bottom: 10px; }
 .dash-pool-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
 .dash-pool-name { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); width: 120px; flex: none; }
 @media (max-width: 560px) { .dash-pool-name { width: 90px; } }
 .dash-pool-emoji { font-size: 12px; }
 .dash-pool-bar { flex: 1; height: 6px; background: var(--bg-mute); border-radius: 999px; overflow: hidden; }
 .dash-pool-fill { display: block; height: 100%; border-radius: 999px; transition: width var(--t-modal); }
-.dash-pool-count { flex: none; min-width: 26px; text-align: right; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dash-pool-count { flex: none; min-width: 26px; text-align: right; font-family: var(--font-display); font-weight: 700; font-size: 12.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    PROCHAINS TOURNOIS
@@ -322,7 +322,7 @@
 .dash-tour-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
 .dash-tour-emoji { width: 38px; height: 38px; border-radius: 10px; background: var(--bg-mute); display: grid; place-items: center; font-size: 18px; flex: none; }
 .dash-tour-main { flex: 1; min-width: 0; }
-.dash-tour-name { display: block; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.dash-tour-name { display: block; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .dash-tour-name:hover { color: var(--green500); }
 .dash-tour-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 3px; font-size: 12px; color: var(--muted); }
 .dash-tour-cd { color: #b45309; font-weight: 600; }

@@ -35,7 +35,7 @@
 }
 .roles-card-id { min-width: 0; }
 .roles-card-name {
-  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 17px; color: var(--ink);
+  font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--ink);
   display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
 }
 .roles-badge-system {
@@ -64,8 +64,8 @@
 .roles-super { display: flex; flex-direction: column; gap: 10px; }
 .roles-super-risk {
   display: inline-flex; align-items: center; gap: 7px;
-  font-size: 12.5px; color: #92600a; background: var(--cream);
-  border: 1px solid #f1dca6; border-radius: 9px; padding: 8px 11px; margin: 0;
+  font-size: 12.5px; color: var(--cream-fg); background: var(--cream);
+  border: 1px solid var(--cream-border); border-radius: 9px; padding: 8px 11px; margin: 0;
 }
 
 /* ── Pied ── */
@@ -93,7 +93,7 @@
 
 /* En-têtes d'action : 11px MAJUSCULES, muet, centrés. */
 .roles-matrix thead th {
-  font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600;
+  font-family: var(--font-body); font-size: 11px; font-weight: 600;
   letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted);
 }
 .roles-matrix tbody tr:last-child th, .roles-matrix tbody tr:last-child td { border-bottom: none; }
@@ -143,7 +143,7 @@
   padding: 16px;
 }
 .roles-summary h4 {
-  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 12px;
+  font-family: var(--font-display); font-weight: 700; font-size: 12px;
   letter-spacing: 0.6px; text-transform: uppercase; color: var(--gold);
   opacity: 0.85; margin: 0 0 10px;
 }

@@ -1,6 +1,6 @@
 /* Login — « Cockpit Émeraude » split-screen (58/42).
    Gauche : green900 + grille de losanges pulsante. Droite : cream + formulaire.
-   Fonts : Space Grotesk (headlines/CTA/stats) + Outfit (body/inputs). */
+   Fonts : --font-body (headlines/CTA/stats) + --font-display (body/inputs). */
 
 .lp-shell {
   display: flex;
@@ -62,7 +62,7 @@
   display: block;
 }
 .lp-brand-name {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 20px;
   color: #fdf6e9;
@@ -93,7 +93,7 @@
   margin-bottom: 20px;
 }
 .lp-headline {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: clamp(34px, 3.8vw, 52px);
   color: #fdf6e9;
@@ -126,7 +126,7 @@
   gap: 4px;
 }
 .lp-stat-num {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 26px;
   color: #fdf6e9;
@@ -164,7 +164,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 12px;
 }
@@ -188,7 +188,7 @@
 }
 .lp-form { width: 100%; max-width: 360px; }
 .lp-form-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 26px;
   color: #0b2e1a;
@@ -231,7 +231,7 @@
   background: #0b2e1a;
   border: 0;
   border-radius: 10px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 15px;
   color: #fdf6e9;

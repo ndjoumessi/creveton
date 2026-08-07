@@ -16,7 +16,7 @@
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 13.5px;
   transition: color var(--t-fast, 150ms), border-color var(--t-fast, 150ms), background var(--t-fast, 150ms);
@@ -34,7 +34,7 @@
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.07);
   color: inherit;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 11.5px;
   display: inline-flex;
@@ -77,7 +77,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 11.5px;
   text-transform: uppercase;
@@ -89,14 +89,14 @@
 .sup-prio--low { color: var(--green500); }
 .sup-id {
   margin-left: auto;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 12px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 .sup-card-date {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 11.5px;
   color: var(--muted);
 }
@@ -107,14 +107,14 @@
   gap: 10px;
 }
 .sup-card-pname {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 14px;
   color: var(--ink);
   line-height: 1.2;
 }
 .sup-card-pcity {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   color: var(--muted);
 }
@@ -124,7 +124,7 @@
   border-radius: 7px;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 11.5px;
   font-weight: 600;
   color: var(--text);
@@ -132,13 +132,13 @@
 }
 
 .sup-subject {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 14px;
   color: var(--ink);
 }
 .sup-excerpt {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 13px;
   color: var(--muted);
   line-height: 1.45;
@@ -175,7 +175,7 @@
   flex-wrap: wrap;
 }
 .sup-dhead-id {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 12.5px;
   color: rgba(255, 255, 255, 0.6);
@@ -184,7 +184,7 @@
 .sup-dstatus {
   padding: 3px 10px;
   border-radius: 7px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 11.5px;
   background: rgba(255, 255, 255, 0.14);
@@ -194,7 +194,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 11.5px;
 }
@@ -203,7 +203,7 @@
 .sup-dprio--low { color: #86efac; }
 .sup-dassign {
   margin-left: auto;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 11.5px;
   color: rgba(255, 255, 255, 0.65);
 }
@@ -215,20 +215,20 @@
   gap: 12px;
 }
 .sup-dpname {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
   font-size: 17px;
   color: #fff;
   line-height: 1.1;
 }
 .sup-dpmeta {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
   margin-top: 2px;
 }
 .sup-dsubject {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 14.5px;
   color: var(--ink);
@@ -242,7 +242,7 @@
   flex-wrap: wrap;
 }
 .sup-assign-label {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -256,14 +256,14 @@
   min-width: 220px;
 }
 .sup-assign-ro {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 13px;
   color: var(--text);
 }
 
 /* Fil de conversation. */
 .sup-thread-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -283,7 +283,7 @@
 .sup-bubble {
   border-radius: 14px;
   padding: 10px 13px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 13.5px;
   line-height: 1.45;
 }
@@ -300,14 +300,14 @@
 }
 .sup-bubble-author {
   display: block;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 11px;
   margin-bottom: 3px;
   opacity: 0.85;
 }
 .sup-msg-time {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 10.5px;
   color: var(--muted);
   margin-top: 4px;
@@ -316,7 +316,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   color: var(--muted);
   font-style: italic;
@@ -325,7 +325,7 @@
 
 /* Formulaire de réponse. */
 .sup-reply { display: flex; flex-direction: column; gap: 10px; }
-.sup-reply .textarea { min-height: 84px; resize: vertical; font-family: 'Space Grotesk', sans-serif; }
+.sup-reply .textarea { min-height: 84px; resize: vertical; font-family: var(--font-body); }
 .sup-chips { display: flex; gap: 7px; flex-wrap: wrap; }
 .sup-chip {
   padding: 6px 12px;
@@ -333,7 +333,7 @@
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 12px;
   transition: border-color var(--t-fast, 150ms), color var(--t-fast, 150ms);
@@ -353,7 +353,7 @@
 }
 .sup-chart-card { display: flex; flex-direction: column; }
 .sup-chart-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 14px;
   color: var(--ink);
@@ -388,7 +388,7 @@
 .sup-legend-val {
   margin-left: auto;
   color: var(--muted);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 12.5px;
   font-variant-numeric: tabular-nums;
@@ -402,7 +402,7 @@
   box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.18));
 }
 .sup-tip-day {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 12.5px;
   color: #fff;
@@ -412,7 +412,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 12.5px;
   color: rgba(255, 255, 255, 0.85);
 }
@@ -420,13 +420,13 @@
 
 /* ── Table signalements ───────────────────────────────────────────── */
 .sup-q-cell {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 500;
   font-size: 13.5px;
   color: var(--ink);
 }
 .sup-reason {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 13px;
   color: var(--text);
 }
@@ -436,7 +436,7 @@
   gap: 5px;
   padding: 3px 10px;
   border-radius: 999px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 12px;
   background: var(--surface-2);

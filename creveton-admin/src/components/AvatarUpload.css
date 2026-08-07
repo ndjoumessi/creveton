@@ -40,7 +40,7 @@
 }
 
 .av-initials {
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 40px;
   line-height: 1;
@@ -66,7 +66,7 @@
 }
 
 .av-overlay-label {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.3px;
@@ -107,7 +107,7 @@
 }
 
 .av-ring-pct {
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
   fill: #fff;
@@ -130,7 +130,7 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
   color: #dc2626;
@@ -141,7 +141,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 13px;
   color: var(--text, #374151);
 }
@@ -249,7 +249,7 @@
 }
 
 .av-crop-zoom-label {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.5px;

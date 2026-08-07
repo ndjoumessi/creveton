@@ -36,13 +36,13 @@ typography:
     lineHeight: 1.3
     letterSpacing: "normal"
   body:
-    fontFamily: "Space Grotesk, system-ui, sans-serif"
+    fontFamily: "Inter, system-ui, sans-serif"
     fontSize: "14px"
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "normal"
   label:
-    fontFamily: "Space Grotesk, system-ui, sans-serif"
+    fontFamily: "Inter, system-ui, sans-serif"
     fontSize: "11px"
     fontWeight: 600
     lineHeight: 1.4
@@ -121,7 +121,7 @@ camerounaise vit dans le couple vert/or ; elle ne passe jamais avant la lisibili
 
 Le système est **dense mais scannable**. Beaucoup d'information par écran (KPI, tables,
 listes, drawers), mais une hiérarchie typographique franche — Outfit pour tout ce qui
-structure (titres, chiffres, libellés de table), Space Grotesk pour le corps — tient le
+structure (titres, chiffres, libellés de table), Inter pour le corps — tient le
 regard. Les surfaces sont plates au repos, posées sur un fond gris très clair légèrement
 teinté vert (`#f0f4f0`), délimitées par une bordure d'1px (`#e5e7eb`) et une ombre quasi invisible.
 La profondeur est réservée à ce qui flotte vraiment : modales et drawers.
@@ -134,7 +134,7 @@ et le **mur de chiffres** (tables brutes sans états vides ni regroupement).
 **Key Characteristics:**
 - Vert profond comme structure, or comme signal rare de valeur et d'action.
 - Surfaces plates et bordées ; profondeur réservée aux couches flottantes.
-- Outfit structure, Space Grotesk lit ; couleur fonctionnelle, jamais décorative.
+- Outfit structure, Inter lit ; couleur fonctionnelle, jamais décorative.
 - Chaque badge porte un libellé, pas qu'une teinte. La couleur ne code jamais seule.
 - Tout état est explicite : skeleton au chargement, message à vide, message à l'erreur.
 
@@ -189,20 +189,28 @@ teinte (contrainte WCAG AA, daltonisme).
 ## 3. Typography
 
 **Display Font:** Outfit (avec `system-ui, sans-serif`)
-**Body Font:** Space Grotesk (avec `system-ui, sans-serif`)
+**Body Font:** Inter (avec `system-ui, sans-serif`)
 
 **Character:** Outfit est géométrique, confiant, légèrement condensé aux gros poids — il
-porte les chiffres et les titres avec autorité. Space Grotesk apporte une lisibilité un
-peu technique au corps, cohérente avec un outil de pilotage. Le contraste structure/corps
-est net : si c'est un nombre, un titre ou un en-tête, c'est de l'Outfit.
+porte les chiffres et les titres avec autorité. Inter est dessinée pour l'interface dense :
+grande hauteur d'x, glyphes désambiguïsés (I / l / 1), formes neutres qui ne fatiguent pas
+sur une journée de modération. Le contraste structure/corps reste net : si c'est un nombre,
+un titre ou un en-tête, c'est de l'Outfit.
+
+> **Changement 08-2026 — Space Grotesk → Inter.** Space Grotesk portait le corps depuis
+> l'origine ; ses formes marquées passaient mal à 11–14px sur les surfaces sombres, où
+> l'essentiel du travail de modération se fait. Les familles ne sont plus écrites en dur
+> nulle part : elles vivent dans `--font-display` / `--font-body` (`src/index.css`), miroir
+> JS dans `constants/theme.js` et `utils/chartTheme.js` (littéral obligatoire côté Recharts,
+> `var()` ne se résout pas dans un attribut de présentation SVG).
 
 ### Hierarchy
 - **Display** (Outfit 700, 36px, line-height 1, -0.5px) : grandes valeurs KPI. La donnée
   qu'on lit de loin.
 - **Headline** (Outfit 700, 24px, -0.3px) : titres de page (`.page-title`).
 - **Title** (Outfit 600, 15px) : titres de carte (`.card-title`), noms (joueurs, tournois).
-- **Body** (Space Grotesk 400, 14px, line-height 1.5) : corps, cellules de table, valeurs.
-- **Label** (Space Grotesk 600, 11px, +0.5px, MAJUSCULES) : en-têtes de colonnes de table,
+- **Body** (Inter 400, 14px, line-height 1.5) : corps, cellules de table, valeurs.
+- **Label** (Inter 600, 11px, +0.5px, MAJUSCULES) : en-têtes de colonnes de table,
   titres de section de sidebar (10px, +1.4px). Le petit texte qui catégorise.
 
 ### Named Rules
@@ -319,7 +327,7 @@ standalone (installée).
 - **Don't** noyer l'écran sous l'or ou les dégradés : pas de **dashboard sur-gamifié**
   (confettis, jauges arc-en-ciel) ni de **SaaS néon / crypto-casino** (dark-mode tape-à-l'œil).
 - **Don't** retomber dans le **template admin gris générique** où rien ne hiérarchise —
-  la hiérarchie typographique Outfit/Space Grotesk est obligatoire.
+  la hiérarchie typographique Outfit/Inter est obligatoire.
 - **Don't** poser une ombre lourde sur une carte ou une table ; l'ombre `0 10px 30px` est
   réservée aux overlays (modale, drawer).
 - **Don't** coder une information par la seule couleur (badge sans libellé interdit).

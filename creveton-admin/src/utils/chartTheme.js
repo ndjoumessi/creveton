@@ -7,6 +7,11 @@
 // axisLine/grid ≈ --border, tooltipBg ≈ --surface, tooltipText ≈ --ink,
 // inactive ≈ --fg-faint.
 
+// Police des graphes. Littérale et NON `var(--font-body)` : les ticks Recharts
+// atterrissent sur des attributs de présentation SVG, où var() ne se résout pas.
+// Miroir de --font-body (index.css) — à garder synchronisé.
+const CHART_FONT = "'Inter', system-ui, sans-serif";
+
 const LIGHT = {
   axisText: '#6b7280',
   axisLine: '#e5e7eb',
@@ -39,12 +44,13 @@ export function chartTheme(isDark) {
     axisLine: c.axisLine,
     grid: c.grid,
     inactive: c.inactive,
+    fontFamily: CHART_FONT,
     tooltip: {
       contentStyle: {
         background: c.tooltipBg,
         border: `1px solid ${c.tooltipBorder}`,
         borderRadius: 10,
-        fontFamily: 'Space Grotesk',
+        fontFamily: CHART_FONT,
         fontSize: 13,
       },
       itemStyle: { color: c.tooltipText },

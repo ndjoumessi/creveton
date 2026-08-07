@@ -18,7 +18,7 @@
 }
 .u-banner-item:last-child { border-right: none; }
 .u-banner-v {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
   font-size: 40px;
   line-height: 1;
@@ -26,13 +26,13 @@
   font-variant-numeric: tabular-nums;
 }
 .u-banner-l {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 13px;
   color: rgba(255, 255, 255, 0.85);
   margin-top: 8px;
 }
 .u-banner-sub {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
   margin-top: 3px;
@@ -76,17 +76,17 @@
   display: inline-block;
   padding: 3px 10px;
   border-radius: 999px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 12px;
   white-space: nowrap;
 }
 .u-xp-mini { display: block; width: 60px; height: 4px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
 .u-xp-mini > span { display: block; height: 100%; border-radius: 999px; }
-.u-xp-mini-label { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: var(--fg-faint); font-variant-numeric: tabular-nums; }
+.u-xp-mini-label { font-family: var(--font-body); font-size: 11px; color: var(--fg-faint); font-variant-numeric: tabular-nums; }
 
 .u-activity { display: flex; flex-direction: column; gap: 1px; }
-.u-act-main { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 16px; color: var(--ink); }
+.u-act-main { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--ink); }
 .u-act-sub { font-size: 13px; color: var(--muted); }
 .u-act-last { font-size: 12px; color: var(--fg-faint); }
 
@@ -160,13 +160,13 @@
 /* Anneau or 2px autour de l'avatar (suit le rayon circulaire du composant). */
 .u-dh-top .avatar-c { box-shadow: 0 0 0 2px var(--gold); flex: none; }
 .u-dh-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.u-dh-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; }
+.u-dh-name { font-family: var(--font-body); font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; }
 .u-dh-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 /* Sur le hero vert profond, badges et statut passent en blanc translucide —
    lisibles dans les deux thèmes (le hero est vert dans light ET dark). */
 .u-dh-badges .u-status { color: rgba(255, 255, 255, 0.9); }
 .u-dh-badges .u-role-badge { background: rgba(255, 255, 255, 0.14); color: #fff; }
-.u-dh-contact { display: flex; flex-wrap: wrap; gap: 8px; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: rgba(255, 255, 255, 0.7); }
+.u-dh-contact { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--font-body); font-size: 13px; color: rgba(255, 255, 255, 0.7); }
 
 /* Bandeau métriques : panneau légèrement différencié sur le hero + dividers
    plus visibles. (surface-2 est clair et jurerait sur le hero toujours vert :
@@ -182,8 +182,8 @@
 }
 .u-dh-metrics > div { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 3px; border-right: 1px solid rgba(255, 255, 255, 0.22); }
 .u-dh-metrics > div:last-child { border-right: none; }
-.u-dh-mv { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 22px; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
-.u-dh-ml { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: rgba(255, 255, 255, 0.6); }
+.u-dh-mv { font-family: var(--font-display); font-weight: 700; font-size: 22px; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
+.u-dh-ml { font-family: var(--font-body); font-size: 11px; color: rgba(255, 255, 255, 0.6); }
 .u-dh-quick { display: flex; flex-wrap: wrap; gap: 8px; }
 .u-dh-quick .btn-ghost-soft { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.2); border-radius: var(--radius-sm, 8px); min-height: 36px; display: inline-flex; align-items: center; }
 .u-dh-quick .btn-ghost-soft:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
@@ -193,7 +193,7 @@
 .u-tab {
   border: 0; background: none; cursor: pointer;
   padding: 12px 16px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-size: 14px; font-weight: 600; color: var(--muted);
   border-bottom: 2px solid transparent; margin-bottom: -1px;
   transition: color var(--t-fast), border-color var(--t-fast);
@@ -202,14 +202,14 @@
 .u-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
 .u-tab-body { padding-bottom: 4px; }
 
-.u-section-title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13.5px; color: var(--ink); margin-bottom: 10px; }
+.u-section-title { font-family: var(--font-display); font-weight: 600; font-size: 13.5px; color: var(--ink); margin-bottom: 10px; }
 .u-empty-note { font-size: 13px; }
 
 /* Onglet Profil */
 .u-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; margin: 0; }
 .u-kv > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.u-kv dt { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
-.u-kv dd { margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 15px; color: var(--ink); word-break: break-word; }
+.u-kv dt { font-family: var(--font-body); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.u-kv dd { margin: 0; font-family: var(--font-body); font-weight: 500; font-size: 15px; color: var(--ink); word-break: break-word; }
 
 .u-account { display: flex; flex-direction: column; gap: 10px; }
 .u-account-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; }
@@ -218,7 +218,7 @@
   display: inline-flex; align-items: center; gap: 6px;
   border: 1px solid var(--border); background: var(--surface-2);
   border-radius: 999px; padding: 4px 11px;
-  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px; color: var(--green700);
+  font-family: var(--font-body); font-weight: 600; font-size: 12.5px; color: var(--green700);
   cursor: pointer;
 }
 .u-copy-pill:hover { background: #f0f7f0; }
@@ -241,11 +241,11 @@
 .u-level-bar--3 { background: #2a8a4f; }
 .u-level-bar--4 { background: var(--pastel-orange-fg); }
 .u-level-bar--5 { background: #d4a017; }
-.u-level-hero-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 24px; color: var(--ink); }
+.u-level-hero-title { font-family: var(--font-display); font-weight: 700; font-size: 24px; color: var(--ink); }
 
 .u-xp-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
-.u-xp-current { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 17px; color: var(--gold); font-variant-numeric: tabular-nums; }
-.u-xp-max { font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: var(--fg-faint); }
+.u-xp-current { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.u-xp-max { font-family: var(--font-body); font-size: 13px; color: var(--fg-faint); }
 .u-xp-bar { height: 12px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
 .u-xp-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2a8a4f, #d4a017); transition: width 600ms ease; }
 .u-xp-hint { margin-top: 8px; font-size: 13px; color: var(--muted); }
@@ -253,8 +253,8 @@
 
 .u-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .u-stat { background: var(--surface-2, #f8faf8); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
-.u-stat-k { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; color: var(--muted); }
-.u-stat-v { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; color: var(--ink); margin-top: 3px; font-variant-numeric: tabular-nums; }
+.u-stat-k { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--muted); }
+.u-stat-v { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--ink); margin-top: 3px; font-variant-numeric: tabular-nums; }
 
 .u-chart { background: #fbfdfb; border: 1px solid var(--border); border-radius: 12px; padding: 10px 6px; }
 .u-theme-perf { display: flex; flex-direction: column; gap: 10px; }
@@ -262,7 +262,7 @@
 .u-theme-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .u-theme-track { height: 4px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
 .u-theme-fill { display: block; height: 100%; border-radius: 999px; transition: width 800ms ease; }
-.u-theme-pct { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; color: #0b2e1a; text-align: right; }
+.u-theme-pct { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #0b2e1a; text-align: right; }
 
 /* Onglet Historique */
 .u-hist-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
@@ -285,7 +285,7 @@
 .u-hist-card--unknown    { border-left-color: var(--pastel-neutral-fg); }
 .u-hist-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
 .u-hist-theme { font-weight: 600; font-size: 13.5px; color: var(--ink); }
-.u-hist-mark { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.u-hist-mark { font-family: var(--font-display); font-weight: 700; font-size: 13px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
 .u-mark-good { background: var(--pastel-green); color: var(--pastel-green-fg); }
 .u-mark-bad { background: var(--pastel-red); color: var(--pastel-red-fg); }
 .u-mark-mid { background: var(--pastel-orange); color: var(--pastel-amber-fg-deep); }
@@ -307,7 +307,7 @@
 .u-session-row:last-child { border-bottom: none; }
 .u-session-when { color: var(--muted); }
 .u-session-theme { color: var(--text); }
-.u-session-score { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--ink); }
+.u-session-score { font-family: var(--font-display); font-weight: 700; color: var(--ink); }
 
 /* Footer fiche */
 .u-foot { display: flex; flex-direction: column; gap: 12px; width: 100%; }

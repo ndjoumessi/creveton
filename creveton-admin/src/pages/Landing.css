@@ -1,11 +1,11 @@
 /* Landing — « Cockpit Émeraude ». Héro vert nuit plein écran + grille de losanges
    pulsante (miroir Login), sections crème/blanc alternées, phone mockup redessiné,
-   bande CTA vert nuit, footer encre. Fonts : Space Grotesk (titres/CTA/chiffres) +
-   Outfit (corps). Préfixe .land-, isolé de la console. */
+   bande CTA vert nuit, footer encre. Fonts : --font-body (titres/CTA/chiffres) +
+   --font-display (corps). Préfixe .land-, isolé de la console. */
 
 .land-page {
   width: 100%;
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: var(--font-display);
   color: #374151;
   overflow-x: hidden;
 }
@@ -79,7 +79,7 @@
   object-fit: cover;
 }
 .land-nav-name {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 17px;
   color: #fdf6e9;
@@ -95,7 +95,7 @@
 .land-nav-cta {
   background: #d4a017;
   color: #0b2e1a;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 13px;
   padding: 9px 20px;
@@ -115,7 +115,7 @@
   background: none;
   border: 0;
   cursor: pointer;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 13px;
   color: rgba(253, 246, 233, 0.4);
@@ -152,7 +152,7 @@
   color: #d4a017;
 }
 .land-hero-eyebrow {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   color: #d4a017;
   text-transform: uppercase;
@@ -160,7 +160,7 @@
   margin: 20px 0;
 }
 .land-headline {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: clamp(36px, 4vw, 56px);
   line-height: 1.05;
@@ -189,7 +189,7 @@
   justify-content: center;
   background: #d4a017;
   color: #0b2e1a;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 14.5px;
   padding: 13px 26px;
@@ -209,7 +209,7 @@
   justify-content: center;
   background: transparent;
   color: rgba(253, 246, 233, 0.7);
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: var(--font-display);
   font-size: 14px;
   padding: 13px 20px;
   border-radius: 10px;
@@ -233,7 +233,7 @@
 }
 .land-stat { display: flex; flex-direction: column; gap: 4px; }
 .land-stat-num {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 24px;
   letter-spacing: -0.5px;
@@ -260,7 +260,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 13px;
 }
@@ -320,7 +320,7 @@
   border-radius: 5px;
 }
 .land-phone-timer {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 11px;
   color: #d4a017;
@@ -336,7 +336,7 @@
   margin-bottom: 5px;
 }
 .land-phone-qtext {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 12px;
   color: #0b2e1a;
@@ -375,7 +375,7 @@
   height: 20px;
   border-radius: 5px;
   background: #e8f0e8;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 9px;
   color: #2a8a4f;
@@ -395,7 +395,7 @@
   color: rgba(253, 246, 233, 0.45);
 }
 .land-phone-score strong {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 15px;
   color: #d4a017;
@@ -407,7 +407,7 @@
 .land-section.white { background: #ffffff; }
 .land-section-head { text-align: center; margin-bottom: 48px; }
 .land-eyebrow {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
   color: #2a8a4f;
@@ -417,7 +417,7 @@
 }
 .land-eyebrow.gold { color: #d4a017; }
 .land-title {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: clamp(26px, 3vw, 36px);
   letter-spacing: -0.8px;
@@ -458,7 +458,7 @@
   position: absolute;
   top: 18px;
   right: 22px;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 28px;
   color: rgba(11, 46, 26, 0.08);
@@ -475,7 +475,7 @@
   margin-bottom: 16px;
 }
 .land-step-title {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 17px;
   color: #0b2e1a;
@@ -512,7 +512,7 @@
   margin-bottom: 18px;
 }
 .land-feature-title {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 18px;
   color: #0b2e1a;
@@ -541,7 +541,7 @@
 }
 .land-theme-emoji { font-size: 36px; display: block; margin-bottom: 12px; }
 .land-theme-name {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 16px;
   color: #0b2e1a;
@@ -579,7 +579,7 @@
   border-radius: 50%;
   background: #0b2e1a;
   color: #d4a017;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 14px;
 }
@@ -604,7 +604,7 @@
 }
 .land-cta .land-eyebrow { margin-bottom: 14px; }
 .land-cta-title {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: clamp(28px, 3.4vw, 42px);
   letter-spacing: -0.8px;

@@ -55,7 +55,7 @@
   display: block;
 }
 .rg-brand-name {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 20px;
   color: #fdf6e9;
@@ -85,7 +85,7 @@
   margin-bottom: 20px;
 }
 .rg-headline {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: clamp(30px, 3.2vw, 46px);
   color: #fdf6e9;
@@ -125,7 +125,7 @@
   color: #d4a017;
 }
 .rg-invite-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 14px;
   color: #fdf6e9;
@@ -160,7 +160,7 @@
 .rg-role-dot--muted { background: rgba(253, 246, 233, 0.35); }
 .rg-role-name {
   display: block;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 13.5px;
   color: #fdf6e9;
@@ -188,7 +188,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 12px;
 }
@@ -209,7 +209,7 @@
 }
 .rg-form { width: 100%; max-width: 400px; }
 .rg-form-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 26px;
   color: #0b2e1a;
@@ -244,7 +244,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 12px;
   z-index: 2;
@@ -288,7 +288,7 @@
   font-weight: 500;
 }
 .rg-invite-banner-token {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 13px;
   color: #1a5230;
@@ -308,7 +308,7 @@
   background: #0b2e1a;
   border: 0;
   border-radius: 10px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 15px;
   color: #fdf6e9;
@@ -336,7 +336,7 @@
 }
 .rg-alert-text { margin: 0 0 10px; font-size: 14px; color: var(--pastel-red-fg-deep); }
 .rg-alert-link {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 14px;
   color: #2a8a4f;
@@ -376,7 +376,7 @@
   color: var(--pastel-neutral-fg);
 }
 .rg-login-link {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   color: #2a8a4f;
   text-decoration: none;

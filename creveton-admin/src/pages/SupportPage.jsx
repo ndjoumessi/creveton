@@ -455,8 +455,8 @@ export default function SupportPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={false} width={34} />
                 <Tooltip content={<TicketsTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
                 <Area type="monotone" dataKey="tickets" stroke="#2a8a4f" strokeWidth={2} fill="url(#supGradTickets)" dot={false} activeDot={{ r: 4 }} />
               </AreaChart>

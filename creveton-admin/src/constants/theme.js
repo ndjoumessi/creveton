@@ -24,7 +24,7 @@ export const colors = {
 
 export const fonts = {
   heading: "'Outfit', system-ui, sans-serif",
-  body: "'Space Grotesk', system-ui, sans-serif",
+  body: "'Inter', system-ui, sans-serif",
 };
 
 // Palette PASTEL — source de vérité unique JS (miroir des tokens CSS --pastel-* de

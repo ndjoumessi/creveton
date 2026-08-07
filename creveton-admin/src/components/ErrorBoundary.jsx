@@ -25,9 +25,9 @@ export default class ErrorBoundary extends Component {
     if (!error) return this.props.children;
 
     return (
-      <div style={{ minHeight: '100vh', background: '#f8f9fa', padding: '48px 24px', fontFamily: "'Space Grotesk', system-ui, sans-serif", color: '#374151' }}>
+      <div style={{ minHeight: '100vh', background: '#f8f9fa', padding: '48px 24px', fontFamily: "var(--font-body)", color: '#374151' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <h1 style={{ fontFamily: "'Outfit', sans-serif", color: '#0b2e1a', fontSize: 22, marginTop: 0 }}>
+          <h1 style={{ fontFamily: "var(--font-display)", color: '#0b2e1a', fontSize: 22, marginTop: 0 }}>
             Une erreur est survenue
           </h1>
           <p style={{ color: '#6b7280' }}>
@@ -44,7 +44,7 @@ export default class ErrorBoundary extends Component {
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <button
               onClick={() => { this.setState({ error: null }); window.location.assign('/dashboard'); }}
-              style={{ background: '#0b2e1a', color: '#d4a017', border: 'none', borderRadius: 8, padding: '10px 16px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}
+              style={{ background: '#0b2e1a', color: '#d4a017', border: 'none', borderRadius: 8, padding: '10px 16px', fontWeight: 600, cursor: 'pointer', fontFamily: "var(--font-display)" }}
             >
               Retour au tableau de bord
             </button>

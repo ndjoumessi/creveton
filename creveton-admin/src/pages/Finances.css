@@ -30,7 +30,7 @@
 }
 
 /* Montant : entrant (vert) / sortant (rouge) */
-.fin-amount { font-family: 'Outfit', sans-serif; font-weight: 700; }
+.fin-amount { font-family: var(--font-display); font-weight: 700; }
 .fin-amount.in { color: var(--green500); }
 .fin-amount.out { color: var(--red); }
 

@@ -17,7 +17,7 @@ createRoot(document.getElementById('root')).render(
       <Toaster
         position="top-right"
         toastOptions={{
-          style: { fontFamily: "'Space Grotesk', sans-serif", fontSize: '13.5px', borderRadius: '10px' },
+          style: { fontFamily: "var(--font-body)", fontSize: '13.5px', borderRadius: '10px' },
           success: { iconTheme: { primary: colors.green500, secondary: '#fff' } },
         }}
       />

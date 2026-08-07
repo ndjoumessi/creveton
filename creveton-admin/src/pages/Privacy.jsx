@@ -94,8 +94,8 @@ const CONTENT = {
   },
 };
 
-const SG = "'Space Grotesk', system-ui, sans-serif";
-const OUTFIT = "'Outfit', system-ui, sans-serif";
+const SG = "var(--font-body)";
+const OUTFIT = "var(--font-display)";
 
 export default function Privacy() {
   const lang = useUiStore((s) => s.lang) === 'en' ? 'en' : 'fr';

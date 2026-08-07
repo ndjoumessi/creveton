@@ -846,8 +846,8 @@ export default function Dashboard() {
               {chartType === 'bar' ? (
                 <BarChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ fill: 'rgba(42,138,79,0.06)' }} />
                   <Bar dataKey="inscriptions" fill="#2a8a4f" radius={[4, 4, 0, 0]} maxBarSize={26} />
                   <Bar dataKey="parties" fill="#d4a017" radius={[4, 4, 0, 0]} maxBarSize={26} />
@@ -855,8 +855,8 @@ export default function Dashboard() {
               ) : chartType === 'line' ? (
                 <LineChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
                   <Line type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
                   <Line type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
@@ -874,8 +874,8 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: 'Space Grotesk' }} tickLine={false} axisLine={false} width={34} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
                   <Area type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2} fill="url(#dashGradSignups)" dot={false} activeDot={{ r: 4 }} />
                   <Area type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2} fill="url(#dashGradGames)" dot={false} activeDot={{ r: 4 }} />
