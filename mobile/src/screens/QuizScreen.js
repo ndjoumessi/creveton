@@ -39,6 +39,15 @@ const LETTERS = ['A', 'B', 'C', 'D'];
 const TIME_BY_LEVEL = { beginner: 15, intermediate: 15, expert: 15 };
 const ANSWER_DELAY_MS = 1500;
 const TIMEOUT_DELAY_MS = 2000;
+// Échéance PROPRE à l'appel `/sessions/answer` sur le chemin interactif.
+// Le client axios attend 15 s (plus des retries exponentiels sur 503) : sur un
+// backend lent ou en cours de réveil, la question restait figée — chrono à 0,
+// aucune option surlignée, aucun feedback — alors que l'avancement est prévu
+// 2 s après l'expiration. L'app paraissait plantée. L'avancement ne doit jamais
+// être otage du réseau : au-delà de ce délai on bascule sur la révélation
+// LOCALE (le cache porte `correct_index` en mode normal), déjà implémentée dans
+// le `catch`. L'appel lui-même n'est pas annulé — s'il aboutit, tant mieux.
+const ANSWER_API_DEADLINE_MS = 3500;
 // Modes mixtes (blitz/marathon) : feedback neutre puis avance après 800 ms.
 const MIXED_ADVANCE_MS = 800;
 
@@ -300,13 +309,22 @@ export default function QuizScreen({ navigation }) {
       // Mode normal : feedback immédiat serveur.
       setChecking(true);
       try {
-        const fb = await sessionsApi.answer({
-          question_id: question.id,
-          selected_index: selectedIndex,
-          elapsed_ms: Math.round(elapsed),
-          mode: 'normal',
-          session_id: sessionId || undefined,
-        });
+        let deadlineTimer;
+        const fb = await Promise.race([
+          sessionsApi.answer({
+            question_id: question.id,
+            selected_index: selectedIndex,
+            elapsed_ms: Math.round(elapsed),
+            mode: 'normal',
+            session_id: sessionId || undefined,
+          }),
+          new Promise((_, reject) => {
+            deadlineTimer = setTimeout(
+              () => reject(new Error('answer-deadline')),
+              ANSWER_API_DEADLINE_MS
+            );
+          }),
+        ]).finally(() => clearTimeout(deadlineTimer));
         setSessionId(fb.session_id);
         // Persiste la solution en cache (fire-and-forget) : la bonne réponse et
         // l'explication resserviront à la révélation + au score des parties

@@ -30,6 +30,14 @@ const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
 // Ordre visuel des marches : index données 1 (2e) · 0 (1er) · 2 (3e).
 const ORDER = [1, 0, 2];
 
+// N'affiche QUE les marches réellement occupées. Les places vides rendaient un
+// espaceur `flex: 1`, si bien qu'avec un seul joueur son nom disposait d'un
+// TIERS de la largeur (~70 px) : « Nelson Djoumessi » sortait en « Nelson
+// Djou… » alors que la ligne était vide à 66 %. La métaphore du podium (marche
+// centrale surélevée) n'a de sens qu'à trois ; en dessous, on répartit la
+// largeur entre les joueurs présents.
+const occupied = (players) => ORDER.filter((position) => players[position]);
+
 export default function Podium({ players = [], variant = 'compact', loading = false }) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
@@ -52,9 +60,8 @@ export default function Podium({ players = [], variant = 'compact', loading = fa
   if (variant === 'card') {
     return (
       <View style={styles.cardPodium}>
-        {ORDER.map((position) => {
+        {occupied(players).map((position) => {
           const p = players[position];
-          if (!p) return <View key={position} style={styles.cardCol} />;
           const isFirst = position === 0;
           // Rang réel (les lignes data portent `rank`) → médaille + bordure colorée.
           const rank = p.rank || position + 1;
@@ -94,9 +101,8 @@ export default function Podium({ players = [], variant = 'compact', loading = fa
   // Variante `compact` (Accueil).
   return (
     <View style={styles.compactPodium}>
-      {ORDER.map((position) => {
+      {occupied(players).map((position) => {
         const row = players[position];
-        if (!row) return <View key={position} style={styles.compactCol} />;
         const isFirst = position === 0;
         const rank = row.rank ?? position + 1;
         return (

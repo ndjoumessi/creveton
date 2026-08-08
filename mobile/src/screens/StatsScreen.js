@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Pressable,
   Text,
-  Dimensions,
 } from 'react-native';
 import { BarChart2, Trophy, Target, TrendingUp, WifiOff, ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -43,9 +42,11 @@ const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
 // Médailles / couleurs de rang : voir `utils/rank.js` (medalColor ici ; le
 // podium top 3 est rendu par le composant partagé `Podium`, variante card).
 
-// Géométrie de la courbe d'évolution (pleine largeur - paddings écran + carte).
-const WIN_W = Dimensions.get('window').width;
-const CHART_W = WIN_W - spacing.lg * 2 - spacing.md * 2;
+// Hauteur de la courbe d'évolution. La LARGEUR n'est plus calculée ici : elle
+// l'était via `Dimensions.get('window').width` AU CHARGEMENT DU MODULE, donc
+// figée pour toute la vie de l'app — insensible à la rotation, à l'écran scindé
+// et aux pliables. `MiniLineChart` sait se mesurer lui-même (`width="auto"`,
+// onLayout), ce que ResultsScreen faisait déjà.
 const CHART_H = 140;
 
 function rateColor(pct, c = colors, isDark = false) {
@@ -410,7 +411,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
             <View style={styles.chartWrap}>
               <MiniLineChart
                 data={scoreValues}
-                width={CHART_W}
+                width="auto"
                 height={CHART_H}
                 color={colors.green500}
                 paddingTop={14}
@@ -742,11 +743,11 @@ const makeStyles = (colors) => StyleSheet.create({
   },
 
   // Courbe
-  chartWrap: { alignItems: 'center' },
+  chartWrap: { alignItems: 'stretch' }, // 'center' bridait la mesure onLayout du graphe
   chartAxis: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: CHART_W,
+    alignSelf: 'stretch', // suit le conteneur (ex-`width: CHART_W`, figé au chargement)
     marginTop: spacing.xs,
   },
   chartEmpty: { alignItems: 'center', paddingVertical: spacing.xl },
