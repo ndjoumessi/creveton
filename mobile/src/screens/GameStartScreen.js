@@ -369,7 +369,7 @@ export default function GameStartScreen({ navigation, route }) {
                 // hors ligne ou pas », pas comparer des quantités.
                 <View style={styles.availableBadge}>
                   <Icon icon={CloudCheck} size={11} color={colors.green700} />
-                  <Label size={11} weight="semibold" color={colors.green700}>
+                  <Label size="caption" weight="semibold" color={colors.green700}>
                     {t('gameStart.availableOffline')}
                   </Label>
                 </View>
@@ -382,7 +382,7 @@ export default function GameStartScreen({ navigation, route }) {
                 // coupure). drawForMode complète via l'API quand on est connecté.
                 <View style={styles.offlineBadge}>
                   <Icon icon={CloudDownload} size={11} color={colors.red600} />
-                  <Label size={11} weight="semibold" color={colors.red600}>
+                  <Label size="caption" weight="semibold" color={colors.red600}>
                     {t('gameStart.onlineOnly')}
                   </Label>
                 </View>

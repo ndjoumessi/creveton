@@ -539,7 +539,7 @@ export default function QuizScreen({ navigation }) {
         {question.media_url ? (
           <QuestionMedia uri={question.media_url} styles={styles} colors={colors} />
         ) : null}
-        <Heading size={17} style={styles.question}>{displayText}</Heading>
+        <Heading size="question" style={styles.question}>{displayText}</Heading>
         <View style={styles.goldBar} />
       </View>
 

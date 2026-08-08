@@ -87,7 +87,7 @@ function ProfStat({ value, label, divider, valueColor }) {
     <View style={styles.profStat}>
       {divider ? <View style={styles.profDivider} /> : null}
       <Title size="lg" color={valueColor || colors.textOnDark}>{value}</Title>
-      <Label size={11} color={colors.textOnDarkMuted}>{label}</Label>
+      <Label size="caption" color={colors.textOnDarkMuted}>{label}</Label>
     </View>
   );
 }
@@ -508,7 +508,7 @@ export default function ProfileScreen() {
           </View>
         </Pressable>
 
-        <Title weight="extrabold" size={24} color={colors.textOnDark} style={styles.headerName} numberOfLines={1}>
+        <Title weight="extrabold" size="screenTitle" color={colors.textOnDark} style={styles.headerName} numberOfLines={1}>
           {user?.name || t('profile.misc.defaultName')}
         </Title>
         <Label weight="semibold" size="md" color={colors.gold400}>
@@ -794,7 +794,7 @@ export default function ProfileScreen() {
             {/* A. Header : drag handle + titre + ✕ */}
             <View style={styles.sheetHandle} />
             <View style={styles.sheetTitleRow}>
-              <Title size={20}>{t('profile.editModal.title')}</Title>
+              <Title size="cardTitle">{t('profile.editModal.title')}</Title>
               <Pressable
                 onPress={closeEdit}
                 hitSlop={10}
@@ -813,7 +813,7 @@ export default function ProfileScreen() {
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.fieldGroup}>
-                <Label size={11} style={styles.inputLabel}>{t('profile.editModal.name')}</Label>
+                <Label size="caption" style={styles.inputLabel}>{t('profile.editModal.name')}</Label>
                 <TextInput
                   value={nom}
                   onChangeText={setNom}
@@ -826,7 +826,7 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Label size={11} style={styles.inputLabel}>{t('profile.editModal.city')}</Label>
+                <Label size="caption" style={styles.inputLabel}>{t('profile.editModal.city')}</Label>
                 <TextInput
                   value={ville}
                   onChangeText={setVille}
@@ -839,7 +839,7 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Label size={11} style={styles.inputLabel}>{t('profile.editModal.age')}</Label>
+                <Label size="caption" style={styles.inputLabel}>{t('profile.editModal.age')}</Label>
                 <TextInput
                   value={age}
                   onChangeText={setAge}
@@ -854,7 +854,7 @@ export default function ProfileScreen() {
 
               {/* C. Sexe : pills (style inchangé) */}
               <View style={styles.fieldGroup}>
-                <Label size={11} style={styles.inputLabel}>{t('profile.editModal.gender')}</Label>
+                <Label size="caption" style={styles.inputLabel}>{t('profile.editModal.gender')}</Label>
                 <View style={styles.pillRow}>
                   {SEXES.map((s) => {
                     const sel = s.key === sexe;

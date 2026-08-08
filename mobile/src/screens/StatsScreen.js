@@ -366,7 +366,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
                 <Text style={styles.kpiIconText}>{k.icon}</Text>
               )}
             </View>
-            <Title weight="extrabold" size={32} style={[styles.kpiValue, k.color ? { color: k.color } : null]}>{k.value}</Title>
+            <Title weight="extrabold" size="keyFigure" style={[styles.kpiValue, k.color ? { color: k.color } : null]}>{k.value}</Title>
             <Label size="xs" style={styles.kpiLabel}>{k.label}</Label>
           </View>
         ))}
@@ -469,7 +469,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
                   <Label size="xs">{meta}</Label>
                   {/* Meilleur score RÉEL (max des parties complètes) — masqué si aucun. */}
                   {best != null ? (
-                    <Label size={11}>{t('stats.themePerf.best', { pts: fmt(best) })}</Label>
+                    <Label size="caption">{t('stats.themePerf.best', { pts: fmt(best) })}</Label>
                   ) : null}
                 </View>
               </View>

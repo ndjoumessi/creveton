@@ -10,7 +10,9 @@
 //   <Label>    Space Grotesk Med. · fontSizes.sm  (13) · colors.textMuted
 //
 // Props communes (toutes optionnelles, opt-in — sans elles le rendu est identique) :
-//   size    clé de `fontSizes` ('xs'|'sm'|'md'|'base'|'lg'|'xl'|'xxl'|'xxxl'|
+//   size    RÔLE (`textRoles` : 'screenTitle'|'cardTitle'|'body'|'caption'|
+//           'keyFigure'|'question'|'authTitle') — à préférer — OU
+//           clé de `fontSizes` ('xs'|'sm'|'md'|'base'|'lg'|'xl'|'xxl'|'xxxl'|
 //           'display'|'hero') OU nombre brut (px) pour les cas hors grille.
 //   weight  poids dans la famille du variant :
 //           · Title/Heading (Outfit)       : 'regular'|'medium'|'semibold'|'bold'|
@@ -22,7 +24,7 @@
 //
 // Exemples :
 //   <Title size="lg" color={colors.gold500}>⚡ 120 pts</Title>   // score Outfit ≥ 700
-//   <Heading size={17}>Question…</Heading>                       // taille hors grille
+//   <Heading size="question">Question…</Heading>                 // rôle (textRoles)
 //   <Body weight="semibold" size="md">✓ Réponse envoyée</Body>
 //   <Label size="md">3/10</Label>
 //
@@ -32,7 +34,7 @@
 
 import React, { useMemo } from 'react';
 import { Text as RNText, StyleSheet } from 'react-native';
-import { fonts, fontSizes } from '../constants/theme';
+import { fonts, fontSizes, textRoles } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 // Poids → fontFamily, par famille. Un poids inconnu est ignoré (défaut du variant).
@@ -55,6 +57,9 @@ const BODY_WEIGHTS = {
 // `size` : clé de fontSizes ou nombre brut. Valeur inconnue → null (défaut du variant).
 function resolveSize(size) {
   if (typeof size === 'number') return size;
+  // Rôles d'abord (screenTitle, keyFigure…), puis l'échelle par taille. Un rôle
+  // dit l'intention ; `fontSizes` reste accepté pour tous les call-sites existants.
+  if (typeof size === 'string' && textRoles[size] != null) return textRoles[size];
   if (typeof size === 'string' && fontSizes[size] != null) return fontSizes[size];
   return null;
 }

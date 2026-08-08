@@ -193,7 +193,7 @@ export default function TournamentLiveScreen({ navigation, route }) {
 
           {/* Question */}
           <View style={styles.card}>
-            <Heading size={17} style={styles.question}>{question.text}</Heading>
+            <Heading size="question" style={styles.question}>{question.text}</Heading>
             <View style={styles.underline} />
           </View>
 

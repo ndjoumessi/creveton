@@ -223,7 +223,7 @@ export default function OTPScreen({ route, navigation }) {
           <Icon icon={Smartphone} size={38} color={colors.green500} />
         </Animated.View>
 
-        <Title size={22} style={styles.heading}>{t('auth.otp.title')}</Title>
+        <Title size="xl" style={styles.heading}>{t('auth.otp.title')}</Title>
         <Body muted style={styles.subtitle}>
           {t('auth.otp.subtitle')}{'\n'}
           <Body weight="bold" color={colors.green700} style={isDark && { color: colors.green300 }}>{prettyPhone(phone)}</Body>

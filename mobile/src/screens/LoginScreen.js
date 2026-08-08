@@ -91,7 +91,7 @@ export default function LoginScreen({ navigation }) {
         </View>
 
         <View style={styles.card}>
-          <Title size={26} style={styles.title}>{t('auth.welcome')}</Title>
+          <Title size="authTitle" style={styles.title}>{t('auth.welcome')}</Title>
           <Body size="md" muted style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Body>
 
           <AuthField

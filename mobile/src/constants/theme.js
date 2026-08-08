@@ -225,6 +225,26 @@ export const fontSizes = {
   hero: 64,
 };
 
+// Rôles typographiques — nomment l'INTENTION, pas la taille (2026-08-08).
+//
+// `fontSizes` ci-dessus nomme par la taille (xs → hero) : rien n'y dit quelle
+// valeur correspond à « chiffre-clé d'une carte KPI ». D'où des tailles brutes
+// apparues sur place (`size={32}` dans StatsScreen : il manquait un cran entre
+// xxl 28 et xxxl 36, quelqu'un l'a inventé).
+//
+// Purement ADDITIF : `fontSizes` n'est ni renommé ni réduit, les call-sites
+// existants continuent de fonctionner. `resolveSize` (components/Text.js)
+// interroge ces rôles EN PREMIER, puis retombe sur `fontSizes`.
+export const textRoles = {
+  screenTitle: 24, // titre d'écran (en-tête sombre)
+  cardTitle: 20, // titre de carte / de modale
+  body: 16, // corps de texte (= fontSizes.base)
+  caption: 11, // légendes, labels de bandeau, libellés de champ
+  keyFigure: 32, // chiffre-clé d'une carte KPI
+  question: 17, // énoncé d'une question (Quiz, TournamentLive)
+  authTitle: 26, // titre des écrans d'authentification (Login, ChangePassword)
+};
+
 export const spacing = {
   xxs: 2,
   xs: 4,

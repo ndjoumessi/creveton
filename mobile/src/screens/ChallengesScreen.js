@@ -357,7 +357,7 @@ export default function ChallengesScreen({ navigation, route }) {
       {/* Bottom sheet — Nouveau challenge */}
       <BottomSheet visible={sheetOpen} onClose={resetSheet} title={t('challengesHub.sheet.title')}>
           {/* Thème — 2 rangées de 3 tuiles (lisibilité petits écrans) */}
-          <Label weight="semibold" size={11} style={styles.fieldLabel}>{t('challengesHub.sheet.theme')}</Label>
+          <Label weight="semibold" size="caption" style={styles.fieldLabel}>{t('challengesHub.sheet.theme')}</Label>
           <ChoiceChips
             layout="grid"
             haptic
@@ -367,7 +367,7 @@ export default function ChallengesScreen({ navigation, route }) {
           />
 
           {/* Difficulté — 3 pills pleine largeur (même motif que GameStartScreen) */}
-          <Label weight="semibold" size={11} style={styles.fieldLabel}>{t('challengesHub.sheet.level')}</Label>
+          <Label weight="semibold" size="caption" style={styles.fieldLabel}>{t('challengesHub.sheet.level')}</Label>
           <ChoiceChips
             haptic
             options={LEVELS.map((l) => ({
@@ -379,7 +379,7 @@ export default function ChallengesScreen({ navigation, route }) {
           />
 
           {/* Adversaire — aléatoire ou recherche d'un ami précis */}
-          <Label weight="semibold" size={11} style={styles.fieldLabel}>{t('challengesHub.sheet.opponent')}</Label>
+          <Label weight="semibold" size="caption" style={styles.fieldLabel}>{t('challengesHub.sheet.opponent')}</Label>
           <View style={styles.oppRow}>
             <Pressable
               onPress={() => {

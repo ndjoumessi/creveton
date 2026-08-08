@@ -117,7 +117,7 @@ export default function ChangePasswordScreen({ navigation }) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.kav}
       >
-        <Title size={26} color={colors.textOnDark} style={styles.title}>{t('changePassword.title')}</Title>
+        <Title size="authTitle" color={colors.textOnDark} style={styles.title}>{t('changePassword.title')}</Title>
         <Body size="md" color={colors.textOnDarkMuted} style={styles.subtitle}>{t('changePassword.subtitle')}</Body>
 
         <View style={styles.card}>
