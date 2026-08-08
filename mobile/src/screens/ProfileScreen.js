@@ -525,7 +525,7 @@ export default function ProfileScreen() {
           {user?.name || t('profile.misc.defaultName')}
         </Title>
         <Label weight="semibold" size="md" color={colors.gold400}>
-          {`${t('profile.misc.level', { level })} — ${t(`profile.levelNames.${level}`)}`}
+          {`${t('profile.misc.level', { level })} — ${t(`common.levelNames.${level}`)}`}
         </Label>
         <View style={styles.headerXpWrap}>
           <XpBar current={progress.current} max={progress.needed} height={4} />

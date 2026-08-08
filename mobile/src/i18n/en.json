@@ -386,7 +386,7 @@
       "chartAxisAgo": "{{n}} ago",
       "chartAxisPlayMore": "Play more to see your curve",
       "chartAxisLast": "Latest",
-      "headerLevel": "Level {{level}} — Player",
+      "headerLevel": "Level {{level}} — {{name}}",
       "levelMax": "Max level",
       "scoreEvolution": "Score evolution",
       "themeNotPlayed": "Not played yet",
@@ -481,13 +481,6 @@
       "save": "Save",
       "cancel": "Cancel"
     },
-    "levelNames": {
-      "1": "Novice",
-      "2": "Apprentice",
-      "3": "Player",
-      "4": "Expert",
-      "5": "Champion"
-    },
     "fields": {
       "name": "Name",
       "email": "Email",
@@ -538,7 +531,14 @@
     "agoMonths": "{{n}} mo ago",
     "justNow": "just now",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "levelNames": {
+      "1": "Novice",
+      "2": "Apprentice",
+      "3": "Player",
+      "4": "Expert",
+      "5": "Champion"
+    }
   },
   "tabs": {
     "home": "Home",

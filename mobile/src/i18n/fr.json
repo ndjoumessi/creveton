@@ -386,7 +386,7 @@
       "chartAxisAgo": "il y a {{n}}",
       "chartAxisPlayMore": "Joue plus pour voir ta courbe",
       "chartAxisLast": "Dernière",
-      "headerLevel": "Niveau {{level}} — Joueur",
+      "headerLevel": "Niveau {{level}} — {{name}}",
       "levelMax": "Niveau max",
       "scoreEvolution": "Évolution du score",
       "themeNotPlayed": "Pas encore joué",
@@ -481,13 +481,6 @@
       "save": "Enregistrer",
       "cancel": "Annuler"
     },
-    "levelNames": {
-      "1": "Novice",
-      "2": "Apprenti",
-      "3": "Joueur",
-      "4": "Expert",
-      "5": "Champion"
-    },
     "fields": {
       "name": "Nom",
       "email": "Email",
@@ -538,7 +531,14 @@
     "agoMonths": "il y a {{n}} mois",
     "justNow": "à l'instant",
     "today": "Aujourd'hui",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "levelNames": {
+      "1": "Novice",
+      "2": "Apprenti",
+      "3": "Joueur",
+      "4": "Expert",
+      "5": "Champion"
+    }
   },
   "tabs": {
     "home": "Accueil",

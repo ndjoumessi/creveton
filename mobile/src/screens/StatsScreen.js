@@ -145,7 +145,14 @@ export default function StatsScreen({ navigation }) {
             <Heading weight="bold" size="xl" color={colors.textOnDark} style={styles.headerName} numberOfLines={1}>
               {user?.name || t('profile.misc.defaultName')}
             </Heading>
-            <Body color={colors.gold400}>{t('stats.misc.headerLevel', { level })}</Body>
+            {/* Le titre était figé : la chaîne contenait « Joueur » EN DUR, si bien
+                que l'écran l'affichait à tous les niveaux — un joueur de niveau 1 y
+                lisait « Niveau 1 — Joueur ». Le mot coïncidait avec le titre du
+                niveau 3, ce qui masquait l'erreur. On compose désormais depuis la
+                même table que le Profil (`common.levelNames`). */}
+            <Body color={colors.gold400}>
+              {t('stats.misc.headerLevel', { level, name: t(`common.levelNames.${level}`) })}
+            </Body>
             <PendingSyncBadge style={styles.pendingSync} />
           </View>
         </View>
