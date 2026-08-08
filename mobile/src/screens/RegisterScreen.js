@@ -79,6 +79,19 @@ export default function RegisterScreen({ navigation }) {
   const [countryOpen, setCountryOpen] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // La ville n'est demandée qu'au Cameroun (liste CM-only, cf. étape 3).
+  const isCameroon = country === DEFAULT_COUNTRY;
+
+  // Changer de pays vide la ville : sans ça, un utilisateur qui choisit
+  // « Douala » puis bascule sur 🇫🇷 enverrait une ville camerounaise avec un
+  // compte français — le champ étant devenu invisible, il ne pourrait plus
+  // la corriger.
+  const onSelectCountry = (iso) => {
+    setCountry(iso);
+    if (iso !== DEFAULT_COUNTRY) setVille('');
+    setCountryOpen(false);
+  };
+
   const setErr = (e) => setErrors(e);
 
   const validateStep = () => {
@@ -247,13 +260,22 @@ export default function RegisterScreen({ navigation }) {
 
           {step === 2 ? (
             <>
-              <Label color={colors.textBody} style={styles.fieldLabel}>{t('auth.register.city')}</Label>
-              <Pressable style={styles.select} onPress={() => setCityOpen(true)}>
-                <Body weight="medium" color={colors.textDark} style={!ville && styles.selectPlaceholder}>
-                  {ville || t('auth.register.placeholder.city')}
-                </Body>
-                <Text style={styles.chevron}>▾</Text>
-              </Pressable>
+              {/* Ville : la liste ne contient que des villes CAMEROUNAISES et
+                  alimente l'affichage du classement. Hors Cameroun elle n'a
+                  aucun choix juste à proposer — on ne la demande donc pas.
+                  `ville` reste simplement `undefined`, ce que le backend
+                  accepte déjà (Joi : `ville` optionnel). */}
+              {isCameroon ? (
+                <>
+                  <Label color={colors.textBody} style={styles.fieldLabel}>{t('auth.register.city')}</Label>
+                  <Pressable style={styles.select} onPress={() => setCityOpen(true)}>
+                    <Body weight="medium" color={colors.textDark} style={!ville && styles.selectPlaceholder}>
+                      {ville || t('auth.register.placeholder.city')}
+                    </Body>
+                    <Text style={styles.chevron}>▾</Text>
+                  </Pressable>
+                </>
+              ) : null}
 
               {/* Champ libre auparavant sans aucune indication : l'utilisateur
                   ne savait ni qu'il est facultatif, ni quelle plage est admise
@@ -344,10 +366,7 @@ export default function RegisterScreen({ navigation }) {
               renderItem={({ item }) => (
                 <Pressable
                   style={styles.cityRow}
-                  onPress={() => {
-                    setCountry(item.iso);
-                    setCountryOpen(false);
-                  }}
+                  onPress={() => onSelectCountry(item.iso)}
                   accessibilityRole="button"
                 >
                   <Body weight="medium" color={colors.textDark} style={styles.countryLabel}>
