@@ -404,7 +404,8 @@
       "best": "Best: {{pts}} pts",
       "sortBy": "Sort by:",
       "sortRate": "Success",
-      "sortGames": "Games"
+      "sortGames": "Games",
+      "scope": "Over your last {{count}} games"
     }
   },
   "profile": {

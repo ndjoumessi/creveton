@@ -399,6 +399,19 @@ export default function QuizScreen({ navigation }) {
     ]
   );
 
+  // `handleAnswer` change d'identité à chaque rendu (ses deps incluent `answered`).
+  // L'intervalle du timer, lui, n'est recréé qu'au changement de QUESTION : il
+  // capturait donc le `handleAnswer` du rendu où l'effet s'est exécuté — celui où
+  // `answered` porte ENCORE la réponse de la question précédente, `setAnswered(null)`
+  // n'ayant lieu que dans ce même effet. À l'expiration, la garde
+  // `if (answered || checking) return` était donc déjà vraie et le quiz restait figé.
+  // Symptôme exact : ça marchait pour Q1 (`answered` valait null au montage) puis plus
+  // jamais. On passe par une ref tenue à jour, qui pointe toujours la dernière version.
+  const handleAnswerRef = useRef(handleAnswer);
+  useEffect(() => {
+    handleAnswerRef.current = handleAnswer;
+  }, [handleAnswer]);
+
   // (Re)démarre le timer à chaque nouvelle question. Dépendances : currentIndex
   // (la question) ET timeLimit (durée selon le niveau).
   //
@@ -437,7 +450,7 @@ export default function QuizScreen({ navigation }) {
         setSecondsLeft(Math.ceil(remaining / 1000));
         if (remaining <= 0) {
           clearInterval(intervalRef.current);
-          handleAnswer({ selectedIndex: null, timedOut: true });
+          handleAnswerRef.current({ selectedIndex: null, timedOut: true });
         }
       };
       intervalRef.current = setInterval(tick, 250);

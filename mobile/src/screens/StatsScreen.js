@@ -436,8 +436,16 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
         })()}
       </View>
 
-      {/* Performance par thème */}
+      {/* Performance par thème. NB : calculée sur la page chargée (50 dernières
+          parties), pas sur toute la vie du compte — d'où le sous-titre. Sans lui, un
+          compteur par thème qui DIMINUE après avoir joué (une vieille partie sort de
+          la fenêtre) passe pour un bug. */}
       <Heading style={styles.sectionTitle}>{t('stats.performanceByTheme')}</Heading>
+      {stats.windowGames > 0 ? (
+        <Label size="xs" color={colors.textFaint} style={styles.sectionNote}>
+          {t('stats.themePerf.scope', { count: stats.windowGames })}
+        </Label>
+      ) : null}
       <View style={styles.card}>
         {/* Tri local : Réussite / Parties (le critère actif affiche le sens ↑/↓) */}
         <View style={styles.sortRow}>
@@ -750,6 +758,7 @@ const makeStyles = (colors) => StyleSheet.create({
     alignSelf: 'stretch', // suit le conteneur (ex-`width: CHART_W`, figé au chargement)
     marginTop: spacing.xs,
   },
+  sectionNote: { marginTop: -spacing.xs, marginBottom: spacing.sm },
   chartEmpty: { alignItems: 'center', paddingVertical: spacing.xl },
   chartEmptyEmoji: { fontSize: 32, marginBottom: spacing.sm },
   chartEmptyText: { textAlign: 'center' },

@@ -8,6 +8,7 @@
 
 export const EMPTY_STATS = {
   totalGames: 0,
+  windowGames: 0,
   avgScore: 0,
   successRate: 0,
   maxStreak: null,
@@ -36,10 +37,19 @@ function countToday(history) {
 }
 
 // history : tableau renvoyé par /users/me/history (récent → ancien).
-export function computeStats(history) {
+/**
+ * @param {Array}  history      page de parties (les N dernières, N = limite API)
+ * @param {number} [serverTotal] nombre RÉEL de parties jouées (`page.total`).
+ *   Sans lui, le total se déduisait de la longueur de la page — donc plafonné à la
+ *   limite (50) à vie : « Parties jouées » restait figé à 50 et n'augmentait plus.
+ *   Les stats DÉRIVÉES (taux, moyenne, répartition par thème) restent calculées sur
+ *   la fenêtre chargée : c'est pourquoi l'UI dit « sur les N dernières parties ».
+ */
+export function computeStats(history, serverTotal) {
   if (!history || history.length === 0) return { ...EMPTY_STATS };
 
-  const totalGames = history.length;
+  const windowGames = history.length;
+  const totalGames = Number.isFinite(serverTotal) ? serverTotal : windowGames;
 
   // Sessions « complètes » : on exclut du score moyen ET du taux de réussite les
   // parties ABANDONNÉES (aucune réponse donnée) — elles fausseraient ces moyennes —
@@ -105,6 +115,7 @@ export function computeStats(history) {
 
   return {
     totalGames,
+    windowGames,
     avgScore,
     successRate,
     maxStreak, // dérivé de l'historique (streak_max persisté par partie)

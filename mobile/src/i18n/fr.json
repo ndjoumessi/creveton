@@ -404,7 +404,8 @@
       "best": "Meilleur : {{pts}} pts",
       "sortBy": "Trier par :",
       "sortRate": "Réussite",
-      "sortGames": "Parties"
+      "sortGames": "Parties",
+      "scope": "Sur tes {{count}} dernières parties"
     }
   },
   "profile": {

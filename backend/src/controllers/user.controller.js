@@ -61,13 +61,21 @@ module.exports = {
   history: asyncHandler(async (req, res) => {
     const { limit, cursor } = req.query;
     const offset = Math.max(0, parseInt(cursor, 10) || 0);
-    const { rows, hasMore } = await sessionModel.listByUser(req.user.id, { limit, offset });
+    const [{ rows, hasMore }, agg] = await Promise.all([
+      sessionModel.listByUser(req.user.id, { limit, offset }),
+      // `total` = nombre RÉEL de parties jouées, toutes pages confondues. Sans lui,
+      // le mobile déduisait le total de la longueur de la page (limite 50) : le
+      // compteur « Parties jouées » plafonnait à 50 à vie et n'augmentait plus.
+      // `statsByUser` existait déjà dans le modèle mais n'était exposé nulle part.
+      sessionModel.statsByUser(req.user.id),
+    ]);
     return ok(res, {
       data: rows.map(sessionModel.toView),
       page: {
         limit,
         next_cursor: hasMore ? String(offset + limit) : null,
         has_more: hasMore,
+        total: agg?.sessions_played ?? rows.length,
       },
     });
   }),

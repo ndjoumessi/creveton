@@ -365,7 +365,10 @@ export default function HomeScreen({ navigation }) {
                   // sombre en dark mode (colors.white → surface sombre) — même
                   // correctif que StatsScreen (kpi avgScore = colors.textDark).
                   label={t('home.myStats.avgScore')}
-                  sub={stats.totalGames > 0 ? t('home.misc.outOfGames', { count: stats.totalGames }) : null}
+                  // `windowGames` et non `totalGames` : la moyenne est calculée sur la
+                  // page chargée (50 dernières). Depuis que `totalGames` porte le total
+                  // RÉEL, écrire « sur N parties » avec N = total mentirait sur l'assiette.
+                  sub={stats.windowGames > 0 ? t('home.misc.outOfGames', { count: stats.windowGames }) : null}
                 />
                 <StatCard
                   icon={TrendingUp}

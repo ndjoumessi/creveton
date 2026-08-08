@@ -25,7 +25,8 @@ export const useStatsStore = create((set, get) => ({
     try {
       const res = await usersApi.history({ limit });
       const history = res.data || [];
-      set({ history, stats: computeStats(history), histLoading: false });
+      // `page.total` = total RÉEL côté serveur (toutes pages). Voir computeStats.
+      set({ history, stats: computeStats(history, res?.page?.total), histLoading: false });
       return history;
     } catch (e) {
       set({
