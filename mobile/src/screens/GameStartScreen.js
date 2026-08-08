@@ -5,9 +5,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Info, CloudDownload, Check } from 'lucide-react-native';
+import { Info, Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Screen, Title, Heading, Body, Label, AppButton, ChoiceChips, useToast } from '../components';
+import { Screen, Title, Heading, Body, AppButton, ChoiceChips, useToast } from '../components';
 import Icon from '../components/Icon';
 import {
   THEMES,
@@ -20,7 +20,6 @@ import { useGameStore } from '../store/gameStore';
 import { themeGradients, fontSizes, radius, spacing } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useReduceMotion } from '../hooks/useReduceMotion';
-import { countQuestionsByTheme } from '../services/database';
 import { themeLabel, levelLabel } from '../utils/format';
 import { hapticMedium } from '../utils/haptics';
 
@@ -58,23 +57,6 @@ export default function GameStartScreen({ navigation, route }) {
   const [theme, setTheme] = useState(preset || null);
   const [level, setLevel] = useState('beginner');
   const [loading, setLoading] = useState(false);
-  // Nombre RÉEL de questions en cache par thème (SQLite) — jamais fabriqué.
-  // null tant que le chargement n'est pas terminé (évite un faux « Connexion requise »).
-  const [themeCounts, setThemeCounts] = useState(null);
-  useEffect(() => {
-    let mounted = true;
-    countQuestionsByTheme()
-      .then((map) => {
-        if (mounted) setThemeCounts(map || {});
-      })
-      .catch(() => {
-        if (mounted) setThemeCounts({});
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   // L'onglet « Jouer » reste monté : un nouveau tap sur une carte de mode (Accueil)
   // met à jour route.params mais NE relance PAS le useState ci-dessus → le mode
   // resterait figé (et en blitz/marathon, `ready` resterait false faute de thème).
@@ -333,7 +315,6 @@ export default function GameStartScreen({ navigation, route }) {
           const anim = cardAnims[i];
           const select = selectAnims[i];
           // Nombre réel de questions en cache pour ce thème (0 si absent / non chargé).
-          const themeCount = themeCounts ? themeCounts[th.key] || 0 : null;
           return (
             <Animated.View
               key={th.key}
@@ -394,26 +375,13 @@ export default function GameStartScreen({ navigation, route }) {
                   </Body>
                 </LinearGradient>
               </Pressable>
-              {/* On ne signale QUE l'exception. « Disponible hors ligne » couvrait
-                  le cas normal (4 thèmes sur 6) : six pastilles sous six cartes,
-                  dont quatre pour dire « tout va bien » — du bruit qui noyait la
-                  seule information utile. Reste « En ligne uniquement », une vraie
-                  contrainte : sans réseau, ces thèmes ne se lancent pas.
-                  Ce n'est PAS un état de déconnexion — le thème n'a simplement
-                  aucune question en cache et se charge à la demande.
-                  Le conteneur garde sa hauteur même vide : la grille est en deux
-                  colonnes, et une pastille présente d'un côté seulement
-                  décalerait la carte voisine. */}
-              <View style={styles.badgeSlot}>
-                {themeCount === 0 ? (
-                  <View style={styles.offlineBadge}>
-                    <Icon icon={CloudDownload} size={11} color={colors.red600} />
-                    <Label size="caption" weight="semibold" color={colors.red600}>
-                      {t('gameStart.onlineOnly')}
-                    </Label>
-                  </View>
-                ) : null}
-              </View>
+              {/* Pastilles de disponibilité RETIRÉES (demande produit). « Disponible
+                  hors ligne » était partie d'abord — elle couvrait le cas normal.
+                  « En ligne uniquement » suit : la grille se lit mieux sans, et
+                  l'information reste délivrée AU MOMENT où elle compte — hors ligne,
+                  `drawForMode` échoue proprement et le toast « pas assez de
+                  questions » s'affiche, sans que l'utilisateur perde sa partie.
+                  Contrepartie assumée : plus d'avertissement AVANT le tap. */}
             </Animated.View>
           );
         })}
@@ -515,34 +483,6 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   themeEmoji: { fontSize: 32 },
   themeName: { marginTop: spacing.xs },
-  // Badge « Disponible hors ligne » : pendant vert du badge rouge ci-dessous, même
-  // géométrie de pill. Trio figé pastelGreen/green500/green700 (aucune surcharge
-  // dark → identique dans les deux thèmes, comme red200/400/600). Texte green700 sur
-  // pastelGreen : ~9:1 (excellent, clair ET sombre). La bordure green500 donne la
-  // forme en mode CLAIR, où pastelGreen sur crème contraste peu ; en sombre la pill
-  // claire ressort déjà nettement sur le fond vert nuit.
-  // Hauteur réservée : la pastille n'apparaît que sur les thèmes sans cache,
-  // mais l'espace est gardé pour que les deux colonnes restent alignées.
-  badgeSlot: { minHeight: 26, justifyContent: 'center' },
-  // Badge « Connexion requise » : pill compacte, paire figée red200/red600 (comme
-  // l'accent d'erreur du Toast), sans rouge plein agressif. Icône CloudDownload + texte
-  // semibold, calé à gauche sous la carte. La bordure red400 est INDISPENSABLE en
-  // mode CLAIR : le fond red200 seul ne contraste qu'à 1,27:1 avec le crème (pill
-  // quasi invisible) ; la bordure (3,55:1 sur crème) redonne la forme. En sombre la
-  // pill ressort déjà (12,55:1), la bordure ajoute juste de la définition (4,49:1).
-  offlineBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 4,
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-    backgroundColor: colors.red200,
-    borderWidth: 1,
-    borderColor: colors.red400,
-  },
 
   modes: { gap: spacing.sm },
   modeRow: {

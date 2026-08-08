@@ -396,13 +396,16 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
           const evo = stats.scoreEvolution || [];
           const scoreValues = evo.map((d) => d.score);
           const n = scoreValues.length;
-          // Repère X central : date courte de la partie du milieu (≥ 4 points,
-          // sinon les bornes J-N / « Dernière » suffisent sur un si petit graphe).
-          const mid = Math.floor((n - 1) / 2);
-          const xLabels =
-            n >= 4 && evo[mid]?.played_at
-              ? evo.map((d, i) => (i === mid ? formatDayMonth(d.played_at, lang) : null))
-              : undefined;
+          // Bornes de l'axe : les DATES réelles de la première et de la dernière
+          // partie tracées. L'axe mélangeait trois unités — « J-9 » à gauche, une
+          // date au milieu, « Dernière » à droite. Or « J-9 » se lit universellement
+          // « 9 JOURS avant » alors qu'il signifiait ici « 9 PARTIES avant » : la
+          // date du milieu paraissait donc périmée, alors que la donnée était juste.
+          // Deux dates aux extrémités disent sans ambiguïté la période couverte.
+          const firstDate = evo[0]?.played_at ? formatDayMonth(evo[0].played_at, lang) : '';
+          const lastDate = evo[n - 1]?.played_at ? formatDayMonth(evo[n - 1].played_at, lang) : '';
+          // Tout sur le même jour → une seule date, à droite (répéter n'apprend rien).
+          const sameDay = firstDate && firstDate === lastDate;
           if (n === 0) {
             return (
               <View style={styles.chartEmpty}>
@@ -429,12 +432,13 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
                 scaleToData
                 lastValueColor={colors.green700}
                 formatValue={fmt}
-                xLabels={xLabels}
               />
               <View style={styles.chartAxis}>
-                <Body size="xs" color={colors.textFaint}>{n > 1 ? `J-${n - 1}` : ''}</Body>
                 <Body size="xs" color={colors.textFaint}>
-                  {n === 1 ? t('stats.misc.chartAxisPlayMore') : t('stats.misc.chartAxisLast')}
+                  {n > 1 && !sameDay ? firstDate : ''}
+                </Body>
+                <Body size="xs" color={colors.textFaint}>
+                  {n === 1 ? t('stats.misc.chartAxisPlayMore') : lastDate}
                 </Body>
               </View>
             </View>
