@@ -394,7 +394,8 @@
       "incomplete": "Incomplet",
       "outOfPlayers": "sur {{totalPlayers}} joueurs",
       "globalRank": "Classement global",
-      "mePill": "Vous"
+      "mePill": "Vous",
+      "themePlayCta": "jouer"
     },
     "themePerf": {
       "best": "Meilleur : {{pts}} pts",

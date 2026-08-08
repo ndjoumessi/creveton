@@ -472,8 +472,21 @@ export default function HomeScreen({ navigation }) {
               ))}
             </ScrollView>
           ) : (
+            // Même impasse que l'onglet Tournois avant 796af25 : du texte nu,
+            // aucune sortie. Le « Voir tout → » de l'en-tête mène à un onglet
+            // lui aussi vide. On propose donc la même action que l'onglet —
+            // jouer — en gardant le format compact d'une section d'accueil
+            // (un EmptyState pleine hauteur serait hors d'échelle ici).
             <AppCard tone="cream" padding="md" elevation="soft">
               <Body muted>{t('home.tournaments.none')}</Body>
+              <AppButton
+                title={t('tournaments.emptyCta')}
+                variant="ghost"
+                size="sm"
+                fullWidth={false}
+                onPress={() => navigation.navigate('Play')}
+                style={styles.tEmptyCta}
+              />
             </AppCard>
           )}
 
@@ -626,6 +639,7 @@ const makeStyles = (colors) => StyleSheet.create({
   // Tournois
   hScroll: { gap: spacing.md, paddingRight: spacing.lg, paddingBottom: spacing.xs },
   tSkeleton: { marginRight: 0 },
+  tEmptyCta: { alignSelf: 'flex-start', marginTop: spacing.sm },
   tCard: {
     width: 120,
     height: 160,

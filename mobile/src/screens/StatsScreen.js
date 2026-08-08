@@ -183,6 +183,7 @@ export default function StatsScreen({ navigation }) {
             isOffline={isOffline}
             onRetry={() => loadHistory()}
             onPlay={() => navigation.navigate('Play')}
+            onPlayTheme={(key) => navigation.navigate('Play', { presetTheme: key })}
             onViewHistory={() => navigation.navigate('SessionsHistory')}
             onOpenSession={(id) => navigation.navigate('SessionDetail', { sessionId: id })}
           />
@@ -232,7 +233,7 @@ function LoadIssue({ isOffline, error, onRetry }) {
 }
 
 // ── Onglet Mes stats ───────────────────────────────────────────────────────
-function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, onViewHistory, onOpenSession }) {
+function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, onPlayTheme, onViewHistory, onOpenSession }) {
   const { t, i18n } = useTranslation();
   const lang = normalizeLang(i18n.language);
   const { colors, isDark } = useTheme();
@@ -459,14 +460,28 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
           const meta = played
             ? `${t('stats.misc.themeGames', { games })}${rate !== null ? ` · ${rate}%` : ''}`
             : t('stats.misc.themeNotPlayed');
+          // Thème jamais joué : la ligne disait « Pas encore joué » et n'allait
+          // nulle part — une invitation sans porte. On la rend actionnable vers
+          // ce thème précis (GameStart accepte `presetTheme`). Les lignes déjà
+          // jouées restent inertes : elles informent, elles n'invitent pas.
+          const RowWrap = played ? View : Pressable;
+          const rowProps = played
+            ? {}
+            : {
+                onPress: () => onPlayTheme?.(theme.key),
+                accessibilityRole: 'button',
+                accessibilityLabel: `${theme.label} — ${t('stats.misc.themePlayCta')}`,
+              };
           return (
-            <View key={theme.key} style={[styles.themeRow, i === 0 && styles.themeRowFirst]}>
+            <RowWrap key={theme.key} {...rowProps} style={[styles.themeRow, i === 0 && styles.themeRowFirst]}>
               <View style={styles.themeHead}>
                 <Body weight="medium" size="md" style={[styles.themeLabel, !played && styles.themeLabelMuted]}>
                   {theme.emoji} {theme.label}
                 </Body>
                 <View style={styles.themeMetaRow}>
-                  <Label size="xs">{meta}</Label>
+                  <Label size="xs" color={played ? undefined : colors.green500}>
+                    {played ? meta : `${meta} · ${t('stats.misc.themePlayCta')}`}
+                  </Label>
                   {/* Meilleur score RÉEL (max des parties complètes) — masqué si aucun. */}
                   {best != null ? (
                     <Label size="caption">{t('stats.themePerf.best', { pts: fmt(best) })}</Label>
@@ -484,7 +499,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
                   delay={i * 100}
                 />
               ) : null}
-            </View>
+            </RowWrap>
           );
         })}
         {/* Blitz/Marathon : pas de thème unique → ligne « Mix » dédiée. */}

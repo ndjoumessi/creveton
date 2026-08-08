@@ -55,7 +55,7 @@ import { SEXES } from '../constants/config';
 import { fonts, radius, spacing, shadow, motion, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { formatFcfa, levelProgress, avatarUri } from '../utils/format';
+import { formatFcfa, levelProgress, avatarUri, MAX_LEVEL } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -68,12 +68,23 @@ const LANG_PILLS = [
 ];
 
 // Badges dérivés honnêtement du niveau atteint.
+//
+// L'échelle était 1 / 3 / 5 / 10 — écrite pour une progression qui n'existe
+// pas : `MAX_LEVEL` vaut 5 (XP_LEVELS a 5 paliers). Le badge « Champion »
+// exigeait donc le niveau 10 et ne pouvait JAMAIS être débloqué. Sur le profil
+// d'un joueur au maximum, l'en-tête affichait « Niveau 5 — Champion · Niveau
+// max » pendant que le badge juste en dessous affichait « Champion 🔒 Niveau
+// 5/10 ». Les deux se contredisaient.
+//
+// Ré-étalée sur la plage réelle (1–5), un palier par cran significatif. Le
+// dernier badge coïncide maintenant avec le niveau max, donc avec le titre
+// « Champion » de l'en-tête au lieu de le contredire.
 function deriveBadges(level, t) {
   return [
     { key: 'first', emoji: '🎯', label: t('profile.badges.first'), min: 1 },
-    { key: 'regular', emoji: '🔥', label: t('profile.badges.regular'), min: 3 },
-    { key: 'expert', emoji: '🧠', label: t('profile.badges.expert'), min: 5 },
-    { key: 'champion', emoji: '👑', label: t('profile.badges.champion'), min: 10 },
+    { key: 'regular', emoji: '🔥', label: t('profile.badges.regular'), min: 2 },
+    { key: 'expert', emoji: '🧠', label: t('profile.badges.expert'), min: 3 },
+    { key: 'champion', emoji: '👑', label: t('profile.badges.champion'), min: MAX_LEVEL },
   ].map((b) => ({
     ...b,
     unlocked: level >= b.min,
