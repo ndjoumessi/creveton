@@ -25,6 +25,7 @@ export default function AppInput({
   helperText,
   rightIcon = null,
   onRightIconPress,
+  rightIconLabel, // obligatoire dès qu'il y a un rightIcon actionnable (cf. plus bas)
   containerStyle,
   style,
   ...props
@@ -86,7 +87,16 @@ export default function AppInput({
           {...props}
         />
         {rightIcon ? (
-          <Pressable onPress={onRightIconPress} hitSlop={10} style={styles.rightIcon}>
+          // Bouton uniquement iconographique : sans libellé explicite il n'a
+          // AUCUN contenu textuel à annoncer — un lecteur d'écran ne dit rien du
+          // tout en s'y posant. `rightIconLabel` est donc à fournir par l'appelant.
+          <Pressable
+            onPress={onRightIconPress}
+            hitSlop={10}
+            style={styles.rightIcon}
+            accessibilityRole="button"
+            accessibilityLabel={rightIconLabel}
+          >
             {rightIcon}
           </Pressable>
         ) : null}

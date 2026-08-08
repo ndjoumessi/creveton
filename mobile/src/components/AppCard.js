@@ -20,6 +20,8 @@ export default function AppCard({
   elevation = 'card',
   radius: r = radius.lg,
   onPress,
+  accessibilityLabel,
+  accessibilityHint,
   style,
 }) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -45,9 +47,16 @@ export default function AppCard({
 
   if (!onPress) return content;
 
+  // Une carte tappable est un bouton : sans rôle, TalkBack lit bien son contenu
+  // mais ne dit jamais qu'on peut l'activer — cartes de partie, tuiles de thème,
+  // lignes de tournoi. Pas de libellé imposé : le contenu de la carte EST le
+  // libellé (contrairement à AppButton, rien ne le remplace en cours de route).
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
       onPressIn={() =>
         Animated.spring(scale, { toValue: 0.985, useNativeDriver: true, speed: 50 }).start()
       }

@@ -452,6 +452,7 @@ export default function HomeScreen({ navigation }) {
                   key={tournament.id}
                   onPress={() => navigation.navigate('Tournaments')}
                   style={styles.tCard}
+                  accessibilityRole="button"
                 >
                   <ThemeBadge theme={tournament.theme} size="sm" showLabel={false} />
                   <Heading

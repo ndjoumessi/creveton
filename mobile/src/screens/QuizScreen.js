@@ -545,7 +545,16 @@ export default function QuizScreen({ navigation }) {
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       {/* Header — bandeau vert, coins bas arrondis */}
       <View style={styles.header}>
-        <Pressable onPress={confirmQuit} hitSlop={10} style={styles.quitBtn}>
+        {/* Croix seule : aucun texte à annoncer. C'était la seule sortie de
+            l'écran (le geste de retour est désactivé pour ne pas quitter une
+            partie par accident) et elle était muette. */}
+        <Pressable
+          onPress={confirmQuit}
+          hitSlop={10}
+          style={styles.quitBtn}
+          accessibilityRole="button"
+          accessibilityLabel={t('quiz.quit')}
+        >
           <Icon icon={X} size={18} color={colors.textOnDark} />
         </Pressable>
         <View style={styles.qBadge}>
@@ -684,6 +693,7 @@ export default function QuizScreen({ navigation }) {
           onPress={() => handleAnswer({ selectedIndex: null, skipped: true })}
           style={styles.skip}
           hitSlop={8}
+          accessibilityRole="button"
         >
           <Body weight="medium" size="md" color={colors.textOnDarkFaint}>{t('quiz.skip')}</Body>
         </Pressable>
@@ -691,7 +701,12 @@ export default function QuizScreen({ navigation }) {
 
       {/* Tap-to-skip : couvre la zone pour avancer immédiatement */}
       {answered ? (
-        <Pressable style={styles.tapToSkip} onPress={goNext} />
+        <Pressable
+          style={styles.tapToSkip}
+          onPress={goNext}
+          accessible={false}
+          importantForAccessibility="no"
+        />
       ) : null}
 
       {/* Explication + barre auto-next — uniquement hors modes chronométrés

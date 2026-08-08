@@ -273,6 +273,8 @@ export default function GameStartScreen({ navigation, route }) {
         <Pressable
           onPress={() => navigation.navigate('Home')}
           hitSlop={{ top: 12, bottom: 12, left: 14, right: 14 }} // cible tactile ≥44px (flèche retour)
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}
         >
           <Text style={styles.back}>←</Text>
         </Pressable>
@@ -289,6 +291,8 @@ export default function GameStartScreen({ navigation, route }) {
               key={m.key}
               onPress={() => setMode(m.key)}
               style={[styles.modeRow, active && styles.modeRowActive]}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: active, checked: active }}
             >
               <Text style={styles.modeEmoji}>{m.emoji}</Text>
               <View style={styles.modeBody}>
@@ -339,7 +343,12 @@ export default function GameStartScreen({ navigation, route }) {
                 },
               ]}
             >
-              <Pressable onPress={() => setTheme(th.key)}>
+              <Pressable
+                onPress={() => setTheme(th.key)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: active, checked: active }}
+                accessibilityLabel={th.label}
+              >
                 <LinearGradient
                   colors={themeGradients[th.key] || themeGradients.industrie}
                   start={{ x: 0, y: 0 }}

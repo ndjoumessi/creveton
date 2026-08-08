@@ -208,6 +208,7 @@ export default function OTPScreen({ route, navigation }) {
         style={styles.back}
         onPress={() => navigation.goBack()}
         hitSlop={8}
+        accessibilityRole="button"
       >
         <Body weight="semibold" color={linkGreen}>
           {t('auth.register.back')}
@@ -293,6 +294,8 @@ export default function OTPScreen({ route, navigation }) {
         disabled={!canResend || resending}
         hitSlop={8}
         style={styles.resendWrap}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !canResend || resending, busy: resending }}
       >
         <Body
           weight="semibold"

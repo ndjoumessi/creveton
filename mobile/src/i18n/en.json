@@ -696,5 +696,12 @@
     "cardA11y": "{{title}}, {{score}} points — view details",
     "timedOut": "Time out",
     "noAnswer": "No answer"
+  },
+  "a11y": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "selectCountry": "Choose country code",
+    "selectCity": "Choose city",
+    "copyCode": "Copy referral code"
   }
 }

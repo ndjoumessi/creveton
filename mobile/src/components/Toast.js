@@ -67,7 +67,18 @@ export function ToastProvider({ children }) {
           ]}
           pointerEvents="box-none"
         >
-          <Pressable onPress={hide} style={[styles.toast, { backgroundColor: cfg.bg }]}>
+          {/* Un toast est la SEULE trace de « Challenge refusé », « Partie
+              enregistrée », d'une erreur réseau — il s'affiche puis disparaît.
+              Sans région live il n'était annoncé nulle part : l'action semblait
+              n'avoir aucun effet. `polite` plutôt qu'`assertive` pour ne pas
+              couper une lecture en cours. */}
+          <Pressable
+            onPress={hide}
+            style={[styles.toast, { backgroundColor: cfg.bg }]}
+            accessibilityRole="button"
+            accessibilityLiveRegion="polite"
+            accessibilityLabel={toast.message}
+          >
             <Icon icon={cfg.icon} size={20} color={cfg.accent} />
             <Text style={styles.message} numberOfLines={2}>
               {toast.message}

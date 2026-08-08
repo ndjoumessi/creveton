@@ -1,6 +1,13 @@
 // AppButton — variant (primary/secondary/ghost/danger/dark/outlineGold) × size (sm/md/lg).
 // Feedback tactile < 120ms (scale spring au press), état loading (spinner inline).
 // L'or est réservé au variant primary (CTA).
+//
+// Accessibilité : `Pressable` ne porte AUCUN rôle par défaut (contrairement à
+// `Button`). Sans les attributs ci-dessous, chaque CTA de l'app — « Jouer »,
+// « Accepter et jouer », « Charger plus » — était annoncé par TalkBack comme du
+// texte ordinaire, ni actionnable, ni désactivé quand il l'était. Le libellé est
+// explicite plutôt que déduit des enfants : en chargement le titre est REMPLACÉ
+// par un spinner, et le bouton devenait alors parfaitement muet.
 
 import React, { useRef, useMemo } from 'react';
 import {
@@ -32,6 +39,8 @@ export default function AppButton({
   iconRight = null,
   fullWidth = true,
   haptic = true,
+  accessibilityLabel,
+  accessibilityHint,
   style,
   textStyle,
 }) {
@@ -79,6 +88,12 @@ export default function AppButton({
         onPressIn={pressIn}
         onPressOut={pressOut}
         disabled={isDisabled}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel || (typeof title === 'string' ? title : undefined)}
+        accessibilityHint={accessibilityHint}
+        // `disabled` et `busy` sont distincts : « indisponible » et « en cours »
+        // ne se réparent pas de la même façon côté utilisateur.
+        accessibilityState={{ disabled: isDisabled, busy: loading }}
         style={[
           styles.base,
           { height: s.height, paddingHorizontal: s.px },

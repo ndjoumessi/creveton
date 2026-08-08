@@ -287,7 +287,7 @@ export default function ChallengesScreen({ navigation, route }) {
       return (
         <View style={styles.stateBox}>
           <Label style={styles.stateText}>{st.error}</Label>
-          <Pressable onPress={() => fetchTab(tab)} hitSlop={8}>
+          <Pressable onPress={() => fetchTab(tab)} hitSlop={8} accessibilityRole="button">
             <Label weight="semibold" color={colors.green500}>{t('common.retry')}</Label>
           </Pressable>
         </View>
@@ -579,7 +579,13 @@ function SentCard({ t, item, onCancel, disabled = false }) {
           {item.your_score != null ? '· ' : ''}{t('challengesHub.card.waiting')}
         </Label>
         <View style={styles.sentSpacer} />
-        <Pressable onPress={() => onCancel(item)} disabled={disabled} hitSlop={8}>
+        <Pressable
+          onPress={() => onCancel(item)}
+          disabled={disabled}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityState={{ disabled }}
+        >
           <Label weight="semibold" color={colors.red600} style={disabled && styles.cancelLinkDisabled}>
             {t('challengesHub.actions.cancel')}
           </Label>

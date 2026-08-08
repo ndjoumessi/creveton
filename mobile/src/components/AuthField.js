@@ -8,6 +8,7 @@
 
 import React, { forwardRef, useState, useMemo } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff } from 'lucide-react-native';
 import Icon from './Icon';
 import { fonts, fontSizes, radius, spacing } from '../constants/theme';
@@ -25,6 +26,7 @@ const AuthField = forwardRef(function AuthField(
   },
   ref
 ) {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [focused, setFocused] = useState(false);
@@ -49,12 +51,16 @@ const AuthField = forwardRef(function AuthField(
           {...inputProps}
         />
         {rightToggle ? (
+          // Le libellé était figé en français ET annonçait les deux actions à la
+          // fois (« Afficher/Masquer ») : un lecteur d'écran ne disait donc jamais
+          // ce que l'appui allait réellement faire. Localisé, et l'état courant
+          // décide du verbe.
           <Pressable
             onPress={rightToggle.onToggle}
             hitSlop={10}
             style={styles.toggle}
             accessibilityRole="button"
-            accessibilityLabel="Afficher/Masquer le mot de passe"
+            accessibilityLabel={t(rightToggle.active ? 'a11y.hidePassword' : 'a11y.showPassword')}
           >
             <Icon
               icon={rightToggle.active ? EyeOff : Eye}
@@ -64,7 +70,14 @@ const AuthField = forwardRef(function AuthField(
           </Pressable>
         ) : null}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {/* L'erreur apparaît APRÈS coup, sous un champ que l'utilisateur vient de
+          quitter : sans région live, elle n'est jamais annoncée et la validation
+          reste purement visuelle. */}
+      {error ? (
+        <Text style={styles.error} accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 });

@@ -141,7 +141,11 @@ function SettingRow({ icon, iconBg, label, value, valueMuted, right, onPress, is
   );
   if (!onPress) return content;
   return (
-    <Pressable onPress={onPress} android_ripple={{ color: colors.divider }}>
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: colors.divider }}
+      accessibilityRole="button"
+    >
       {content}
     </Pressable>
   );
@@ -607,6 +611,8 @@ export default function ProfileScreen() {
                       key={l.key}
                       onPress={() => changeLanguage(l.key)}
                       style={[styles.langPill, active && styles.langPillActive]}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: active, checked: active }}
                     >
                       <Label weight="bold" size="xs" color={active ? colors.green900 : colors.textBody}>
                         {l.key.toUpperCase()}
@@ -657,7 +663,13 @@ export default function ProfileScreen() {
                 <Title size="sm" style={styles.referralCode} numberOfLines={1}>
                   {user?.referral_code || 'CREV'}
                 </Title>
-                <Pressable onPress={copyReferral} style={styles.copyBtn} hitSlop={6}>
+                <Pressable
+                  onPress={copyReferral}
+                  style={styles.copyBtn}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('a11y.copyCode')}
+                >
                   <Label weight="bold" size="xs" color={colors.gold500}>{t('profile.referral.copy')}</Label>
                 </Pressable>
               </View>
@@ -790,13 +802,17 @@ export default function ProfileScreen() {
         title={t('profile.avatar.sheetTitle')}
         style={styles.avatarSheet}
       >
-        <Pressable style={styles.actionRow} onPress={() => pickAvatar('camera')}>
+        <Pressable style={styles.actionRow} onPress={() => pickAvatar('camera')} accessibilityRole="button">
           <Body weight="semibold" color={colors.textDark}>{t('profile.avatar.camera')}</Body>
         </Pressable>
-        <Pressable style={styles.actionRow} onPress={() => pickAvatar('gallery')}>
+        <Pressable style={styles.actionRow} onPress={() => pickAvatar('gallery')} accessibilityRole="button">
           <Body weight="semibold" color={colors.textDark}>{t('profile.avatar.gallery')}</Body>
         </Pressable>
-        <Pressable style={[styles.actionRow, styles.actionCancel]} onPress={() => setAvatarSheet(false)}>
+        <Pressable
+          style={[styles.actionRow, styles.actionCancel]}
+          onPress={() => setAvatarSheet(false)}
+          accessibilityRole="button"
+        >
           <Body weight="medium" muted>{t('profile.avatar.cancel')}</Body>
         </Pressable>
       </BottomSheet>
@@ -887,7 +903,13 @@ export default function ProfileScreen() {
                   {SEXES.map((s) => {
                     const sel = s.key === sexe;
                     return (
-                      <Pressable key={s.key} onPress={() => setSexe(s.key)} style={[styles.pill, sel && styles.pillActive]}>
+                      <Pressable
+                        key={s.key}
+                        onPress={() => setSexe(s.key)}
+                        style={[styles.pill, sel && styles.pillActive]}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: sel, checked: sel }}
+                      >
                         <Label weight={sel ? 'semibold' : 'medium'} color={sel ? colors.green900 : colors.textBody}>
                           {t(`profile.misc.gender.${s.key}`)}
                         </Label>

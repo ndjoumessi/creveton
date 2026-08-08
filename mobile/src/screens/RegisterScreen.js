@@ -268,7 +268,13 @@ export default function RegisterScreen({ navigation }) {
               {isCameroon ? (
                 <>
                   <Label color={colors.textBody} style={styles.fieldLabel}>{t('auth.register.city')}</Label>
-                  <Pressable style={styles.select} onPress={() => setCityOpen(true)}>
+                  <Pressable
+                    style={styles.select}
+                    onPress={() => setCityOpen(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('a11y.selectCity')}
+                    accessibilityValue={{ text: ville || undefined }}
+                  >
                     <Body weight="medium" color={colors.textDark} style={!ville && styles.selectPlaceholder}>
                       {ville || t('auth.register.placeholder.city')}
                     </Body>
@@ -324,7 +330,7 @@ export default function RegisterScreen({ navigation }) {
             onPress={onNext}
             style={styles.submit}
           />
-          <Pressable style={styles.backBtn} onPress={onBack} hitSlop={8}>
+          <Pressable style={styles.backBtn} onPress={onBack} hitSlop={8} accessibilityRole="button">
             <Label size="md">{t('auth.register.back')}</Label>
           </Pressable>
         </View>
@@ -332,7 +338,12 @@ export default function RegisterScreen({ navigation }) {
 
       {/* Sélecteur de ville */}
       <Modal visible={cityOpen} transparent animationType="slide" onRequestClose={() => setCityOpen(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setCityOpen(false)}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setCityOpen(false)}
+          accessible={false}
+          importantForAccessibility="no"
+        >
           <View style={styles.modalSheet}>
             <Heading style={styles.modalTitle}>{t('auth.register.misc.cityPickerTitle')}</Heading>
             <FlatList
@@ -345,6 +356,8 @@ export default function RegisterScreen({ navigation }) {
                     setVille(item);
                     setCityOpen(false);
                   }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: ville === item, checked: ville === item }}
                 >
                   <Body weight="medium" color={colors.textDark}>{item}</Body>
                   {ville === item ? <Icon icon={Check} size={18} color={colors.green500} strokeWidth={3} /> : null}
@@ -357,7 +370,12 @@ export default function RegisterScreen({ navigation }) {
 
       {/* Sélecteur d'indicatif pays (téléphone du compte) */}
       <Modal visible={countryOpen} transparent animationType="slide" onRequestClose={() => setCountryOpen(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setCountryOpen(false)}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setCountryOpen(false)}
+          accessible={false}
+          importantForAccessibility="no"
+        >
           <View style={styles.modalSheet}>
             <Heading style={styles.modalTitle}>{t('auth.register.misc.countryPickerTitle')}</Heading>
             <FlatList
@@ -367,7 +385,8 @@ export default function RegisterScreen({ navigation }) {
                 <Pressable
                   style={styles.cityRow}
                   onPress={() => onSelectCountry(item.iso)}
-                  accessibilityRole="button"
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: country === item.iso, checked: country === item.iso }}
                 >
                   <Body weight="medium" color={colors.textDark} style={styles.countryLabel}>
                     {`${item.flag}  ${countryName(item, lang)}`}

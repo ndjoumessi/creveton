@@ -340,7 +340,7 @@ function EndedView({ t, ended, myScore, myRank, myId, onBack }) {
         <MiniLeaderboard t={t} board={board} myId={myId} limit={10} />
       </View>
 
-      <Pressable style={styles.backButton} onPress={onBack}>
+      <Pressable style={styles.backButton} onPress={onBack} accessibilityRole="button">
         <Title size="base" style={styles.backButtonText}>{t('tournamentLive.back')}</Title>
       </Pressable>
     </ScrollView>

@@ -59,7 +59,17 @@ export default function OfflineBanner() {
       style={[styles.wrap, { height: total, paddingTop: insets.top, transform: [{ translateY: slide }] }]}
       pointerEvents={visible ? 'auto' : 'none'}
     >
-      <Pressable style={styles.inner} onPress={() => setDismissed(true)} hitSlop={6}>
+      {/* Perdre le réseau change ce que l'app sait faire (défis et tournois
+          deviennent indisponibles) : l'information doit être annoncée, pas
+          seulement affichée. Le tap masque la bannière — d'où le rôle bouton. */}
+      <Pressable
+        style={styles.inner}
+        onPress={() => setDismissed(true)}
+        hitSlop={6}
+        accessibilityRole="button"
+        accessibilityLiveRegion="polite"
+        accessibilityLabel={t('offline.banner')}
+      >
         <Icon icon={WifiOff} size={15} color={colors.green900} />
         <Text style={styles.text} numberOfLines={1}>{t('offline.banner')}</Text>
       </Pressable>

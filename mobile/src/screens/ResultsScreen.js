@@ -672,7 +672,12 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
                 ]}
               >
                 {/* En-tête tappable */}
-                <Pressable style={styles.recapRow} onPress={() => toggleRow(i)}>
+                <Pressable
+                  style={styles.recapRow}
+                  onPress={() => toggleRow(i)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: open }}
+                >
                   <View style={[styles.pastille, good ? styles.pastilleGood : styles.pastilleBad]}>
                     <Icon icon={good ? Check : X} size={16} color={colors.white} strokeWidth={3} />
                   </View>

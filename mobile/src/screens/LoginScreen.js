@@ -143,6 +143,7 @@ export default function LoginScreen({ navigation }) {
           style={styles.linkRow}
           onPress={() => navigation.navigate('Register')}
           hitSlop={8}
+          accessibilityRole="link"
         >
           <Body size="md" color={colors.textOnDarkMuted}>
             {t('auth.noAccount')}{' '}
