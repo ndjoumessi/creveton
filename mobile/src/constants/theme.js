@@ -236,14 +236,20 @@ export const spacing = {
   xxxl: 48,
 };
 
+// Rayons — 5 valeurs, une par RÔLE. Resserré de 7 à 5 le 2026-08-08 :
+//   · `base` (14) était mort-né — 3 usages coincés entre md 12 et lg 16, soit un
+//     écart de 2 px qu'aucun œil ne distingue. Migré vers `md`.
+//   · `xl` (20) et `lg` (16) désignaient tous deux « une carte ». Fusionnés sur `lg`.
+//   · `xxl` (24) est CONSERVÉ mais renommé `sheet` : ses usages sont tous des coins
+//     hauts de feuille (le corps crème qui chevauche l'en-tête sombre, sur 5 écrans).
+//     C'est un motif signature, pas une dérive — le réduire aplatirait l'app.
+// Un cercle ne se code pas en dur (moitié de la largeur) : `pill` le fait à toute taille.
 export const radius = {
-  sm: 8,
-  md: 12,
-  base: 14,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
-  pill: 999,
+  sm: 8, // badges, pastilles, petites pilules
+  md: 12, // champs, boutons, tuiles
+  lg: 16, // cartes
+  sheet: 24, // coins hauts des feuilles et bandeaux
+  pill: 999, // CTA arrondis, onglets, avatars, cercles
 };
 
 // Ombres — douces sur clair, profondes pour cartes flottantes.

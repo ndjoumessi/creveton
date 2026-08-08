@@ -611,7 +611,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
 
       {/* ISSUE DU DUEL (défi) — résultat final si les deux ont joué, sinon attente */}
       {isChallenge ? (
-        <GoldVeilBanner style={styles.duelBanner} radius={radius.xl}>
+        <GoldVeilBanner style={styles.duelBanner} radius={radius.lg}>
           {duelCompleted ? (
             <>
               <Text style={styles.duelEmoji}>{duelEmoji}</Text>
@@ -630,7 +630,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
       <Heading color={colors.cream} style={styles.sectionTitle}>
         {t('results.recap')}
       </Heading>
-      <AppCard tone="light" padding="md" radius={radius.xl} style={styles.recapCard}>
+      <AppCard tone="light" padding="md" radius={radius.lg} style={styles.recapCard}>
         {review.length ? (
           review.map((item, i) => {
             const good = item.is_correct;
@@ -731,7 +731,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
           <Heading color={colors.cream} style={styles.sectionTitle}>
             {t('results.misc.progression')}
           </Heading>
-          <AppCard tone="light" padding="md" radius={radius.xl}>
+          <AppCard tone="light" padding="md" radius={radius.lg}>
             <Skeleton width="100%" height={120} radius={radius.md} />
           </AppCard>
         </View>
@@ -740,7 +740,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
           <Heading color={colors.cream} style={styles.sectionTitle}>
             {t('results.misc.progression')}
           </Heading>
-          <AppCard tone="light" padding="md" radius={radius.xl}>
+          <AppCard tone="light" padding="md" radius={radius.lg}>
             {/* Même config riche que « Score evolution » (StatsScreen) : axe de
                 valeurs (showGrid), aire, points cerclés, dernier point mis en avant
                 (showLastValue), échelle sur les données réelles. Largeur responsive
@@ -770,7 +770,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
       {/* PALIER DÉBLOQUÉ */}
       {result.level_unlocked ? (
         <Animated.View style={[styles.levelUpWrap, { transform: [{ scale: glowScale }] }]}>
-          <GoldVeilBanner style={styles.levelUp} radius={radius.xl}>
+          <GoldVeilBanner style={styles.levelUp} radius={radius.lg}>
             <Text style={styles.levelUpEmoji}>🎉</Text>
             <Heading color={colors.gold400}>{t('results.misc.levelUpTitle')}</Heading>
             {result.unlocked_difficulty ? (
@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.xl,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     backgroundColor: colors.cardOnDark,
     borderWidth: 1,
     borderColor: colors.borderOnDark,

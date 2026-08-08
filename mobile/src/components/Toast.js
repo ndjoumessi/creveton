@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-    borderRadius: radius.base,
+    borderRadius: radius.md,
     width: '100%',
     ...shadow.floating,
   },

@@ -402,7 +402,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
   card: {
     backgroundColor: colors.white,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: 20,
     marginTop: spacing.lg,
   },
@@ -470,7 +470,7 @@ const makeStyles = (colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.cardOnDark,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
     marginTop: spacing.md,

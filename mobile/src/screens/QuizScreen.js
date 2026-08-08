@@ -651,7 +651,7 @@ const makeStyles = (colors) => StyleSheet.create({
   quitBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: radius.pill, // cercle (bouton quitter 36px)
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.whiteVeil, // voile clair sur le bandeau vert (2 thèmes)
@@ -685,7 +685,7 @@ const makeStyles = (colors) => StyleSheet.create({
   // D. Carte question — surface flottante (thémée), barre or sous le texte.
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: 20,
     marginTop: spacing.lg,
     ...shadow.floating,
@@ -696,7 +696,7 @@ const makeStyles = (colors) => StyleSheet.create({
   qMediaWrap: {
     width: '100%',
     height: 200,
-    borderRadius: 12,
+    borderRadius: radius.md,
     overflow: 'hidden',
     marginBottom: spacing.md,
     backgroundColor: colors.surfaceCream,

@@ -140,7 +140,7 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     minHeight: 56,
-    borderRadius: radius.base, // 14
+    borderRadius: radius.md, // 14
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1.5,

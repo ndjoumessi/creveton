@@ -299,8 +299,8 @@ const makeStyles = (colors) =>
     body: {
       flex: 1,
       backgroundColor: colors.cream,
-      borderTopLeftRadius: radius.xxl,
-      borderTopRightRadius: radius.xxl,
+      borderTopLeftRadius: radius.sheet,
+      borderTopRightRadius: radius.sheet,
       marginTop: -spacing.sm,
       paddingTop: spacing.lg,
     },

@@ -534,8 +534,8 @@ const makeStyles = (colors) => StyleSheet.create({
   // Corps
   body: {
     backgroundColor: colors.cream,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
+    borderTopLeftRadius: radius.sheet,
+    borderTopRightRadius: radius.sheet,
     marginTop: -spacing.lg,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,

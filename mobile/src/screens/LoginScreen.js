@@ -160,7 +160,7 @@ const makeStyles = (colors) => StyleSheet.create({
   brand: { alignItems: 'center', marginBottom: spacing.xl },
   card: {
     backgroundColor: colors.white,
-    borderRadius: radius.xxl,
+    borderRadius: radius.sheet,
     padding: 28,
     borderWidth: 1,
     borderColor: colors.border,

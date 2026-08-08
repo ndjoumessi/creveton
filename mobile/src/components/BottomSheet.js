@@ -1,7 +1,7 @@
 // BottomSheet — feuille modale ancrée en bas, partagée (Défis « Nouveau
 // challenge », Profil « Photo de profil »…). Remplace les Modal/backdrop/handle
 // faits main des écrans, à rendu identique :
-//   - handle pill centré + coins supérieurs radius.xl,
+//   - handle pill centré + coins supérieurs radius.lg,
 //   - backdrop semi-transparent (colors.overlay) → tap = onClose,
 //   - safe-area bas (insets) + KeyboardAvoidingView (padding iOS / height
 //     Android, convention formulaires) pour les feuilles avec inputs,
@@ -121,8 +121,8 @@ const makeStyles = (colors) => StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: colors.overlay },
   sheet: {
     backgroundColor: colors.surfaceCream,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
     padding: spacing.lg,
     gap: spacing.xs,
   },

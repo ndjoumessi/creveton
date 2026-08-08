@@ -162,7 +162,7 @@ export default function SessionDetailScreen({ navigation, route }) {
       ) : (
         <>
           {/* En-tête de partie */}
-          <AppCard tone="light" padding="md" radius={radius.xl} style={styles.header}>
+          <AppCard tone="light" padding="md" radius={radius.lg} style={styles.header}>
             <View style={styles.headTop}>
               {hasTheme ? (
                 <ThemeBadge theme={data.theme} />

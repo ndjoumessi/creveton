@@ -6,7 +6,7 @@
 // Props :
 //   - children  : contenu du bandeau.
 //   - style     : surcharge par bandeau (padding, marges, flexDirection, radius pill vs xl…).
-//   - radius    : rayon des coins (défaut radius.xl).
+//   - radius    : rayon des coins (défaut radius.lg).
 
 import React from 'react';
 import { View } from 'react-native';

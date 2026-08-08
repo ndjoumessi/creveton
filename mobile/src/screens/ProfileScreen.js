@@ -898,7 +898,7 @@ const makeStyles = (colors) => StyleSheet.create({
   avatarBorder: { borderWidth: 3, borderColor: colors.gold400, ...shadow.gold },
   avatarOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 55,
+    borderRadius: radius.pill, // cercle (voile sur avatar 110px)
     backgroundColor: colors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
@@ -909,7 +909,7 @@ const makeStyles = (colors) => StyleSheet.create({
     bottom: -2,
     width: 26,
     height: 26,
-    borderRadius: 13,
+    borderRadius: radius.pill, // cercle (pastille 26px)
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
@@ -963,7 +963,7 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
-  rowIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  rowIcon: { width: 36, height: 36, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   rowLabel: { flex: 1 },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, maxWidth: '55%' },
   rowValueMuted: { color: colors.textMuted },
@@ -1078,8 +1078,8 @@ const makeStyles = (colors) => StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: colors.white,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
+    borderTopLeftRadius: radius.sheet,
+    borderTopRightRadius: radius.sheet,
     padding: 20,
     maxHeight: '88%',
     shadowColor: colors.green900,

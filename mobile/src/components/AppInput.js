@@ -104,7 +104,7 @@ const makeStyles = (colors) => StyleSheet.create({
   container: { marginBottom: spacing.lg },
   field: {
     minHeight: 56,
-    borderRadius: radius.base,
+    borderRadius: radius.md,
     borderWidth: 1.5,
     backgroundColor: colors.white,
     paddingHorizontal: spacing.lg,
