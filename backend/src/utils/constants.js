@@ -32,8 +32,22 @@ const LEVEL_XP_THRESHOLDS = [0, 200, 500, 1200, 3000];
 
 const CURRENCY = 'XAF';
 
-// Format téléphone Cameroun : +237 suivi de 9 chiffres.
-const PHONE_REGEX = /^\+237\d{9}$/;
+// ── Téléphones : DEUX formats, à ne pas confondre ──────────────────────────
+//
+// PHONE_REGEX — téléphone du COMPTE (register / OTP / login). International
+// depuis 08-2026 : l'app n'était ouverte qu'au +237, ce qui excluait la
+// diaspora. Forme E.164 : « + », indicatif pays ne commençant pas par 0, puis
+// 8 à 15 chiffres au total. On valide ici la FORME ; la validation fine par
+// pays (longueur du numéro national) vit côté mobile via `libphonenumber-js`,
+// où elle sert aussi à formater la saisie. Un numéro de forme valide mais
+// inexistant est de toute façon arrêté par l'OTP, qui n'arrivera jamais.
+const PHONE_REGEX = /^\+[1-9]\d{7,14}$/;
+
+// MOMO_PHONE_REGEX — téléphone MOBILE MONEY (recharge wallet, frais d'entrée
+// tournoi). Reste strictement camerounais : les trois PSP branchés
+// (orange_money, mtn_momo, campay) n'opèrent qu'au Cameroun. NE PAS aligner
+// sur PHONE_REGEX — un compte peut être étranger, son moyen de paiement non.
+const MOMO_PHONE_REGEX = /^\+237\d{9}$/;
 
 module.exports = {
   THEMES,
@@ -53,5 +67,6 @@ module.exports = {
   LEVEL_XP_THRESHOLDS,
   CURRENCY,
   PHONE_REGEX,
+  MOMO_PHONE_REGEX,
 };
 

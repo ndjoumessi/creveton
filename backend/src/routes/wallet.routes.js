@@ -6,7 +6,7 @@ const ctrl = require('../controllers/wallet.controller');
 const validate = require('../middlewares/validate');
 const authenticate = require('../middlewares/authenticate');
 const featureFlag = require('../middlewares/featureFlag');
-const { PAYMENT_PROVIDERS, PHONE_REGEX } = require('../utils/constants');
+const { PAYMENT_PROVIDERS, MOMO_PHONE_REGEX } = require('../utils/constants');
 
 const router = express.Router();
 
@@ -16,7 +16,10 @@ router.use(authenticate, featureFlag('tournaments.paid.enabled'));
 const recharge = Joi.object({
   amount: Joi.number().integer().min(100).required(),
   provider: Joi.string().valid(...PAYMENT_PROVIDERS).required(),
-  phone: Joi.string().pattern(PHONE_REGEX).required(),
+  // Mobile Money camerounais uniquement — voir MOMO_PHONE_REGEX (constants.js).
+  phone: Joi.string().pattern(MOMO_PHONE_REGEX).required().messages({
+    'string.pattern.base': 'Le numéro Mobile Money doit être au format +237XXXXXXXXX.',
+  }),
 });
 
 router.get('/', ctrl.get);

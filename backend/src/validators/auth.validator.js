@@ -3,8 +3,11 @@
 const Joi = require('joi');
 const { SEXES, LANGS, PHONE_REGEX } = require('../utils/constants');
 
+// Téléphone du compte : international (E.164). Voir PHONE_REGEX (constants.js)
+// — à ne pas confondre avec MOMO_PHONE_REGEX, resté +237 pour les paiements.
 const phone = Joi.string().pattern(PHONE_REGEX).messages({
-  'string.pattern.base': 'Le numéro doit être au format +237XXXXXXXXX.',
+  'string.pattern.base':
+    "Le numéro doit être au format international, indicatif pays compris (ex. +237690000000).",
 });
 
 const password = Joi.string()

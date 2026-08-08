@@ -48,6 +48,26 @@ t('register → 201 + OTP envoyé', async () => {
   expect(r.body.phone).toBe(REG.phone);
 });
 
+// ── Téléphone du compte : international depuis 08-2026 ────────────────────
+// L'inscription n'acceptait que le +237, ce qui fermait l'app à la diaspora.
+// Le téléphone Mobile Money, lui, reste camerounais (cf. wallet.test.js).
+t('register : numéro international hors Cameroun → 201', async () => {
+  const r = await request(app)
+    .post(`${base}/register`)
+    .send({ ...REG, email: 'diaspora@example.fr', phone: '+33612345678' });
+  expect(r.status).toBe(201);
+  expect(r.body.phone).toBe('+33612345678');
+});
+
+t('register : numéro non E.164 → 400 VALIDATION_ERROR', async () => {
+  for (const phone of ['237690000000', '+0123456789', '+1234567', '690000000']) {
+    const r = await request(app)
+      .post(`${base}/register`)
+      .send({ ...REG, email: `x${Math.abs(phone.length)}@example.cm`, phone });
+    expect(r.status).toBe(400);
+  }
+});
+
 t('register : téléphone déjà utilisé → 409 PHONE_ALREADY_USED', async () => {
   await request(app).post(`${base}/register`).send(REG);
   const r = await request(app)

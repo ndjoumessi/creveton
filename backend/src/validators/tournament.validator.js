@@ -6,7 +6,7 @@ const {
   TOURNAMENT_TYPES,
   TOURNAMENT_STATUSES,
   PAYMENT_PROVIDERS,
-  PHONE_REGEX,
+  MOMO_PHONE_REGEX,
 } = require('../utils/constants');
 
 /** GET /tournaments?status=&type= */
@@ -25,7 +25,10 @@ const start = Joi.object({
 const join = Joi.object({
   payment: Joi.object({
     provider: Joi.string().valid(...PAYMENT_PROVIDERS).required(),
-    phone: Joi.string().pattern(PHONE_REGEX).required(),
+    // Mobile Money camerounais uniquement — voir MOMO_PHONE_REGEX (constants.js).
+    phone: Joi.string().pattern(MOMO_PHONE_REGEX).required().messages({
+      'string.pattern.base': 'Le numéro Mobile Money doit être au format +237XXXXXXXXX.',
+    }),
   }).optional(),
 });
 

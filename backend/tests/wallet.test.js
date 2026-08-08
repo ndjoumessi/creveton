@@ -69,6 +69,21 @@ t('POST /wallet/recharge → 202 pending + reference', async () => {
   expect(r.body.transaction_id).toBeDefined();
 });
 
+// Le téléphone du COMPTE est international depuis 08-2026 (cf. auth.test.js),
+// mais celui du Mobile Money reste camerounais : les PSP branchés
+// (orange_money, mtn_momo, campay) n'opèrent qu'au Cameroun. Un compte étranger
+// ne doit donc pas pouvoir recharger avec son numéro national.
+t('recharge : numéro Mobile Money hors Cameroun → 400', async () => {
+  const { token } = await actor();
+  for (const phone of ['+33612345678', '+14155552671']) {
+    const r = await request(app)
+      .post('/api/v1/wallet/recharge')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ amount: 2000, provider: 'mtn_momo', phone });
+    expect(r.status).toBe(400);
+  }
+});
+
 t('recharge idempotente (Idempotency-Key) → une seule transaction', async () => {
   const { user, token } = await actor();
   const send = () =>
