@@ -685,6 +685,8 @@
     "noReview": "Aucun détail disponible pour cette partie.",
     "notFound": "Partie introuvable.",
     "offline": "Connexion requise pour afficher le détail d'une partie.",
-    "cardA11y": "{{title}}, {{score}} points — voir le détail"
+    "cardA11y": "{{title}}, {{score}} points — voir le détail",
+    "timedOut": "Temps écoulé",
+    "noAnswer": "Sans réponse"
   }
 }

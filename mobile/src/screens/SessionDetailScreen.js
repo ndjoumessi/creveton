@@ -50,14 +50,26 @@ function ReviewQuestion({ item, index, lang, styles, colors }) {
   const explanation =
     lang === 'en' && item.explanation_en ? item.explanation_en : item.explanation;
   const elapsed = item.elapsed_ms != null ? (item.elapsed_ms / 1000).toFixed(1) : null;
-  const skipped = item.selected_index == null;
+  // Sans réponse : trois cas à ne PAS confondre. `selected_index == null` couvre
+  // aussi bien « j'ai appuyé sur Passer » que « le chrono a expiré » — le premier
+  // est un choix, le second un accident. Le drapeau `skipped` les sépare (persisté
+  // côté serveur depuis 08-2026). Les parties ANTÉRIEURES ne le portent pas : on
+  // reste alors neutre plutôt que d'accuser à tort l'utilisateur d'avoir passé.
+  const noAnswer = item.selected_index == null;
+  const noAnswerLabel = !noAnswer
+    ? null
+    : item.skipped === true
+      ? t('sessionDetail.skipped')
+      : item.skipped === false
+        ? t('sessionDetail.timedOut')
+        : t('sessionDetail.noAnswer');
 
   return (
     <AppCard tone="light" padding="md" radius={radius.lg} style={styles.qCard}>
       <View style={styles.qHead}>
         <Label color={colors.textMuted}>{t('sessionDetail.questionN', { n: index + 1 })}</Label>
-        {skipped ? (
-          <Label color={colors.red400}>{t('sessionDetail.skipped')}</Label>
+        {noAnswerLabel ? (
+          <Label color={colors.red400}>{noAnswerLabel}</Label>
         ) : null}
       </View>
       <Body weight="semibold" style={styles.qText}>{questionText}</Body>

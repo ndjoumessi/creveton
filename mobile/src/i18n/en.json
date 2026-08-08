@@ -685,6 +685,8 @@
     "noReview": "No details available for this game.",
     "notFound": "Game not found.",
     "offline": "You need a connection to view game details.",
-    "cardA11y": "{{title}}, {{score}} points — view details"
+    "cardA11y": "{{title}}, {{score}} points — view details",
+    "timedOut": "Time out",
+    "noAnswer": "No answer"
   }
 }

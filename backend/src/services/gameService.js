@@ -89,6 +89,11 @@ async function submitSession({ userId, mode = 'normal', theme, level, startedAt,
       selected_index: a.selected_index,
       is_correct: result.review[i].is_correct,
       elapsed_ms: a.elapsed_ms,
+      // `skipped` était reçu et utilisé par le score, mais PAS persisté. Or une
+      // question passée et une question dont le chrono a expiré donnent toutes
+      // deux `selected_index: null` : sans ce drapeau, le détail de partie les
+      // confondait et affichait « Passée » pour un simple dépassement de temps.
+      skipped: !!a.skipped,
     }));
 
     // 5. Persistance + crédit XP/niveau dans UNE transaction.
