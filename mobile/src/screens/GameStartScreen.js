@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Info, CloudDownload, CloudCheck, Check } from 'lucide-react-native';
+import { Info, CloudDownload, Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Screen, Title, Heading, Body, Label, AppButton, ChoiceChips, useToast } from '../components';
 import Icon from '../components/Icon';
@@ -360,32 +360,26 @@ export default function GameStartScreen({ navigation, route }) {
                   </Body>
                 </LinearGradient>
               </Pressable>
-              {themeCount === null ? null : themeCount > 0 ? (
-                // Questions en cache local : le thème est jouable hors ligne. Pill
-                // verte (tonalité disponibilité/succès) + CloudCheck — le pendant
-                // positif du badge « En ligne uniquement » ci-dessous. On n'affiche
-                // plus le compte exact : l'utilisateur veut juste savoir « jouable
-                // hors ligne ou pas », pas comparer des quantités.
-                <View style={styles.availableBadge}>
-                  <Icon icon={CloudCheck} size={11} color={colors.green700} />
-                  <Label size="caption" weight="semibold" color={colors.green700}>
-                    {t('gameStart.availableOffline')}
-                  </Label>
-                </View>
-              ) : (
-                // Aucune question en cache local pour ce thème : il se charge à la
-                // demande depuis le serveur (jouable en ligne, mais pas de secours
-                // hors ligne). Ce n'est PAS un état de déconnexion réseau — d'où
-                // « En ligne uniquement » + icône de téléchargement cloud (et non
-                // « Connexion requise » + Wi-Fi barré, qui faisaient croire à une
-                // coupure). drawForMode complète via l'API quand on est connecté.
-                <View style={styles.offlineBadge}>
-                  <Icon icon={CloudDownload} size={11} color={colors.red600} />
-                  <Label size="caption" weight="semibold" color={colors.red600}>
-                    {t('gameStart.onlineOnly')}
-                  </Label>
-                </View>
-              )}
+              {/* On ne signale QUE l'exception. « Disponible hors ligne » couvrait
+                  le cas normal (4 thèmes sur 6) : six pastilles sous six cartes,
+                  dont quatre pour dire « tout va bien » — du bruit qui noyait la
+                  seule information utile. Reste « En ligne uniquement », une vraie
+                  contrainte : sans réseau, ces thèmes ne se lancent pas.
+                  Ce n'est PAS un état de déconnexion — le thème n'a simplement
+                  aucune question en cache et se charge à la demande.
+                  Le conteneur garde sa hauteur même vide : la grille est en deux
+                  colonnes, et une pastille présente d'un côté seulement
+                  décalerait la carte voisine. */}
+              <View style={styles.badgeSlot}>
+                {themeCount === 0 ? (
+                  <View style={styles.offlineBadge}>
+                    <Icon icon={CloudDownload} size={11} color={colors.red600} />
+                    <Label size="caption" weight="semibold" color={colors.red600}>
+                      {t('gameStart.onlineOnly')}
+                    </Label>
+                  </View>
+                ) : null}
+              </View>
             </Animated.View>
           );
         })}
@@ -506,19 +500,9 @@ const makeStyles = (colors) => StyleSheet.create({
   // pastelGreen : ~9:1 (excellent, clair ET sombre). La bordure green500 donne la
   // forme en mode CLAIR, où pastelGreen sur crème contraste peu ; en sombre la pill
   // claire ressort déjà nettement sur le fond vert nuit.
-  availableBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 4,
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-    backgroundColor: colors.pastelGreen,
-    borderWidth: 1,
-    borderColor: colors.green500,
-  },
+  // Hauteur réservée : la pastille n'apparaît que sur les thèmes sans cache,
+  // mais l'espace est gardé pour que les deux colonnes restent alignées.
+  badgeSlot: { minHeight: 26, justifyContent: 'center' },
   // Badge « Connexion requise » : pill compacte, paire figée red200/red600 (comme
   // l'accent d'erreur du Toast), sans rouge plein agressif. Icône CloudDownload + texte
   // semibold, calé à gauche sous la carte. La bordure red400 est INDISPENSABLE en

@@ -361,11 +361,12 @@
     "myPosition": "My position",
     "leaderboard": {
       "myPosition": "My position",
-      "outOf": "out of {{count}} player(s)",
       "pts": "pts",
       "rank1": "🏆 Leaderboard champion!",
       "rankTop10": "Top 10 — excellent!",
-      "rankOther": "Keep it up!"
+      "rankOther": "Keep it up!",
+      "outOf_one": "out of {{formatted}} player",
+      "outOf_other": "out of {{formatted}} players"
     },
     "trend": {
       "up": "↑ +{{n}} this week",
@@ -388,14 +389,16 @@
       "headerLevel": "Level {{level}} — Player",
       "levelMax": "Max level",
       "scoreEvolution": "Score evolution",
-      "themeGames": "{{games}} game(s)",
       "themeNotPlayed": "Not played yet",
-      "mix": "Mix · {{games}} game(s)",
       "incomplete": "Incomplete",
       "outOfPlayers": "out of {{totalPlayers}} players",
       "globalRank": "Global ranking",
       "mePill": "You",
-      "themePlayCta": "play"
+      "themePlayCta": "play",
+      "themeGames_one": "{{count}} game",
+      "themeGames_other": "{{count}} games",
+      "mix_one": "Mix · {{count}} game",
+      "mix_other": "Mix · {{count}} games"
     },
     "themePerf": {
       "best": "Best: {{pts}} pts",
@@ -573,7 +576,6 @@
   "challengesHub": {
     "title": "Challenges",
     "subtitle": "Challenge your friends",
-    "activeCount": "{{count}} active",
     "launchCta": "Start a challenge",
     "new": "New",
     "confirmDecline": "Decline this challenge?",
@@ -629,7 +631,9 @@
       "cancelled": "Challenge cancelled",
       "accepted": "Challenge accepted",
       "soon": "Coming soon"
-    }
+    },
+    "activeCount_one": "{{count}} active",
+    "activeCount_other": "{{count}} active"
   },
   "changePassword": {
     "title": "Change password",
@@ -650,13 +654,15 @@
     "tournaments": "Tournaments available online only",
     "challenges": "Challenges require a connection",
     "loginRequired": "A connection is required to create an account",
-    "syncedSessions": "{{count}} result(s) synchronized",
-    "pendingSessions": "{{count}} result(s) pending",
     "savedOffline": "Results saved offline",
     "savedOfflineMessage": "Your game will be sent automatically once the connection is back.",
     "avatarDisabled": "Photo update available online",
     "title": "You're offline",
-    "message": "Check your internet connection, then try again."
+    "message": "Check your internet connection, then try again.",
+    "syncedSessions_one": "{{count}} result synchronized",
+    "syncedSessions_other": "{{count}} results synchronized",
+    "pendingSessions_one": "{{count}} result pending",
+    "pendingSessions_other": "{{count}} results pending"
   },
   "sessionsHistory": {
     "title": "History",

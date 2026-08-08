@@ -361,11 +361,12 @@
     "myPosition": "Ma position",
     "leaderboard": {
       "myPosition": "Ma position",
-      "outOf": "sur {{count}} joueur(s)",
       "pts": "pts",
       "rank1": "🏆 Champion du classement !",
       "rankTop10": "Top 10 — excellent !",
-      "rankOther": "Continue comme ça !"
+      "rankOther": "Continue comme ça !",
+      "outOf_one": "sur {{formatted}} joueur",
+      "outOf_other": "sur {{formatted}} joueurs"
     },
     "trend": {
       "up": "↑ +{{n}} cette semaine",
@@ -388,14 +389,16 @@
       "headerLevel": "Niveau {{level}} — Joueur",
       "levelMax": "Niveau max",
       "scoreEvolution": "Évolution du score",
-      "themeGames": "{{games}} partie(s)",
       "themeNotPlayed": "Pas encore joué",
-      "mix": "Mix · {{games}} partie(s)",
       "incomplete": "Incomplet",
       "outOfPlayers": "sur {{totalPlayers}} joueurs",
       "globalRank": "Classement global",
       "mePill": "Vous",
-      "themePlayCta": "jouer"
+      "themePlayCta": "jouer",
+      "themeGames_one": "{{count}} partie",
+      "themeGames_other": "{{count}} parties",
+      "mix_one": "Mix · {{count}} partie",
+      "mix_other": "Mix · {{count}} parties"
     },
     "themePerf": {
       "best": "Meilleur : {{pts}} pts",
@@ -573,7 +576,6 @@
   "challengesHub": {
     "title": "Défis",
     "subtitle": "Affronte tes amis",
-    "activeCount": "{{count}} actif(s)",
     "launchCta": "Lancer un défi",
     "new": "Nouveau",
     "confirmDecline": "Refuser ce défi ?",
@@ -629,7 +631,9 @@
       "cancelled": "Challenge annulé",
       "accepted": "Challenge accepté",
       "soon": "Bientôt disponible"
-    }
+    },
+    "activeCount_one": "{{count}} actif",
+    "activeCount_other": "{{count}} actifs"
   },
   "changePassword": {
     "title": "Changer le mot de passe",
@@ -650,13 +654,15 @@
     "tournaments": "Tournois disponibles en ligne uniquement",
     "challenges": "Les défis nécessitent une connexion",
     "loginRequired": "Une connexion est requise pour créer un compte",
-    "syncedSessions": "{{count}} résultat(s) synchronisé(s)",
-    "pendingSessions": "{{count}} résultat(s) en attente",
     "savedOffline": "Résultats sauvegardés hors ligne",
     "savedOfflineMessage": "Ta partie sera envoyée automatiquement dès le retour de la connexion.",
     "avatarDisabled": "Modification photo disponible en ligne",
     "title": "Pas de connexion",
-    "message": "Vérifie ta connexion internet, puis réessaie."
+    "message": "Vérifie ta connexion internet, puis réessaie.",
+    "syncedSessions_one": "{{count}} résultat synchronisé",
+    "syncedSessions_other": "{{count}} résultats synchronisés",
+    "pendingSessions_one": "{{count}} résultat en attente",
+    "pendingSessions_other": "{{count}} résultats en attente"
   },
   "sessionsHistory": {
     "title": "Historique",

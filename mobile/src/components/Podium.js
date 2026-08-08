@@ -27,12 +27,6 @@ import { medalEmoji, SILVER, BRONZE } from '../utils/rank';
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
 
-// Nom tronqué à 14 caractères max (ellipsis) pour les cartes podium (card).
-function truncName(name, max = 14) {
-  const s = String(name || '');
-  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
-}
-
 // Ordre visuel des marches : index données 1 (2e) · 0 (1er) · 2 (3e).
 const ORDER = [1, 0, 2];
 
@@ -79,7 +73,7 @@ export default function Podium({ players = [], variant = 'compact', loading = fa
                   (Avatar gère uri→initiales). Prêt si le backend ajoute la photo. */}
               <Avatar name={p.name || ''} size={isFirst ? 56 : 44} gold={isFirst} uri={p.avatar_url || null} />
               <Text style={styles.cardName} numberOfLines={1}>
-                {truncName(p.name)}
+                {p.name}
               </Text>
               {p.ville ? (
                 <Text style={styles.cardVille} numberOfLines={1}>
@@ -163,7 +157,11 @@ const makeStyles = (colors) =>
       fontFamily: fonts.bodySemiBold,
       fontSize: fontSizes.sm,
       marginTop: spacing.sm,
-      maxWidth: 88,
+      // `maxWidth: 88` bridait le nom bien avant la largeur réelle de la colonne
+      // (flex:1 sur 3 ⇒ ~280 px) : « Nelson Djoumessi » sortait en « Nelson Djou… »
+      // alors que la place ne manquait pas. On laisse la colonne décider, et
+      // `numberOfLines={1}` tronque seulement quand c'est nécessaire.
+      alignSelf: 'stretch',
       textAlign: 'center',
     },
     compactScore: {

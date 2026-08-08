@@ -458,7 +458,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
           const played = games > 0;
           // Méta compacte « N parties · X% » sur une ligne.
           const meta = played
-            ? `${t('stats.misc.themeGames', { games })}${rate !== null ? ` · ${rate}%` : ''}`
+            ? `${t('stats.misc.themeGames', { count: games })}${rate !== null ? ` · ${rate}%` : ''}`
             : t('stats.misc.themeNotPlayed');
           // Thème jamais joué : la ligne disait « Pas encore joué » et n'allait
           // nulle part — une invitation sans porte. On la rend actionnable vers
@@ -507,7 +507,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
           <View style={styles.themeRow}>
             <View style={styles.themeHead}>
               <Body weight="medium" size="md" style={styles.themeLabel}>🎲 Mix</Body>
-              <Label size="xs">{t('stats.misc.mix', { games: mixGames })}</Label>
+              <Label size="xs">{t('stats.misc.mix', { count: mixGames })}</Label>
             </View>
           </View>
         ) : null}
@@ -599,7 +599,7 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
               {t('common.rank', { n: fmt(myRank.rank) })}
             </Title>
             {totalPlayers ? (
-              <Body size="sm" muted>{t('stats.leaderboard.outOf', { count: fmt(totalPlayers) })}</Body>
+              <Body size="sm" muted>{t('stats.leaderboard.outOf', { count: totalPlayers, formatted: fmt(totalPlayers) })}</Body>
             ) : (
               <Body size="sm" muted>{t('stats.misc.globalRank')}</Body>
             )}
