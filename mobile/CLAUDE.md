@@ -10,7 +10,7 @@ Ce dossier (`mobile/`) est une app d'un monorepo : `backend/` (API REST + socket
 - Navigation : `@react-navigation/native` v7 (native-stack + bottom-tabs)
 - State : `zustand` ; Réseau : `axios` ; Temps réel : `socket.io-client`
 - Stockage : `@react-native-async-storage/async-storage` (tokens/user/sync) + `expo-sqlite` (cache questions)
-- UI : `react-native-svg`, `expo-linear-gradient`, `expo-haptics`, polices `@expo-google-fonts/outfit` + `.../space-grotesk`
+- UI : `react-native-svg`, `expo-linear-gradient`, `expo-haptics`, polices `@expo-google-fonts/outfit` (titres) + `.../inter` (corps, depuis 08-2026 ; `space-grotesk` reste installé mais n'est plus référencé)
 - Notifs : `expo-notifications`
 
 ## Commandes
@@ -100,7 +100,7 @@ existe en sombre (héritée via `...colors`, surchargée seulement si le clair y
 - Certains composants sont **volontairement figés clair-sur-sombre** (CircularTimer, ProgressDots, LoadingScreen, Toast, Splash) : leurs tokens n'ont pas de variante dark, c'est normal.
 
 **Typographie — `components/Text.js`** : `Title/Heading/Body/Label` (Outfit pour Title/Heading,
-Space Grotesk pour Body/Label), **theme-aware**. Props opt-in `size` (clé de `fontSizes` ou
+Inter pour Body/Label depuis 08-2026), **theme-aware**. Props opt-in `size` (clé de `fontSizes` ou
 nombre px) et `weight` (poids dans la famille du variant) — **defaults inchangés** (rétro-compat
 stricte), valeur inconnue ignorée sans crash. Ex. `<Title size="lg">⚡ 120 pts</Title>`,
 `<Heading size={17}>…</Heading>`, `<Body weight="semibold" size="md">…</Body>`. Règle charte :
@@ -134,7 +134,10 @@ marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-id
 ## Conventions & règles à respecter
 
 - **Charte « Cockpit Émeraude »** : vert profond (#0b2e1a/#1a5230/#2a8a4f/#5eca84), **or rare ≤ 10% de l'écran** (CTA primaires, rewards, podium, timer, états actifs), crème (#fdf6e9), rouge (#e74c3c). Toujours utiliser les tokens de `theme.js`, jamais de couleurs en dur.
-- **Fonts** : Outfit (titres/scores), Space Grotesk (corps). Contraste ≥ 4.5:1.
+- **Fonts** : Outfit (titres/scores), **Inter** (corps — ex-Space Grotesk, aligné sur la
+  console admin `b6d6a77` : une police à fort caractère fatigue en texte courant ;
+  l'identité reste portée par les titres). Bascule via les 4 tokens `fonts.body*` de
+  `theme.js` — aucun écran ne nomme la famille en dur. Contraste ≥ 4.5:1.
 - **Logo** : Logo = `assets/logo.png` (cœur drapeau camerounais). Composant : `src/components/Logo.js` → `<Image source={require('../../assets/logo.png')} />`.
 - **Animations** : `Animated` (RN), slide+fade ≤ 300ms (max 500), ease-out, retour haptique < 120ms sur les boutons.
 - **Anti-triche (CDC §2.8)** : `correct_index` n'est **jamais** dans la vue joueur des questions de tournoi/challenge. Le feedback immédiat du quiz passe par **`POST /sessions/answer`** (mode normal seulement) ; `/sessions/submit` reste l'autorité finale du score. Ne jamais fabriquer de bonne réponse côté client.

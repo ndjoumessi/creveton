@@ -225,11 +225,15 @@ export const fonts = {
   titleBold: 'Outfit_700Bold',
   titleExtraBold: 'Outfit_800ExtraBold',
   titleBlack: 'Outfit_900Black',
-  // Corps : Space Grotesk
-  bodyRegular: 'SpaceGrotesk_400Regular',
-  bodyMedium: 'SpaceGrotesk_500Medium',
-  bodySemiBold: 'SpaceGrotesk_600SemiBold',
-  bodyBold: 'SpaceGrotesk_700Bold',
+  // Corps : Inter (08-2026, ex-Space Grotesk). Même arbitrage que la console
+  // admin (b6d6a77) : Outfit garde les titres et l'identité, Inter prend le texte
+  // courant, où une police à fort caractère fatigue et ralentit la lecture.
+  // Point de bascule UNIQUE : aucun écran ne nomme la famille en dur, tout passe
+  // par ces quatre tokens — revenir en arrière tient en quatre lignes.
+  bodyRegular: 'Inter_400Regular',
+  bodyMedium: 'Inter_500Medium',
+  bodySemiBold: 'Inter_600SemiBold',
+  bodyBold: 'Inter_700Bold',
 
   // Fallbacks « System » si une famille custom n'est pas encore chargée.
   regular: 'System',

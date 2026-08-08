@@ -1,5 +1,5 @@
 // Point d'entrée de l'app Creveton.
-// - Charge les polices (Outfit / Space Grotesk)
+// - Charge les polices (Outfit pour les titres / Inter pour le corps)
 // - Maintient le splash natif jusqu'à ce que tout soit prêt
 // - Initialise SQLite + delta sync (non bloquant) + notifications push
 // - Monte le SafeAreaProvider + AppNavigator
@@ -17,12 +17,16 @@ import {
   Outfit_800ExtraBold,
   Outfit_900Black,
 } from '@expo-google-fonts/outfit';
+// Corps de texte : Inter (08-2026). La console admin a fait le même chemin en
+// août (commit b6d6a77, « lisibilité — Inter en corps ») : une police à fort
+// caractère fatigue en texte courant. Les TITRES restent en Outfit — c'est là
+// que vit la personnalité de la marque.
 import {
-  SpaceGrotesk_400Regular,
-  SpaceGrotesk_500Medium,
-  SpaceGrotesk_600SemiBold,
-  SpaceGrotesk_700Bold,
-} from '@expo-google-fonts/space-grotesk';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 
 import * as Sentry from '@sentry/react-native';
 
@@ -71,11 +75,11 @@ function App() {
     // des variants Text.js) — étaient absents ici → rendu en police système (fallback).
     Outfit_800ExtraBold,
     Outfit_900Black,
-    SpaceGrotesk_400Regular,
-    SpaceGrotesk_500Medium,
-    // bodySemiBold (weight="semibold" des variants) — idem, manquant → fallback.
-    SpaceGrotesk_600SemiBold,
-    SpaceGrotesk_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    // bodySemiBold (weight="semibold" des variants) — doit être chargé, sinon fallback.
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   // Init des services au démarrage (DB + premier sync), non bloquant. Les
