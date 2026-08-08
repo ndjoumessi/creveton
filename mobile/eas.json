@@ -18,7 +18,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://creveton-staging.up.railway.app/api/v1",
-        "EXPO_PUBLIC_SENTRY_ENV": "staging"
+        "EXPO_PUBLIC_SENTRY_ENV": "staging",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "production": {
@@ -28,7 +29,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://creveton-staging.up.railway.app/api/v1",
-        "EXPO_PUBLIC_SENTRY_ENV": "production"
+        "EXPO_PUBLIC_SENTRY_ENV": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },

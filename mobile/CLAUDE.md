@@ -171,10 +171,19 @@ marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-id
   plus nécessaire.** Vérif si besoin : `which -a npx` + `/usr/local/bin/npx --version`
   (doit afficher 11.x, pas 6.4.1). (Les `npm --version` interactifs, aliasés vers nvm,
   restent trompeurs : c'est le `npx` **spawné** qu'il faut vérifier.)
-- **Upload source-maps Sentry** : en local, la tâche Gradle `…SentryUpload` échoue faute
-  d'identifiants (`An organization ID or slug is required`). Pour un APK de test :
-  `export SENTRY_DISABLE_AUTO_UPLOAD=true` (l'app reste fonctionnelle ; source-maps
-  uploadables séparément plus tard).
+- **Upload source-maps Sentry — RÉSOLU pour le cloud (2026-08-08).** La tâche Gradle
+  `…SentryUpload` échoue faute d'identifiants (`error: An organization ID or slug is
+  required`) et **fait échouer tout le build**, en local comme sur EAS cloud. Cause : le
+  plugin `@sentry/react-native` est déclaré nu dans `app.json` (ni org ni projet) et il
+  n'existe **aucun** `sentry.properties` versionné — `android/` est généré au prebuild.
+  Le compte Sentry n'existe pas encore (`App.js` : `Sentry.init` est inerte sans DSN),
+  donc l'upload n'a rien à alimenter. **Fix appliqué** : `SENTRY_DISABLE_AUTO_UPLOAD=true`
+  posé dans `eas.json`, profils `preview` **et** `production` — le cloud n'avait jamais
+  reçu le traitement qui était documenté ici pour le local seul, d'où un build cloud perdu
+  le 2026-08-08. En local, la variable reste à exporter à la main (cf. commande plus bas).
+  ⚠️ Le jour où Sentry est réellement branché, il ne suffira PAS de retirer cette variable :
+  il faudra `SENTRY_ORG`, `SENTRY_PROJECT` et un `SENTRY_AUTH_TOKEN` en secret EAS
+  (`eas secret:create`), sinon le build re-cassera exactement de la même façon.
 - `ANDROID_HOME` requis : `export ANDROID_HOME=~/Library/Android/sdk`.
 - devDep requise (résolue par `npx` sans repasser en mode install) :
   `eas-cli-local-build-plugin` — épinglée dans `mobile/package.json`.
