@@ -471,9 +471,14 @@ export default function HomeScreen({ navigation }) {
                   accessibilityRole="button"
                 >
                   <ThemeBadge theme={tournament.theme} size="sm" showLabel={false} />
+                  {/* `textOnDark` et NON `colors.white` : la carte est en
+                      `green900`, une couleur identitaire qui ne bascule jamais,
+                      alors que `white` bascule (#ffffff → #16331f en sombre).
+                      Le titre tombait donc à 1.08:1 sur son propre fond — le nom
+                      du tournoi était invisible en thème sombre. */}
                   <Heading
                     size="md"
-                    color={colors.white}
+                    color={colors.textOnDark}
                     numberOfLines={2}
                     style={styles.tName}
                   >

@@ -38,6 +38,14 @@ export const colors = {
   textBody: '#374151', // gris ardoise — contraste ≥ 4.5:1 sur clair
   textMuted: '#6b7280', // gris moyen lisible
   textFaint: '#9ca3af', // labels secondaires / tabs inactifs
+  // ⚠ RÈGLE : sur une surface FIGÉE — `green900`, `green700`, `gold500`, qui sont
+  // des couleurs de MARQUE et ne basculent jamais — n'employer QUE des tokens
+  // `*OnDark` (ou `green900` sur l'or). Les tokens thémés y produisent un
+  // contraste correct dans un thème et illisible dans l'autre. Mesuré sur
+  // `green900` : `white` 14.79:1 en clair mais 1.08:1 en sombre ; `textDark`
+  // 13.58:1 en sombre mais 1.00:1 en clair ; `cream` 13.76:1 puis 1.21:1.
+  // Ces trois-là ont déjà produit des textes invisibles en production.
+  // `textOnDark` (13.76:1 / 14.79:1) est sûr des deux côtés — c'est le défaut.
   textOnDark: '#fdf6e9',
   textOnDarkMuted: 'rgba(253, 246, 233, 0.72)',
   textOnDarkFaint: 'rgba(253, 246, 233, 0.5)',

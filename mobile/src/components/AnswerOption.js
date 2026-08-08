@@ -192,7 +192,11 @@ const makeStyles = (colors, isDark) => StyleSheet.create({
   optTextWrong: { color: isDark ? colors.red400 : colors.red600 },
   // Sur fond or : `colors.white` (blanc en clair, surface sombre en sombre) garde
   // le contraste sur gold500 dans les deux thèmes.
-  optTextNeutral: { color: colors.white, fontFamily: fonts.bodySemiBold },
+  // Sur l'or, l'encre est SOMBRE — c'est la convention du variant primary
+  // d'AppButton (`text: { color: green900 }`). `colors.white` donnait 2.38:1 en
+  // thème clair : illisible. Le hasard le sauvait en sombre (où `white` vaut
+  // #16331f, donc 5.79:1) — un contraste correct par accident reste un bug.
+  optTextNeutral: { color: colors.green900, fontFamily: fonts.bodySemiBold },
   goodLabel: {
     fontFamily: fonts.bodyMedium,
     fontSize: 11,

@@ -5,7 +5,7 @@
 // sous l'icône. Inactif : gris (#9ca3af). Hauteur 80 + safe area bas.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Text, View, StyleSheet } from 'react-native';
+import { Animated, Text, View, StyleSheet, useWindowDimensions } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -29,8 +29,16 @@ const LABEL_KEYS = {
   Profile: 'tabs.profile',
 };
 
+// 4 onglets, moins les marges internes de React Navigation. Sur un écran de
+// 360 dp cela donne ~84 dp par libellé — « Tournaments » (le plus long des deux
+// langues) mesure ~66 dp à 11 px. La marge couvre une traduction plus longue.
+const TAB_COUNT = 4;
+const TAB_GUTTER = 6;
+
 function TabItem({ routeName, focused }) {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const itemWidth = Math.max(64, width / TAB_COUNT - TAB_GUTTER * 2);
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const lift = useRef(new Animated.Value(focused ? 1 : 0)).current;
@@ -49,22 +57,18 @@ function TabItem({ routeName, focused }) {
   const color = focused ? colors.gold500 : isDark ? colors.textMuted : colors.textFaint;
 
   return (
-    <View style={styles.item}>
+    <View style={[styles.item, { width: itemWidth }]}>
       <Animated.View style={{ transform: [{ translateY }] }}>
         <Icon icon={ICONS[routeName]} size={24} color={color} strokeWidth={focused ? 2.25 : 1.75} />
       </Animated.View>
-      {/* `numberOfLines` + `adjustsFontSizeToFit` : le libellé doit RÉTRÉCIR,
-          jamais passer à la ligne. « Tournaments » (EN) coupait en
-          « Tournamen / ts » — un mot brisé se lit comme un bug d'affichage, et
-          la barre grandissait d'une ligne. Un libellé de traduction peut
-          toujours être plus long que prévu ; on cadre la contrainte au lieu de
-          la subir langue par langue. */}
-      <Text
-        style={[styles.label, { color }]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.85}
-      >
+      {/* Une seule ligne, une seule TAILLE. `adjustsFontSizeToFit` réglait bien
+          le retour à la ligne (« Tournamen / ts ») mais en rétrécissant le seul
+          libellé trop long : « Tournois » s'affichait visiblement plus petit que
+          « Accueil » et « Profil » à côté. Des libellés de tailles différentes
+          dans une même barre se lisent comme un défaut de rendu.
+          La largeur de l'onglet est désormais CALCULÉE (cf. `itemWidth`), ce qui
+          laisse la place au plus long libellé sans toucher à la police. */}
+      <Text style={[styles.label, { color }]} numberOfLines={1}>
         {t(LABEL_KEYS[routeName])}
       </Text>
       <View style={[styles.dot, focused && styles.dotActive]} />
@@ -143,10 +147,12 @@ const makeStyles = (colors) => StyleSheet.create({
     ...shadow.tabBar,
   },
   tabItem: { paddingTop: spacing.xs },
-  // Largeur FIXE 64 px remplacée par la place réellement disponible : avec 4
-  // onglets sur un écran de 360 dp, chacun dispose d'environ 90 dp. Les 64 px
-  // hérités des 6 onglets bridaient inutilement les libellés longs.
-  item: { alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch', minHeight: MIN_TOUCH, gap: 2, paddingHorizontal: 2 },
+  // Pas de largeur figée ici : elle est calculée par TabItem à partir de la
+  // largeur de fenêtre (`useWindowDimensions`, donc réactif à la rotation et à
+  // l'écran scindé). Les 64 px d'origine dataient des SIX onglets et bridaient
+  // les libellés longs ; `alignSelf: 'stretch'` seul ne suffisait pas, le
+  // conteneur d'icône de React Navigation ne s'élargit pas de lui-même.
+  item: { alignItems: 'center', justifyContent: 'center', minHeight: MIN_TOUCH, gap: 2 },
   label: { fontFamily: fonts.bodyMedium, fontSize: 11, textAlign: 'center' },
   dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'transparent', marginTop: 1 },
   dotActive: { backgroundColor: colors.gold500 },
