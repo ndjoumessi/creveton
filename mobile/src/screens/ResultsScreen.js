@@ -267,6 +267,16 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
     setOpenRows((m) => ({ ...m, [i]: !m[i] }));
   };
 
+  // Tout déplier / tout replier. Une partie à 3/10 laisse SEPT cartes fermées
+  // qu'il faut ouvrir une par une pour voir ce qu'on a raté — c'est-à-dire la
+  // seule chose qu'on vient chercher dans un récapitulatif. Le bouton n'apparaît
+  // qu'à partir de trois questions (en dessous, deux taps suffisent).
+  const allOpen = review.length > 0 && review.every((_, i) => openRows[i]);
+  const toggleAll = () => {
+    LayoutAnimation.configureNext(EXPAND_ANIM);
+    setOpenRows(allOpen ? {} : Object.fromEntries(review.map((_, i) => [i, true])));
+  };
+
   // Reveal séquentiel des cartes du récap (stagger 80 ms) : slide-up + fondu.
   const rowAnims = useRef(review.map(() => new Animated.Value(0))).current;
   useEffect(() => {
@@ -627,9 +637,16 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
       ) : null}
 
       {/* RÉCAP */}
-      <Heading color={colors.cream} style={styles.sectionTitle}>
-        {t('results.recap')}
-      </Heading>
+      <View style={styles.recapHeader}>
+        <Heading color={colors.cream}>{t('results.recap')}</Heading>
+        {review.length >= 3 ? (
+          <Pressable onPress={toggleAll} hitSlop={8} accessibilityRole="button">
+            <Label weight="semibold" color={colors.gold400}>
+              {t(allOpen ? 'results.misc.collapseAll' : 'results.misc.expandAll')}
+            </Label>
+          </Pressable>
+        ) : null}
+      </View>
       <AppCard tone="light" padding="md" radius={radius.lg} style={styles.recapCard}>
         {review.length ? (
           review.map((item, i) => {
@@ -660,7 +677,12 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
                     <Icon icon={good ? Check : X} size={16} color={colors.white} strokeWidth={3} />
                   </View>
                   <View style={styles.recapBody}>
-                    <Body weight="semibold" size="md" color={colors.textDark} numberOfLines={open ? undefined : 1}>
+                    {/* Deux lignes fermé, pas une : « Quelle est la monnaie
+                        utilisé… » ne permet pas d'identifier la question, et il
+                        faut alors ouvrir chaque carte pour savoir laquelle on
+                        regarde. Le libellé Correct/Faux à droite est court, la
+                        place existe. */}
+                    <Body weight="semibold" size="md" color={colors.textDark} numberOfLines={open ? undefined : 2}>
                       {title}
                     </Body>
                   </View>
@@ -876,6 +898,16 @@ const styles = StyleSheet.create({
   statLabel: { textAlign: 'center' },
 
   sectionTitle: { marginBottom: spacing.sm },
+  // Le titre ne porte PAS `sectionTitle` ici : sa marge basse décalerait le
+  // bouton « Tout déplier » vers le haut du fait du centrage. La marge remonte
+  // sur la ligne.
+  recapHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+  },
   recapCard: { gap: 0 },
   recapCardRow: {
     borderRadius: radius.md,

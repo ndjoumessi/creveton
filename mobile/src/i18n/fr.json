@@ -211,6 +211,11 @@
     "themeBonus": {
       "x15": "+50% thème 🔥",
       "x2": "+100% thème 🔥🔥"
+    },
+    "verdict": {
+      "correct": "+{{pts}} pts",
+      "wrong": "Raté",
+      "timeout": "Temps écoulé"
     }
   },
   "results": {
@@ -247,7 +252,9 @@
       "yourAnswer": "Ta réponse",
       "progression": "Ma progression",
       "levelUpTitle": "Niveau supérieur !",
-      "difficultyUnlocked": "Difficulté « {{difficulty}} » débloquée"
+      "difficultyUnlocked": "Difficulté « {{difficulty}} » débloquée",
+      "expandAll": "Tout déplier",
+      "collapseAll": "Tout replier"
     },
     "themeBonus": "🎯 Bonus thème : +{{bonus}} pts",
     "perf": {
@@ -256,8 +263,8 @@
       "keepGoing": "Continue ! 💪"
     },
     "compare": {
-      "up": "↑ +{{pts}}",
-      "down": "↓ −{{pts}}"
+      "up": "↑ {{pts}} pts de plus",
+      "down": "↓ {{pts}} pts de moins"
     }
   },
   "tournaments": {

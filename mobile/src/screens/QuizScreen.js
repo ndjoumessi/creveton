@@ -21,7 +21,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Lightbulb, X } from 'lucide-react-native';
+import { Lightbulb, X, Check, TimerOff as TimerIcon } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import { AnswerOption, LoadingScreen, ProgressDots, CircularTimer, useToast, Title, Heading, Body } from '../components';
 import { useGameStore } from '../store/gameStore';
@@ -352,6 +352,9 @@ export default function QuizScreen({ navigation }) {
           explanation: fb.explanation || null,
           explanation_en: fb.explanation_en || null,
           isCorrect: !!fb.correct,
+          // Points de CETTE question — le total du bandeau monte tout seul, sans
+          // jamais dire de combien. Affiché dans le verdict (cf. styles.verdict).
+          pointsEarned: fb.points_earned || 0,
           timedOut,
         });
         revealExplain();
@@ -495,11 +498,16 @@ export default function QuizScreen({ navigation }) {
   // Une fois la réponse donnée, le chrono est arrêté mais restait AFFICHÉ, figé
   // sur sa dernière valeur — un compteur immobile sur un écran de feedback attire
   // l'œil pour rien, alors que la barre de progression sous l'explication dit déjà
-  // « on passe à la suite ». On l'efface en gardant sa place : le masquer
-  // décalerait tout le contenu vers le haut au moment précis où l'utilisateur lit
-  // la correction. Ne concerne QUE l'anneau par question — le chrono global de
-  // blitz/marathon continue de tourner, il pilote toute la session.
+  // « on passe à la suite ». Ne concerne QUE l'anneau par question — le chrono
+  // global de blitz/marathon continue de tourner, il pilote toute la session.
+  //
+  // La hauteur du créneau (104 dp) reste réservée : la libérer décalerait tout le
+  // contenu au moment précis où l'utilisateur lit la correction. Mais l'effacer
+  // seul laissait un trou franc sous le bandeau — le verdict vient l'occuper en
+  // fondu croisé (cf. styles.verdict).
   const timerFade = useRef(new Animated.Value(1)).current;
+  const verdictFade = timerFade.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
+  const verdictScale = timerFade.interpolate({ inputRange: [0, 1], outputRange: [1, 0.85] });
   useEffect(() => {
     const to = answered ? 0 : 1;
     if (reduceMotion) {
@@ -571,9 +579,48 @@ export default function QuizScreen({ navigation }) {
             }
           />
         ) : (
-          <Animated.View style={{ opacity: timerFade }}>
-            <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
-          </Animated.View>
+          <>
+            <Animated.View style={{ opacity: timerFade }}>
+              <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
+            </Animated.View>
+            {/* Verdict — prend la place de l'anneau une fois la réponse donnée.
+                Le chrono effacé laissait 104 dp de vide sous le bandeau (la
+                hauteur du créneau est réservée pour que rien ne saute) : autant
+                y mettre l'information que le joueur cherche justement à ce
+                moment-là — combien cette question a rapporté, et si le temps
+                est simplement écoulé (une réponse non donnée ne se distingue
+                sinon pas d'un mauvais choix).
+                Même garde que l'explication : en tournoi/défi `correctIndex`
+                est null (anti-triche) — pas de verdict plutôt qu'un faux. */}
+            {answered && answered.correctIndex !== null ? (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.verdict,
+                  answered.isCorrect ? styles.verdictGood : styles.verdictBad,
+                  { opacity: verdictFade, transform: [{ scale: verdictScale }] },
+                ]}
+              >
+                <Icon
+                  icon={answered.timedOut ? TimerIcon : answered.isCorrect ? Check : X}
+                  size={18}
+                  color={answered.isCorrect ? colors.green300 : colors.red400}
+                  strokeWidth={3}
+                />
+                <Heading
+                  weight="bold"
+                  size="md"
+                  color={answered.isCorrect ? colors.green300 : colors.red400}
+                >
+                  {answered.timedOut
+                    ? t('quiz.verdict.timeout')
+                    : answered.isCorrect
+                      ? t('quiz.verdict.correct', { pts: answered.pointsEarned ?? 0 })
+                      : t('quiz.verdict.wrong')}
+                </Heading>
+              </Animated.View>
+            ) : null}
+          </>
         )}
       </View>
 
@@ -721,6 +768,26 @@ const makeStyles = (colors) => StyleSheet.create({
   headerSpacer: { width: 36 }, // équilibre le bouton ✕ → badge « Q x/N » centré
 
   timerWrap: { alignItems: 'center', marginTop: spacing.md, minHeight: 104, justifyContent: 'center' },
+  // Verdict de la question — superposé à l'anneau (même créneau, fondu croisé),
+  // donc en absolu : les deux coexistent le temps de la transition sans que l'un
+  // pousse l'autre. Pastille et non bloc plein : elle doit se lire d'un coup
+  // d'œil sans concurrencer la carte question juste en dessous.
+  verdict: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  // Fond = `whiteVeil` dans les deux cas : l'écran est figé sur `green900` quel
+  // que soit le thème, et `successBg`/`errorBg`, eux, flippent — un fond crème
+  // clair viendrait s'y poser en thème clair. Le voile marche sur les deux ; la
+  // sémantique passe par la bordure, l'icône ET le libellé (jamais la couleur seule).
+  verdictGood: { backgroundColor: colors.whiteVeil, borderColor: colors.green300 },
+  verdictBad: { backgroundColor: colors.whiteVeil, borderColor: colors.red400 },
   dots: { marginTop: spacing.md },
 
   // B. Timer global circulaire (montre) — anneau par mode + M:SS + libellé.
