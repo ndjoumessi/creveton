@@ -97,6 +97,16 @@ export default function StatsScreen({ navigation }) {
   const [tab, setTab] = useState('stats');
   const [refreshing, setRefreshing] = useState(false);
 
+  // « Jouer » vise un ONGLET, or cet écran vit dans MainStack depuis le passage
+  // de 6 à 4 onglets (08-2026) : `navigate('Play')` remontait la pile sans
+  // jamais trouver la route (React Navigation ne descend pas dans le navigateur
+  // enfant d'un frère) — les CTA des états vides ne faisaient rien. La forme
+  // imbriquée est la seule qui atteigne un onglet depuis la pile.
+  const goPlay = useCallback(
+    (params) => navigation.navigate('Tabs', { screen: 'Play', params }),
+    [navigation]
+  );
+
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
@@ -196,8 +206,8 @@ export default function StatsScreen({ navigation }) {
             error={error}
             isOffline={isOffline}
             onRetry={() => loadHistory()}
-            onPlay={() => navigation.navigate('Play')}
-            onPlayTheme={(key) => navigation.navigate('Play', { presetTheme: key })}
+            onPlay={goPlay}
+            onPlayTheme={(key) => goPlay({ presetTheme: key })}
             onViewHistory={() => navigation.navigate('SessionsHistory')}
             onOpenSession={(id) => navigation.navigate('SessionDetail', { sessionId: id })}
           />
@@ -211,7 +221,7 @@ export default function StatsScreen({ navigation }) {
             isOffline={isOffline}
             onRetry={() => loadLeaderboard({ scope: 'global', currentUserId: user?.id })}
             currentUserId={user?.id}
-            onPlay={() => navigation.navigate('Play')}
+            onPlay={goPlay}
           />
         )}
       </View>

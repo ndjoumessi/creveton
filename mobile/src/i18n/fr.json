@@ -673,7 +673,8 @@
     "empty": "Aucune partie jouée",
     "playNow": "Jouer maintenant",
     "noMatch": "Aucune partie pour ce filtre",
-    "clearFilters": "Retirer les filtres"
+    "clearFilters": "Retirer les filtres",
+    "noMatchMore": "Seules les parties déjà chargées sont filtrées — il en reste à charger."
   },
   "sessionDetail": {
     "title": "Détail de la partie",

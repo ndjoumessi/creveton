@@ -61,9 +61,12 @@ export function formatDayMonth(iso, lang = 'fr') {
 }
 
 // Renvoie « Xh Ymin » si startsAt est dans les 24 prochaines heures, sinon null.
-export function formatCountdown(startsAt) {
+// `now` est injectable : l'appelant qui veut un décompte VIVANT lui passe une
+// horloge qui avance (cf. useNow), sinon la valeur est figée au rendu et le
+// « commence dans 2h 14min » ne bouge plus jamais.
+export function formatCountdown(startsAt, now = Date.now()) {
   if (!startsAt) return null;
-  const ms = new Date(startsAt).getTime() - Date.now();
+  const ms = new Date(startsAt).getTime() - now;
   if (Number.isNaN(ms) || ms <= 0 || ms > 24 * 60 * 60 * 1000) return null;
   const totalMin = Math.floor(ms / 60000);
   const h = Math.floor(totalMin / 60);

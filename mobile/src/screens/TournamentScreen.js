@@ -30,6 +30,7 @@ import { parseApiError } from '../services/api';
 import { radius, spacing, themeAccent, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import { useNow } from '../hooks/useNow';
 import { formatDateTime, formatCountdown } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
 
@@ -95,6 +96,15 @@ export default function TournamentScreen() {
     setRefreshing(true);
     load(tab, { isRefresh: true });
   };
+
+  // Décompte vivant. On tique UNE fois pour toute la liste (pas un timer par
+  // carte) et seulement s'il existe au moins un tournoi qui démarre dans les 24 h
+  // — sinon aucune carte n'affiche de décompte et le timer ne servirait à rien.
+  const hasCountdown = useMemo(
+    () => items.some((it) => formatCountdown(it.starts_at) !== null),
+    [items]
+  );
+  const now = useNow(60000, hasCountdown);
 
   // Confirmation native (useConfirm) puis POST /tournaments/:id/join (gratuit →
   // 201 confirmed) et bascule sur la manche live. Erreurs (complet, fermé, flag
@@ -170,6 +180,9 @@ export default function TournamentScreen() {
             keyExtractor={(t, i) => String(t.id ?? i)}
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
+            // `data` ne change pas d'une minute à l'autre : sans extraData, les
+            // lignes ne se re-rendraient pas et le décompte resterait figé.
+            extraData={now}
             refreshing={items.length > 0 && refreshing}
             onRefresh={onRefresh}
             ListEmptyComponent={
@@ -186,7 +199,7 @@ export default function TournamentScreen() {
                 style={styles.empty}
               />
             }
-            renderItem={({ item }) => <TournamentCard t={item} onJoin={onJoin} />}
+            renderItem={({ item }) => <TournamentCard t={item} onJoin={onJoin} now={now} />}
           />
         )}
       </View>
@@ -194,7 +207,7 @@ export default function TournamentScreen() {
   );
 }
 
-function TournamentCard({ t, onJoin }) {
+function TournamentCard({ t, onJoin, now }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t: tr } = useTranslation();
@@ -206,7 +219,7 @@ function TournamentCard({ t, onJoin }) {
   const ratio = t.max_players
     ? Math.min(1, (t.registered_players ?? 0) / t.max_players)
     : 0;
-  const countdown = formatCountdown(t.starts_at);
+  const countdown = formatCountdown(t.starts_at, now);
 
   let ctaTitle = tr('tournaments.card.join');
   let ctaVariant = 'primary';

@@ -8,7 +8,7 @@
 //   - DELETE /challenges/:id                           → annuler (émetteur)
 //   - GET /users/search?q=                             → cibler un ami précis
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -72,10 +72,18 @@ export default function ChallengesScreen({ navigation, route }) {
   });
   const [refreshing, setRefreshing] = useState(false);
 
+  // Requêtes en vol, par onglet. `status` ne peut pas jouer ce rôle : deux effets
+  // qui se déclenchent dans le MÊME rendu lisent tous les deux l'état d'avant le
+  // premier `setStatus`, et « Reçus » partait deux fois à chaque montage. Un ref
+  // est à jour immédiatement, lui.
+  const inFlight = useRef({});
+
   // Charge (ou rafraîchit) un onglet depuis l'API.
   const fetchTab = useCallback(
     async (key, { refresh = false } = {}) => {
       if (!isOnline) return;
+      if (inFlight.current[key]) return;
+      inFlight.current[key] = true;
       setStatus((s) => ({ ...s, [key]: { ...s[key], loading: !refresh, error: null } }));
       try {
         const res = await challenges.list({ status: key, page: 1, limit: PAGE_SIZE });
@@ -83,14 +91,23 @@ export default function ChallengesScreen({ navigation, route }) {
         setStatus((s) => ({ ...s, [key]: { loading: false, error: null, loaded: true } }));
       } catch (e) {
         setStatus((s) => ({ ...s, [key]: { loading: false, error: parseApiError(e).message, loaded: true } }));
+      } finally {
+        inFlight.current[key] = false;
       }
     },
     [isOnline]
   );
 
-  // Onglet « Reçus » au montage (alimente la pastille de compteur).
+  // « Reçus » ET « Envoyés » au montage. La pastille annonce le nombre de défis
+  // ACTIFS = reçus + envoyés en attente ; avec le seul onglet visible chargé, elle
+  // affichait « 2 actifs » puis sautait à « 5 actifs » dès qu'on ouvrait Envoyés —
+  // un compteur qui se corrige tout seul se lit comme un bug. Les deux listes
+  // servent le même compteur, elles se chargent ensemble. « Terminés » reste
+  // paresseux : il n'alimente rien avant d'être ouvert.
   useEffect(() => {
-    if (isOnline) fetchTab('received');
+    if (!isOnline) return;
+    fetchTab('received');
+    fetchTab('sent');
   }, [isOnline, fetchTab]);
 
   // Chargement paresseux du premier affichage de chaque onglet.
@@ -317,7 +334,11 @@ export default function ChallengesScreen({ navigation, route }) {
           tabs={TABS.map((key) => ({
             key,
             label: t(`challengesHub.tabs.${key}`),
-            count: key === 'received' ? data.received.length : 0,
+            // Reçus ET envoyés portent un compteur : les deux sont chargés au
+            // montage et comptent des défis EN ATTENTE, donc actionnables.
+            // « Terminés » n'en porte pas — un historique n'a pas de volume à
+            // signaler, et il est chargé paresseusement.
+            count: key === 'completed' ? 0 : data[key].length,
           }))}
           activeKey={tab}
           onChange={setTab}
@@ -478,12 +499,15 @@ export default function ChallengesScreen({ navigation, route }) {
   );
 }
 
-function OpponentRow({ t, name, level, theme, right }) {
+function OpponentRow({ t, name, level, theme, right, avatarUrl, glyph }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.cardRow}>
-      <Avatar name={name} size={44} />
+      {/* `avatar_url` est bien renvoyé par GET /challenges (jointure opponent) —
+          il n'était simplement pas transmis, et toutes les cartes retombaient sur
+          les initiales alors que la photo était disponible. */}
+      <Avatar name={name} size={44} uri={avatarUrl || null} glyph={glyph} />
       <View style={styles.cardMid}>
         <Heading weight="bold" size="base" numberOfLines={1}>
           {name}
@@ -511,7 +535,14 @@ function ReceivedCard({ t, item, onAccept, onDecline, disabled = false }) {
   const name = item.opponent?.name || '—';
   return (
     <AppCard tone="light" padding="md" radius={radius.lg} style={[styles.card, styles.cardReceived]}>
-      <OpponentRow t={t} name={name} level={item.opponent?.level} theme={item.theme} />
+      <OpponentRow
+        t={t}
+        name={name}
+        avatarUrl={item.opponent?.avatar_url}
+        glyph={item.opponent ? null : '?'}
+        level={item.opponent?.level}
+        theme={item.theme}
+      />
       <Body muted size="xs" style={styles.cardSub}>
         {t('challengesHub.card.sentAgo', { ago: timeAgo(item.created_at) })}
       </Body>
@@ -526,10 +557,20 @@ function ReceivedCard({ t, item, onAccept, onDecline, disabled = false }) {
 function SentCard({ t, item, onCancel, disabled = false }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  // Matchmaking aléatoire : l'adversaire n'existe pas encore. Le libellé porte
+  // déjà le dé — la pastille reçoit le glyphe, pas les initiales du libellé.
+  const random = !item.opponent;
   const name = item.opponent?.name || t('challengesHub.sheet.randomOpponent');
   return (
     <AppCard tone="light" padding="md" radius={radius.lg} style={[styles.card, styles.cardSent]}>
-      <OpponentRow t={t} name={name} level={item.opponent?.level} theme={item.theme} />
+      <OpponentRow
+        t={t}
+        name={name}
+        avatarUrl={item.opponent?.avatar_url}
+        glyph={random ? '🎲' : null}
+        level={item.opponent?.level}
+        theme={item.theme}
+      />
       <View style={styles.sentFooter}>
         {item.your_score != null ? (
           <Heading size="md">{t('challengesHub.card.myScore', { score: item.your_score })}</Heading>

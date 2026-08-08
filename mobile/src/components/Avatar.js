@@ -38,7 +38,12 @@ function hashColor(name = '') {
   return PALETTE[h % PALETTE.length];
 }
 
-export default function Avatar({ name = '', size = 48, gold = false, uri = null, style }) {
+// `glyph` : pastille neutre portant un caractère (emoji ou « ? ») au lieu des
+// initiales, pour les identités qui n'en ont pas. Sans lui, un adversaire encore
+// inconnu affichait les initiales de son LIBELLÉ : « 🎲 Adversaire aléatoire »
+// devenait la pastille « 🎲A ». Fond gris volontaire — la couleur hachée sert à
+// distinguer des personnes, pas des emplacements vides.
+export default function Avatar({ name = '', size = 48, gold = false, uri = null, glyph = null, style }) {
   const { colors } = useTheme();
   const dims = { width: size, height: size, borderRadius: size / 2 };
 
@@ -57,6 +62,21 @@ export default function Avatar({ name = '', size = 48, gold = false, uri = null,
         onError={() => setFailed(true)}
         style={[styles.avatar, dims, { backgroundColor: colors.cardOnDark }, style]}
       />
+    );
+  }
+
+  if (glyph) {
+    return (
+      <View
+        style={[
+          styles.avatar,
+          dims,
+          { backgroundColor: colors.surfaceCream, borderWidth: 1, borderColor: colors.border },
+          style,
+        ]}
+      >
+        <Text style={{ fontSize: size * 0.42 }}>{glyph}</Text>
+      </View>
     );
   }
 

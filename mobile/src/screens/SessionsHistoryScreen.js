@@ -95,6 +95,15 @@ export default function SessionsHistoryScreen({ navigation }) {
     loadPage(true);
   }, [loadPage]);
 
+  // Cet écran vit dans MainStack, pas dans le navigateur d'onglets : `navigate('Play')`
+  // remontait la pile sans jamais trouver la route (React Navigation ne descend pas
+  // dans le navigateur enfant d'un frère) et le CTA « Jouer maintenant » ne faisait
+  // rien. Voir le même correctif dans StatsScreen.
+  const goPlay = useCallback(
+    () => navigation.navigate('Tabs', { screen: 'Play' }),
+    [navigation]
+  );
+
   // Filtrage CÔTÉ CLIENT des parties chargées (l'API ne filtre pas thème/niveau).
   // Les modes chronométrés (blitz/marathon) ont thème/niveau null → exclus d'un
   // filtre spécifique, ce qui est correct.
@@ -201,14 +210,25 @@ export default function SessionsHistoryScreen({ navigation }) {
       return (
         // L'action attendue ici n'est PAS de jouer (des parties existent, elles
         // sont juste masquées) mais de retirer le filtre qui les cache.
+        //
+        // Le filtre s'applique CÔTÉ CLIENT aux seules parties déjà chargées :
+        // « aucun résultat » ne veut donc pas dire « aucune partie de ce thème »,
+        // seulement « aucune dans les N premières ». Sans issue de chargement, le
+        // filtre était un cul-de-sac (la liste — donc le pied « Charger plus » —
+        // n'est pas rendue dans cette branche). On expose la suite tant qu'il
+        // reste des pages, et on le dit dans le message.
         <EmptyState
           icon="🔍"
           title={t('sessionsHistory.noMatch', 'Aucune partie pour ce filtre')}
+          message={hasMore ? t('sessionsHistory.noMatchMore') : undefined}
           ctaLabel={t('sessionsHistory.clearFilters', 'Retirer les filtres')}
           onCta={() => {
             setSelectedTheme('all');
             setSelectedLevel('all');
           }}
+          secondaryLabel={hasMore ? t('sessionsHistory.loadMore', 'Charger plus') : undefined}
+          secondaryLoading={loadingMore}
+          onSecondary={hasMore ? () => loadPage(false) : undefined}
           style={styles.empty}
           titleStyle={styles.emptyTitle}
         />
@@ -222,7 +242,7 @@ export default function SessionsHistoryScreen({ navigation }) {
           icon="🎮"
           title={t('sessionsHistory.empty', 'Aucune partie jouée')}
           ctaLabel={t('sessionsHistory.playNow', 'Jouer maintenant')}
-          onCta={() => navigation.navigate('Play')}
+          onCta={goPlay}
           ctaSize="lg"
           ctaFullWidth
           style={styles.empty}

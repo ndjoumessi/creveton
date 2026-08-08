@@ -673,7 +673,8 @@
     "empty": "No games played yet",
     "playNow": "Play now",
     "noMatch": "No games match this filter",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "noMatchMore": "Only the games already loaded are filtered — there are more to load."
   },
   "sessionDetail": {
     "title": "Game details",

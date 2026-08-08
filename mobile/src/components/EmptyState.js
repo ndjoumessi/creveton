@@ -5,6 +5,11 @@
 // graisse/taille du titre, interligne du message) passent par `style`,
 // `titleStyle` et `messageStyle` — le squelette (centrage, ordre, CTA primaire)
 // reste partagé.
+//
+// `secondaryLabel`/`onSecondary` ajoutent une seconde action en ghost sous le CTA.
+// Un état vide n'a pas toujours une seule sortie : quand la liste est filtrée ET
+// paginée, « retirer le filtre » et « charger la page suivante » sont deux issues
+// légitimes, et n'en offrir qu'une transforme le filtre en cul-de-sac.
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
@@ -23,6 +28,9 @@ export default function EmptyState({
   onCta,
   ctaSize = 'md',
   ctaFullWidth = false,
+  secondaryLabel,
+  onSecondary,
+  secondaryLoading = false,
   style,
   titleStyle,
   messageStyle,
@@ -53,6 +61,17 @@ export default function EmptyState({
           style={styles.cta}
         />
       ) : null}
+      {secondaryLabel && onSecondary ? (
+        <AppButton
+          variant="ghost"
+          title={secondaryLabel}
+          size={ctaSize}
+          fullWidth={ctaFullWidth}
+          loading={secondaryLoading}
+          onPress={onSecondary}
+          style={styles.secondary}
+        />
+      ) : null}
     </View>
   );
 }
@@ -67,4 +86,7 @@ const styles = StyleSheet.create({
   title: { textAlign: 'center' },
   message: { textAlign: 'center' },
   cta: { marginTop: spacing.md },
+  // Collée au CTA (pas de nouvelle respiration) : c'est une alternative à
+  // l'action principale, pas un troisième bloc.
+  secondary: { marginTop: spacing.xs },
 });
