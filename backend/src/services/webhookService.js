@@ -36,6 +36,12 @@ const PROVIDER_SECRET = {
  */
 async function handlePayment({ provider, rawBody, signature, body }) {
   if (!PAYMENT_PROVIDERS.includes(provider)) {
+    // Les trois messages de ce bloc restent MONOLINGUES, et c'est délibéré : ils
+    // répondent au serveur d'un prestataire de paiement, pas à un humain. Aucun
+    // écran ne les affiche ; ils servent au diagnostic et finissent dans nos
+    // journaux, où le français est la langue de l'équipe. Les traduire n'aurait
+    // ajouté que du bruit — d'où cette note, pour qu'on ne les prenne pas pour
+    // un oubli.
     throw new ApiError('NOT_FOUND', { message: `Prestataire inconnu : ${provider}.` });
   }
 

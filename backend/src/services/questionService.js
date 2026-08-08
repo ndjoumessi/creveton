@@ -296,7 +296,7 @@ async function transitionStatus(id, to, reason, actorId = null) {
   const allowed = STATUS_TRANSITIONS[existing.status] || [];
   if (!allowed.includes(to)) {
     throw new ApiError('VALIDATION_ERROR', {
-      message: `Transition interdite : ${existing.status} → ${to}.`,
+      message: { fr: `Transition interdite : ${existing.status} → ${to}.`, en: `Forbidden transition: ${existing.status} → ${to}.` },
       details: [{ field: 'to', issue: 'invalid_transition', expected: allowed.join(' | ') || 'aucune' }],
     });
   }

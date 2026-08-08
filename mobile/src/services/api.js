@@ -33,10 +33,15 @@ export function setOnAuthExpired(cb) {
 // --- Intercepteur requête : injecte le Bearer token ----------------------
 api.interceptors.request.use(async (config) => {
   const token = await getAccessToken();
+  config.headers = config.headers || {};
   if (token) {
-    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Langue de l'INTERFACE, pas celle du système : le serveur traduit ses messages
+  // d'erreur avec (`backend/src/utils/lang.js`), et un message doit s'accorder
+  // avec l'écran qui l'affiche. `i18n.language` peut porter un code régional
+  // ('en-US') — le serveur ne lit que le préfixe.
+  config.headers['Accept-Language'] = i18n.language || 'fr';
   return config;
 });
 

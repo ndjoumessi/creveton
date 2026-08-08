@@ -19,7 +19,7 @@ const ApiError = require('./ApiError');
  */
 function parseSince(value) {
   if (value === undefined || value === null || value === '') {
-    throw new ApiError('INVALID_TIMESTAMP', { message: 'Le paramètre « since » est requis.' });
+    throw new ApiError('INVALID_TIMESTAMP', { message: { fr: 'Le paramètre « since » est requis.', en: 'The "since" parameter is required.' } });
   }
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {

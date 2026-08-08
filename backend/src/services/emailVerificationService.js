@@ -65,14 +65,14 @@ function normalize(email) {
 async function issue(user, targetEmail, { isChange = false, awaitDelivery = true } = {}) {
   const email = normalize(targetEmail);
   if (!email) {
-    throw new ApiError('VALIDATION_ERROR', { message: 'Adresse email manquante.' });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: 'Adresse email manquante.', en: 'Missing email address.' } });
   }
 
   const sent = await redis.incr(throttleKey(user.id));
   if (sent === 1) await redis.expire(throttleKey(user.id), 3600);
   if (sent > env.emailVerification.requestLimitPerHour) {
     throw new ApiError('RATE_LIMITED', {
-      message: 'Trop de demandes de vérification, réessayez plus tard.',
+      message: { fr: 'Trop de demandes de vérification, réessayez plus tard.', en: 'Too many verification requests, try again later.' },
     });
   }
 
@@ -141,7 +141,7 @@ async function requestForCurrentEmail(userId) {
   const user = await userModel.findById(userId);
   if (!user) throw new ApiError('USER_NOT_FOUND');
   if (!user.email) {
-    throw new ApiError('VALIDATION_ERROR', { message: "Ce compte n'a pas d'adresse email." });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: "Ce compte n'a pas d'adresse email.", en: 'This account has no email address.' } });
   }
   if (user.email_verified) {
     throw new ApiError('EMAIL_ALREADY_VERIFIED');

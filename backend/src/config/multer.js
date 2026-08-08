@@ -39,7 +39,7 @@ const avatarUpload = multer({
     if (file.mimetype && file.mimetype.startsWith('image/')) {
       return cb(null, true);
     }
-    return cb(new ApiError('VALIDATION_ERROR', { message: 'Seules les images sont acceptées.' }));
+    return cb(new ApiError('VALIDATION_ERROR', { message: { fr: 'Seules les images sont acceptées.', en: 'Only images are accepted.' } }));
   },
 });
 
@@ -57,7 +57,7 @@ const questionImageUpload = multer({
     if (file.mimetype && QUESTION_IMAGE_MIME.includes(file.mimetype)) {
       return cb(null, true);
     }
-    return cb(new ApiError('VALIDATION_ERROR', { message: 'Image JPG, PNG ou WebP attendue (max 2 Mo).' }));
+    return cb(new ApiError('VALIDATION_ERROR', { message: { fr: 'Image JPG, PNG ou WebP attendue (max 2 Mo).', en: 'JPG, PNG or WebP image expected (max 2 MB).' } }));
   },
 });
 

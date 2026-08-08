@@ -3,6 +3,7 @@
 const env = require('../config/env');
 const logger = require('../config/logger');
 const ApiError = require('../utils/ApiError');
+const { langOf } = require('../utils/lang');
 
 /**
  * Middleware terminal de gestion des erreurs.
@@ -19,12 +20,19 @@ module.exports = function errorHandler(err, req, res, next) {
     apiError = new ApiError('TOKEN_INVALID');
   } else if (err && (err.type === 'entity.parse.failed' || (err instanceof SyntaxError && err.status === 400))) {
     // Corps JSON malformé (express.json) → erreur de validation, pas un 500.
-    apiError = new ApiError('VALIDATION_ERROR', { message: 'Corps JSON invalide.' });
+    apiError = new ApiError('VALIDATION_ERROR', {
+      message: { fr: 'Corps JSON invalide.', en: 'Invalid JSON body.' },
+    });
   } else if (err && err.type === 'entity.too.large') {
-    apiError = new ApiError('VALIDATION_ERROR', { message: 'Corps de requête trop volumineux.' });
+    apiError = new ApiError('VALIDATION_ERROR', {
+      message: { fr: 'Corps de requête trop volumineux.', en: 'Request body too large.' },
+    });
   } else if (err && err.name === 'MulterError') {
     // Erreur d'upload (taille, champ inattendu…) lors de l'import de questions.
-    apiError = new ApiError('VALIDATION_ERROR', { message: `Upload invalide : ${err.message}` });
+    // Le détail vient de multer (anglais) : on ne traduit que notre préfixe.
+    apiError = new ApiError('VALIDATION_ERROR', {
+      message: { fr: `Upload invalide : ${err.message}`, en: `Invalid upload: ${err.message}` },
+    });
   } else if (err instanceof ApiError) {
     apiError = err;
   } else {
@@ -45,10 +53,13 @@ module.exports = function errorHandler(err, req, res, next) {
     logger.debug('Erreur applicative', { request_id: req.id, code: apiError.code });
   }
 
+  // Résolution du message ICI, et pas à la construction : c'est le seul endroit
+  // qui connaît à la fois l'erreur et la requête — donc la langue du lecteur.
+  // Les journaux ci-dessus, eux, gardent le français (langue de l'équipe).
   const body = {
     error: {
       code: apiError.code,
-      message: apiError.message,
+      message: apiError.localize(langOf(req)),
       ...(apiError.details ? { details: apiError.details } : {}),
       request_id: req.id,
     },

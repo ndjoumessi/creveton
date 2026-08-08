@@ -53,7 +53,7 @@ async function getFlags() {
 /** Modifie un flag éditable (valeur booléenne). */
 async function setFlag(key, enabled, actorId) {
   const def = FLAG_DEFS.find((f) => f.key === key);
-  if (!def) throw new ApiError('VALIDATION_ERROR', { message: `Flag inconnu ou verrouillé : ${key}.` });
+  if (!def) throw new ApiError('VALIDATION_ERROR', { message: { fr: `Flag inconnu ou verrouillé : ${key}.`, en: `Unknown or locked flag: ${key}.` } });
   await settingsModel.set(key, !!enabled, actorId);
   return getFlags();
 }

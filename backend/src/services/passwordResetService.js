@@ -67,7 +67,7 @@ async function issueFor(user, { awaitDelivery = true } = {}) {
   if (sent === 1) await redis.expire(throttleKey(user.id), 3600);
   if (sent > env.passwordReset.requestLimitPerHour) {
     throw new ApiError('RATE_LIMITED', {
-      message: 'Trop de demandes de réinitialisation, réessayez plus tard.',
+      message: { fr: 'Trop de demandes de réinitialisation, réessayez plus tard.', en: 'Too many reset requests, try again later.' },
     });
   }
 
@@ -213,7 +213,7 @@ async function confirmReset({ email, code, newPassword }) {
 
   if (await bcrypt.compare(newPassword, user.password_hash)) {
     throw new ApiError('VALIDATION_ERROR', {
-      message: "Le nouveau mot de passe doit différer de l'ancien.",
+      message: { fr: "Le nouveau mot de passe doit différer de l'ancien.", en: 'The new password must differ from the old one.' },
     });
   }
 
@@ -257,7 +257,7 @@ function notifyPasswordChanged(user) {
 async function issueForUser(user) {
   if (!user.email) {
     throw new ApiError('VALIDATION_ERROR', {
-      message: "Ce compte n'a pas d'adresse email : impossible d'envoyer un code.",
+      message: { fr: "Ce compte n'a pas d'adresse email : impossible d'envoyer un code.", en: 'This account has no email address: a code cannot be sent.' },
     });
   }
   // Pas d'anti-énumération à tenir ici (l'appelant est authentifié et a la fiche
@@ -265,8 +265,10 @@ async function issueForUser(user) {
   // croirait à une panne.
   if (!user.email_verified) {
     throw new ApiError('VALIDATION_ERROR', {
-      message:
-        "L'adresse de ce compte n'est pas vérifiée : lui envoyer un code de réinitialisation la rendrait exploitable par un tiers.",
+      message: {
+        fr: "L'adresse de ce compte n'est pas vérifiée : lui envoyer un code de réinitialisation la rendrait exploitable par un tiers.",
+        en: "This account's address is not verified: sending it a reset code would make the account exploitable by a third party.",
+      },
     });
   }
   // Ici on ATTEND la délivrance : l'admin déclenche depuis la console et a

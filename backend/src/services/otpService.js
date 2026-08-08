@@ -31,7 +31,7 @@ async function issue(phone) {
     await redis.expire(resendKey(phone), 3600);
   }
   if (resends > env.otp.resendLimitPerHour) {
-    throw new ApiError('RATE_LIMITED', { message: "Trop d'envois d'OTP, réessayez plus tard." });
+    throw new ApiError('RATE_LIMITED', { message: { fr: "Trop d'envois d'OTP, réessayez plus tard.", en: 'Too many OTP sends, try again later.' } });
   }
 
   const code = generateCode();

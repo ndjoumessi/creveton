@@ -32,7 +32,7 @@ async function inviteFriend({ userId, email, lang = 'fr' }) {
   if (count === 1) await redis.expire(rlKey(userId), DAY_SEC);
   if (count > env.email.referralLimitPerDay) {
     throw new ApiError('RATE_LIMITED', {
-      message: `Limite de ${env.email.referralLimitPerDay} invitations par jour atteinte.`,
+      message: { fr: `Limite de ${env.email.referralLimitPerDay} invitations par jour atteinte.`, en: `Daily limit of ${env.email.referralLimitPerDay} invitations reached.` },
     });
   }
 

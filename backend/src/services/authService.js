@@ -304,7 +304,7 @@ async function changePassword(userId, currentPassword, newPassword, currentSid) 
   if (!match) throw new ApiError('INVALID_CURRENT_PASSWORD');
 
   if (await bcrypt.compare(newPassword, user.password_hash)) {
-    throw new ApiError('VALIDATION_ERROR', { message: "Le nouveau mot de passe doit différer de l'ancien." });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: "Le nouveau mot de passe doit différer de l'ancien.", en: 'The new password must differ from the old one.' } });
   }
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_COST);

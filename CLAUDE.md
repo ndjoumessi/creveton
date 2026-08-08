@@ -64,6 +64,24 @@ régénérer avec `/impeccable document`.
   renvoient le payload **au niveau racine** (ex. `{ access_token, ... }` ou
   `{ data, page }` quand le service le structure ainsi), **pas** sous une clé `.data`
   automatique. Les erreurs, elles, sont sous `.error`.
+- **Messages d'erreur bilingues** : le catalogue `src/utils/errorCodes.js` porte
+  `{ http, fr, en }` (plus de clé `message`) ; `messageFor(code, lang)` résout avec repli
+  `lang → fr → code`. `ApiError` ne fige PLUS le message à la construction — il transporte
+  le code et expose `localize(lang)` ; `.message` (Error) reste **français**, c'est lui qui
+  part dans les journaux et Sentry. La résolution se fait à la **sérialisation**
+  (`errorHandler`), seul endroit qui connaît à la fois l'erreur et la requête.
+  · Langue : `utils/lang.js` → **`Accept-Language` uniquement**, puis français. Les deux
+    clients l'envoient depuis leur propre état i18n (et non depuis le système) — le
+    message doit s'accorder avec l'écran affiché. Pas de repli sur `user.lang` : le JWT ne
+    porte que `{ sub, role, lvl, sid }`, l'obtenir coûterait une lecture base par requête.
+  · Surcharges : `ApiError('X', { message: { fr, en } })` pour tout ce qu'un humain lit ;
+    la forme **chaîne** reste permise et signifie « volontairement monolingue » (seuls les
+    messages de `webhookService`, adressés au serveur d'un prestataire, l'utilisent).
+  · `tests/errorLocale.test.js` **refuse un code ajouté sans sa traduction** — c'est ainsi
+    que le catalogue était resté monolingue pendant toute la vie du projet.
+  · `details[]` (Joi) n'est traduit par personne : les messages Joi natifs sont anglais et
+    **aucun client n'affiche ce champ** (donnée de diagnostic). À reprendre si une UI s'en
+    sert un jour — les `.messages()` personnalisés des validateurs sont français.
 - **Permissions admin** : `src/middlewares/admin.middleware.js` — table `PERMISSIONS`
   (`op → rôle minimum`) + hiérarchie `player < moderator < admin < super_admin`.
 - **XP & niveau (1–5)** : `userModel.creditSessionXp(id, xpDelta, executor?)` est l'**unique**

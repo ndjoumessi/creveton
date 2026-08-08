@@ -103,10 +103,10 @@ const translate = asyncHandler(async (req, res) => {
 
   // Valide la présence de la source.
   if (targetLang === 'en' && !row.text_fr) {
-    throw new ApiError('VALIDATION_ERROR', { message: 'text_fr requis pour traduire vers l\'anglais.' });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: 'text_fr requis pour traduire vers l\'anglais.', en: 'text_fr is required to translate into English.' } });
   }
   if (targetLang === 'fr' && !row.text_en) {
-    throw new ApiError('VALIDATION_ERROR', { message: 'text_en requis pour traduire vers le français.' });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: 'text_en requis pour traduire vers le français.', en: 'text_en is required to translate into French.' } });
   }
 
   const sourceLang = targetLang === 'en' ? 'fr' : 'en';
@@ -137,7 +137,7 @@ const remove = asyncHandler(async (req, res) => {
 /** POST /admin/questions/:id/image — upload image (multipart, champ « image »). */
 const uploadImage = asyncHandler(async (req, res) => {
   if (!req.file) {
-    throw new ApiError('VALIDATION_ERROR', { message: 'Champ « image » (fichier) requis.' });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: 'Champ « image » (fichier) requis.', en: 'An "image" field (file) is required.' } });
   }
   const current = await questionModel.findByIdAny(req.params.id);
   if (!current) throw new ApiError('QUESTION_NOT_FOUND');
@@ -192,7 +192,7 @@ const history = asyncHandler(async (req, res) => {
  */
 const importCsv = asyncHandler(async (req, res) => {
   if (!req.file) {
-    throw new ApiError('VALIDATION_ERROR', { message: 'Fichier CSV requis (champ « file »).' });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: 'Fichier CSV requis (champ « file »).', en: 'A CSV file is required (field "file").' } });
   }
   const force = req.body?.force === 'true' || req.body?.force === true;
   const report = await importService.importCsv(req.file.buffer, { createdBy: req.user.id, force });

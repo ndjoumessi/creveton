@@ -303,12 +303,12 @@ async function resendInvitation(id, invitedBy = null, lang = 'fr') {
  */
 async function setRole(id, role, actorId) {
   if (actorId && id === actorId) {
-    throw new ApiError('FORBIDDEN', { message: 'Impossible de modifier votre propre rôle.' });
+    throw new ApiError('FORBIDDEN', { message: { fr: 'Impossible de modifier votre propre rôle.', en: 'You cannot change your own role.' } });
   }
   const target = await userModel.findById(id);
   if (!target) throw new ApiError('USER_NOT_FOUND');
   if (target.role === 'super_admin') {
-    throw new ApiError('FORBIDDEN', { message: 'Le rôle d’un super_admin ne peut pas être modifié.' });
+    throw new ApiError('FORBIDDEN', { message: { fr: 'Le rôle d’un super_admin ne peut pas être modifié.', en: 'A super_admin role cannot be changed.' } });
   }
   const updated = await userModel.setRole(id, role);
   if (!updated) throw new ApiError('USER_NOT_FOUND');
@@ -321,12 +321,12 @@ async function setRole(id, role, actorId) {
  */
 async function remove(id, actorId) {
   if (actorId && id === actorId) {
-    throw new ApiError('FORBIDDEN', { message: 'Impossible de vous désactiver vous-même.' });
+    throw new ApiError('FORBIDDEN', { message: { fr: 'Impossible de vous désactiver vous-même.', en: 'You cannot deactivate yourself.' } });
   }
   const target = await userModel.findById(id);
   if (!target) throw new ApiError('USER_NOT_FOUND');
   if (target.role === 'super_admin') {
-    throw new ApiError('FORBIDDEN', { message: 'Un super_admin ne peut pas être désactivé.' });
+    throw new ApiError('FORBIDDEN', { message: { fr: 'Un super_admin ne peut pas être désactivé.', en: 'A super_admin cannot be deactivated.' } });
   }
   const deleted = await userModel.softDelete(id);
   if (!deleted) throw new ApiError('USER_NOT_FOUND');
@@ -364,10 +364,10 @@ async function listRoles() {
  */
 async function setRolePermissions(role, permissions, actorId) {
   if (!ROLE_LIST.includes(role)) {
-    throw new ApiError('VALIDATION_ERROR', { message: `Rôle inconnu : ${role}.` });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: `Rôle inconnu : ${role}.`, en: `Unknown role: ${role}.` } });
   }
   if (SYSTEM_ROLES.includes(role)) {
-    throw new ApiError('VALIDATION_ERROR', { message: `Le rôle ${role} est un rôle système non modifiable.` });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: `Le rôle ${role} est un rôle système non modifiable.`, en: `The ${role} role is a system role and cannot be modified.` } });
   }
   const stored = (await settingsModel.get(PERMISSIONS_KEY)) || {};
   const next = { ...stored, [role]: permissions };

@@ -21,7 +21,7 @@ const PRIZE_SPLIT = [0.5, 0.3, 0.2];
 async function create(input, createdBy) {
   if (input.entry_fee > 0 && !env.features.tournamentsPaidEnabled) {
     throw new ApiError('FEATURE_DISABLED', {
-      message: 'Les tournois payants sont désactivés (mode gratuit forcé). Flag tournaments.paid.enabled = false.',
+      message: { fr: 'Les tournois payants sont désactivés (mode gratuit forcé). Flag tournaments.paid.enabled = false.', en: 'Paid tournaments are disabled (free mode enforced). Flag tournaments.paid.enabled = false.' },
     });
   }
   const row = await tournamentModel.create({
@@ -52,7 +52,7 @@ async function joinTournament(tournamentId, userId) {
   if (Number(t.entry_fee) > 0) {
     if (!env.features.tournamentsPaidEnabled) {
       throw new ApiError('FEATURE_DISABLED', {
-        message: 'Les tournois payants sont désactivés (mode gratuit forcé). Flag tournaments.paid.enabled = false.',
+        message: { fr: 'Les tournois payants sont désactivés (mode gratuit forcé). Flag tournaments.paid.enabled = false.', en: 'Paid tournaments are disabled (free mode enforced). Flag tournaments.paid.enabled = false.' },
       });
     }
     // Flag activé : le paiement Mobile Money reste à implémenter (module transactions).
@@ -60,7 +60,7 @@ async function joinTournament(tournamentId, userId) {
   }
 
   if (t.status !== 'open') {
-    throw new ApiError('TOURNAMENT_NOT_OPEN', { message: `Statut « ${t.status} » : inscriptions fermées.` });
+    throw new ApiError('TOURNAMENT_NOT_OPEN', { message: { fr: `Statut « ${t.status} » : inscriptions fermées.`, en: `Status "${t.status}": registration closed.` } });
   }
 
   if (t.max_players != null) {
@@ -120,12 +120,12 @@ async function start(id) {
   const t = await tournamentModel.findById(id);
   if (!t) throw new ApiError('TOURNAMENT_NOT_FOUND');
   if (!['scheduled', 'open'].includes(t.status)) {
-    throw new ApiError('TOURNAMENT_NOT_OPEN', { message: `Statut « ${t.status} » : démarrage impossible.` });
+    throw new ApiError('TOURNAMENT_NOT_OPEN', { message: { fr: `Statut « ${t.status} » : démarrage impossible.`, en: `Status "${t.status}": cannot start.` } });
   }
   const players = await tournamentModel.countParticipants(id);
   if (players < MIN_PLAYERS_TO_START) {
     throw new ApiError('TOURNAMENT_NOT_OPEN', {
-      message: `Minimum ${MIN_PLAYERS_TO_START} joueurs requis (actuellement ${players}).`,
+      message: { fr: `Minimum ${MIN_PLAYERS_TO_START} joueurs requis (actuellement ${players}).`, en: `At least ${MIN_PLAYERS_TO_START} players required (currently ${players}).` },
     });
   }
   const row = await tournamentModel.setStatus(id, 'running');
@@ -137,7 +137,7 @@ async function cancel(id) {
   const t = await tournamentModel.findById(id);
   if (!t) throw new ApiError('TOURNAMENT_NOT_FOUND');
   if (['paid', 'cancelled'].includes(t.status)) {
-    throw new ApiError('TOURNAMENT_NOT_OPEN', { message: `Tournoi déjà « ${t.status} ».` });
+    throw new ApiError('TOURNAMENT_NOT_OPEN', { message: { fr: `Tournoi déjà « ${t.status} ».`, en: `Tournament already "${t.status}".` } });
   }
   // NB : si entry_fee > 0, les remboursements Mobile Money seraient déclenchés
   // ici (module transactions). En mode gratuit (flag off), rien à rembourser.
@@ -156,7 +156,7 @@ async function payout(id) {
   if (!t) throw new ApiError('TOURNAMENT_NOT_FOUND');
   if (!['running', 'closed'].includes(t.status)) {
     throw new ApiError('TOURNAMENT_NOT_OPEN', {
-      message: `Statut « ${t.status} » : payout impossible (attendu running|closed).`,
+      message: { fr: `Statut « ${t.status} » : payout impossible (attendu running|closed).`, en: `Status "${t.status}": payout impossible (expected running|closed).` },
     });
   }
 
@@ -199,7 +199,7 @@ async function adminAddParticipant(tournamentId, userId) {
   const t = await tournamentModel.findById(tournamentId);
   if (!t || t.deleted_at) throw new ApiError('TOURNAMENT_NOT_FOUND');
   if (['cancelled', 'paid'].includes(t.status)) {
-    throw new ApiError('VALIDATION_ERROR', { message: `Impossible d'inscrire un joueur dans un tournoi ${t.status}.` });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: `Impossible d'inscrire un joueur dans un tournoi ${t.status}.`, en: `A player cannot be added to a ${t.status} tournament.` } });
   }
   const user = await userModel.findById(userId);
   if (!user || user.deleted_at) throw new ApiError('USER_NOT_FOUND');
@@ -228,10 +228,10 @@ async function adminRemoveParticipant(tournamentId, userId) {
   const t = await tournamentModel.findById(tournamentId);
   if (!t || t.deleted_at) throw new ApiError('TOURNAMENT_NOT_FOUND');
   if (['running', 'closed', 'paid'].includes(t.status)) {
-    throw new ApiError('FORBIDDEN', { message: "Impossible de retirer un participant d'un tournoi en cours ou terminé." });
+    throw new ApiError('FORBIDDEN', { message: { fr: "Impossible de retirer un participant d'un tournoi en cours ou terminé.", en: 'A participant cannot be removed from a running or finished tournament.' } });
   }
   const removed = await tournamentModel.removeParticipant(tournamentId, userId);
-  if (!removed) throw new ApiError('USER_NOT_FOUND', { message: 'Participant introuvable dans ce tournoi.' });
+  if (!removed) throw new ApiError('USER_NOT_FOUND', { message: { fr: 'Participant introuvable dans ce tournoi.', en: 'Participant not found in this tournament.' } });
   return { tournament_id: tournamentId, user_id: userId };
 }
 

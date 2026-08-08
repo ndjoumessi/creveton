@@ -195,7 +195,7 @@ async function answerSingle({ userId, sessionId = null, questionId, selectedInde
   // 1. Mode : feedback immédiat réservé au solo « normal ».
   if (mode !== 'normal') {
     throw new ApiError('MODE_NOT_ALLOWED', {
-      message: 'Le feedback immédiat est réservé au mode normal (tournoi/challenge interdits).',
+      message: { fr: 'Le feedback immédiat est réservé au mode normal (tournoi/challenge interdits).', en: 'Instant feedback is limited to normal mode (tournaments and duels excluded).' },
     });
   }
 

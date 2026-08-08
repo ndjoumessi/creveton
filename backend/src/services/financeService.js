@@ -58,7 +58,7 @@ async function updateStatus(id, status, { adminId, reason } = {}) {
     at: new Date().toISOString(),
   };
   const row = await txModel.adminUpdateStatus(id, status, action);
-  if (!row) throw new ApiError('NOT_FOUND', { message: 'Transaction introuvable.' });
+  if (!row) throw new ApiError('NOT_FOUND', { message: { fr: 'Transaction introuvable.', en: 'Transaction not found.' } });
   logger.info('Transaction mise à jour (admin)', { transaction_id: id, status, admin_id: adminId });
   return txModel.toAdminView(row);
 }

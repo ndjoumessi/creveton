@@ -223,6 +223,10 @@ t('admin reset-password refuse une adresse non vérifiée, avec un motif clair',
 
   const res = await request(app)
     .post(`/api/v1/admin/users/${target.id}/reset-password`)
+    // En-tête EXPLICITE : depuis l'i18n des erreurs serveur, ce message existe
+    // en deux langues. Sans lui, l'assertion tiendrait par le seul hasard du
+    // défaut français.
+    .set('Accept-Language', 'fr')
     .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
 
   expect(res.status).toBe(400);

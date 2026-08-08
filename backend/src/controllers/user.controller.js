@@ -43,7 +43,7 @@ module.exports = {
   updateMe: asyncHandler(async (req, res) => {
     const { password, current_password: _cp, ...profile } = req.body;
     if (password) {
-      throw new ApiError('VALIDATION_ERROR', { message: 'Utilisez POST /auth/change-password pour le mot de passe.' });
+      throw new ApiError('VALIDATION_ERROR', { message: { fr: 'Utilisez POST /auth/change-password pour le mot de passe.', en: 'Use POST /auth/change-password to change the password.' } });
     }
     const row = await userModel.updateProfile(req.user.id, profile);
     if (!row) throw new ApiError('USER_NOT_FOUND');
@@ -55,7 +55,7 @@ module.exports = {
   uploadAvatar: asyncHandler(async (req, res) => {
     const file = req.file;
     if (!file) {
-      throw new ApiError('VALIDATION_ERROR', { message: 'Champ « avatar » (image) requis.' });
+      throw new ApiError('VALIDATION_ERROR', { message: { fr: 'Champ « avatar » (image) requis.', en: 'An "avatar" field (image) is required.' } });
     }
     const userId = req.user.id;
     // public_id de l'avatar courant → supprimé après l'upload du nouveau

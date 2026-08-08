@@ -10,6 +10,6 @@ const ApiError = require('./ApiError');
  */
 module.exports = function notImplemented(label) {
   return function handler(req, res, next) {
-    next(new ApiError('NOT_IMPLEMENTED', { message: `${label} — à brancher sur la base de données.` }));
+    next(new ApiError('NOT_IMPLEMENTED', { message: { fr: `${label} — à brancher sur la base de données.`, en: `${label} — to be wired to the database.` } }));
   };
 };

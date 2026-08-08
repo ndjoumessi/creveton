@@ -85,7 +85,7 @@ async function start(tournamentId, { count, timePerQSec }) {
   if (!t || t.deleted_at) throw new ApiError('TOURNAMENT_NOT_FOUND');
   if (t.status === 'running') throw new ApiError('TOURNAMENT_ALREADY_RUNNING');
   if (t.status === 'closed' || t.status === 'paid' || t.status === 'cancelled') {
-    throw new ApiError('TOURNAMENT_NOT_OPEN', { message: 'Tournoi déjà terminé ou annulé.' });
+    throw new ApiError('TOURNAMENT_NOT_OPEN', { message: { fr: 'Tournoi déjà terminé ou annulé.', en: 'Tournament already finished or cancelled.' } });
   }
 
   const rows = await questionModel.pickRandom({
@@ -121,7 +121,7 @@ async function start(tournamentId, { count, timePerQSec }) {
   // À placer AVANT setStatus/writeState pour ne pas laisser d'état partiel.
   if (userIds.length < tournamentService.MIN_PLAYERS_TO_START) {
     throw new ApiError('TOURNAMENT_NOT_OPEN', {
-      message: `Minimum ${tournamentService.MIN_PLAYERS_TO_START} joueurs requis (actuellement ${userIds.length}).`,
+      message: { fr: `Minimum ${tournamentService.MIN_PLAYERS_TO_START} joueurs requis (actuellement ${userIds.length}).`, en: `At least ${tournamentService.MIN_PLAYERS_TO_START} players required (currently ${userIds.length}).` },
     });
   }
 

@@ -35,12 +35,12 @@ router.post(
   requirePermission('jobs:run'),
   asyncHandler(async (req, res) => {
     const job = jobs.byName(req.params.name);
-    if (!job) throw new ApiError('JOB_NOT_FOUND', { message: `Tâche inconnue : ${req.params.name}` });
+    if (!job) throw new ApiError('JOB_NOT_FOUND', { message: { fr: `Tâche inconnue : ${req.params.name}`, en: `Unknown job: ${req.params.name}` } });
 
     const result = await jobs.runJob(job, { force: true });
     if (!result.ran) {
       throw new ApiError('JOB_ALREADY_RUNNING', {
-        message: `Tâche non lancée (${result.reason}) — elle tourne probablement déjà.`,
+        message: { fr: `Tâche non lancée (${result.reason}) — elle tourne probablement déjà.`, en: `Job not started (${result.reason}) — it is probably already running.` },
       });
     }
     return ok(res, { name: job.name, ok: result.ok, summary: result.summary ?? null, error: result.error ?? null });

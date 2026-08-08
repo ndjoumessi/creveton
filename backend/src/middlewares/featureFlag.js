@@ -18,7 +18,7 @@ module.exports = function featureFlag(flagPath) {
   const resolver = FLAGS[flagPath];
   return function check(req, res, next) {
     if (!resolver || !resolver()) {
-      return next(new ApiError('FEATURE_DISABLED', { message: `Fonctionnalité « ${flagPath} » désactivée.` }));
+      return next(new ApiError('FEATURE_DISABLED', { message: { fr: `Fonctionnalité « ${flagPath} » désactivée.`, en: `Feature "${flagPath}" is disabled.` } }));
     }
     return next();
   };

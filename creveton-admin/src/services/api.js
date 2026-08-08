@@ -1,4 +1,5 @@
 import axios from 'axios';
+import i18n from '../i18n';
 
 /**
  * Client HTTP central. baseURL depuis VITE_API_URL (sinon /api/v1 proxifié).
@@ -80,6 +81,10 @@ api.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
+  // Langue de la CONSOLE (bascule FR/EN de l'en-tête), pas celle du navigateur :
+  // l'opérateur peut travailler en anglais sur un poste configuré en français.
+  // Le serveur s'en sert pour traduire ses messages d'erreur.
+  config.headers['Accept-Language'] = i18n.language || 'fr';
   return config;
 });
 

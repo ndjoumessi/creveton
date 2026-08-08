@@ -45,11 +45,11 @@ function sideOf(ch, userId) {
 /** POST /challenges/create — challenger joue en premier (reçoit le set). */
 async function create({ userId, opponentId, theme, level, stake = 0 }) {
   if (stake > 0 && !env.features.tournamentsPaidEnabled) {
-    throw new ApiError('FEATURE_DISABLED', { message: 'Les mises (stake > 0) sont désactivées (v2).' });
+    throw new ApiError('FEATURE_DISABLED', { message: { fr: 'Les mises (stake > 0) sont désactivées (v2).', en: 'Stakes (stake > 0) are disabled (v2).' } });
   }
   if (opponentId) {
     if (opponentId === userId) {
-      throw new ApiError('VALIDATION_ERROR', { message: 'Impossible de se défier soi-même.' });
+      throw new ApiError('VALIDATION_ERROR', { message: { fr: 'Impossible de se défier soi-même.', en: 'You cannot challenge yourself.' } });
     }
     const opponent = await userModel.findById(opponentId);
     if (!opponent) throw new ApiError('USER_NOT_FOUND');
@@ -100,10 +100,10 @@ async function accept({ userId, challengeId }) {
   if (!ch) throw new ApiError('CHALLENGE_NOT_FOUND');
   if (isExpired(ch)) throw new ApiError('CHALLENGE_EXPIRED');
   if (userId === ch.challenger_id) {
-    throw new ApiError('FORBIDDEN', { message: 'Le challenger ne peut pas accepter son propre défi.' });
+    throw new ApiError('FORBIDDEN', { message: { fr: 'Le challenger ne peut pas accepter son propre défi.', en: 'The challenger cannot accept their own duel.' } });
   }
   if (ch.opponent_id && ch.opponent_id !== userId) {
-    throw new ApiError('FORBIDDEN', { message: "Ce défi est destiné à un autre joueur." });
+    throw new ApiError('FORBIDDEN', { message: { fr: "Ce défi est destiné à un autre joueur.", en: 'This duel is meant for another player.' } });
   }
 
   if (!ch.opponent_id) {
@@ -123,7 +123,7 @@ async function submit({ userId, challengeId, answers }) {
   if (isExpired(ch)) throw new ApiError('CHALLENGE_EXPIRED');
 
   const side = sideOf(ch, userId);
-  if (!side) throw new ApiError('FORBIDDEN', { message: 'Vous ne participez pas à ce défi.' });
+  if (!side) throw new ApiError('FORBIDDEN', { message: { fr: 'Vous ne participez pas à ce défi.', en: 'You are not taking part in this duel.' } });
   const already = side === 'challenger' ? ch.score_challenger : ch.score_opponent;
   if (already != null) throw new ApiError('ALREADY_PLAYED');
 
@@ -252,10 +252,10 @@ async function decline({ userId, challengeId }) {
   const ch = await challengeModel.findById(challengeId);
   if (!ch) throw new ApiError('CHALLENGE_NOT_FOUND');
   if (ch.opponent_id !== userId) {
-    throw new ApiError('FORBIDDEN', { message: 'Seul le destinataire peut décliner ce défi.' });
+    throw new ApiError('FORBIDDEN', { message: { fr: 'Seul le destinataire peut décliner ce défi.', en: 'Only the recipient can decline this duel.' } });
   }
   if (ch.status !== 'pending') {
-    throw new ApiError('VALIDATION_ERROR', { message: 'Ce défi ne peut plus être décliné.' });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: 'Ce défi ne peut plus être décliné.', en: 'This duel can no longer be declined.' } });
   }
   const updated = await challengeModel.setStatus(challengeId, 'declined');
   return { challenge_id: updated.id, status: 'declined' };
@@ -266,10 +266,10 @@ async function cancel({ userId, challengeId }) {
   const ch = await challengeModel.findById(challengeId);
   if (!ch) throw new ApiError('CHALLENGE_NOT_FOUND');
   if (ch.challenger_id !== userId) {
-    throw new ApiError('FORBIDDEN', { message: "Seul l'émetteur peut annuler ce défi." });
+    throw new ApiError('FORBIDDEN', { message: { fr: "Seul l'émetteur peut annuler ce défi.", en: 'Only the sender can cancel this duel.' } });
   }
   if (ch.status !== 'pending') {
-    throw new ApiError('VALIDATION_ERROR', { message: 'Ce défi ne peut plus être annulé.' });
+    throw new ApiError('VALIDATION_ERROR', { message: { fr: 'Ce défi ne peut plus être annulé.', en: 'This duel can no longer be cancelled.' } });
   }
   const updated = await challengeModel.setStatus(challengeId, 'cancelled');
   return { challenge_id: updated.id, status: 'cancelled' };

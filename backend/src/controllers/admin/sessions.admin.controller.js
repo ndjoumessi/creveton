@@ -30,7 +30,7 @@ const list = asyncHandler(async (req, res) => {
 /** GET /admin/sessions/:id — détail avec récap question par question. */
 const get = asyncHandler(async (req, res) => {
   const session = await sessionModel.findByIdAdmin(req.params.id);
-  if (!session) throw new ApiError('NOT_FOUND', { message: 'Partie introuvable.' });
+  if (!session) throw new ApiError('NOT_FOUND', { message: { fr: 'Partie introuvable.', en: 'Game not found.' } });
 
   const answers = Array.isArray(session.answers) ? session.answers : [];
   const qMap = await questionModel.findManyBrief(answers.map((a) => a.question_id).filter(Boolean));
