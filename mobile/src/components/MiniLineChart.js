@@ -76,32 +76,62 @@ export default function MiniLineChart({
   //   · onMoveShouldSetPanResponder(Capture)=false → on ne retient JAMAIS le
   //     mouvement : dès que le doigt glisse, le ScrollView parent récupère le geste,
   //   · onPanResponderTerminationRequest=true → on cède volontiers au parent.
-  // Résultat : tap statique = tooltip ; tout drag (vertical) = scroll de la page.
+  // Résultat : tap statique = tooltip ; drag VERTICAL = scroll de la page.
+  //
+  // Parcours au doigt (scrub) : on réclame en plus les gestes franchement
+  // HORIZONTAUX (|dx| nettement > |dy|). Le parent défile à la verticale, les deux
+  // axes ne se disputent donc jamais : glisser de gauche à droite promène la
+  // sélection le long de la courbe, glisser de haut en bas fait défiler la page.
+  // Une fois le scrub engagé on REFUSE de céder (`onPanResponderTerminationRequest`
+  // → false), sinon le ScrollView reprend la main au premier tremblement vertical.
   const panRef = useRef(null);
+  const scrubbingRef = useRef(false);
   if (!panRef.current) {
+    // Index du point le plus proche d'une abscisse (même UX que les anciennes
+    // bandes : n'importe où dans la colonne sélectionne le point de la colonne).
+    const nearest = (x) => {
+      const pts = pointsRef.current;
+      if (!pts.length) return null;
+      let best = 0;
+      let bestDist = Infinity;
+      for (let i = 0; i < pts.length; i += 1) {
+        const d = Math.abs(pts[i].x - x);
+        if (d < bestDist) { bestDist = d; best = i; }
+      }
+      return best;
+    };
+    const isHorizontal = (g) =>
+      Math.abs(g.dx) > TAP_SLOP && Math.abs(g.dx) > Math.abs(g.dy) * 1.5;
+
     panRef.current = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onStartShouldSetPanResponderCapture: () => false,
-      onMoveShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (evt, g) => isHorizontal(g),
       onMoveShouldSetPanResponderCapture: () => false,
-      onPanResponderTerminationRequest: () => true,
-      onPanResponderRelease: (evt, gesture) => {
-        // Geste ayant bougé au-delà du seuil → c'était un scroll, on ne fait rien.
-        if (Math.abs(gesture.dx) > TAP_SLOP || Math.abs(gesture.dy) > TAP_SLOP) return;
-        const pts = pointsRef.current;
-        if (!pts.length) return;
-        // Point le plus proche du x touché (même UX que les anciennes bandes :
-        // taper n'importe où dans la colonne sélectionne le point de cette colonne).
-        const x = evt.nativeEvent.locationX;
-        let best = 0;
-        let bestDist = Infinity;
-        for (let i = 0; i < pts.length; i += 1) {
-          const d = Math.abs(pts[i].x - x);
-          if (d < bestDist) { bestDist = d; best = i; }
-        }
-        setSelected((cur) => (cur === best ? null : best));
+      // Tant qu'on parcourt, on garde le geste ; sinon on cède volontiers.
+      onPanResponderTerminationRequest: () => !scrubbingRef.current,
+      onPanResponderMove: (evt, g) => {
+        if (!isHorizontal(g)) return;
+        scrubbingRef.current = true;
+        const i = nearest(evt.nativeEvent.locationX);
+        if (i != null) setSelected(i);
       },
-      onPanResponderTerminate: () => {},
+      onPanResponderRelease: (evt, gesture) => {
+        // Fin d'un parcours : on GARDE le point atteint (pas de bascule).
+        if (scrubbingRef.current) {
+          scrubbingRef.current = false;
+          return;
+        }
+        // Geste ayant bougé au-delà du seuil sans être horizontal → c'était un
+        // scroll, on ne fait rien.
+        if (Math.abs(gesture.dx) > TAP_SLOP || Math.abs(gesture.dy) > TAP_SLOP) return;
+        const i = nearest(evt.nativeEvent.locationX);
+        if (i == null) return;
+        setSelected((cur) => (cur === i ? null : i));
+      },
+      onPanResponderTerminate: () => {
+        scrubbingRef.current = false;
+      },
     });
   }
 
