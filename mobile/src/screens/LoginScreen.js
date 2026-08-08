@@ -126,7 +126,11 @@ export default function LoginScreen({ navigation }) {
               <Label style={styles.offline}>{t('offline.loginRequired')}</Label>
             </View>
           ) : null}
-          {error ? <Label color={colors.red400} style={styles.error}>{error}</Label> : null}
+          {error ? (
+            <Label color={colors.red400} style={styles.error} accessibilityLiveRegion="polite">
+              {error}
+            </Label>
+          ) : null}
 
           <AppButton
             title={t('auth.login')}

@@ -18,7 +18,6 @@ import { useStatsStore } from '../store/statsStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { THEMES } from '../constants/config';
 import {
-  colors,
   fonts,
   fontSizes,
   radius,
@@ -29,7 +28,7 @@ import {
 import { useTheme } from '../hooks/useTheme';
 import { levelProgress, avatarUri, formatDayMonth, themeLabel, formatNumber } from '../utils/format';
 import { normalizeLang } from '../utils/i18n';
-import { medalColor } from '../utils/rank';
+import { medalColor, successRateColor } from '../utils/rank';
 import { hapticLight } from '../utils/haptics';
 
 const TABS = [
@@ -54,15 +53,6 @@ const fmt = formatNumber;
 // et aux pliables. `MiniLineChart` sait se mesurer lui-même (`width="auto"`,
 // onLayout), ce que ResultsScreen faisait déjà.
 const CHART_H = 140;
-
-function rateColor(pct, c = colors, isDark = false) {
-  if (pct === null || pct === undefined) return c.textDark;
-  // green500 (#2a8a4f) tombe à ~2:1 sur la carte KPI sombre (colors.white →
-  // #16331f en dark) → en dark on prend green300, lisible sur fond sombre.
-  if (pct >= 70) return isDark ? c.green300 : c.green500; // vert
-  if (pct >= 40) return c.gold500; // ambre (≈ orange) — lisible sur les deux fonds
-  return c.red400; // rouge — lisible sur les deux fonds
-}
 
 // Couleur de la barre de perf par thème (feu tricolore, doublée d'un libellé %) :
 // ≥70 vert, 40–69 or, <40 rouge. green500 conservé (barre, pas texte → contraste
@@ -358,7 +348,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
       icon: TrendingUp,
       bg: colors.pastelBlue,
       value: `${stats.successRate}%`,
-      color: rateColor(stats.successRate, colors, isDark),
+      color: successRateColor(stats.successRate, colors, isDark),
       label: t('stats.kpi.successRate'),
     },
     {

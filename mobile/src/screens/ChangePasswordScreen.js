@@ -26,12 +26,16 @@ import { AppButton, AuthField, Title, Body, useToast } from '../components';
 import Icon from '../components/Icon';
 import { auth } from '../services/endpoints';
 import { parseApiError } from '../services/api';
+import { passwordIssues } from '../utils/validation';
 import { radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
-// Règle serveur : ≥ 8 caractères, au moins une majuscule et un chiffre.
-const isStrongPassword = (pwd) =>
-  pwd.length >= 8 && /[A-Z]/.test(pwd) && /[0-9]/.test(pwd);
+// La règle (≥ 8 car., 1 majuscule, 1 chiffre) vit dans `utils/validation` et
+// était RÉIMPLÉMENTÉE ici — deux copies libres de diverger. Pire, cette copie ne
+// rendait qu'un booléen : l'écran répondait « mot de passe trop faible » sans
+// dire ce qui manquait, là où l'inscription — même règle, même utilisateur —
+// désigne précisément la contrainte non satisfaite. On réutilise `passwordIssues`
+// et la même composition de message.
 
 export default function ChangePasswordScreen({ navigation }) {
   const { t } = useTranslation();
@@ -63,8 +67,11 @@ export default function ChangePasswordScreen({ navigation }) {
     if (!current) {
       nextErrors.current = t('changePassword.currentRequired');
     }
-    if (!isStrongPassword(next)) {
-      nextErrors.next = t('changePassword.weak');
+    const issues = passwordIssues(next);
+    if (issues.length) {
+      nextErrors.next = issues
+        .map((k) => t(`auth.register.validation.password_${k}`))
+        .join(' ');
     } else if (next === current) {
       nextErrors.next = t('changePassword.samePassword');
     }

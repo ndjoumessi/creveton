@@ -263,8 +263,9 @@ export default function OTPScreen({ route, navigation }) {
         })}
       </Animated.View>
 
+      {/* Code refusé / expiré : annoncé, pas seulement affiché (cf. AuthField). */}
       {error ? (
-        <Body color={colors.errorText} style={styles.error}>
+        <Body color={colors.errorText} style={styles.error} accessibilityLiveRegion="polite">
           {error}
         </Body>
       ) : null}

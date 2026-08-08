@@ -55,6 +55,7 @@ import { setLanguage } from '../i18n';
 import { SEXES } from '../constants/config';
 import { fonts, radius, spacing, shadow, motion, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { successRateColor } from '../utils/rank';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { formatFcfa, levelProgress, avatarUri, MAX_LEVEL } from '../utils/format';
 import { hapticLight } from '../utils/haptics';
@@ -479,8 +480,9 @@ export default function ProfileScreen() {
   const rank = myRank?.rank;
   const rate = stats.totalGames > 0 ? stats.successRate : null;
   const rankValueColor = rank === 1 ? colors.gold500 : undefined;
-  const rateValueColor =
-    rate == null ? undefined : rate < 50 ? colors.red400 : rate > 70 ? colors.green300 : undefined;
+  // Même barème que les Stats (utils/rank) : les deux écrans divergeaient sur le
+  // même chiffre. Voir successRateColor.
+  const rateValueColor = rate == null ? undefined : successRateColor(rate, colors, isDark);
   const stripBorderColor =
     rank === 1 ? colors.gold400 : rank && rank <= 10 ? colors.green300 : 'transparent';
 

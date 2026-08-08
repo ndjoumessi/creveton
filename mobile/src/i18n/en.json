@@ -695,7 +695,9 @@
     "offline": "You need a connection to view game details.",
     "cardA11y": "{{title}}, {{score}} points — view details",
     "timedOut": "Time out",
-    "noAnswer": "No answer"
+    "noAnswer": "No answer",
+    "wrongOnly_one": "My mistake ({{count}})",
+    "wrongOnly_other": "My mistakes ({{count}})"
   },
   "a11y": {
     "showPassword": "Show password",

@@ -695,7 +695,9 @@
     "offline": "Connexion requise pour afficher le détail d'une partie.",
     "cardA11y": "{{title}}, {{score}} points — voir le détail",
     "timedOut": "Temps écoulé",
-    "noAnswer": "Sans réponse"
+    "noAnswer": "Sans réponse",
+    "wrongOnly_one": "Mes erreurs ({{count}})",
+    "wrongOnly_other": "Mes erreurs ({{count}})"
   },
   "a11y": {
     "showPassword": "Afficher le mot de passe",

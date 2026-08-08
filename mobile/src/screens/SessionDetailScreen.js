@@ -142,6 +142,13 @@ export default function SessionDetailScreen({ navigation, route }) {
   const review = Array.isArray(data?.review) ? data.review : [];
   const hasTheme = !!data?.theme;
 
+  // « Erreur » = pas la bonne réponse, ce qui inclut le chrono écoulé et les
+  // questions passées — ce sont justement celles qu'on vient revoir.
+  const [wrongOnly, setWrongOnly] = useState(false);
+  const isWrong = (it) => it.selected_index !== it.correct_index;
+  const wrongCount = review.filter(isWrong).length;
+  const shownReview = wrongOnly ? review.filter(isWrong) : review;
+
   return (
     <Screen dark={false} scroll padded edges={['top']} statusBarStyle="dark-content">
       {/* En-tête de navigation */}
@@ -165,11 +172,16 @@ export default function SessionDetailScreen({ navigation, route }) {
           <Skeleton width="100%" height={160} radius={radius.lg} style={styles.skelGap} />
         </View>
       ) : error ? (
+        // Hors ligne, l'écran ne proposait AUCUNE action : ni réessayer, ni rien.
+        // Or le réseau revient sans prévenir, et l'utilisateur n'avait alors que
+        // le retour arrière pour tenter à nouveau. Le bouton est proposé dans les
+        // deux cas — au pire il échoue et le même message revient.
         <ErrorScreen
           inline
           dark={false}
           message={isOffline ? t('sessionDetail.offline') : error}
-          onRetry={isOffline ? undefined : load}
+          onRetry={load}
+          retryLabel={t('common.retry')}
         />
       ) : (
         <>
@@ -216,13 +228,40 @@ export default function SessionDetailScreen({ navigation, route }) {
             </View>
           </AppCard>
 
+          {/* Filtre « mes erreurs ». Chaque question occupe ici une carte
+              ENTIÈRE (énoncé + 4 options + explication), toujours dépliée : une
+              partie de marathon en aligne vingt, soit plusieurs écrans de
+              défilement. Or on ouvre une relecture pour voir ce qu'on a raté,
+              pas pour relire ce qu'on a réussi. Masqué sous trois questions, et
+              quand il n'y a aucune erreur (le filtre n'aurait rien à filtrer). */}
+          {review.length >= 3 && wrongCount > 0 ? (
+            <View style={styles.filterRow}>
+              <Pressable
+                onPress={() => setWrongOnly((v) => !v)}
+                style={[styles.filterPill, wrongOnly && styles.filterPillActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: wrongOnly }}
+              >
+                <Label
+                  weight="semibold"
+                  color={wrongOnly ? colors.textOnDark : colors.textBody}
+                >
+                  {t('sessionDetail.wrongOnly', { count: wrongCount })}
+                </Label>
+              </Pressable>
+            </View>
+          ) : null}
+
           {/* Review par question */}
-          {review.length ? (
-            review.map((item, i) => (
+          {shownReview.length ? (
+            shownReview.map((item, i) => (
               <ReviewQuestion
                 key={item.question_id || i}
                 item={item}
-                index={i}
+                // L'index affiché reste celui de la partie, pas celui de la
+                // liste filtrée : « Question 7 » doit rester la 7e question
+                // jouée, même quand on n'affiche que les erreurs.
+                index={review.indexOf(item)}
                 lang={lang}
                 styles={styles}
                 colors={colors}
@@ -271,6 +310,19 @@ const makeStyles = (colors) =>
       borderTopColor: colors.border,
     },
     stat: { alignItems: 'center', gap: spacing.xxs },
+    filterRow: { flexDirection: 'row', marginBottom: spacing.md },
+    filterPill: {
+      minHeight: 36,
+      justifyContent: 'center',
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    // Actif = vert profond + texte clair (même motif que les filtres de
+    // l'Historique) — jamais d'or sur fond clair, il est réservé aux récompenses.
+    filterPillActive: { backgroundColor: colors.green700, borderColor: colors.green700 },
     qCard: { marginBottom: spacing.md },
     qHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
     qText: { marginBottom: spacing.md, lineHeight: 22 },
