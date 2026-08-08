@@ -714,10 +714,11 @@ export default function TeamPage() {
     // Un membre d'équipe EST un user → POST /admin/users/:id/reset-password (envoie
     // un code de réinitialisation). notify uniquement sur succès réel de l'API.
     try {
-      await usersService.resetPassword(m.id);
-      notify.success(t('users.notify.resetSent'));
-    } catch {
-      notify.error(t('users.notify.resetFailed'));
+      const res = await usersService.resetPassword(m.id);
+      if (res?.delivered === false) notify.error(t('users.notify.resetNotDelivered'));
+      else notify.success(t('users.notify.resetSent'));
+    } catch (err) {
+      notify.error(err?.response?.data?.error?.message || t('users.notify.resetFailed'));
     }
   };
 

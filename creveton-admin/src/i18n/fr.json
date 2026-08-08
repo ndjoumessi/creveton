@@ -679,7 +679,9 @@
       "suspendReason": "Raison (obligatoire)",
       "confirmSuspend": "Confirmer la suspension",
       "confirmDelete": "Tapez SUPPRIMER pour confirmer",
-      "viewGameDetail": "Voir le détail →"
+      "viewGameDetail": "Voir le détail →",
+      "emailUnverified": "Email non vérifié",
+      "emailUnverifiedHint": "Le joueur n'a pas confirmé son adresse : la réinitialisation de mot de passe par email est refusée tant qu'elle ne l'est pas."
     },
     "levels": {
       "1": "Novice",
@@ -737,7 +739,8 @@
       "inviteFailed": "Invitation impossible.",
       "messageMailFallback": "Envoi indisponible — ouverture du client mail.",
       "nothingToExport": "Aucun utilisateur à exporter.",
-      "exported": "{{count}} utilisateur(s) exporté(s)."
+      "exported": "{{count}} utilisateur(s) exporté(s).",
+      "resetNotDelivered": "Le code n'a pas pu être envoyé (service email). Rien n'a été transmis au joueur."
     },
     "empty": {
       "notEnoughGames": "Pas assez de parties pour tracer une courbe.",

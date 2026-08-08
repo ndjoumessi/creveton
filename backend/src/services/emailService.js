@@ -301,4 +301,77 @@ async function sendPasswordResetCode({ to, name, code, expiresMinutes, lang = 'f
   return send({ to, subject, html, logSubject: 'Code de réinitialisation Creveton' });
 }
 
-module.exports = { sendTeamInvitation, sendPlayerReferral, sendPasswordResetCode };
+/**
+ * Code de vérification d'adresse email (inscription ou changement d'adresse).
+ *
+ * Même forme que le code de réinitialisation — code recopié dans l'app, pas de
+ * lien — mais un texte distinct : ici rien n'est en danger, on confirme
+ * simplement une adresse. Le confondre avec un email de sécurité banaliserait
+ * l'autre.
+ *
+ * @param {{ to, name?, code, expiresMinutes, isChange?, lang }} p
+ */
+async function sendEmailVerificationCode({ to, name, code, expiresMinutes, isChange = false, lang = 'fr' }) {
+  const isFr = lang !== 'en';
+  const nameEsc = esc(name || '');
+  const codeEsc = esc(code);
+  const hello = name
+    ? `${isFr ? 'Bonjour' : 'Hi'} ${nameEsc},`
+    : `${isFr ? 'Bonjour,' : 'Hello,'}`;
+
+  const subject = isFr
+    ? `Confirme ton adresse Creveton : ${code}`
+    : `Confirm your Creveton address: ${code}`;
+
+  const codeBlock = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+      <tr><td style="background-color:${COLORS.cream};border:1px solid ${COLORS.border};border-radius:10px;padding:18px 28px;text-align:center;">
+        <span style="font-family:${FONT};font-size:32px;font-weight:700;letter-spacing:8px;color:${COLORS.green900};">${codeEsc}</span>
+      </td></tr>
+    </table>`;
+
+  // Le « pourquoi » compte plus que le « comment » : sans adresse confirmée, la
+  // récupération de mot de passe est refusée. Le dire ici évite de le découvrir
+  // le jour où on en a besoin.
+  const why = isFr
+    ? `<p style="margin:0 0 12px;">Une adresse confirmée nous permet de te redonner accès à ton compte si tu oublies ton mot de passe.</p>`
+    : `<p style="margin:0 0 12px;">A confirmed address lets us get you back into your account if you forget your password.</p>`;
+
+  const intro = isFr
+    ? isChange
+      ? 'Voici le code pour confirmer ta <strong>nouvelle</strong> adresse :'
+      : 'Voici le code pour confirmer ton adresse :'
+    : isChange
+      ? 'Here is the code to confirm your <strong>new</strong> address:'
+      : 'Here is the code to confirm your address:';
+
+  const bodyHtml = `<p style="margin:0 0 12px;">${hello}</p>
+       <p style="margin:0 0 12px;">${intro}</p>
+       ${codeBlock}
+       <p style="margin:0 0 12px;">${
+         isFr
+           ? `Il est valable <strong>${expiresMinutes} minutes</strong>.`
+           : `It is valid for <strong>${expiresMinutes} minutes</strong>.`
+       }</p>
+       ${why}
+       <p style="margin:0;color:${COLORS.muted};font-size:13px;">${
+         isFr
+           ? "Tu n'as rien demandé ? Ignore cet email."
+           : "Didn't request this? Just ignore this email."
+       }</p>`;
+
+  const html = layout({
+    preheader: isFr ? `Code ${code} — confirmation d'adresse` : `Code ${code} — address confirmation`,
+    bodyHtml,
+    footerHtml: isFr ? 'Creveton · Ne partage jamais ce code.' : 'Creveton · Never share this code.',
+  });
+
+  // Sujet caviardé dans les journaux : il porte le code (cf. send).
+  return send({ to, subject, html, logSubject: "Code de vérification d'adresse Creveton" });
+}
+
+module.exports = {
+  sendTeamInvitation,
+  sendPlayerReferral,
+  sendPasswordResetCode,
+  sendEmailVerificationCode,
+};

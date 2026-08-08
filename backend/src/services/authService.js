@@ -13,6 +13,7 @@ const {
 } = require('../utils/jwt');
 const userModel = require('../models/user.model');
 const otpService = require('./otpService');
+const emailVerificationService = require('./emailVerificationService');
 
 /**
  * Logique métier d'authentification (réf. spec §4).
@@ -106,6 +107,11 @@ async function register(input) {
     }
     throw err;
   }
+
+  // Vérification d'adresse : lancée EN PARALLÈLE de l'OTP, sans bloquer. Le
+  // compte est utilisable sans elle (seule la récupération de mot de passe
+  // l'exige) — la faire attendre ici rallongerait l'inscription pour rien.
+  emailVerificationService.issueOnRegister(user);
 
   // Envoi OTP. Si Twilio est indisponible (503), le compte existe déjà : la
   // récupération se fait via /auth/resend-otp.

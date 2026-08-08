@@ -55,6 +55,15 @@ const env = {
     resendLimitPerHour: int(process.env.OTP_RESEND_LIMIT_PER_HOUR, 5),
   },
 
+  // Vérification d'adresse email (inscription + changement d'adresse). Mêmes
+  // ordres de grandeur que la réinitialisation : c'est le même geste pour
+  // l'utilisateur, il n'y a pas de raison que les délais diffèrent.
+  emailVerification: {
+    expiresMinutes: int(process.env.EMAIL_VERIFY_EXPIRES_MINUTES, 15),
+    maxAttempts: int(process.env.EMAIL_VERIFY_MAX_ATTEMPTS, 3),
+    requestLimitPerHour: int(process.env.EMAIL_VERIFY_LIMIT_PER_HOUR, 5),
+  },
+
   // Mot de passe oublié — code à 6 chiffres envoyé par EMAIL (canal choisi :
   // l'email est déjà l'identifiant de connexion, et un SMS par tentative sur un
   // endpoint public coûterait cher). TTL plus long que l'OTP : l'email met plus

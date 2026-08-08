@@ -565,6 +565,13 @@ function DrawerBody({ user, tab, setTab, onMessage, onSuspend, onReset }) {
             <div className="u-dh-badges"><RoleBadge role={user.role} /><StatusDot status={user.status} /></div>
             <div className="u-dh-contact">
               <span>{user.email}</span>
+              {/* Sans ce repère, le refus de « Réinitialiser le mot de passe »
+                  sur une adresse non vérifiée paraîtrait être une panne. */}
+              {user.email && (detail?.email_verified ?? user.email_verified) === false && (
+                <span className="u-email-unverified" title={t('users.drawer.emailUnverifiedHint')}>
+                  {t('users.drawer.emailUnverified')}
+                </span>
+              )}
               {user.phone && <span>· {user.phone}</span>}
             </div>
           </div>
@@ -662,9 +669,17 @@ export default function Utilisateurs() {
   const doResetPassword = async (u) => {
     if (!window.confirm(t('users.confirm.resetPassword', { name: u.name }))) return;
     try {
-      await usersService.resetPassword(u.id);
-      notify.success(t('users.notify.resetSent'));
-    } catch { notify.error(t('users.notify.resetFailed')); }
+      // `delivered` dit si le prestataire a VRAIMENT accepté l'envoi. Annoncer
+      // « code envoyé » sans le regarder ferait croire à l'opérateur que le
+      // joueur a reçu quelque chose (constaté : domaine non vérifié chez
+      // Resend → aucun email ne part, l'API répond pourtant 200).
+      const res = await usersService.resetPassword(u.id);
+      if (res?.delivered === false) notify.error(t('users.notify.resetNotDelivered'));
+      else notify.success(t('users.notify.resetSent'));
+    } catch (err) {
+      // Motif serveur quand il y en a un (adresse non vérifiée, pas d'email…).
+      notify.error(err?.response?.data?.error?.message || t('users.notify.resetFailed'));
+    }
   };
 
   const [confirmRole, setConfirmRole] = useState(null); // { user, role } en attente de confirmation

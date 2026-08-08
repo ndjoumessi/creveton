@@ -540,6 +540,28 @@
         "F": "Femme",
         "N": "Non précisé"
       }
+    },
+    "email": {
+      "unverified": "Non vérifié",
+      "sheetTitle": "Adresse email",
+      "why": "Confirme ton adresse : c’est elle qui te permettra de récupérer ton compte si tu oublies ton mot de passe. Sans confirmation, la récupération est refusée.",
+      "current": "Adresse actuelle",
+      "newAddress": "Nouvelle adresse",
+      "send": "M’envoyer un code",
+      "wrongAddress": "Ce n’est pas la bonne adresse",
+      "keepAddress": "Garder l’adresse actuelle",
+      "codeSentTo": "Saisis le code envoyé à",
+      "codeLabel": "Code à 6 chiffres",
+      "codeRequired": "Saisis les 6 chiffres du code.",
+      "confirm": "Confirmer",
+      "back": "Retour",
+      "invalid": "Adresse email invalide.",
+      "notify": {
+        "sent": "Code envoyé.",
+        "verified": "Adresse vérifiée ✅",
+        "changed": "Nouvelle adresse confirmée ✅",
+        "notDelivered": "L'email n'a pas pu être envoyé. Réessaie dans un moment, ou contacte le support."
+      }
     }
   },
   "common": {

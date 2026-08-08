@@ -540,6 +540,28 @@
         "F": "Female",
         "N": "Not specified"
       }
+    },
+    "email": {
+      "unverified": "Unverified",
+      "sheetTitle": "Email address",
+      "why": "Confirm your address: it is what lets you recover your account if you forget your password. Without confirmation, recovery is refused.",
+      "current": "Current address",
+      "newAddress": "New address",
+      "send": "Send me a code",
+      "wrongAddress": "This is not the right address",
+      "keepAddress": "Keep the current address",
+      "codeSentTo": "Enter the code sent to",
+      "codeLabel": "6-digit code",
+      "codeRequired": "Enter all 6 digits of the code.",
+      "confirm": "Confirm",
+      "back": "Back",
+      "invalid": "Invalid email address.",
+      "notify": {
+        "sent": "Code sent.",
+        "verified": "Address verified ✅",
+        "changed": "New address confirmed ✅",
+        "notDelivered": "The email could not be sent. Try again shortly, or contact support."
+      }
     }
   },
   "common": {

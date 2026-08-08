@@ -120,8 +120,18 @@ const adminLeaderboard = Joi.object({
   theme: Joi.string().valid(...THEMES).optional(),
 });
 
+const emailChange = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+const emailVerify = Joi.object({
+  code: Joi.string().length(6).pattern(/^\d{6}$/).required(),
+});
+
 module.exports = {
   updateMe,
+  emailChange,
+  emailVerify,
   referralInvite,
   search,
   pagination,

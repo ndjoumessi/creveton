@@ -39,15 +39,19 @@ const EMAIL = 'awa@example.cm';
 const OLD_PASSWORD = 'AncienMotDePasse1';
 const NEW_PASSWORD = 'NouveauMotDePasse1';
 
-/** Crée un joueur connectable (email + hash + téléphone vérifié). */
+/**
+ * Crée un joueur connectable : email + hash + téléphone vérifié, et surtout
+ * ADRESSE VÉRIFIÉE — depuis la migration 026, la récupération par email n'est
+ * offerte qu'aux adresses dont le contrôle a été prouvé (le cas non vérifié est
+ * couvert par emailVerification.test.js).
+ */
 async function createPlayer(over = {}) {
   const user = await H.createUser({ phone_verified: true, ...over });
   const hash = await bcrypt.hash(over.password || OLD_PASSWORD, 4);
-  await H.db.query('UPDATE users SET email = $1, password_hash = $2 WHERE id = $3', [
-    over.email || EMAIL,
-    hash,
-    user.id,
-  ]);
+  await H.db.query(
+    'UPDATE users SET email = $1, password_hash = $2, email_verified = true WHERE id = $3',
+    [over.email || EMAIL, hash, user.id]
+  );
   const { rows } = await H.db.query('SELECT * FROM users WHERE id = $1', [user.id]);
   return rows[0];
 }

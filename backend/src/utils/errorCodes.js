@@ -14,6 +14,7 @@ const ERROR_CODES = {
   // (email) et le sens diffèrent, et « Code OTP incorrect » serait faux pour un
   // code reçu par email. Sépare aussi les deux flux dans les journaux.
   RESET_CODE_INVALID: { http: 400, message: 'Code de réinitialisation incorrect.' },
+  VERIFY_CODE_INVALID: { http: 400, message: 'Code de vérification incorrect.' },
   INVALID_CURRENT_PASSWORD: { http: 400, message: 'Mot de passe actuel incorrect.' },
 
   AUTH_INVALID_CREDENTIALS: { http: 401, message: 'Email ou mot de passe incorrect.' },
@@ -42,6 +43,7 @@ const ERROR_CODES = {
   NOT_FOUND: { http: 404, message: 'Ressource introuvable.' },
 
   EMAIL_ALREADY_USED: { http: 409, message: 'Cet email est déjà utilisé.' },
+  EMAIL_ALREADY_VERIFIED: { http: 409, message: 'Cette adresse est déjà vérifiée.' },
   PHONE_ALREADY_USED: { http: 409, message: 'Ce numéro est déjà utilisé.' },
   DUPLICATE_QUESTION: { http: 409, message: 'Une question identique existe déjà.' },
   SESSION_ALREADY_SUBMITTED: { http: 409, message: 'Cette session a déjà été soumise.' },
@@ -54,6 +56,7 @@ const ERROR_CODES = {
 
   OTP_EXPIRED: { http: 410, message: 'Le code OTP a expiré.' },
   RESET_CODE_EXPIRED: { http: 410, message: 'Le code de réinitialisation a expiré.' },
+  VERIFY_CODE_EXPIRED: { http: 410, message: 'Le code de vérification a expiré.' },
   INVITE_EXPIRED: { http: 410, message: "L'invitation est invalide ou a expiré." },
 
   INVALID_CORRECT_OPTION_COUNT: { http: 422, message: 'Il doit y avoir exactement une bonne réponse.' },
@@ -66,6 +69,7 @@ const ERROR_CODES = {
 
   OTP_TOO_MANY_ATTEMPTS: { http: 429, message: "Trop de tentatives OTP." },
   RESET_TOO_MANY_ATTEMPTS: { http: 429, message: 'Trop de tentatives, demandez un nouveau code.' },
+  VERIFY_TOO_MANY_ATTEMPTS: { http: 429, message: 'Trop de tentatives, demandez un nouveau code.' },
   RATE_LIMITED: { http: 429, message: 'Trop de requêtes, réessayez plus tard.' },
 
   INTERNAL_ERROR: { http: 500, message: 'Erreur serveur.' },

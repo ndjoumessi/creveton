@@ -25,6 +25,9 @@ function toPublic(row) {
     email: row.email,
     phone: row.phone,
     phone_verified: row.phone_verified,
+    // Exposé au client : le profil affiche une invite tant que l'adresse n'est
+    // pas prouvée, et la récupération de mot de passe en dépend.
+    email_verified: !!row.email_verified,
     ville: row.ville ?? null,
     age: row.age ?? null,
     sexe: row.sexe ?? null,
@@ -234,6 +237,33 @@ async function setStatus(id, status) {
 }
 
 /** Met à jour le hash de mot de passe (changement de mot de passe). */
+/** Marque l'adresse courante comme vérifiée (code confirmé). */
+async function markEmailVerified(id) {
+  const { rows } = await db.query(
+    `UPDATE users SET email_verified = true WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
+/**
+ * Change l'adresse et la marque vérifiée — indissociable : on n'arrive ici
+ * qu'après confirmation d'un code envoyé à la NOUVELLE adresse. Les poser
+ * séparément laisserait une fenêtre où l'email est changé mais encore réputé
+ * non vérifié (ou pire, l'inverse).
+ *
+ * La contrainte UNIQUE reste le garde-fou : deux confirmations concurrentes sur
+ * la même adresse doivent en perdre une (23505 traité par l'appelant).
+ */
+async function setVerifiedEmail(id, email) {
+  const { rows } = await db.query(
+    `UPDATE users SET email = $2, email_verified = true
+      WHERE id = $1 AND deleted_at IS NULL RETURNING *`,
+    [id, email]
+  );
+  return rows[0] || null;
+}
+
 async function setPassword(id, passwordHash) {
   const { rows } = await db.query(
     `UPDATE users SET password_hash = $2 WHERE id = $1 AND deleted_at IS NULL RETURNING id`,
@@ -459,6 +489,8 @@ module.exports = {
   levelForXp,
   XP_LEVELS,
   setPassword,
+  markEmailVerified,
+  setVerifiedEmail,
   setAvatar,
   clearAvatar,
   search,

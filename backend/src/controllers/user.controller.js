@@ -4,13 +4,35 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { ok, noContent } = require('../utils/response');
 const walletService = require('../services/walletService');
+const emailVerificationService = require('../services/emailVerificationService');
 const avatarService = require('../services/avatarService');
 const referralService = require('../services/referralService');
 const userModel = require('../models/user.model');
 const sessionModel = require('../models/session.model');
 
 /** Contrôleurs Profil & utilisateur (spec §10/§11). */
+/** POST /users/me/email/verify/request → 200 { sent, email, expires_at } */
+const requestEmailVerification = asyncHandler(async (req, res) => {
+  const result = await emailVerificationService.requestForCurrentEmail(req.user.id);
+  return ok(res, result);
+});
+
+/** POST /users/me/email → demande un changement d'adresse (code à la NOUVELLE). */
+const requestEmailChange = asyncHandler(async (req, res) => {
+  const result = await emailVerificationService.requestEmailChange(req.user.id, req.body.email);
+  return ok(res, result);
+});
+
+/** POST /users/me/email/verify → 200 { email, email_verified, changed } */
+const confirmEmailVerification = asyncHandler(async (req, res) => {
+  const result = await emailVerificationService.confirm(req.user.id, req.body.code);
+  return ok(res, result);
+});
+
 module.exports = {
+  requestEmailVerification,
+  requestEmailChange,
+  confirmEmailVerification,
   // GET /users/me — profil de l'utilisateur authentifié.
   me: asyncHandler(async (req, res) => {
     const row = await userModel.findById(req.user.id);

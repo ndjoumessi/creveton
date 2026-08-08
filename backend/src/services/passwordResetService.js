@@ -25,14 +25,17 @@ const authService = require('./authService');
  * dans l'app, sans quitter le flux, et fonctionne même si l'email est lu depuis
  * un autre appareil.
  *
- * ─ Limite connue et assumée ─
- * L'email n'est PAS vérifié à l'inscription (requis et unique, rien de plus) :
- * une adresse mal saisie ou usurpée expose le compte. Le garde-fou habituel
- * — « email de confirmation après changement » — serait ici inutile puisqu'il
- * partirait à l'attaquant. La notification part donc par SMS, sur le SEUL canal
- * dont on sait qu'il appartient au titulaire (`phone_verified`). Fermer
- * complètement le trou demande une vérification d'email à l'inscription :
- * chantier séparé.
+ * ─ Adresse vérifiée EXIGÉE ─
+ * On n'envoie un code qu'à une adresse dont le contrôle a été prouvé
+ * (`email_verified`, cf. emailVerificationService). Sans cette condition, une
+ * adresse mal saisie à l'inscription rendait le compte récupérable par un
+ * inconnu — c'est précisément le trou que ce service ouvrait. Les comptes non
+ * vérifiés ne sont pas bloqués pour autant : ils se connectent normalement et
+ * confirment leur adresse depuis le profil (ou la corrigent, si c'était une
+ * faute de frappe).
+ *
+ * La notification de changement part par SMS, sur le canal vérifié — un email
+ * de confirmation irait à l'attaquant dans le cas d'usurpation.
  *
  * Stockage : Redis, clé `pwdreset:<user_id>` — l'ID et pas l'email, pour qu'un
  * changement d'adresse en cours de route ne puisse pas être exploité.
@@ -126,8 +129,16 @@ async function issueFor(user, { awaitDelivery = true } = {}) {
 async function requestReset(email) {
   const user = await userModel.findByEmail(String(email).trim().toLowerCase());
 
-  if (!user || !user.password_hash) {
-    logger.info('Demande de réinitialisation sans destinataire', { email_known: !!user });
+  // Trois refus, une seule réponse. `email_verified` en fait partie : envoyer un
+  // code à une adresse non prouvée reviendrait à offrir le compte à qui la
+  // relève. Le silence est ici le comportement correct — l'app dit ailleurs (au
+  // profil, dans l'email de vérification) qu'une adresse non confirmée n'ouvre
+  // pas de récupération.
+  if (!user || !user.password_hash || !user.email_verified) {
+    logger.info('Demande de réinitialisation sans destinataire', {
+      email_known: !!user,
+      email_verified: user ? !!user.email_verified : null,
+    });
     return { requested: true };
   }
 
@@ -159,9 +170,10 @@ async function requestReset(email) {
 async function confirmReset({ email, code, newPassword }) {
   const user = await userModel.findByEmail(String(email).trim().toLowerCase());
 
-  // Compte inconnu : même erreur que « code faux ». Sinon l'écran de saisie du
-  // code devient à son tour un oracle d'existence.
-  if (!user || !user.password_hash) {
+  // Compte inconnu, sans mot de passe, ou adresse non vérifiée : même erreur que
+  // « code faux ». Sinon l'écran de saisie du code devient à son tour un oracle,
+  // sur l'existence du compte comme sur l'état de son adresse.
+  if (!user || !user.password_hash || !user.email_verified) {
     throw new ApiError('RESET_CODE_INVALID');
   }
 
@@ -246,6 +258,15 @@ async function issueForUser(user) {
   if (!user.email) {
     throw new ApiError('VALIDATION_ERROR', {
       message: "Ce compte n'a pas d'adresse email : impossible d'envoyer un code.",
+    });
+  }
+  // Pas d'anti-énumération à tenir ici (l'appelant est authentifié et a la fiche
+  // sous les yeux) : on dit franchement pourquoi c'est refusé, sinon l'opérateur
+  // croirait à une panne.
+  if (!user.email_verified) {
+    throw new ApiError('VALIDATION_ERROR', {
+      message:
+        "L'adresse de ce compte n'est pas vérifiée : lui envoyer un code de réinitialisation la rendrait exploitable par un tiers.",
     });
   }
   // Ici on ATTEND la délivrance : l'admin déclenche depuis la console et a

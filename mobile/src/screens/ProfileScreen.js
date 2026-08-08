@@ -42,7 +42,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Screen, Avatar, AppButton, BottomSheet, XpBar, useConfirm, useToast, Title, Heading, Body, Label } from '../components';
+import { Screen, Avatar, AppButton, BottomSheet, EmailVerifySheet, XpBar, useConfirm, useToast, Title, Heading, Body, Label } from '../components';
 import FillBar from '../components/FillBar';
 import Icon from '../components/Icon';
 import { useReduceMotion } from '../hooks/useReduceMotion';
@@ -180,6 +180,7 @@ export default function ProfileScreen() {
   // relatif. `avatarBust` force `<Image>` à recharger après un upload : sans ça,
   // RN garde en cache l'ancienne image (ou un échec) si l'URL ne change pas.
   const [avatarSheet, setAvatarSheet] = useState(false);
+  const [emailSheet, setEmailSheet] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarBust, setAvatarBust] = useState(0);
   const baseAvatar = avatarUri(user);
@@ -591,7 +592,34 @@ export default function ProfileScreen() {
             l'icône green900 invisible ; les pastel* ne flippent jamais). */}
         <Section title={t('profile.sections.account')}>
           <SettingRow icon={User} iconBg={colors.pastelGreen} label={t('profile.fields.name')} value={user?.name} onPress={openEdit} />
-          <SettingRow icon={Mail} iconBg={colors.pastelBlue} label={t('profile.fields.email')} value={user?.email} valueMuted />
+          {/* L'adresse n'est plus une donnée morte : elle est vérifiable et
+              corrigeable. Non vérifiée, elle porte une pastille — pas un rouge
+              d'erreur (rien n'est cassé) mais un ambre d'action en attente,
+              doublé du libellé comme l'exige la charte. */}
+          <SettingRow
+            icon={Mail}
+            iconBg={colors.pastelBlue}
+            label={t('profile.fields.email')}
+            onPress={() => setEmailSheet(true)}
+            right={
+              <View style={styles.emailRight}>
+                <Label
+                  color={colors.textBody}
+                  style={styles.emailValue}
+                  numberOfLines={1}
+                >
+                  {user?.email || '—'}
+                </Label>
+                {user?.email && !user?.email_verified ? (
+                  <View style={styles.emailBadge}>
+                    <Label weight="bold" size="xs" color={colors.green900}>
+                      {t('profile.email.unverified')}
+                    </Label>
+                  </View>
+                ) : null}
+              </View>
+            }
+          />
           <SettingRow icon={Smartphone} iconBg={colors.pastelYellow} label={t('profile.fields.phone')} value={user?.phone} valueMuted />
           <SettingRow icon={MapPin} iconBg={colors.pastelRed} label={t('profile.fields.city')} value={user?.ville} onPress={openEdit} isLast />
         </Section>
@@ -819,6 +847,15 @@ export default function ProfileScreen() {
         </Pressable>
       </BottomSheet>
 
+      {/* Vérification / correction de l'adresse email. `refreshProfile` recharge
+          `email` et `email_verified` depuis le serveur : on ne les devine pas. */}
+      <EmailVerifySheet
+        visible={emailSheet}
+        onClose={() => setEmailSheet(false)}
+        email={user?.email}
+        onVerified={refreshProfile}
+      />
+
       </Screen>
 
       {/* Overlay d'édition — même fenêtre que l'écran (pas un <Modal> RN).
@@ -1019,6 +1056,17 @@ const makeStyles = (colors) => StyleSheet.create({
   rowLabel: { flex: 1 },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, maxWidth: '55%' },
   rowValueMuted: { color: colors.textMuted },
+  // Ligne Email : valeur + pastille d'état. `flexShrink` sur la valeur pour que
+  // ce soit l'adresse qui tronque, jamais la pastille — c'est elle qui porte
+  // l'action à faire.
+  emailRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 1 },
+  emailValue: { flexShrink: 1 },
+  emailBadge: {
+    backgroundColor: colors.pastelYellow,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
 
   // Langue (pills inline)
   langPills: { flexDirection: 'row', gap: spacing.xs },

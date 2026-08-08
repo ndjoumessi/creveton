@@ -110,6 +110,14 @@ export const users = {
     api.get('/users/me/history', { params }).then((r) => r.data),
   transactions: (params) =>
     api.get('/users/me/transactions', { params }).then((r) => r.data),
+  // — Vérification d'adresse email (auth requise).
+  //   `requestEmailCode` renvoie un code à l'adresse ACTUELLE ;
+  //   `changeEmail` l'envoie à une NOUVELLE (rien n'est modifié avant
+  //   confirmation) ; `verifyEmail` confirme le code et pose l'adresse visée.
+  requestEmailCode: () =>
+    api.post('/users/me/email/verify/request').then((r) => r.data),
+  changeEmail: (email) => api.post('/users/me/email', { email }).then((r) => r.data),
+  verifyEmail: (code) => api.post('/users/me/email/verify', { code }).then((r) => r.data),
   // Téléverse une photo de profil (multipart, champ « avatar ») → { avatar_url }.
   //
   // On passe par `fetch` (et NON axios) : l'instance axios force un

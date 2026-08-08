@@ -679,7 +679,9 @@
       "suspendReason": "Reason (required)",
       "confirmSuspend": "Confirm suspension",
       "confirmDelete": "Type DELETE to confirm",
-      "viewGameDetail": "View detail →"
+      "viewGameDetail": "View detail →",
+      "emailUnverified": "Email unverified",
+      "emailUnverifiedHint": "The player has not confirmed their address: email password reset is refused until they do."
     },
     "levels": {
       "1": "Novice",
@@ -737,7 +739,8 @@
       "inviteFailed": "Invitation failed.",
       "messageMailFallback": "Sending unavailable — opening mail client.",
       "nothingToExport": "No user to export.",
-      "exported": "{{count}} user(s) exported."
+      "exported": "{{count}} user(s) exported.",
+      "resetNotDelivered": "The code could not be sent (email service). Nothing reached the player."
     },
     "empty": {
       "notEnoughGames": "Not enough games to plot a curve.",

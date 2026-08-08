@@ -114,6 +114,27 @@ régénérer avec `/impeccable document`.
   timer global 62 s) ; `/sessions/answer` (feedback immédiat, mode `normal` only) une
   réponse < 150 ms → `CHEAT_DETECTED`. La bonne réponse n'est révélée qu'après soumission.
   (Seuils assouplis depuis 2 répétitions / 1 s / 500 ms pour limiter les faux positifs.)
+- **Vérification d'adresse email** (`src/services/emailVerificationService.js`,
+  migration `026_users_email_verified.sql`) : code à 6 chiffres par email, Redis
+  `emailverify:<user_id>` (stocke aussi l'adresse **VISÉE** — un code demandé pour une
+  adresse ne peut pas en valider une autre), TTL 15 min, 3 essais, 5/h. Routes
+  **authentifiées** : `POST /users/me/email/verify/request` (adresse courante),
+  `POST /users/me/email` (changement — code envoyé à la **nouvelle**, rien n'est écrit
+  avant confirmation), `POST /users/me/email/verify`. `toPublic` expose `email_verified`.
+  · **Non bloquant** : l'email part en parallèle de l'OTP à l'inscription
+    (`issueOnRegister`, fire-and-forget) ; le compte est jouable sans. Ce qui est refusé
+    sans vérification, c'est la **récupération de mot de passe**, pas l'usage. Les comptes
+    existants sont à `false` (les marquer vrais perpétuerait le trou) ; les invitations
+    admin acceptées sont backfillées à `true` (le lien prouvait déjà la boîte).
+  · **Le changement d'adresse fait partie du lot** : `PATCH /users/me` n'accepte pas
+    `email`, donc sans lui une faute de frappe à l'inscription serait définitive et le
+    compte irrécupérable pour toujours. `userModel.setVerifiedEmail` pose adresse +
+    drapeau dans la **même** requête. Notification par SMS (canal vérifié) — alerter
+    l'ancienne adresse email n'aurait aucune valeur, c'est justement elle qui bouge.
+  · Codes `VERIFY_CODE_INVALID` / `VERIFY_CODE_EXPIRED` / `VERIFY_TOO_MANY_ATTEMPTS` /
+    `EMAIL_ALREADY_VERIFIED`. Front : mobile `components/EmailVerifySheet.js` (ligne Email
+    du Profil, pastille « Non vérifié ») ; admin : pastille dans le tiroir Utilisateurs.
+    Tests : `backend/tests/emailVerification.test.js`.
 - **Mot de passe oublié** (`src/services/passwordResetService.js`) : code à **6 chiffres
   par EMAIL** (Resend), Redis `pwdreset:<user_id>`, TTL 15 min, 3 tentatives, 5 demandes/h
   par compte. `POST /auth/forgot-password` répond **204 systématiquement** (anti-énumération,
@@ -122,9 +143,10 @@ régénérer avec `/impeccable document`.
   (`authService.revokeAllSessions` — un reset veut dire « peut-être compromis », à la
   différence de `changePassword` qui préserve la session courante). Codes dédiés
   `RESET_CODE_INVALID` / `RESET_CODE_EXPIRED` / `RESET_TOO_MANY_ATTEMPTS`.
-  · **L'email n'est pas vérifié** à l'inscription : la notification « mot de passe modifié »
-    part donc par **SMS**, seul canal vérifié (`phone_verified`). Un email de confirmation
-    irait à l'attaquant en cas d'adresse usurpée.
+  · **Adresse vérifiée EXIGÉE** (`email_verified`) : sans elle, aucun code n'est émis —
+    la réponse reste 204 (anti-énumération), et l'admin, lui, reçoit un motif explicite.
+    La notification « mot de passe modifié » part par **SMS**, seul canal vérifié
+    (`phone_verified`) : un email de confirmation irait à l'attaquant en cas d'usurpation.
   · Sur le chemin PUBLIC l'envoi est **fire-and-forget** : l'attendre créait un oracle
     temporel (mesuré 16,4 s pour un compte connu contre 3 ms pour un inconnu) qui annulait
     l'anti-énumération. L'admin, lui, attend (il veut savoir si c'est parti).
