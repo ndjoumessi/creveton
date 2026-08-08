@@ -30,7 +30,7 @@ import { patchQuestionSolution } from '../services/database';
 import { hapticLight, hapticSuccess, hapticError } from '../utils/haptics';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { useTheme } from '../hooks/useTheme';
-import { fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
 import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
 
@@ -492,6 +492,29 @@ export default function QuizScreen({ navigation }) {
     }
   }, [correctStreak, streakBounce]);
 
+  // Une fois la réponse donnée, le chrono est arrêté mais restait AFFICHÉ, figé
+  // sur sa dernière valeur — un compteur immobile sur un écran de feedback attire
+  // l'œil pour rien, alors que la barre de progression sous l'explication dit déjà
+  // « on passe à la suite ». On l'efface en gardant sa place : le masquer
+  // décalerait tout le contenu vers le haut au moment précis où l'utilisateur lit
+  // la correction. Ne concerne QUE l'anneau par question — le chrono global de
+  // blitz/marathon continue de tourner, il pilote toute la session.
+  const timerFade = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const to = answered ? 0 : 1;
+    if (reduceMotion) {
+      timerFade.setValue(to);
+      return undefined;
+    }
+    const anim = Animated.timing(timerFade, {
+      toValue: to,
+      duration: motion.base,
+      useNativeDriver: true,
+    });
+    anim.start();
+    return () => anim.stop();
+  }, [answered, reduceMotion, timerFade]);
+
   // Localisation FR/EN — recalculée si la question change OU si la langue change
   // pendant la partie (toggle FR↔EN dans Profil) : le quiz en cours se met à jour.
   const displayText = useMemo(() => getQuestionText(question, lang), [question, lang]);
@@ -548,7 +571,9 @@ export default function QuizScreen({ navigation }) {
             }
           />
         ) : (
-          <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
+          <Animated.View style={{ opacity: timerFade }}>
+            <CircularTimer size={80} strokeWidth={5} progress={timerAnim} seconds={secondsLeft} />
+          </Animated.View>
         )}
       </View>
 

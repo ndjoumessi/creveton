@@ -78,8 +78,13 @@ export default function CircularTimer({
       ? RED
       : GOLD
     : activeProgress.interpolate({
-        inputRange: [0, 0.2, 0.5, 1],
-        outputRange: [RED, RED, ORANGE, GOLD],
+        // L'or n'existait qu'EXACTEMENT à 1 : la dégradation vers l'orange
+        // commençait dès la première seconde écoulée. Sur 15 s, il restait 11 s
+        // (progress 0,73) et l'anneau virait déjà orange — une alerte alors que
+        // 73 % du temps restait. L'or tient désormais jusqu'à la moitié, l'orange
+        // occupe le dernier tiers, le rouge les toutes dernières secondes.
+        inputRange: [0, 0.15, 0.35, 0.6, 1],
+        outputRange: [RED, RED, ORANGE, GOLD, GOLD],
       });
   const trackStroke = watch ? WATCH_TRACK[mode] || WATCH_TRACK.blitz : colors.trackOnDark;
 
