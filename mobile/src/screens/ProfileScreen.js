@@ -973,7 +973,7 @@ const makeStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
   },
   // Actif = or (état actif de la charte) : indispensable en mode sombre, où
-  // green900 se confondait avec la surface (cream→#0d1f14) → pastille « invisible ».
+  // green900 se confondait avec la surface (cream→#0a1b10) → pastille « invisible ».
   // Or sur green900/cream = lisible dans les deux thèmes (cf. pills Sexe, même écran).
   langPillActive: { backgroundColor: colors.gold500, borderColor: colors.gold500 },
   themeToggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },

@@ -51,7 +51,7 @@ const CHART_H = 140;
 function rateColor(pct, c = colors, isDark = false) {
   if (pct === null || pct === undefined) return c.textDark;
   // green500 (#2a8a4f) tombe à ~2:1 sur la carte KPI sombre (colors.white →
-  // #162a1e en dark) → en dark on prend green300, lisible sur fond sombre.
+  // #16331f en dark) → en dark on prend green300, lisible sur fond sombre.
   if (pct >= 70) return isDark ? c.green300 : c.green500; // vert
   if (pct >= 40) return c.gold500; // ambre (≈ orange) — lisible sur les deux fonds
   return c.red400; // rouge — lisible sur les deux fonds
@@ -314,7 +314,7 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
       bg: colors.pastelYellow,
       value: fmt(stats.avgScore),
       // Valeur en couleur de texte thème-aware : green900 ne flippe pas et
-      // disparaissait sur la carte KPI sombre (colors.white → #162a1e en dark).
+      // disparaissait sur la carte KPI sombre (colors.white → #16331f en dark).
       color: colors.textDark,
       label: t('stats.kpi.avgScore'),
     },

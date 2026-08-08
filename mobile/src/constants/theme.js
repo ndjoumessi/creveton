@@ -118,28 +118,44 @@ export const darkColors = {
   ...colors,
 
   // Fonds — rampe verte tintée (pas de noir pur) : page < carte < secondaire < élevé.
-  background: '#0d1f14', // page (vert très sombre, = cream sombre)
-  backgroundSecondary: '#162a1e', // en-têtes / barre d'onglets (= niveau carte)
-  backgroundTertiary: '#1e3328', // surfaces élevées
-  cardOnDark: '#162a1e',
+  //
+  // RECALIBRAGE LISIBILITÉ (08-2026) — rampe alignée sur le thème sombre de l'admin
+  // (`creveton-admin/src/index.css`, bloc `[data-theme="dark"]`). L'ancienne rampe
+  // empilait des verts à luminance quasi égale : la carte ne se détachait pas du fond
+  // (1.13:1) et la bordure 1px — qui PORTE tout le système d'élévation — était
+  // invisible (1.31:1). Deux principes, repris tels quels de l'admin :
+  //   1. Les SURFACES gardent la teinte verte mais s'écartent en luminance : c'est
+  //      l'écart qui fait lire une carte, pas la teinte.
+  //   2. Les TEXTES se désaturent vers le neutre. Le vert reste porté par les accents
+  //      de marque (green300/gold), jamais par le corps de texte.
+  // Ratios mesurés sur la carte (`surface`) sauf mention contraire.
+  background: '#0a1b10', // page (niveau 0) — laisse les surfaces monter au-dessus
+  backgroundSecondary: '#16331f', // en-têtes / barre d'onglets (= niveau carte)
+  backgroundTertiary: '#1d4128', // surfaces élevées (= niveau 2)
+  cardOnDark: '#16331f',
 
   // Inversions de surface (ce qui était clair devient sombre)
-  white: '#162a1e', // « cartes » blanches → surface sombre (niveau 1)
-  cream: '#0d1f14', // fond de page (niveau 0)
-  surface: '#162a1e',
-  surfaceCream: '#1e3328', // surface secondaire tintée (niveau 2)
-  surfaceElevated: '#22382a', // plus claire que les cartes (#162a1e) → tuiles « mode » (niveau 3)
+  white: '#16331f', // « cartes » blanches → surface sombre (niveau 1) — 1.30:1 sur la page (était 1.13:1)
+  cream: '#0a1b10', // fond de page (niveau 0)
+  surface: '#16331f',
+  surfaceCream: '#1d4128', // surface secondaire tintée (niveau 2) — 1.20:1 sur la carte
+  surfaceElevated: '#234f30', // niveau 3 (tuiles « mode » Home, chips, recherche d'ami) — 1.21:1 sur le niveau 2.
+  //   Sans équivalent admin (qui n'a que 2 niveaux) : dérivé en reprenant son pas de luminance.
 
   // Textes : clairs sur sombre (mêmes clés que la palette claire)
-  textDark: '#f0faf4', // primaire — blanc cassé verdâtre (~15:1 sur la page)
-  textBody: '#e8f5ed', // paragraphes — légèrement plus chaud que textDark
-  textMuted: '#9dbfaa', // secondaire / labels (~7.4–8.6:1 sur toutes surfaces sombres)
-  textFaint: '#7da88a', // dé-emphasé : AA corps (≥5.5:1) — relevé de #6a9070 (échouait 4.1:1 sur cartes)
+  textDark: '#f0f7f1', // primaire / titres — 12.62:1
+  textBody: '#d6e4d8', // paragraphes — 10.44:1
+  textMuted: '#bdcfc1', // secondaire / labels — 8.42:1 (5.76:1 au niveau 3)
+  textFaint: '#a7bbac', // dé-emphasé : méta / placeholders — 6.77:1 (4.63:1 au niveau 3)
+  //   `textMuted`/`textFaint` sont un cran plus clairs que leurs homologues admin
+  //   (#a3b8a8 / #8fa695) : le mobile a un niveau d'élévation de plus, et les deux y
+  //   sont réellement posés (description des tuiles « mode » Home, placeholder de la
+  //   recherche d'ami). Les valeurs admin y tomberaient à 4.47:1 et 3.61:1, sous AA.
   textOnDark: '#ffffff', // texte sur en-têtes vert profond → blanc pur
 
   // Bordures & séparateurs
-  border: '#2a3d30',
-  borderInput: '#2a3d30',
+  border: '#356b45', // 2.19:1 sur la carte (était 1.31:1) — la bordure 1px existe enfin
+  borderInput: '#356b45',
   divider: 'rgba(240, 250, 244, 0.08)',
 
   // États (fonds sombres)
