@@ -252,7 +252,37 @@ export default function GameStartScreen({ navigation, route }) {
   };
 
   return (
-    <Screen scroll edges={['top']}>
+    <Screen
+      scroll
+      edges={['top']}
+      // L'action principale était en bas d'une page longue (3 modes + 6 cartes de
+      // thème + niveau) : « Lancer » n'apparaissait qu'après avoir fait défiler,
+      // alors que c'est le geste que l'écran existe pour provoquer. Ancré en pied,
+      // il reste sous le pouce quel que soit le défilement. L'indice « choisis un
+      // thème » l'accompagne : il explique POURQUOI le bouton est inactif, il doit
+      // donc être visible en même temps que lui.
+      footer={
+        <>
+          <Animated.View style={{ transform: [{ scale: pulse }] }}>
+            <AppButton
+              title={t('gameStart.launch')}
+              variant="primary"
+              size="lg"
+              loading={loading}
+              disabled={!ready}
+              onPress={onStart}
+            />
+          </Animated.View>
+          {showPickHint ? (
+            <Animated.View style={{ opacity: pickHintAnim }}>
+              <Body weight="medium" size="sm" color={colors.gold500} style={styles.pickHint}>
+                {t('gameStart.pickThemeHint')}
+              </Body>
+            </Animated.View>
+          ) : null}
+        </>
+      }
+    >
       <View style={styles.header}>
         <Pressable
           onPress={() => navigation.navigate('Home')}
@@ -425,22 +455,9 @@ export default function GameStartScreen({ navigation, route }) {
         </View>
       )}
 
-      <Animated.View style={{ transform: [{ scale: pulse }] }}>
-        <AppButton
-          title={t('gameStart.launch')}
-          variant="primary"
-          size="lg"
-          loading={loading}
-          disabled={!ready}
-          onPress={onStart}
-          style={styles.cta}
-        />
-      </Animated.View>
-      {showPickHint ? (
-        <Animated.View style={{ opacity: pickHintAnim }}>
-          <Body weight="medium" size="sm" color={colors.gold500} style={styles.pickHint}>{t('gameStart.pickThemeHint')}</Body>
-        </Animated.View>
-      ) : null}
+      {/* Action SECONDAIRE : reste dans le contenu défilant. La mettre dans le pied
+          ancré aurait porté sa hauteur à ~150 px (CTA + indice + ce bouton), au
+          détriment de la grille de thèmes qu'on vient précisément de rendre visible. */}
       <AppButton
         title={t('gameStart.misc.challengeFriend')}
         variant="ghost"
@@ -562,11 +579,10 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.textMuted,
   },
 
-  cta: { marginTop: spacing.xl },
   // Nudge vers le CTA : or (accent distinct, court libellé unique → dans le budget or).
   // textMuted rendait vert-de-gris en sombre (indistinct du reste).
   pickHint: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     textAlign: 'center',
   },
   challenge: { marginTop: spacing.md },

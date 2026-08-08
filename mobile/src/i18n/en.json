@@ -366,7 +366,8 @@
       "rankTop10": "Top 10 — excellent!",
       "rankOther": "Keep it up!",
       "outOf_one": "out of {{formatted}} player",
-      "outOf_other": "out of {{formatted}} players"
+      "outOf_other": "out of {{formatted}} players",
+      "tooFewPlayers": "Leaderboard is filling up — invite friends to compete"
     },
     "trend": {
       "up": "↑ +{{n}} this week",

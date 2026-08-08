@@ -1,5 +1,10 @@
 // Screen — conteneur safe-area. Fond cream (clair) ou green900 (dark).
 // scroll optionnel, pull-to-refresh, padding configurable.
+//
+// `footer` (opt-in) : contenu ANCRÉ hors de la zone scrollable, toujours visible.
+// Sert aux écrans dont l'action principale se retrouve sous la ligne de flottaison
+// (écran Jouer : modes + 6 thèmes + niveau poussent « Lancer » hors écran).
+// Défaut `null` → aucun changement pour les écrans qui ne le passent pas.
 
 import React from 'react';
 import {
@@ -15,6 +20,7 @@ import { useTheme } from '../hooks/useTheme';
 
 export default function Screen({
   children,
+  footer = null,
   dark = false,
   scroll = false,
   padded = true,
@@ -60,6 +66,11 @@ export default function Screen({
     <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: rootBg }, style]}>
       <StatusBar barStyle={statusBarStyle || (dark || isDark ? 'light-content' : 'dark-content')} />
       <Content {...contentProps}>{children}</Content>
+      {footer ? (
+        <View style={[styles.footer, { backgroundColor: bg, borderTopColor: colors.border }]}>
+          {footer}
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -68,4 +79,11 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   padded: { padding: spacing.lg },
   bodyFill: { flexGrow: 1 },
+  // Liseré haut : détache le pied du contenu qui défile dessous.
+  footer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    borderTopWidth: 1,
+  },
 });

@@ -37,6 +37,12 @@ const TABS = [
   { key: 'rank', icon: Trophy, labelKey: 'stats.tabs.leaderboard' },
 ];
 
+// En dessous de ce nombre d'inscrits, un classement ne veut rien dire : être
+// « #1 sur 1 joueur » n'est pas une performance, et le sacrer sonne creux. On
+// affiche la position (elle est factuelle) mais on remplace la célébration par
+// une invitation — la seule action qui change vraiment la situation.
+const MIN_RANKED_PLAYERS = 3;
+
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
 
 // Médailles / couleurs de rang : voir `utils/rank.js` (medalColor ici ; le
@@ -623,8 +629,11 @@ function RankTab({ data, myRank, totalPlayers, loading, error, isOffline, onRetr
             {/* Message motivant contextuel selon le rang */}
             {(() => {
               const r = myRank.rank;
-              const msg =
-                r === 1
+              // Trop peu d'inscrits → pas de sacre, une invitation.
+              const tooFew = !totalPlayers || totalPlayers < MIN_RANKED_PLAYERS;
+              const msg = tooFew
+                ? { text: t('stats.leaderboard.tooFewPlayers'), color: colors.textMuted }
+                : r === 1
                   ? { text: t('stats.leaderboard.rank1'), color: colors.gold500 }
                   : r <= 10
                     ? { text: t('stats.leaderboard.rankTop10'), color: colors.green300 }

@@ -366,7 +366,8 @@
       "rankTop10": "Top 10 — excellent !",
       "rankOther": "Continue comme ça !",
       "outOf_one": "sur {{formatted}} joueur",
-      "outOf_other": "sur {{formatted}} joueurs"
+      "outOf_other": "sur {{formatted}} joueurs",
+      "tooFewPlayers": "Classement en formation — invite des amis pour te mesurer"
     },
     "trend": {
       "up": "↑ +{{n}} cette semaine",
