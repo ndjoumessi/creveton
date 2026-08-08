@@ -45,8 +45,8 @@
       },
       "placeholder": {
         "city": "Choisis ta ville",
-        "phone": "Numéro sans indicatif",
-        "age": "Facultatif"
+        "phone": "Ton numéro",
+        "age": "Ton âge"
       },
       "notify": {
         "emailUsed": "Email déjà utilisé.",

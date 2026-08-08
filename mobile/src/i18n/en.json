@@ -45,8 +45,8 @@
       },
       "placeholder": {
         "city": "Choose your city",
-        "phone": "Number without country code",
-        "age": "Optional"
+        "phone": "Your number",
+        "age": "Your age"
       },
       "notify": {
         "emailUsed": "Email already in use.",

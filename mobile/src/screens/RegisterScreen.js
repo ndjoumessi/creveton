@@ -369,6 +369,9 @@ export default function RegisterScreen({ navigation }) {
 // `maxLength` à 15 = maximum E.164 tous pays confondus ; la longueur RÉELLE
 // attendue dépend du pays et est vérifiée par libphonenumber-js à la validation
 // (un cap à 9 chiffres, hérité du Cameroun, tronquait les numéros étrangers).
+// `numberOfLines`/`multiline={false}` : la tuile d'indicatif ayant grandi (drapeau
+// + code + chevron), le champ restant est étroit et un placeholder un peu long
+// repassait à la ligne pour se faire couper par la hauteur fixe du champ.
 function PhoneInput({ defaultValue, onChangeText, placeholder }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -381,6 +384,8 @@ function PhoneInput({ defaultValue, onChangeText, placeholder }) {
       keyboardType="phone-pad"
       placeholder={placeholder}
       maxLength={15}
+      multiline={false}
+      numberOfLines={1}
     />
   );
 }
