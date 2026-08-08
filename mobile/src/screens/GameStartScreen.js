@@ -13,8 +13,6 @@ import {
   THEMES,
   LEVELS,
   GAME,
-  MODE_DURATION_S,
-  MODE_QUESTION_COUNT,
   TIMED_MODES,
 } from '../constants/config';
 import { useQuestionsStore } from '../store/questionsStore';
@@ -110,13 +108,14 @@ export default function GameStartScreen({ navigation, route }) {
   }, [cardAnims]);
 
   const recap = useMemo(() => {
-    // Modes chronométrés : récap dédié (durée globale + nb questions, mix auto).
-    if (isMixed) {
-      return t(`gameStart.recapTimed.${mode}`, {
-        minutes: Math.round(MODE_DURATION_S[mode] / 60),
-        count: MODE_QUESTION_COUNT[mode],
-      });
-    }
+    // Modes chronométrés : PAS de récap. Il répétait mot pour mot la carte de
+    // mode déjà sélectionnée et surlignée en or — « Marathon · 2 min · 20
+    // questions · mix » sous une carte disant « Marathon » puis « 2 min · 20
+    // questions · mix ». Le récap n'a de valeur qu'en mode Normal, où il réunit
+    // thème + niveau + durée par question, que les cartes ne montrent nulle part
+    // ensemble. (`recapTimed` reste dans les traductions : pas de clé orpheline
+    // supprimée à la volée, mais il n'est plus rendu.)
+    if (isMixed) return null;
     if (!theme) return null;
     const time = TIME_BY_LEVEL[level] || 15;
     return t('gameStart.recap', {
@@ -125,7 +124,7 @@ export default function GameStartScreen({ navigation, route }) {
       count: GAME.questionsPerSession,
       time,
     });
-  }, [isMixed, mode, theme, level, t]);
+  }, [isMixed, theme, level, t]);
 
   // Le récap apparaît en glissant vers le bas quand thème + niveau sont choisis.
   const recapAnim = useRef(new Animated.Value(0)).current;

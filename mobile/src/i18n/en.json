@@ -439,12 +439,14 @@
     "sections": {
       "account": "MY ACCOUNT",
       "preferences": "PREFERENCES",
-      "security": "SECURITY"
+      "security": "SECURITY",
+      "progress": "MY PROGRESS"
     },
     "rows": {
       "notifications": "Notifications",
       "changePassword": "Change password",
-      "appearance": "Appearance"
+      "appearance": "Appearance",
+      "myStats": "My statistics"
     },
     "referral": {
       "label": "Referral code",

@@ -439,12 +439,14 @@
     "sections": {
       "account": "MON COMPTE",
       "preferences": "PRÉFÉRENCES",
-      "security": "SÉCURITÉ"
+      "security": "SÉCURITÉ",
+      "progress": "MA PROGRESSION"
     },
     "rows": {
       "notifications": "Notifications",
       "changePassword": "Changer le mot de passe",
-      "appearance": "Apparence"
+      "appearance": "Apparence",
+      "myStats": "Mes statistiques"
     },
     "referral": {
       "label": "Code parrainage",

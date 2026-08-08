@@ -34,6 +34,7 @@ import {
   Key,
   Lock,
   Wallet,
+  BarChart2,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -551,6 +552,21 @@ export default function ProfileScreen() {
       </Pressable>
 
       <View style={styles.body}>
+        {/* Accès aux statistiques. « Stats » ayant quitté la barre d'onglets
+            (6 → 4), le bandeau de chiffres ci-dessus a été rendu pressable —
+            mais SANS affordance : ni chevron ni libellé, alors que toutes les
+            autres lignes de l'écran en ont un. Un pressable invisible n'existe
+            pas. Cette ligne rend l'accès explicite, au motif du reste de l'écran. */}
+        <Section title={t('profile.sections.progress')}>
+          <SettingRow
+            icon={BarChart2}
+            iconBg={colors.pastelIndigo}
+            label={t('profile.rows.myStats')}
+            onPress={() => navigation.navigate('Stats')}
+            isLast
+          />
+        </Section>
+
         {/* C. MON COMPTE */}
         {/* Pastilles d'icônes : tokens `pastel*` (theme.js) — pastels clairs FIXES,
             identiques en sombre (successBg/errorBg flippent foncé en dark, rendant
