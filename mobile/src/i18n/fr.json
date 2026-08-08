@@ -81,6 +81,33 @@
     "notify": {
       "credentialsRequired": "Email et mot de passe requis.",
       "loginFailed": "Connexion impossible."
+    },
+    "forgot": {
+      "link": "Mot de passe oublié ?",
+      "title": "Mot de passe oublié",
+      "subtitle": "Indique ton adresse email : on t’envoie un code à 6 chiffres pour en choisir un nouveau.",
+      "submit": "Envoyer le code",
+      "invalidEmail": "Adresse email invalide.",
+      "hint": "Le code peut mettre une minute à arriver. Pense à regarder les spams.",
+      "haveCode": "J’ai déjà un code",
+      "notify": {
+        "sent": "Si un compte existe pour cette adresse, un code vient d’être envoyé.",
+        "failed": "Envoi impossible pour le moment. Réessaie dans un instant."
+      }
+    },
+    "reset": {
+      "title": "Nouveau mot de passe",
+      "subtitle": "Saisis le code reçu à",
+      "codeLabel": "Code à 6 chiffres",
+      "codeRequired": "Saisis les 6 chiffres du code.",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirme le mot de passe",
+      "submit": "Changer mon mot de passe",
+      "resend": "Renvoyer un code",
+      "notify": {
+        "done": "Mot de passe modifié. Te voilà connecté !",
+        "failed": "Impossible de modifier le mot de passe."
+      }
     }
   },
   "home": {

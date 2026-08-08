@@ -114,6 +114,30 @@ régénérer avec `/impeccable document`.
   timer global 62 s) ; `/sessions/answer` (feedback immédiat, mode `normal` only) une
   réponse < 150 ms → `CHEAT_DETECTED`. La bonne réponse n'est révélée qu'après soumission.
   (Seuils assouplis depuis 2 répétitions / 1 s / 500 ms pour limiter les faux positifs.)
+- **Mot de passe oublié** (`src/services/passwordResetService.js`) : code à **6 chiffres
+  par EMAIL** (Resend), Redis `pwdreset:<user_id>`, TTL 15 min, 3 tentatives, 5 demandes/h
+  par compte. `POST /auth/forgot-password` répond **204 systématiquement** (anti-énumération,
+  même règle que `login`) ; `POST /auth/reset-password { email, code, new_password }` renvoie
+  les **mêmes tokens que `/auth/login`** après avoir coupé **TOUTES** les sessions
+  (`authService.revokeAllSessions` — un reset veut dire « peut-être compromis », à la
+  différence de `changePassword` qui préserve la session courante). Codes dédiés
+  `RESET_CODE_INVALID` / `RESET_CODE_EXPIRED` / `RESET_TOO_MANY_ATTEMPTS`.
+  · **L'email n'est pas vérifié** à l'inscription : la notification « mot de passe modifié »
+    part donc par **SMS**, seul canal vérifié (`phone_verified`). Un email de confirmation
+    irait à l'attaquant en cas d'adresse usurpée.
+  · Sur le chemin PUBLIC l'envoi est **fire-and-forget** : l'attendre créait un oracle
+    temporel (mesuré 16,4 s pour un compte connu contre 3 ms pour un inconnu) qui annulait
+    l'anti-énumération. L'admin, lui, attend (il veut savoir si c'est parti).
+  · `emailService.send({ logSubject })` **caviarde le sujet dans les journaux** : celui du
+    code le porte en clair (pour l'aperçu de notification), il atterrissait donc dans les logs.
+  · `POST /admin/users/:id/reset-password` passe par le même service. **Il envoyait avant un
+    OTP que RIEN ne consommait** — le seul consommateur, `/auth/verify-otp`, émet des tokens :
+    le bouton de la console envoyait un code de *connexion* et le mot de passe restait
+    inchangé. Front : mobile `ForgotPasswordScreen`/`ResetPasswordScreen` (+ `CodeInput`
+    partagé, extrait d'`OTPScreen`) ; admin `pages/ForgotPassword.jsx` (`/forgot-password`,
+    publique). Tests : `backend/tests/passwordReset.test.js`.
+  · ⚠️ Prérequis de déploiement : `RESEND_API_KEY` **et un domaine vérifié chez Resend**
+    (constaté en local : la clé existe mais `creveton.cm` n'est pas vérifié → envoi refusé).
 - **Avatars (médias)** : stockés sur **Cloudinary**, jamais sur le disque local (éphémère
   sur Railway). `POST /users/me/avatar` (multipart, champ `avatar` ; `config/multer.js`
   `avatarUpload` = memoryStorage, 5 Mo, filtre `image/*` → rejet en `ApiError` 400) →

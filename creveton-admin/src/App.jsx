@@ -5,6 +5,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
 import AcceptInvite from './pages/AcceptInvite';
+import ForgotPassword from './pages/ForgotPassword';
 import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
 import Dashboard from './pages/Dashboard';
@@ -37,6 +38,8 @@ export default function App() {
       <Route path="/landing" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/accept-invite" element={<AcceptInvite />} />
+      {/* Publique : un compte verrouillé dehors ne peut pas passer par PrivateRoute. */}
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/privacy" element={<Privacy />} />
 
       {/* Console d'administration (protégée par PrivateRoute) */}

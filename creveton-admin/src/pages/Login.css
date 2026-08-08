@@ -224,6 +224,22 @@
   cursor: pointer;
 }
 
+/* « Mot de passe oublié ? » — à droite de « Se souvenir de moi » (.lp-form-row
+   est déjà en space-between). Vert de marque et non or : l'or est réservé au
+   CTA de la page, qui doit rester le seul point doré du formulaire. */
+.lp-forgot {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #2a8a4f;
+  text-decoration: none;
+}
+.lp-forgot:hover { text-decoration: underline; }
+.lp-forgot:focus-visible {
+  outline: 2px solid #2a8a4f;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* CTA principal */
 .lp-submit {
   width: 100%;

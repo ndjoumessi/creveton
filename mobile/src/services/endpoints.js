@@ -20,6 +20,15 @@ export const auth = {
   // data : { current_password, new_password } (snake_case). → { changed: true }
   changePassword: (data) =>
     api.post('/auth/change-password', data).then((r) => r.data),
+  // Mot de passe oublié : demande d'un code à 6 chiffres par email. Le serveur
+  // répond 204 que le compte existe ou non (anti-énumération) — l'app ne peut
+  // donc PAS dire « email inconnu », et ne doit pas essayer.
+  forgotPassword: (email) =>
+    api.post('/auth/forgot-password', { email }).then((r) => r.data),
+  // Valide le code + pose le nouveau mot de passe. Réponse = mêmes tokens que
+  // /auth/login → l'utilisateur atterrit connecté.
+  resetPassword: (payload) =>
+    api.post('/auth/reset-password', payload).then((r) => r.data),
 };
 
 // --- Questions & sync (API §5) ------------------------------------------

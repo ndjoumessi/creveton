@@ -6,7 +6,7 @@ const asyncHandler = require('../../utils/asyncHandler');
 const ApiError = require('../../utils/ApiError');
 const { ok, created, noContent } = require('../../utils/response');
 const userModel = require('../../models/user.model');
-const otpService = require('../../services/otpService');
+const passwordResetService = require('../../services/passwordResetService');
 
 const BCRYPT_COST = 12;
 
@@ -70,12 +70,23 @@ const ban = asyncHandler(async (req, res) => {
   return ok(res, { id: updated.id, status: updated.status });
 });
 
-/** POST /admin/users/:id/reset-password — déclenche un OTP de réinitialisation. */
+/**
+ * POST /admin/users/:id/reset-password — envoie à l'UTILISATEUR un code de
+ * réinitialisation (l'admin déclenche, il ne reçoit rien).
+ *
+ * Cette route envoyait auparavant `otpService.issue(user.phone)` et renvoyait
+ * `{ reset_initiated: true }`. Or AUCUN endpoint ne consommait cet OTP pour
+ * poser un mot de passe : le seul consommateur, /auth/verify-otp, marque le
+ * téléphone vérifié et ÉMET DES TOKENS. Le bouton « Réinitialiser le mot de
+ * passe » de la console envoyait donc un code de CONNEXION — le mot de passe
+ * restait inchangé, et l'opérateur lisait « réinitialisation lancée ».
+ * Il passe maintenant par le même service que le flux public.
+ */
 const resetPassword = asyncHandler(async (req, res) => {
   const user = await userModel.findById(req.params.id);
   if (!user) throw new ApiError('USER_NOT_FOUND');
-  await otpService.issue(user.phone);
-  return ok(res, { reset_initiated: true });
+  const result = await passwordResetService.issueForUser(user);
+  return ok(res, result);
 });
 
 /** DELETE /admin/users/:id — soft delete RGPD. */

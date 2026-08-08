@@ -120,6 +120,19 @@ export default function LoginScreen({ navigation }) {
             rightToggle={{ active: showPassword, onToggle: () => setShowPassword((v) => !v) }}
           />
 
+          {/* Emporte l'email déjà tapé : l'utilisateur vient d'échouer à se
+              connecter, le lui redemander serait une friction gratuite. */}
+          <Pressable
+            style={styles.forgotRow}
+            onPress={() =>
+              navigation.navigate('ForgotPassword', { email: values.current.email.trim() })
+            }
+            hitSlop={8}
+            accessibilityRole="button"
+          >
+            <Body size="md" color={colors.green500}>{t('auth.forgot.link')}</Body>
+          </Pressable>
+
           {!isOnline ? (
             <View style={styles.offlineRow}>
               <Icon icon={WifiOff} size={16} color={colors.textMuted} />
@@ -193,6 +206,9 @@ const makeStyles = (colors) => StyleSheet.create({
     textAlign: 'center',
   },
   submit: { marginTop: spacing.sm },
+  // Aligné à droite sous le champ mot de passe — position attendue, et
+  // n'entre pas en concurrence visuelle avec le CTA de connexion.
+  forgotRow: { alignSelf: 'flex-end', marginTop: spacing.xs },
   linkRow: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -77,6 +77,38 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // Mot de passe oublié — demande d'un code. Le serveur ne dit jamais si le
+  // compte existe : on renvoie donc toujours ok, sauf échec réseau ou 429.
+  forgotPassword: async (email) => {
+    try {
+      await authApi.forgotPassword(email);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: parseApiError(e) };
+    }
+  },
+
+  // Validation du code + nouveau mot de passe. Le serveur renvoie des tokens :
+  // on ouvre directement la session, comme après un login.
+  resetPassword: async ({ email, code, newPassword }) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await authApi.resetPassword({
+        email,
+        code,
+        new_password: newPassword,
+      });
+      await get()._applySession(data);
+      await setLastEmail(email);
+      set({ loading: false });
+      return { ok: true };
+    } catch (e) {
+      const err = parseApiError(e);
+      set({ loading: false, error: err.message });
+      return { ok: false, error: err };
+    }
+  },
+
   // Connexion email + mot de passe.
   login: async (email, password) => {
     set({ loading: true, error: null });

@@ -98,12 +98,19 @@ function layout({ preheader, bodyHtml, ctaLabel, ctaUrl, footerHtml }) {
         <tr>
           <td style="padding:32px;font-family:${FONT};color:${COLORS.ink};font-size:15px;line-height:1.6;">
             ${bodyHtml}
-            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 8px;">
+            ${
+              // CTA optionnel : l'email de réinitialisation porte un CODE à
+              // recopier dans l'app, pas un lien. Sans cette garde, il aurait
+              // affiché un bouton « # » et l'URL « # » en dessous.
+              ctaUrl
+                ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 8px;">
               <tr><td style="border-radius:8px;background-color:${COLORS.gold};">
                 <a href="${safeCtaUrl}" target="_blank" style="display:inline-block;padding:14px 28px;font-family:${FONT};font-size:15px;font-weight:700;color:${COLORS.green900};text-decoration:none;border-radius:8px;">${esc(ctaLabel)}</a>
               </td></tr>
             </table>
-            <p style="font-family:${FONT};font-size:12px;color:${COLORS.muted};margin:16px 0 0;word-break:break-all;">${safeCtaUrl}</p>
+            <p style="font-family:${FONT};font-size:12px;color:${COLORS.muted};margin:16px 0 0;word-break:break-all;">${safeCtaUrl}</p>`
+                : ''
+            }
           </td>
         </tr>
         <tr>
@@ -118,28 +125,38 @@ function layout({ preheader, bodyHtml, ctaLabel, ctaUrl, footerHtml }) {
 </html>`;
 }
 
-/** Envoi bas-niveau : renvoie toujours un résultat, ne jette jamais. */
-async function send({ to, subject, html }) {
+/**
+ * Envoi bas-niveau : renvoie toujours un résultat, ne jette jamais.
+ *
+ * `logSubject` remplace `subject` dans les JOURNAUX. Nécessaire dès que le sujet
+ * contient un secret : celui du code de réinitialisation le porte en clair (pour
+ * qu'il se lise dans l'aperçu de notification), et il atterrissait donc en clair
+ * dans les logs applicatifs — Railway, agrégateur, n'importe qui y ayant accès
+ * pouvait prendre un compte dans les 15 minutes. Le sujet réel part bien à
+ * Resend ; seule la trace est caviardée.
+ */
+async function send({ to, subject, html, logSubject }) {
+  const logged = logSubject || subject;
   // Hermétique en test : jamais d'appel réseau réel, même si une clé est présente.
   if (env.isTest) {
     return { sent: false, skipped: true };
   }
   const resend = getClient();
   if (!resend) {
-    logger.warn('Email non envoyé (RESEND_API_KEY absente) — no-op', { to, subject });
+    logger.warn('Email non envoyé (RESEND_API_KEY absente) — no-op', { to, subject: logged });
     return { sent: false, skipped: true };
   }
   try {
     const { data, error } = await resend.emails.send({ from: env.email.from, to, subject, html });
     if (error) {
       const message = error.message || String(error);
-      logger.error('Échec envoi email (Resend)', { to, subject, error: message });
+      logger.error('Échec envoi email (Resend)', { to, subject: logged, error: message });
       return { sent: false, error: message };
     }
-    logger.info('Email envoyé', { to, subject, id: data?.id });
+    logger.info('Email envoyé', { to, subject: logged, id: data?.id });
     return { sent: true, id: data?.id || null };
   } catch (err) {
-    logger.error('Exception envoi email', { to, subject, error: err.message });
+    logger.error('Exception envoi email', { to, subject: logged, error: err.message });
     return { sent: false, error: err.message };
   }
 }
@@ -226,4 +243,62 @@ async function sendPlayerReferral({ to, referrerName, referralCode, lang = 'fr' 
   return send({ to, subject, html });
 }
 
-module.exports = { sendTeamInvitation, sendPlayerReferral };
+/**
+ * Code de réinitialisation de mot de passe. PAS de lien : le code se recopie
+ * dans l'app (mobile) ou la console (admin). Un lien aurait exigé une page
+ * d'atterrissage et des liens universels iOS/Android non configurés — et un
+ * code se lit aussi bien depuis un autre appareil.
+ *
+ * Le corps dit explicitement quoi faire si la demande ne vient pas de
+ * l'utilisateur : ne rien faire suffit, aucun mot de passe n'a encore changé.
+ *
+ * @param {{ to, name?, code, expiresMinutes, lang }} p
+ */
+async function sendPasswordResetCode({ to, name, code, expiresMinutes, lang = 'fr' }) {
+  const isFr = lang !== 'en';
+  const nameEsc = esc(name || '');
+  const codeEsc = esc(code);
+  const hello = name
+    ? `${isFr ? 'Bonjour' : 'Hi'} ${nameEsc},`
+    : `${isFr ? 'Bonjour,' : 'Hello,'}`;
+
+  const subject = isFr
+    ? `Ton code de réinitialisation Creveton : ${code}`
+    : `Your Creveton reset code: ${code}`;
+
+  // Le code est en gros, espacé, sur fond crème : il doit se lire d'un coup
+  // d'œil dans l'aperçu de notification comme dans le corps du message.
+  const codeBlock = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+      <tr><td style="background-color:${COLORS.cream};border:1px solid ${COLORS.border};border-radius:10px;padding:18px 28px;text-align:center;">
+        <span style="font-family:${FONT};font-size:32px;font-weight:700;letter-spacing:8px;color:${COLORS.green900};">${codeEsc}</span>
+      </td></tr>
+    </table>`;
+
+  const bodyHtml = isFr
+    ? `<p style="margin:0 0 12px;">${hello}</p>
+       <p style="margin:0 0 12px;">Voici ton code pour définir un nouveau mot de passe :</p>
+       ${codeBlock}
+       <p style="margin:0 0 12px;">Il est valable <strong>${expiresMinutes} minutes</strong> et ne sert qu'une fois.</p>
+       <p style="margin:0;color:${COLORS.muted};font-size:13px;">Tu n'as rien demandé ? Ignore cet email : ton mot de passe reste inchangé.</p>`
+    : `<p style="margin:0 0 12px;">${hello}</p>
+       <p style="margin:0 0 12px;">Here is your code to set a new password:</p>
+       ${codeBlock}
+       <p style="margin:0 0 12px;">It is valid for <strong>${expiresMinutes} minutes</strong> and can only be used once.</p>
+       <p style="margin:0;color:${COLORS.muted};font-size:13px;">Didn't request this? Ignore this email — your password stays unchanged.</p>`;
+
+  const html = layout({
+    preheader: isFr
+      ? `Code ${code} — valable ${expiresMinutes} min`
+      : `Code ${code} — valid for ${expiresMinutes} min`,
+    bodyHtml,
+    // Pas de CTA : le layout omet le bouton quand `ctaUrl` est absent.
+    footerHtml: isFr
+      ? 'Creveton · Ne partage jamais ce code.'
+      : 'Creveton · Never share this code.',
+  });
+
+  // Le sujet porte le code : caviardé dans les journaux (cf. send).
+  return send({ to, subject, html, logSubject: 'Code de réinitialisation Creveton' });
+}
+
+module.exports = { sendTeamInvitation, sendPlayerReferral, sendPasswordResetCode };

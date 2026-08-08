@@ -41,7 +41,7 @@ export default function Login() {
   // Pré-remplissage via defaultValues (équivalent react-hook-form du useEffect/setEmail).
   const rememberedEmail = localStorage.getItem('remembered_email') || '';
   const [rememberMe, setRememberMe] = useState(!!rememberedEmail);
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: USE_MOCKS ? 'admin@creveton.cm' : rememberedEmail,
       password: '',
@@ -166,6 +166,14 @@ export default function Login() {
               />
               <span>{t('login.rememberMe')}</span>
             </label>
+            {/* Le lien emporte l'email déjà saisi : l'admin vient d'échouer à se
+                connecter, le lui redemander serait une friction gratuite. */}
+            <Link
+              className="lp-forgot"
+              to={`/forgot-password${watch('email') ? `?email=${encodeURIComponent(watch('email'))}` : ''}`}
+            >
+              {t('forgotPassword.link')}
+            </Link>
           </div>
 
           <button className="lp-submit" type="submit" disabled={submitting}>

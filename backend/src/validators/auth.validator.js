@@ -55,4 +55,25 @@ const changePassword = Joi.object({
   new_password: password.required(),
 });
 
-module.exports = { register, verifyOtp, resendOtp, login, refresh, changePassword };
+const forgotPassword = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+const resetPassword = Joi.object({
+  email: Joi.string().email().required(),
+  code: Joi.string().length(6).pattern(/^\d{6}$/).required(),
+  // Même règle que l'inscription et le changement de mot de passe : une
+  // réinitialisation ne doit pas être un chemin détourné vers un mot de passe faible.
+  new_password: password.required(),
+});
+
+module.exports = {
+  register,
+  verifyOtp,
+  resendOtp,
+  login,
+  refresh,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+};

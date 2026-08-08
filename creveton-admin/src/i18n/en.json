@@ -2056,5 +2056,42 @@
       "expired": "This invitation is invalid or has expired.",
       "failed": "Activation failed."
     }
+  },
+  "forgotPassword": {
+    "link": "Forgot password?",
+    "eyebrow": "Account recovery",
+    "headline": "Let’s get you back in.",
+    "heroSub": "A 6-digit code by email, a new password, and you’re back.",
+    "backToLogin": "← Back to sign in",
+    "haveCode": "I already have a code",
+    "request": {
+      "title": "Forgot password",
+      "subtitle": "Enter your account address and we’ll send a code to set a new password.",
+      "cta": "Send the code",
+      "hint": "The code can take a minute to arrive. Remember to check your spam folder."
+    },
+    "reset": {
+      "title": "New password",
+      "subtitle": "Code sent to",
+      "code": "6-digit code",
+      "codeRequired": "Enter the code you received by email.",
+      "codeFormat": "The code is 6 digits.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "weak": "At least 8 characters, with one capital letter and one digit.",
+      "mismatch": "The two passwords differ.",
+      "cta": "Change password",
+      "resend": "Send a new code"
+    },
+    "notify": {
+      "sent": "If an account exists for this address, a code has just been sent.",
+      "done": "Password changed.",
+      "failed": "Could not complete right now. Try again in a moment.",
+      "rateLimited": "Too many requests. Please wait before trying again.",
+      "badCode": "Incorrect code.",
+      "expiredCode": "This code has expired. Request a new one.",
+      "tooManyAttempts": "Too many attempts. Request a new code.",
+      "weakPassword": "Password rejected: at least 8 characters, with one capital letter and one digit."
+    }
   }
 }

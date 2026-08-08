@@ -3,6 +3,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const { ok, created, noContent } = require('../utils/response');
 const authService = require('../services/authService');
+const passwordResetService = require('../services/passwordResetService');
 
 /**
  * Contrôleurs Auth (spec §4). Fins : ils délèguent toute la logique à
@@ -69,4 +70,37 @@ const revokeOtherSessions = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
-module.exports = { register, verifyOtp, resendOtp, login, refresh, changePassword, logout, sessions, revokeOtherSessions };
+/**
+ * POST /auth/forgot-password → 204 TOUJOURS.
+ * Réponse volontairement identique que le compte existe ou non : distinguer les
+ * deux ferait de cet endpoint public un annuaire d'adresses. Le login applique
+ * déjà la même règle.
+ */
+const forgotPassword = asyncHandler(async (req, res) => {
+  await passwordResetService.requestReset(req.body.email);
+  return noContent(res);
+});
+
+/** POST /auth/reset-password → 200 (mêmes tokens que /auth/login) */
+const resetPassword = asyncHandler(async (req, res) => {
+  const result = await passwordResetService.confirmReset({
+    email: req.body.email,
+    code: req.body.code,
+    newPassword: req.body.new_password,
+  });
+  return ok(res, result);
+});
+
+module.exports = {
+  register,
+  verifyOtp,
+  resendOtp,
+  login,
+  refresh,
+  changePassword,
+  logout,
+  sessions,
+  revokeOtherSessions,
+  forgotPassword,
+  resetPassword,
+};

@@ -268,6 +268,16 @@ async function revokeOtherSessions(userId, currentSid) {
 }
 
 /**
+ * Coupe TOUTES les sessions d'un compte, y compris celle de l'appareil courant.
+ * Utilisé par la réinitialisation de mot de passe : contrairement à un
+ * changement volontaire (qui préserve la session en cours), une réinitialisation
+ * signifie « j'ai peut-être été compromis » — aucun refresh token ne survit.
+ */
+function revokeAllSessions(userId) {
+  return revokeOtherSessions(userId, null);
+}
+
+/**
  * Change le mot de passe d'un compte authentifié : vérifie le mot de passe
  * actuel, refuse un nouveau identique à l'ancien, puis stocke le hash bcrypt.
  *
@@ -306,6 +316,7 @@ module.exports = {
   logout,
   listSessions,
   revokeOtherSessions,
+  revokeAllSessions,
   changePassword,
   issueTokens,
 };

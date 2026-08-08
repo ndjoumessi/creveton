@@ -2056,5 +2056,42 @@
       "expired": "Cette invitation est invalide ou a expiré.",
       "failed": "Échec de l'activation."
     }
+  },
+  "forgotPassword": {
+    "link": "Mot de passe oublié ?",
+    "eyebrow": "Récupération d’accès",
+    "headline": "On te renvoie dans la console.",
+    "heroSub": "Un code à 6 chiffres par email, un nouveau mot de passe, et c’est reparti.",
+    "backToLogin": "← Retour à la connexion",
+    "haveCode": "J’ai déjà un code",
+    "request": {
+      "title": "Mot de passe oublié",
+      "subtitle": "Indique l’adresse de ton compte : on t’envoie un code pour en définir un nouveau.",
+      "cta": "Envoyer le code",
+      "hint": "Le code peut mettre une minute à arriver. Pense à regarder les spams."
+    },
+    "reset": {
+      "title": "Nouveau mot de passe",
+      "subtitle": "Code envoyé à",
+      "code": "Code à 6 chiffres",
+      "codeRequired": "Saisis le code reçu par email.",
+      "codeFormat": "Le code fait 6 chiffres.",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirme le mot de passe",
+      "weak": "8 caractères minimum, dont une majuscule et un chiffre.",
+      "mismatch": "Les deux mots de passe diffèrent.",
+      "cta": "Changer le mot de passe",
+      "resend": "Renvoyer un code"
+    },
+    "notify": {
+      "sent": "Si un compte existe pour cette adresse, un code vient d’être envoyé.",
+      "done": "Mot de passe modifié.",
+      "failed": "Opération impossible pour le moment. Réessaie dans un instant.",
+      "rateLimited": "Trop de demandes. Patiente avant de réessayer.",
+      "badCode": "Code incorrect.",
+      "expiredCode": "Ce code a expiré. Demandes-en un nouveau.",
+      "tooManyAttempts": "Trop de tentatives. Demande un nouveau code.",
+      "weakPassword": "Mot de passe refusé : 8 caractères minimum, dont une majuscule et un chiffre."
+    }
   }
 }

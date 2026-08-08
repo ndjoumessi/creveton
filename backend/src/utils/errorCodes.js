@@ -10,6 +10,10 @@ const ERROR_CODES = {
   VALIDATION_ERROR: { http: 400, message: 'Champ(s) invalide(s).' },
   INVALID_TIMESTAMP: { http: 400, message: "Le paramètre « since » est mal formé." },
   OTP_INVALID: { http: 400, message: 'Code OTP incorrect.' },
+  // Réinitialisation de mot de passe : codes DISTINCTS des OTP_* — le canal
+  // (email) et le sens diffèrent, et « Code OTP incorrect » serait faux pour un
+  // code reçu par email. Sépare aussi les deux flux dans les journaux.
+  RESET_CODE_INVALID: { http: 400, message: 'Code de réinitialisation incorrect.' },
   INVALID_CURRENT_PASSWORD: { http: 400, message: 'Mot de passe actuel incorrect.' },
 
   AUTH_INVALID_CREDENTIALS: { http: 401, message: 'Email ou mot de passe incorrect.' },
@@ -49,6 +53,7 @@ const ERROR_CODES = {
   INVITATION_NOT_PENDING: { http: 409, message: "Cette invitation n'est plus en attente." },
 
   OTP_EXPIRED: { http: 410, message: 'Le code OTP a expiré.' },
+  RESET_CODE_EXPIRED: { http: 410, message: 'Le code de réinitialisation a expiré.' },
   INVITE_EXPIRED: { http: 410, message: "L'invitation est invalide ou a expiré." },
 
   INVALID_CORRECT_OPTION_COUNT: { http: 422, message: 'Il doit y avoir exactement une bonne réponse.' },
@@ -60,6 +65,7 @@ const ERROR_CODES = {
   CHEAT_DETECTED: { http: 422, message: 'Comportement suspect détecté.' },
 
   OTP_TOO_MANY_ATTEMPTS: { http: 429, message: "Trop de tentatives OTP." },
+  RESET_TOO_MANY_ATTEMPTS: { http: 429, message: 'Trop de tentatives, demandez un nouveau code.' },
   RATE_LIMITED: { http: 429, message: 'Trop de requêtes, réessayez plus tard.' },
 
   INTERNAL_ERROR: { http: 500, message: 'Erreur serveur.' },

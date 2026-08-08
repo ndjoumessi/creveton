@@ -81,6 +81,33 @@
     "notify": {
       "credentialsRequired": "Email and password required.",
       "loginFailed": "Sign-in failed."
+    },
+    "forgot": {
+      "link": "Forgot password?",
+      "title": "Forgot password",
+      "subtitle": "Enter your email address and we’ll send you a 6-digit code to choose a new one.",
+      "submit": "Send the code",
+      "invalidEmail": "Invalid email address.",
+      "hint": "The code can take a minute to arrive. Remember to check your spam folder.",
+      "haveCode": "I already have a code",
+      "notify": {
+        "sent": "If an account exists for this address, a code has just been sent.",
+        "failed": "Could not send right now. Try again in a moment."
+      }
+    },
+    "reset": {
+      "title": "New password",
+      "subtitle": "Enter the code sent to",
+      "codeLabel": "6-digit code",
+      "codeRequired": "Enter all 6 digits of the code.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Change my password",
+      "resend": "Send a new code",
+      "notify": {
+        "done": "Password changed. You’re signed in!",
+        "failed": "Could not change the password."
+      }
     }
   },
   "home": {

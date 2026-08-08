@@ -37,6 +37,21 @@ export async function login(email, password) {
   }
 }
 
+/**
+ * POST /auth/forgot-password — demande un code de réinitialisation par email.
+ * Le serveur répond 204 que le compte existe ou non (anti-énumération) :
+ * l'appelant ne PEUT pas savoir, et ne doit donc pas l'afficher.
+ */
+export async function forgotPassword(email) {
+  await api.post('/auth/forgot-password', { email });
+}
+
+/** POST /auth/reset-password — { email, code, new_password } → tokens. */
+export async function resetPassword(payload) {
+  const { data } = await api.post('/auth/reset-password', payload);
+  return data;
+}
+
 /** POST /auth/change-password — change le mot de passe du compte connecté. */
 export async function changePassword(currentPassword, newPassword) {
   const { data } = await api.post('/auth/change-password', {

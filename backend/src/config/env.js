@@ -55,6 +55,16 @@ const env = {
     resendLimitPerHour: int(process.env.OTP_RESEND_LIMIT_PER_HOUR, 5),
   },
 
+  // Mot de passe oublié — code à 6 chiffres envoyé par EMAIL (canal choisi :
+  // l'email est déjà l'identifiant de connexion, et un SMS par tentative sur un
+  // endpoint public coûterait cher). TTL plus long que l'OTP : l'email met plus
+  // de temps à arriver que le SMS et l'utilisateur change d'application entre-temps.
+  passwordReset: {
+    expiresMinutes: int(process.env.PASSWORD_RESET_EXPIRES_MINUTES, 15),
+    maxAttempts: int(process.env.PASSWORD_RESET_MAX_ATTEMPTS, 3),
+    requestLimitPerHour: int(process.env.PASSWORD_RESET_LIMIT_PER_HOUR, 5),
+  },
+
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID || '',
     authToken: process.env.TWILIO_AUTH_TOKEN || '',
