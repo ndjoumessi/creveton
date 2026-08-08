@@ -174,17 +174,26 @@ export const themeGradients = {
   geographie: ['#1e3a5f', '#2d5a8e'], // bleu
   culture: ['#2d1b4e', '#5b2d8e'], // violet
   histoire: ['#4a2000', '#8b4513'], // brun
-  industrie: ['#0b2e1a', '#1a5230'], // vert
+  industrie: ['#2b3440', '#4b5563'], // ardoise — voir la note sous themeAccent
   sport: ['#3a1212', '#8e2d2d'], // rouge profond
   science: ['#063b3a', '#0f7b75'], // sarcelle
 };
 
 // Voiles assortis (badges/accents discrets liés au thème).
+// ⚠️ « Industrie » était #1a5230, soit EXACTEMENT `green700` — la couleur de
+// marque (dE = 0,0 en Lab, mesuré). Le vert signifie partout ailleurs dans l'app
+// « succès / marque / actif » ; ici il désignait une catégorie parmi six, si bien
+// que sur l'écran Jouer la carte Industrie se lisait comme une carte sélectionnée.
+// Remplacé par une ardoise (#4b5563) : teinte libre dans la palette (dE = 24 du
+// thème le plus proche, Géographie ; dE = 36 du vert de marque), et qui évoque
+// l'acier. Titre blanc conservé : 12,6:1 au début du dégradé, 7,6:1 à la fin.
+// NB : « Sport » (#8e2d2d) avait été soupçonné de frôler le rouge d'erreur — la
+// mesure l'infirme, il en est loin. Laissé tel quel.
 export const themeAccent = {
   geographie: '#2d5a8e',
   culture: '#5b2d8e',
   histoire: '#8b4513',
-  industrie: '#1a5230',
+  industrie: '#4b5563',
   sport: '#8e2d2d',
   science: '#0f7b75',
 };

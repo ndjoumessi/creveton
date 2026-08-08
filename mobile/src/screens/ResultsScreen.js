@@ -32,7 +32,7 @@ import {
   GoldVeilBanner,
   useToast,
 } from '../components';
-import { Lightbulb, WifiOff, Check } from 'lucide-react-native';
+import { Lightbulb, WifiOff, Check, X } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import { useGameStore } from '../store/gameStore';
 import { useQuestionsStore } from '../store/questionsStore';
@@ -657,7 +657,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
                 {/* En-tête tappable */}
                 <Pressable style={styles.recapRow} onPress={() => toggleRow(i)}>
                   <View style={[styles.pastille, good ? styles.pastilleGood : styles.pastilleBad]}>
-                    <Body weight="bold" size="md" color={colors.white}>{good ? '✓' : '✗'}</Body>
+                    <Icon icon={good ? Check : X} size={16} color={colors.white} strokeWidth={3} />
                   </View>
                   <View style={styles.recapBody}>
                     <Body weight="semibold" size="md" color={colors.textDark} numberOfLines={open ? undefined : 1}>
@@ -675,15 +675,17 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
                   <View style={styles.detail}>
                     {correctText ? (
                       <View style={styles.ansGood}>
-                        <Label color={colors.successText}>
-                          ✓ {t('results.misc.correctAnswer')} : {correctText}
+                        <Icon icon={Check} size={14} color={colors.successText} strokeWidth={2.5} />
+                        <Label color={colors.successText} style={styles.ansText}>
+                          {t('results.misc.correctAnswer')} : {correctText}
                         </Label>
                       </View>
                     ) : null}
                     {!good && yourText ? (
                       <View style={styles.ansBad}>
-                        <Label color={colors.errorText}>
-                          ✗ {t('results.misc.yourAnswer')} : {yourText}
+                        <Icon icon={X} size={14} color={colors.errorText} strokeWidth={2.5} />
+                        <Label color={colors.errorText} style={styles.ansText}>
+                          {t('results.misc.yourAnswer')} : {yourText}
                         </Label>
                       </View>
                     ) : null}
@@ -902,8 +904,9 @@ const styles = StyleSheet.create({
 
   // Détail déplié d'une carte du récap.
   detail: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
-  ansGood: { backgroundColor: colors.pastelGreen, borderRadius: radius.sm, padding: spacing.sm },
-  ansBad: { backgroundColor: colors.pastelRose, borderRadius: radius.sm, padding: spacing.sm },
+  ansText: { flex: 1 },
+  ansGood: { backgroundColor: colors.pastelGreen, borderRadius: radius.sm, padding: spacing.sm, flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  ansBad: { backgroundColor: colors.pastelRose, borderRadius: radius.sm, padding: spacing.sm, flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   detailExpl: { fontStyle: 'italic' },
   detailExplRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   detailExplFlex: { flex: 1 },

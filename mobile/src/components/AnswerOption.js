@@ -21,6 +21,8 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, Animated, Easing, StyleSheet } from 'react-native';
+import { Check, X } from 'lucide-react-native';
+import Icon from './Icon';
 import { useTheme } from '../hooks/useTheme';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { hapticLight } from '../utils/haptics';
@@ -66,6 +68,12 @@ export default function AnswerOption({
   let badgeText = styles.badgeTextDefault;
   let label = styles.optTextDefault;
   let glyph = letter;
+  // Bon/mauvais : icône Lucide plutôt que les glyphes '✓'/'✗'. Ceux-ci étaient
+  // rendus par la POLICE SYSTÈME — poids, taille optique et alignement vertical
+  // échappaient aux tokens, et ils cohabitaient avec de vraies icônes Lucide
+  // dans le même écran. `glyphIcon` non nul ⇒ on rend l'icône à la place du texte.
+  let glyphIcon = null;
+  let glyphColor = colors.textOnDark;
 
   if (state === 'selected') {
     container = styles.optSelected;
@@ -74,18 +82,19 @@ export default function AnswerOption({
     badge = styles.badgeCorrect;
     badgeText = styles.badgeTextOnColor;
     label = styles.optTextCorrect;
-    glyph = '✓';
+    glyphIcon = Check;
   } else if (state === 'incorrect') {
     container = styles.optWrong;
     badge = styles.badgeWrong;
     badgeText = styles.badgeTextOnColor;
     label = styles.optTextWrong;
-    glyph = '✗';
+    glyphIcon = X;
   } else if (state === 'neutral') {
     container = styles.optNeutral;
     badge = styles.badgeOnGold;
     badgeText = styles.badgeTextGold;
     label = styles.optTextNeutral;
+    glyphColor = colors.gold500;
   } else if (state === 'dimmed') {
     container = styles.optDimmed;
   }
@@ -115,9 +124,14 @@ export default function AnswerOption({
       >
         <View style={[styles.badge, badge]}>
           {showCheck ? (
-            <Animated.Text style={[styles.badgeText, badgeText, { transform: [{ scale: checkScale }] }]}>
-              ✓
-            </Animated.Text>
+            // Motif imposé par les variants/icônes : envelopper un rendu STATIQUE
+            // dans un Animated.View portant la seule prop animée (cf. mobile/CLAUDE.md,
+            // « Cas Animated.Text »). Une icône Lucide n'est pas animable directement.
+            <Animated.View style={{ transform: [{ scale: checkScale }] }}>
+              <Icon icon={Check} size={16} color={glyphColor} strokeWidth={3} />
+            </Animated.View>
+          ) : glyphIcon ? (
+            <Icon icon={glyphIcon} size={16} color={glyphColor} strokeWidth={3} />
           ) : (
             <Text style={[styles.badgeText, badgeText]}>{glyph}</Text>
           )}

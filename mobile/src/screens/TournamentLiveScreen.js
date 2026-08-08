@@ -232,7 +232,10 @@ export default function TournamentLiveScreen({ navigation, route }) {
           {phase === 'reveal' ? (
             <RevealPanel t={t} reveal={reveal} myId={myId} />
           ) : answered ? (
-            <Body weight="semibold" size="md" style={styles.answeredHint}>✓ {t('tournamentLive.answered')}</Body>
+            <View style={styles.answeredRow}>
+              <Icon icon={Check} size={16} color={colors.green300} strokeWidth={2.5} />
+              <Body weight="semibold" size="md" style={styles.answeredHint}>{t('tournamentLive.answered')}</Body>
+            </View>
           ) : null}
         </>
       )}
@@ -412,6 +415,7 @@ const makeStyles = (colors) => StyleSheet.create({
   // Boutons réponse — rendus par <AnswerOption /> (états/feedback inclus).
   options: { marginTop: spacing.lg, gap: spacing.sm },
 
+  answeredRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   answeredHint: {
     marginTop: spacing.lg,
     textAlign: 'center',

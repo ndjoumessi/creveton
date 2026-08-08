@@ -35,6 +35,7 @@ import {
   Lock,
   Wallet,
   BarChart2,
+  X,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -829,7 +830,7 @@ export default function ProfileScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t('common.cancel')}
               >
-                <Body weight="semibold" size="lg" muted>✕</Body>
+                <Icon icon={X} size={20} color={colors.textMuted} />
               </Pressable>
             </View>
 

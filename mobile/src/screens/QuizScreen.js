@@ -11,7 +11,6 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMe
 import { useTranslation } from 'react-i18next';
 import {
   View,
-  Text,
   Image,
   ActivityIndicator,
   StyleSheet,
@@ -22,7 +21,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Lightbulb } from 'lucide-react-native';
+import { Lightbulb, X } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import { AnswerOption, LoadingScreen, ProgressDots, CircularTimer, useToast, Title, Heading, Body } from '../components';
 import { useGameStore } from '../store/gameStore';
@@ -485,7 +484,7 @@ export default function QuizScreen({ navigation }) {
       {/* Header — bandeau vert, coins bas arrondis */}
       <View style={styles.header}>
         <Pressable onPress={confirmQuit} hitSlop={10} style={styles.quitBtn}>
-          <Text style={styles.quitText}>✕</Text>
+          <Icon icon={X} size={18} color={colors.textOnDark} />
         </Pressable>
         <View style={styles.qBadge}>
           <Heading weight="bold" size="md" color={colors.textOnDark}>

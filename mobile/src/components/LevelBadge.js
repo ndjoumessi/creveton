@@ -3,6 +3,8 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Star } from 'lucide-react-native';
+import Icon from './Icon';
 import { colors, fonts, fontSizes, radius, spacing } from '../constants/theme';
 import { levelForXp } from '../utils/format';
 
@@ -13,7 +15,7 @@ export default function LevelBadge({ level = 1, xp, variant = 'gold', style }) {
   const displayLevel = xp !== undefined ? levelForXp(xp) : level;
   return (
     <View style={[styles.badge, gold ? styles.gold : styles.soft, style]}>
-      <Text style={styles.star}>★</Text>
+      <Icon icon={Star} size={11} color={colors.green900} strokeWidth={2.5} />
       <Text style={[styles.text, gold ? styles.textGold : styles.textSoft]}>
         Niv. {displayLevel}
         {xp !== undefined ? ` · ${Number(xp).toLocaleString('fr-FR')} XP` : ''}
@@ -34,7 +36,6 @@ const styles = StyleSheet.create({
   },
   gold: { backgroundColor: colors.gold400 },
   soft: { backgroundColor: colors.goldVeil, borderWidth: 1, borderColor: colors.goldVeilBorder },
-  star: { fontSize: 11, color: colors.green900 },
   text: { fontFamily: fonts.bodyBold, fontSize: fontSizes.xs },
   textGold: { color: colors.green900 },
   textSoft: { color: colors.gold500 },

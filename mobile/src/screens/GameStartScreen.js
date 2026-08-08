@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Info, CloudDownload, CloudCheck } from 'lucide-react-native';
+import { Info, CloudDownload, CloudCheck, Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Screen, Title, Heading, Body, Label, AppButton, ChoiceChips, useToast } from '../components';
 import Icon from '../components/Icon';
@@ -283,7 +283,7 @@ export default function GameStartScreen({ navigation, route }) {
                   {t(`gameStart.modes.${m.key}.desc`)}
                 </Body>
               </View>
-              {active ? <Body weight="bold" size="lg" color={colors.gold500}>✓</Body> : null}
+              {active ? <Icon icon={Check} size={18} color={colors.gold500} strokeWidth={3} /> : null}
             </Pressable>
           );
         })}
@@ -348,7 +348,7 @@ export default function GameStartScreen({ navigation, route }) {
                         },
                       ]}
                     >
-                      <Body weight="bold" size="sm" color={colors.green900}>✓</Body>
+                      <Icon icon={Check} size={14} color={colors.green900} strokeWidth={3} />
                     </Animated.View>
                   ) : null}
                   <Text style={styles.themeEmoji}>{th.emoji}</Text>

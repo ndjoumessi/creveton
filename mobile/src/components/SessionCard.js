@@ -20,7 +20,7 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, Check, Zap } from 'lucide-react-native';
 import Icon from './Icon';
 import { fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
@@ -133,10 +133,17 @@ export default function SessionCard({ game, style, showIncomplete = false, onPre
             {timeAgo(game.played_at)}
           </Text>
           {rate !== null && !incomplete ? (
-            <Text style={styles.detail} numberOfLines={1}>
-              ✓ {correct}/{total}
-              {game.xp_earned ? ` · ⚡ +${fmt(game.xp_earned)}` : ''}
-            </Text>
+            <View style={styles.detailRow}>
+              <Icon icon={Check} size={12} color={colors.textMuted} strokeWidth={2.5} />
+              <Text style={styles.detail} numberOfLines={1}>{correct}/{total}</Text>
+              {game.xp_earned ? (
+                <>
+                  <Text style={styles.detail}>·</Text>
+                  <Icon icon={Zap} size={12} color={colors.textMuted} strokeWidth={2.5} />
+                  <Text style={styles.detail} numberOfLines={1}>+{fmt(game.xp_earned)}</Text>
+                </>
+              ) : null}
+            </View>
           ) : null}
         </View>
         <View style={styles.right}>
@@ -232,7 +239,8 @@ const makeStyles = (colors) =>
       color: colors.textMuted,
       marginTop: 1,
     },
-    detail: {
+    detailRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  detail: {
       fontFamily: fonts.bodyMedium,
       fontSize: fontSizes.xs,
       color: colors.textMuted,

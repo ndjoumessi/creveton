@@ -16,7 +16,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WifiOff } from 'lucide-react-native';
+import { WifiOff, Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Logo, AppButton, AuthField, ChoiceChips, Title, Heading, Body, Label } from '../components';
 import Icon from '../components/Icon';
@@ -347,7 +347,7 @@ export default function RegisterScreen({ navigation }) {
                   }}
                 >
                   <Body weight="medium" color={colors.textDark}>{item}</Body>
-                  {ville === item ? <Body weight="bold" color={colors.green500}>✓</Body> : null}
+                  {ville === item ? <Icon icon={Check} size={18} color={colors.green500} strokeWidth={3} /> : null}
                 </Pressable>
               )}
             />
@@ -373,7 +373,7 @@ export default function RegisterScreen({ navigation }) {
                     {`${item.flag}  ${countryName(item, lang)}`}
                   </Body>
                   <Body color={colors.textMuted}>{`+${callingCodeFor(item.iso)}`}</Body>
-                  {country === item.iso ? <Body weight="bold" color={colors.green500}>✓</Body> : null}
+                  {country === item.iso ? <Icon icon={Check} size={18} color={colors.green500} strokeWidth={3} /> : null}
                 </Pressable>
               )}
             />
