@@ -44,7 +44,7 @@
 .set-sys-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 @media (max-width: 760px) { .set-sys-grid { grid-template-columns: 1fr; } }
 .set-sys-card { display: flex; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); }
-.set-sys-ic { width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; color: var(--green700); flex: none; }
+.set-sys-ic { width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; color: var(--accent-fg); flex: none; }
 .set-sys-name { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--ink); }
 .set-sys-state { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; margin-top: 2px; }
 .set-sys-state.ok { color: var(--green600, var(--green500)); }

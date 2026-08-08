@@ -520,7 +520,7 @@
   transition: all var(--t-fast);
 }
 .q-opt-radio:hover { border-color: var(--green300); color: var(--green700); }
-.q-opt-row.is-correct .q-opt-radio { border-color: var(--green500); color: var(--green700); background: var(--surface); }
+.q-opt-row.is-correct .q-opt-radio { border-color: var(--green500); color: var(--accent-fg); background: var(--surface); }
 .q-opt-radio input { accent-color: var(--green500); width: 15px; height: 15px; }
 .q-opt-text { flex: 1; }
 .q-opt-label { font-weight: 400; color: var(--muted); font-size: 12px; }
@@ -1345,7 +1345,7 @@
 .q-draft-text { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 14.5px; color: var(--ink); }
 .q-draft-opts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; }
 .q-draft-opts li { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--muted); }
-.q-draft-opts li.is-correct { color: var(--green700); font-weight: 600; }
+.q-draft-opts li.is-correct { color: var(--accent-fg); font-weight: 600; }
 .q-draft-opt-ic { flex: none; color: var(--green500); }
 .q-draft-expl { margin: 2px 0 0; font-size: 12.5px; color: var(--fg-faint); font-style: italic; }
 .q-draft-actions { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }

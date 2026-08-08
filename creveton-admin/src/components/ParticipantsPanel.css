@@ -161,7 +161,7 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 14.5px;
-  color: var(--green700);
+  color: var(--accent-fg);
   flex-shrink: 0;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;

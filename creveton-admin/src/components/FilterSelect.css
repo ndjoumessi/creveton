@@ -35,7 +35,7 @@
   text-align: left; transition: background var(--t-fast);
 }
 .fsel-opt:hover { background: var(--surface-2); }
-.fsel-opt.is-selected { background: rgba(42, 138, 79, 0.08); color: var(--green700); font-weight: 600; }
+.fsel-opt.is-selected { background: rgba(42, 138, 79, 0.08); color: var(--accent-fg); font-weight: 600; }
 .fsel-opt-ic { font-size: 14px; line-height: 1; flex: none; }
 .fsel-opt-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .fsel-opt-label { flex: 1; }
