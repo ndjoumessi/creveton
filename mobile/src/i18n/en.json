@@ -18,7 +18,7 @@
       "step2": "Your account",
       "step3": "Your profile",
       "fullName": "Full name",
-      "phone": "Phone (+237)",
+      "phone": "Phone",
       "email": "Email address",
       "password": "Password",
       "confirmPassword": "Confirm password",
@@ -36,14 +36,17 @@
       "loginLink": "Sign in",
       "validation": {
         "name": "Name required (2 to 100 characters).",
-        "phone": "Invalid number (9 digits after +237).",
+        "phone": "Invalid number for the selected country.",
         "email": "Invalid email address.",
-        "password": "8 characters min., 1 digit, 1 uppercase.",
-        "passwordMismatch": "Passwords do not match."
+        "passwordMismatch": "Passwords do not match.",
+        "password_length": "At least 8 characters.",
+        "password_digit": "At least 1 digit.",
+        "password_upper": "At least 1 uppercase letter."
       },
       "placeholder": {
         "city": "Choose your city",
-        "phone": "6XX XXX XXX"
+        "phone": "Number without country code",
+        "age": "Optional"
       },
       "notify": {
         "emailUsed": "Email already in use.",
@@ -52,7 +55,9 @@
       },
       "misc": {
         "stepCounter": "Step {{n}}",
-        "cityPickerTitle": "Choose your city"
+        "cityPickerTitle": "Choose your city",
+        "countryPickerTitle": "Choose your country",
+        "ageHint": "Optional — between 6 and 99."
       }
     },
     "otp": {

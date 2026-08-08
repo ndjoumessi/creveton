@@ -29,21 +29,19 @@ import {
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { formatTimer } from '../utils/format';
+import { formatPhone } from '../utils/validation';
 
 const LENGTH = 6;
 const FALLBACK_SECONDS = 600;
 const RESEND_UNLOCK = 540; // renvoi possible quand il reste ≤ 540s
 
-// Mise en forme légère du numéro (groupes de 2-3 chiffres) pour la lisibilité.
+// Mise en forme du numéro selon les conventions de SON pays (le compte est
+// international depuis 08-2026 : le groupage 2-2-2 hérité du Cameroun rendait
+// « +33 6 12 34 56 78 » plausible mais « +1 41 55 55 26 71 » illisible).
+// `formatPhone` retombe sur la chaîne brute si le numéro n'est pas parsable.
 function prettyPhone(raw) {
   if (!raw) return '';
-  const str = String(raw).trim();
-  const plus = str.startsWith('+') ? '+' : '';
-  const digits = str.replace(/\D/g, '');
-  if (digits.length < 6) return str;
-  // ex. +237 6 12 34 56 78
-  const groups = digits.replace(/(\d{1,3})(?=(\d{2})+(?!\d))/g, '$1 ');
-  return `${plus}${groups}`.trim();
+  return formatPhone(raw);
 }
 
 export default function OTPScreen({ route, navigation }) {

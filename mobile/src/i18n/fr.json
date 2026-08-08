@@ -18,7 +18,7 @@
       "step2": "Ton compte",
       "step3": "Ton profil",
       "fullName": "Nom complet",
-      "phone": "Téléphone (+237)",
+      "phone": "Téléphone",
       "email": "Adresse email",
       "password": "Mot de passe",
       "confirmPassword": "Confirmer le mot de passe",
@@ -36,14 +36,17 @@
       "loginLink": "Se connecter",
       "validation": {
         "name": "Nom requis (2 à 100 caractères).",
-        "phone": "Numéro invalide (9 chiffres après +237).",
+        "phone": "Numéro invalide pour le pays sélectionné.",
         "email": "Adresse email invalide.",
-        "password": "8 caractères min., 1 chiffre, 1 majuscule.",
-        "passwordMismatch": "Les mots de passe ne correspondent pas."
+        "passwordMismatch": "Les mots de passe ne correspondent pas.",
+        "password_length": "Au moins 8 caractères.",
+        "password_digit": "Au moins 1 chiffre.",
+        "password_upper": "Au moins 1 majuscule."
       },
       "placeholder": {
         "city": "Choisis ta ville",
-        "phone": "6XX XXX XXX"
+        "phone": "Numéro sans indicatif",
+        "age": "Facultatif"
       },
       "notify": {
         "emailUsed": "Email déjà utilisé.",
@@ -52,7 +55,9 @@
       },
       "misc": {
         "stepCounter": "Étape {{n}}",
-        "cityPickerTitle": "Choisis ta ville"
+        "cityPickerTitle": "Choisis ta ville",
+        "countryPickerTitle": "Choisis ton pays",
+        "ageHint": "Facultatif — entre 6 et 99 ans."
       }
     },
     "otp": {
