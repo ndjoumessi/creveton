@@ -254,7 +254,11 @@ export default function GameStartScreen({ navigation, route }) {
   return (
     <Screen
       scroll
-      edges={['top']}
+      // 'bottom' ajouté avec le pied ancré : sans lui, le pied venait coller la
+      // barre d'onglets, sans respiration. La barre absorbe déjà l'inset système
+      // (BottomTabs : `paddingBottom: insets.bottom`), donc ce que l'on gagne ici
+      // est un espacement visuel, pas une zone de sécurité manquante.
+      edges={['top', 'bottom']}
       // L'action principale était en bas d'une page longue (3 modes + 6 cartes de
       // thème + niveau) : « Lancer » n'apparaissait qu'après avoir fait défiler,
       // alors que c'est le geste que l'écran existe pour provoquer. Ancré en pied,
