@@ -189,6 +189,22 @@ export const themeGradients = {
 // l'acier. Titre blanc conservé : 12,6:1 au début du dégradé, 7,6:1 à la fin.
 // NB : « Sport » (#8e2d2d) avait été soupçonné de frôler le rouge d'erreur — la
 // mesure l'infirme, il en est loin. Laissé tel quel.
+//
+// ARBITRAGE TRANCHÉ (2026-08-08) — ne pas rouvrir sans nouvelle décision produit.
+// L'ardoise est nettement moins saturée que ses voisines : chroma 9,4 contre 44
+// en moyenne pour les cinq autres. Sur la grille de l'écran Jouer, elle paraît
+// donc plus terne — c'est visible, c'est connu, c'est ASSUMÉ.
+// Huit teintes vives ont été testées : toutes percutent un thème existant
+// (indigo/acier → Géographie dE 8–18 ; bronze/ambre → Histoire dE 13 ;
+// prune/violine → Culture dE 19). L'espace des teintes est plein — cinq sont
+// prises (violet, bleu, brun, rouge, sarcelle) et le vert appartient à la marque.
+// Le SEUL candidat saturé qui dégageait partout était un magenta (#8e2d6b,
+// dE 33 mini) : écarté, il ne dit rien d'« industrie » là où le gris évoque
+// l'acier. On préfère le sens à la parité de vivacité.
+// Réserve connue : l'état désactivé (AppButton) est lui aussi un aplat neutre —
+// deux gris, deux sens. Le contexte lève l'ambiguïté (une carte de thème porte
+// toujours un emoji en couleur, un titre blanc et une pastille de disponibilité,
+// ce qu'un bouton inerte n'a pas).
 export const themeAccent = {
   geographie: '#2d5a8e',
   culture: '#5b2d8e',
