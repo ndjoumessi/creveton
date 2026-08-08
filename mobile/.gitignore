@@ -44,3 +44,7 @@ yarn-error.*
 
 # local EAS APK builds
 build-*.apk
+
+# APK de test produits par les builds locaux/EAS (le motif `build-*.apk`
+# ci-dessus ne couvrait pas les fichiers renommés à la main).
+*.apk
