@@ -1,5 +1,11 @@
-name: Mobile — EAS Build
+name: Mobile — Lint & EAS Build
 
+# Le build EAS est MANUEL (workflow_dispatch) et lui seul consomme le quota
+# Android gratuit d'Expo. Il l'a longtemps été à chaque push sur main, ce qui
+# vidait le quota mensuel en quelques jours (constaté 2026-07-04, quota de
+# juillet mangé les 1–2) alors que la plupart des push ne réclament aucun APK.
+# Le push garde une garde CI gratuite : lint + export du bundle, qui rattrape
+# l'essentiel du signal que donnait le build (imports cassés, bundling).
 on:
   workflow_dispatch:
     inputs:
@@ -17,13 +23,48 @@ on:
       - 'mobile/**'
       - '.github/workflows/mobile-build.yml'
 
+# Les push (lint) s'annulent entre eux ; un build manuel n'est JAMAIS annulé
+# par un push qui arrive derrière — il est trop coûteux pour être sacrifié.
 concurrency:
-  group: mobile-build-${{ github.ref }}
-  cancel-in-progress: true
+  group: mobile-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
+  # ── Garde CI, à chaque push : gratuite, aucun quota EAS consommé ──────────
+  check:
+    name: Lint + bundle
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npx expo lint
+
+      # Valide que le bundle se construit et que tous les imports résolvent —
+      # même contrôle que celui documenté pour le local (mobile/CLAUDE.md).
+      - name: Bundle export (imports résolus)
+        run: npx expo export --platform android --output-dir /tmp/export-check
+
+  # ── Build APK, MANUEL uniquement : c'est ce job qui coûte du quota ────────
   build:
     name: EAS Build (${{ github.event.inputs.profile || 'preview' }})
+    if: github.event_name == 'workflow_dispatch'
+    needs: check
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -49,18 +90,18 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Lint
-        run: npx expo lint
-
+      # PROFILE passe par env (et non interpolé dans `run:`) — motif recommandé
+      # pour toute entrée d'événement, même contrainte par un `type: choice`.
       - name: EAS Build
         run: |
           eas build \
             --platform android \
-            --profile ${{ github.event.inputs.profile || 'preview' }} \
+            --profile "$PROFILE" \
             --non-interactive \
             --no-wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          PROFILE: ${{ github.event.inputs.profile || 'preview' }}
 
       - name: Build URL
         run: echo "✅ Build lancé — https://expo.dev/accounts/ndjoumessi/projects/creveton/builds"

@@ -148,12 +148,16 @@ marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-id
 
 - EAS Free : quota de builds Android/mois (reset le 1er). La limite réelle appliquée par
   EAS peut être < 30 ; si le cloud refuse (`used its Android builds from the Free plan this
-  month`), passer en build local. **⚠️ Le workflow CI `Mobile — EAS Build` lance un
-  build cloud à CHAQUE push sur `main`** → il consomme le quota gratuit tout seul ; même
-  après le reset du 1er, le cloud peut être épuisé en quelques jours (constaté 2026-07-04,
-  quota juillet mangé les 1–2). Sonder avant de supposer le cloud dispo : un submit
+  month`), passer en build local. Sonder avant de supposer le cloud dispo : un submit
   `eas build … --no-wait` échoue en **pré-vol** si le quota est épuisé, **sans consommer**
   de build.
+- **Le build cloud est MANUEL** (`.github/workflows/mobile-build.yml`, job `build`) :
+  onglet Actions → *Mobile — Lint & EAS Build* → `Run workflow` → profil `preview` ou
+  `production`. C'est le **seul** chemin qui consomme du quota. Un push sur `main` ne
+  déclenche que le job `check` (lint + `expo export`), gratuit. ⚠️ Historique : ce
+  workflow buildait à chaque push et vidait le quota mensuel tout seul en quelques jours
+  (constaté 2026-07-04, quota de juillet mangé les 1–2) — ne pas remettre `push` sur le
+  job `build`.
 - **`npx EINVALIDTAGNAME` / `E400` au lancement du build local — RÉSOLU (2026-07-04).**
   Cause : un **npm 6.4.1 hérité dans `/usr/local`** dont le symlink `/usr/local/bin/npx`
   (placé **avant nvm dans le `PATH`**) pointait encore dessus, alors que `node`/`npm`
