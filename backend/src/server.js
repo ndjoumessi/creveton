@@ -11,6 +11,7 @@ const logger = require('./config/logger');
 const db = require('./config/database');
 const redisClient = require('./config/redis');
 const { initSockets } = require('./sockets');
+const jobs = require('./jobs/runner');
 
 const server = http.createServer(app);
 
@@ -28,6 +29,10 @@ async function start() {
     logger.warn('Redis indisponible au démarrage (fonctionnera en mode dégradé)', { error: err.message });
   }
 
+  // Ordonnanceur : APRÈS Redis (il lui faut le verrou et la trace d'exécution)
+  // et sans bloquer l'écoute HTTP. Inerte en test.
+  jobs.start();
+
   server.listen(env.port, () => {
     logger.info(`Creveton API démarrée`, {
       env: env.nodeEnv,
@@ -40,6 +45,11 @@ async function start() {
 // --- Arrêt gracieux ---
 async function shutdown(signal) {
   logger.info(`Signal ${signal} reçu, arrêt en cours…`);
+  // On arrête le tic AVANT de fermer les connexions : une tâche démarrée pendant
+  // l'arrêt échouerait sur une base déjà fermée et laisserait une trace en échec
+  // trompeuse. Une tâche EN COURS, elle, garde son verrou jusqu'à expiration —
+  // c'est voulu, un autre processus ne doit pas la reprendre à chaud.
+  jobs.stop();
   server.close(async () => {
     try {
       await Promise.allSettled([db.close(), redisClient.close()]);

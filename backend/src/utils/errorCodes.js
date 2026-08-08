@@ -37,6 +37,7 @@ const ERROR_CODES = {
   QUESTION_NOT_FOUND: { http: 404, message: 'Question introuvable.' },
   TOURNAMENT_NOT_FOUND: { http: 404, message: 'Tournoi introuvable.' },
   CHALLENGE_NOT_FOUND: { http: 404, message: 'Challenge introuvable.' },
+  JOB_NOT_FOUND: { http: 404, message: 'Tâche planifiée introuvable.' },
   SESSION_NOT_FOUND: { http: 404, message: 'Partie introuvable.' },
   NO_QUESTIONS_AVAILABLE: { http: 404, message: 'Aucune question disponible pour ce filtre.' },
   INVITATION_NOT_FOUND: { http: 404, message: 'Invitation introuvable.' },
@@ -44,6 +45,7 @@ const ERROR_CODES = {
 
   EMAIL_ALREADY_USED: { http: 409, message: 'Cet email est déjà utilisé.' },
   EMAIL_ALREADY_VERIFIED: { http: 409, message: 'Cette adresse est déjà vérifiée.' },
+  JOB_ALREADY_RUNNING: { http: 409, message: 'Cette tâche est déjà en cours.' },
   PHONE_ALREADY_USED: { http: 409, message: 'Ce numéro est déjà utilisé.' },
   DUPLICATE_QUESTION: { http: 409, message: 'Une question identique existe déjà.' },
   SESSION_ALREADY_SUBMITTED: { http: 409, message: 'Cette session a déjà été soumise.' },

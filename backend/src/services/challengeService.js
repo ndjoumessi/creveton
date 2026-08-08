@@ -296,4 +296,7 @@ async function get({ userId, challengeId }) {
   };
 }
 
-module.exports = { create, accept, submit, get, list, decline, cancel, apiStatus, CHALLENGE_QUESTIONS };
+// `CHALLENGE_TTL_MS` est exporté pour la tâche planifiée `expire-challenges` :
+// recopier le délai là-bas garantirait qu'il diverge un jour, produisant des défis
+// « morts à la lecture mais vivants en base » (ou l'inverse).
+module.exports = { create, accept, submit, get, list, decline, cancel, apiStatus, CHALLENGE_QUESTIONS, CHALLENGE_TTL_MS };

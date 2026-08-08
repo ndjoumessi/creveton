@@ -16,6 +16,7 @@ const settingsRoutes = require('./settings.admin.routes');
 const teamRoutes = require('./team.admin.routes');
 const transactionRoutes = require('./transactions.routes');
 const supportRoutes = require('./support.admin.routes');
+const jobRoutes = require('./jobs.admin.routes');
 
 const router = express.Router();
 
@@ -34,6 +35,7 @@ router.use('/transactions', transactionRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/team', teamRoutes);
 router.use('/support', supportRoutes);
+router.use('/jobs', jobRoutes);
 // Parrainage : route à plat /admin/referrals/:code (spec §12).
 router.get('/referrals/:code', requirePermission('users:read'), usersCtrl.referral);
 

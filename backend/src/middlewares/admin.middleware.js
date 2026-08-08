@@ -49,6 +49,10 @@ const PERMISSIONS = {
 
   'system:read': 'admin',
   'system:manage': 'super_admin',
+  // Tâches planifiées : lecture de l'état (admin), déclenchement manuel
+  // (super_admin — relancer un batch touche toutes les données).
+  'jobs:read': 'admin',
+  'jobs:run': 'super_admin',
 
   'settings:read': 'admin',
   'settings:manage': 'super_admin',

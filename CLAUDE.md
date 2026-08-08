@@ -114,6 +114,30 @@ régénérer avec `/impeccable document`.
   timer global 62 s) ; `/sessions/answer` (feedback immédiat, mode `normal` only) une
   réponse < 150 ms → `CHEAT_DETECTED`. La bonne réponse n'est révélée qu'après soumission.
   (Seuils assouplis depuis 2 répétitions / 1 s / 500 ms pour limiter les faux positifs.)
+- **Tâches planifiées** (`src/jobs/`) : moteur EN PROCESSUS (tic 60 s), démarré par
+  `server.js` après Redis, inerte en test. Verrou Redis `jobs:lock:<nom>` (SET NX PX,
+  libération par comparaison via Lua) : `numReplicas: 1` aujourd'hui, mais c'est un
+  réglage de tableau de bord — la correction ne doit pas en dépendre. **Cadences dans le
+  dépôt** (`jobs/schedule.js`, descripteur sans dépendance : `everyMinutes` / `dailyAt` /
+  `weeklyAt`), exprimées en **heure du Cameroun (UTC+1)** et non en UTC.
+  · Tâches : `success-rate` (3 h — le batch existait, jamais planifié),
+    `expire-challenges` (60 min — `isExpired` n'était calculé qu'à la LECTURE, les lignes
+    restaient `pending` et faussaient le compteur de défis actifs),
+    `tournament-lifecycle` (15 min — ouvre `scheduled → open` ; ne DÉMARRE jamais un
+    tournoi, décision produit), `email-verify-nudge` (18 h — push, 3 j de grâce, 7 j
+    d'espacement, plafond 3 à vie, migration `027`).
+  · **Observation obligatoire** : chaque exécution écrit `jobs:last:<nom>` (30 j),
+    `GET /admin/jobs` (perm `jobs:read`) l'expose, `POST /admin/jobs/:name/run`
+    (`jobs:run`, super_admin) relance. Un ordonnanceur muet est pire que pas
+    d'ordonnanceur : sans trace, on CROIT `success_rate` frais.
+  · CLI : `node src/jobs/run.js <nom>` — exploitation, et point d'entrée tout prêt si on
+    bascule un jour sur un service Railway dédié avec `cronSchedule`.
+  · ⚠️ **Condition** : si le service Railway s'endort quand il est inactif, le moteur en
+    processus ne se déclenche jamais → passer au service cron dédié.
+  · **Hors périmètre, volontairement** : la purge RGPD. Toutes les FK vers `users` sont en
+    ON DELETE CASCADE — un `DELETE` effacerait `game_sessions`, donc réécrirait les
+    classements et fausserait `success_rate`. La forme correcte est une ANONYMISATION, et
+    la durée de rétention est un choix juridique. Tests : `backend/tests/jobs.test.js`.
 - **Vérification d'adresse email** (`src/services/emailVerificationService.js`,
   migration `026_users_email_verified.sql`) : code à 6 chiffres par email, Redis
   `emailverify:<user_id>` (stocke aussi l'adresse **VISÉE** — un code demandé pour une
