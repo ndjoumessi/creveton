@@ -53,7 +53,20 @@ function TabItem({ routeName, focused }) {
       <Animated.View style={{ transform: [{ translateY }] }}>
         <Icon icon={ICONS[routeName]} size={24} color={color} strokeWidth={focused ? 2.25 : 1.75} />
       </Animated.View>
-      <Text style={[styles.label, { color }]}>{t(LABEL_KEYS[routeName])}</Text>
+      {/* `numberOfLines` + `adjustsFontSizeToFit` : le libellé doit RÉTRÉCIR,
+          jamais passer à la ligne. « Tournaments » (EN) coupait en
+          « Tournamen / ts » — un mot brisé se lit comme un bug d'affichage, et
+          la barre grandissait d'une ligne. Un libellé de traduction peut
+          toujours être plus long que prévu ; on cadre la contrainte au lieu de
+          la subir langue par langue. */}
+      <Text
+        style={[styles.label, { color }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.85}
+      >
+        {t(LABEL_KEYS[routeName])}
+      </Text>
       <View style={[styles.dot, focused && styles.dotActive]} />
     </View>
   );
@@ -130,8 +143,11 @@ const makeStyles = (colors) => StyleSheet.create({
     ...shadow.tabBar,
   },
   tabItem: { paddingTop: spacing.xs },
-  item: { alignItems: 'center', justifyContent: 'center', width: 64, minHeight: MIN_TOUCH, gap: 2 },
-  label: { fontFamily: fonts.bodyMedium, fontSize: 11 },
+  // Largeur FIXE 64 px remplacée par la place réellement disponible : avec 4
+  // onglets sur un écran de 360 dp, chacun dispose d'environ 90 dp. Les 64 px
+  // hérités des 6 onglets bridaient inutilement les libellés longs.
+  item: { alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch', minHeight: MIN_TOUCH, gap: 2, paddingHorizontal: 2 },
+  label: { fontFamily: fonts.bodyMedium, fontSize: 11, textAlign: 'center' },
   dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'transparent', marginTop: 1 },
   dotActive: { backgroundColor: colors.gold500 },
   badge: {

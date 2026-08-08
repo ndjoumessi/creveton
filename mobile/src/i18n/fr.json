@@ -602,7 +602,9 @@
       "3": "Joueur",
       "4": "Expert",
       "5": "Champion"
-    }
+    },
+    "oops": "Oups…",
+    "timeout": "Délai dépassé."
   },
   "tabs": {
     "home": "Accueil",
@@ -726,7 +728,8 @@
     "syncedSessions_one": "{{count}} résultat synchronisé",
     "syncedSessions_other": "{{count}} résultats synchronisés",
     "pendingSessions_one": "{{count}} résultat en attente",
-    "pendingSessions_other": "{{count}} résultats en attente"
+    "pendingSessions_other": "{{count}} résultats en attente",
+    "challengeSubmit": "Connexion requise pour valider un défi."
   },
   "sessionsHistory": {
     "title": "Historique",

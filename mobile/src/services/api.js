@@ -124,13 +124,18 @@ export function parseApiError(error) {
     return {
       status,
       code: err.code || 'UNKNOWN',
-      message: err.message || 'Une erreur est survenue.',
+      // Repli quand le serveur ne fournit pas de message. NB : les messages
+      // que le serveur FOURNIT, eux, sont en français quelle que soit la langue
+      // du client — le catalogue `backend/src/utils/errorCodes.js` est
+      // monolingue. Chantier serveur distinct (l'API devrait lire
+      // Accept-Language) ; ici on ne peut que localiser ce qui nous appartient.
+      message: err.message || i18n.t('common.error'),
       details: err.details || [],
       requestId: err.request_id,
     };
   }
   if (error?.code === 'ECONNABORTED') {
-    return { status: 0, code: 'TIMEOUT', message: 'Délai dépassé.' };
+    return { status: 0, code: 'TIMEOUT', message: i18n.t('common.timeout') };
   }
   return {
     status: status || 0,

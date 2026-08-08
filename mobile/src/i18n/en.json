@@ -602,7 +602,9 @@
       "3": "Player",
       "4": "Expert",
       "5": "Champion"
-    }
+    },
+    "oops": "Oops…",
+    "timeout": "Request timed out."
   },
   "tabs": {
     "home": "Home",
@@ -726,7 +728,8 @@
     "syncedSessions_one": "{{count}} result synchronized",
     "syncedSessions_other": "{{count}} results synchronized",
     "pendingSessions_one": "{{count}} result pending",
-    "pendingSessions_other": "{{count}} results pending"
+    "pendingSessions_other": "{{count}} results pending",
+    "challengeSubmit": "A connection is required to submit a duel."
   },
   "sessionsHistory": {
     "title": "History",

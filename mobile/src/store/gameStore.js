@@ -4,6 +4,7 @@
 
 import { create } from 'zustand';
 import { sessions as sessionsApi, challenges as challengesApi } from '../services/endpoints';
+import i18n from '../i18n';
 import { parseApiError } from '../services/api';
 import { useNetworkStore } from './networkStore';
 import { useOfflineQueue } from './offlineQueue';
@@ -198,7 +199,7 @@ export const useGameStore = create((set, get) => ({
     // qui serait invalide pour un défi → on exige la connexion (échec explicite).
     if (mode === 'challenge' && challengeId) {
       if (!useNetworkStore.getState().isOnline) {
-        const err = { code: 'NETWORK_ERROR', message: 'Connexion requise pour valider un défi.' };
+        const err = { code: 'NETWORK_ERROR', message: i18n.t('offline.challengeSubmit') };
         set({ submitting: false, error: err.message });
         return { ok: false, error: err };
       }

@@ -3,20 +3,32 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import AppButton from './AppButton';
 import Icon from './Icon';
 import { colors, fonts, fontSizes, spacing } from '../constants/theme';
 
+/**
+ * Les libellés par défaut étaient écrits EN DUR en français : les huit écrans
+ * qui s'en remettent à eux affichaient « Oups… / Une erreur est survenue /
+ * Réessayer » au milieu d'une interface anglaise. Ils sont désormais résolus à
+ * l'exécution — d'où `undefined` en valeur par défaut plutôt qu'une chaîne :
+ * un défaut de paramètre est évalué avant que `t` n'existe.
+ */
 export default function ErrorScreen({
   emoji = '🦐',
   icon, // composant Lucide optionnel : remplace l'emoji par une icône vectorielle
-  title = 'Oups…',
-  message = 'Une erreur est survenue.',
+  title,
+  message,
   onRetry,
-  retryLabel = 'Réessayer',
+  retryLabel,
   dark = true,
   inline = false,
 }) {
+  const { t } = useTranslation();
+  const heading = title ?? t('common.oops');
+  const body = message ?? t('common.error');
+  const retry = retryLabel ?? t('common.retry');
   const onDark = dark && !inline;
   return (
     <View style={[styles.container, onDark && styles.dark, inline && styles.inline]}>
@@ -27,13 +39,13 @@ export default function ErrorScreen({
       ) : (
         <Text style={styles.emoji}>{emoji}</Text>
       )}
-      <Text style={[styles.title, onDark && styles.onDarkText]}>{title}</Text>
+      <Text style={[styles.title, onDark && styles.onDarkText]}>{heading}</Text>
       <Text style={[styles.message, onDark ? styles.onDarkMuted : styles.muted]}>
-        {message}
+        {body}
       </Text>
       {onRetry ? (
         <AppButton
-          title={retryLabel}
+          title={retry}
           onPress={onRetry}
           variant={onDark ? 'primary' : 'secondary'}
           size="md"

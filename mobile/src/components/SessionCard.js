@@ -198,11 +198,11 @@ export default function SessionCard({ game, style, showIncomplete = false, onPre
       }}
       style={({ pressed }) => [...cardStyle, pressed && styles.cardPressed]}
       accessibilityRole="button"
-      accessibilityLabel={t('sessionDetail.cardA11y', {
-        title,
-        score: fmt(score),
-        defaultValue: '{{title}}, {{score}} points — voir le détail',
-      })}
+      // Plus de `defaultValue` français : la clé existe dans les deux langues,
+      // et i18next retombe déjà sur `fallbackLng` si elle disparaissait. Un
+      // défaut en dur n'ajoutait rien — sinon le risque de servir du français
+      // à un utilisateur anglophone le jour où la clé serait renommée.
+      accessibilityLabel={t('sessionDetail.cardA11y', { title, score: fmt(score) })}
     >
       {content}
     </Pressable>

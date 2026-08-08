@@ -86,15 +86,8 @@ export function isValidAge(age) {
   return Number.isInteger(n) && n >= 6 && n <= 99;
 }
 
-// Renvoie un objet { field: message } pour le formulaire d'inscription
-export function validateRegister({ name, email, phone, password, age }) {
-  const errors = {};
-  if (!isValidName(name)) errors.name = 'Nom requis (2 à 100 caractères).';
-  if (!isValidEmail(email)) errors.email = 'Adresse email invalide.';
-  if (!isValidPhone(phone))
-    errors.phone = 'Numéro invalide pour le pays sélectionné.';
-  if (!isValidPassword(password))
-    errors.password = '8 caractères min., 1 chiffre, 1 majuscule.';
-  if (!isValidAge(age)) errors.age = 'Âge entre 6 et 99 ans.';
-  return errors;
-}
+// `validateRegister` vivait ici avec cinq messages français EN DUR. Aucun
+// appelant : l'inscription valide champ par champ (`isValidName`, `passwordIssues`…)
+// avec des libellés localisés. Supprimé plutôt que traduit — du code mort traduit
+// reste du code mort, et il aurait donné l'illusion d'un chemin de validation
+// alternatif.
