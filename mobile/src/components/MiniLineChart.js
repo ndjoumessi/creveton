@@ -21,11 +21,17 @@
 // Theme-aware : palette via useTheme (identique en mode clair à l'ancien rendu).
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, PanResponder, Animated, StyleSheet } from 'react-native';
-import Svg, { Path, Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
+import { View, Text, PanResponder, Animated, Easing, StyleSheet } from 'react-native';
+import Svg, { Path, Polyline, Circle, Line, G, Text as SvgText } from 'react-native-svg';
 import { fonts, motion, radius, zIndex } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useReduceMotion } from '../hooks/useReduceMotion';
+
+// react-native-svg accepte des props animées sur ses primitives. `useNativeDriver`
+// reste FALSE : ni `strokeDashoffset` ni `fillOpacity` ne sont des props natives.
+const AnimatedPolyline = Animated.createAnimatedComponent(Polyline);
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedG = Animated.createAnimatedComponent(G);
 
 // Seuil (px) en deçà duquel un geste est considéré comme un TAP (et non un scroll).
 // Au-delà sur X ou Y, on ne sélectionne rien : le mouvement appartient au parent.
@@ -120,6 +126,32 @@ export default function MiniLineChart({
     }).start();
   }, [sel, reduceMotion, tipOpacity]);
 
+  // ── Animation de tracé ────────────────────────────────────────────────────
+  // La courbe se dessine de gauche à droite au montage (et à chaque changement
+  // de données), puis l'aire, les points et le libellé apparaissent en fondu.
+  // Technique : `strokeDasharray` = longueur totale, `strokeDashoffset` animé de
+  // cette longueur vers 0 — le trait est « déroulé » plutôt que redessiné.
+  // La longueur est EXACTE (somme des segments) et non estimée : le tracé est une
+  // polyligne, pas une courbe de Bézier.
+  // `reduceMotion` court-circuite tout et rend l'état final (charte a11y).
+  const drawAnim = useRef(new Animated.Value(0)).current;
+  const dataKey = data.join('|');
+  useEffect(() => {
+    if (reduceMotion) {
+      drawAnim.setValue(1);
+      return undefined;
+    }
+    drawAnim.setValue(0);
+    const anim = Animated.timing(drawAnim, {
+      toValue: 1,
+      duration: motion.max,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false, // props SVG : non prises en charge par le driver natif
+    });
+    anim.start();
+    return () => anim.stop();
+  }, [dataKey, measuredW, reduceMotion, drawAnim]);
+
   const onWrapLayout = autoWidth
     ? (e) => setMeasuredW(Math.round(e.nativeEvent.layout.width))
     : undefined;
@@ -167,6 +199,18 @@ export default function MiniLineChart({
     `M ${points[0].x},${baseY} ` +
     points.map((p) => `L ${p.x},${p.y}`).join(' ') +
     ` L ${points[n - 1].x},${baseY} Z`;
+
+  // Longueur EXACTE du tracé : somme des segments (polyligne, pas de Bézier).
+  // Sert de `strokeDasharray` — le trait est masqué puis déroulé.
+  const pathLen = points.reduce(
+    (acc, p, i) => (i === 0 ? 0 : acc + Math.hypot(p.x - points[i - 1].x, p.y - points[i - 1].y)),
+    0
+  ) || 1;
+  const dashOffset = drawAnim.interpolate({ inputRange: [0, 1], outputRange: [pathLen, 0] });
+  // Aire, points et libellé n'apparaissent qu'une fois le trait bien engagé (60 %),
+  // sinon ils flottent devant une courbe encore absente.
+  const trailIn = drawAnim.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0, 1] });
+  const areaOpacity = drawAnim.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0, 0.15] });
 
   // Graduations Y (4 repères, valeurs décroissantes de max vers min), rendues dans la
   // colonne d'axe réservée à droite. Le nombre n'a plus besoin d'être réduit pour
@@ -288,25 +332,40 @@ export default function MiniLineChart({
               ) : null
             )
           : null}
-        {fillArea && n > 1 ? <Path d={area} fill={stroke} fillOpacity={0.15} /> : null}
+        {fillArea && n > 1 ? <AnimatedPath d={area} fill={stroke} fillOpacity={areaOpacity} /> : null}
         {n > 1 ? (
-          <Polyline points={polyline} fill="none" stroke={stroke} strokeWidth={2.5} strokeLinejoin="round" />
+          <AnimatedPolyline
+            points={polyline}
+            fill="none"
+            stroke={stroke}
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            strokeDasharray={[pathLen, pathLen]}
+            strokeDashoffset={dashOffset}
+          />
         ) : null}
-        {points.map((p, i) =>
-          outlinedDots ? (
-            <Circle
-              key={i}
-              cx={p.x}
-              cy={p.y}
-              r={i === n - 1 ? 5 : 4}
-              fill={i === n - 1 ? stroke : colors.white}
-              stroke={stroke}
-              strokeWidth={2}
-            />
-          ) : (
-            <Circle key={i} cx={p.x} cy={p.y} r={3.5} fill={stroke} />
-          )
-        )}
+        {/* Les points apparaissent APRÈS le trait (fondu tardif) : posés d'emblée,
+            ils flotteraient devant une courbe encore en train de se dessiner. Le
+            point de sélection ci-dessous n'est PAS dans ce groupe — il doit rester
+            visible immédiatement si l'utilisateur tape pendant l'animation. */}
+        <AnimatedG opacity={trailIn}>
+          {points.map((p, i) =>
+            outlinedDots ? (
+              <Circle
+                key={i}
+                cx={p.x}
+                cy={p.y}
+                r={i === n - 1 ? 5 : 4}
+                fill={i === n - 1 ? stroke : colors.white}
+                stroke={stroke}
+                strokeWidth={2}
+              />
+            ) : (
+              <Circle key={i} cx={p.x} cy={p.y} r={3.5} fill={stroke} />
+            )
+          )}
+        </AnimatedG>
         {/* Feedback de sélection : point agrandi/évidé par-dessus le point courant. */}
         {selPoint ? (
           <Circle
