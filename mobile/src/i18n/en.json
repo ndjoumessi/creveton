@@ -162,6 +162,12 @@
       "badgeTop": "TOP",
       "badgeGood": "GOOD",
       "viewAll": "View full history"
+    },
+    "emailNudge": {
+      "title": "Confirm your email address",
+      "body": "Without a confirmed address, we cannot get you back into your account if you forget your password.",
+      "cta": "Confirm now →",
+      "dismiss": "Hide this reminder"
     }
   },
   "gameStart": {

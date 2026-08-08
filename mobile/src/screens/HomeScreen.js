@@ -34,6 +34,8 @@ import {
   SessionCard,
   Podium,
   PendingSyncBadge,
+  EmailNudge,
+  EmailVerifySheet,
 } from '../components';
 import { useAuthStore } from '../store/authStore';
 import { useLeaderboardStore } from '../store/leaderboardStore';
@@ -161,6 +163,9 @@ export default function HomeScreen({ navigation }) {
   const { isOffline } = useNetworkStatus();
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  // Feuille de vérification montée ICI plutôt que d'envoyer vers le Profil :
+  // le bandeau promet un geste, deux écrans de plus le rendraient dissuasif.
+  const [emailSheet, setEmailSheet] = useState(false);
   const loadLeaderboard = useLeaderboardStore((s) => s.load);
   const top = useLeaderboardStore((s) => s.data);
   const lbError = useLeaderboardStore((s) => s.error);
@@ -262,6 +267,17 @@ export default function HomeScreen({ navigation }) {
 
         {/* Corps cream */}
         <View style={styles.body}>
+          {/* Rappel de confirmation d'adresse. EN PREMIER dans le corps, avant
+              même le choix du mode : plus bas il serait noyé, et le joueur ne
+              découvrirait le problème que le jour où il perd son mot de passe.
+              Il ne pousse rien vers le bas quand il n'a pas lieu d'être (le
+              composant rend `null`). */}
+          <EmailNudge
+            user={user}
+            onPress={() => setEmailSheet(true)}
+            style={styles.emailNudge}
+          />
+
           {/* Choisir un mode — cartes horizontales → GameStart pré-réglé */}
           <SectionHeader title={t('home.chooseMode')} color={sectionColor} />
           <ScrollView
@@ -518,6 +534,15 @@ export default function HomeScreen({ navigation }) {
           )}
         </View>
       </ScrollView>
+
+      {/* Vérification d'adresse — même feuille qu'au Profil. `refreshProfile`
+          recharge `email_verified` : le bandeau disparaît de lui-même. */}
+      <EmailVerifySheet
+        visible={emailSheet}
+        onClose={() => setEmailSheet(false)}
+        email={user?.email}
+        onVerified={refreshProfile}
+      />
     </SafeAreaView>
   );
 }
@@ -558,6 +583,9 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingTop: spacing.xl,
     paddingBottom: spacing.xxl,
   },
+  // Séparé du premier bloc de contenu ; aucune marge propre quand le bandeau
+  // ne s'affiche pas (le composant rend `null`, la marge disparaît avec lui).
+  emailNudge: { marginBottom: spacing.lg },
 
   // Choisir un mode
   modesScroll: {

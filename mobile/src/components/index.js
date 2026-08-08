@@ -15,6 +15,7 @@ export { default as AuthField } from './AuthField';
 export { default as SegmentedTabs } from './SegmentedTabs';
 export { default as CodeInput } from './CodeInput';
 export { default as EmailVerifySheet } from './EmailVerifySheet';
+export { default as EmailNudge } from './EmailNudge';
 export { default as ChoiceChips } from './ChoiceChips';
 export { default as FAB } from './FAB';
 

@@ -135,6 +135,11 @@ régénérer avec `/impeccable document`.
     `EMAIL_ALREADY_VERIFIED`. Front : mobile `components/EmailVerifySheet.js` (ligne Email
     du Profil, pastille « Non vérifié ») ; admin : pastille dans le tiroir Utilisateurs.
     Tests : `backend/tests/emailVerification.test.js`.
+  · **Relance** : `components/EmailNudge.js`, bandeau en tête du corps de l'Accueil.
+    Canal choisi faute d'ordonnanceur serveur (le push en exigerait un) et parce qu'une
+    relance PAR EMAIL irait à l'adresse justement non prouvée. Fermable, mais revient
+    après **7 jours** (`crv.email_nudge_dismissed_at`) : la conséquence, elle, ne
+    disparaît pas. Disparaît seul quand `email_verified` passe à vrai.
 - **Mot de passe oublié** (`src/services/passwordResetService.js`) : code à **6 chiffres
   par EMAIL** (Resend), Redis `pwdreset:<user_id>`, TTL 15 min, 3 tentatives, 5 demandes/h
   par compte. `POST /auth/forgot-password` répond **204 systématiquement** (anti-énumération,

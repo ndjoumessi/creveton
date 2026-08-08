@@ -162,6 +162,12 @@
       "badgeTop": "TOP",
       "badgeGood": "BIEN",
       "viewAll": "Voir tout l'historique"
+    },
+    "emailNudge": {
+      "title": "Confirme ton adresse email",
+      "body": "Sans adresse confirmée, impossible de récupérer ton compte si tu oublies ton mot de passe.",
+      "cta": "Confirmer maintenant →",
+      "dismiss": "Masquer ce rappel"
     }
   },
   "gameStart": {
