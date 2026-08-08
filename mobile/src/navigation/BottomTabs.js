@@ -1,4 +1,6 @@
-// Onglets principaux — Accueil | Jouer | Tournois | Stats | Profil.
+// Onglets principaux — Accueil | Jouer | Tournois | Profil.
+// Réduit de 6 à 4 le 2026-08-08 : « Défis » et « Stats » vivent désormais dans
+// MainStack (voir le commentaire au-dessus de <Tab.Screen name="Profile">).
 // Fond blanc, ombre haute douce. Onglet actif : icône + label or, point or
 // sous l'icône. Inactif : gris (#9ca3af). Hauteur 80 + safe area bas.
 
@@ -10,10 +12,8 @@ import { useTranslation } from 'react-i18next';
 import HomeScreen from '../screens/HomeScreen';
 import GameStartScreen from '../screens/GameStartScreen';
 import TournamentScreen from '../screens/TournamentScreen';
-import ChallengesScreen from '../screens/ChallengesScreen';
-import StatsScreen from '../screens/StatsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import { Home, Gamepad2, Trophy, Swords, BarChart2, User } from 'lucide-react-native';
+import { Home, Gamepad2, Trophy, User } from 'lucide-react-native';
 import { tournaments as tournamentsApi } from '../services/endpoints';
 import { fonts, shadow, spacing, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
@@ -21,13 +21,11 @@ import Icon from '../components/Icon';
 
 const Tab = createBottomTabNavigator();
 
-const ICONS = { Home, Play: Gamepad2, Tournaments: Trophy, Challenges: Swords, Stats: BarChart2, Profile: User };
+const ICONS = { Home, Play: Gamepad2, Tournaments: Trophy, Profile: User };
 const LABEL_KEYS = {
   Home: 'tabs.home',
   Play: 'tabs.play',
   Tournaments: 'tabs.tournaments',
-  Challenges: 'tabs.challenges',
-  Stats: 'tabs.stats',
   Profile: 'tabs.profile',
 };
 
@@ -108,8 +106,15 @@ export default function BottomTabs() {
           tabBarBadgeStyle: styles.badge,
         }}
       />
-      <Tab.Screen name="Challenges" component={ChallengesScreen} />
-      <Tab.Screen name="Stats" component={StatsScreen} />
+      {/* 6 onglets → 4 (08-2026). « Défis » et « Stats » sont passés dans
+          MainStack : six onglets dépassaient la recommandation iOS/Android
+          (3 à 5) et diluaient l'action principale. Aucun écran n'est supprimé.
+          · Défis      → bouton « Défier un ami » (écran Jouer), résultat de duel,
+                         notification push, et le stub `Challenge`.
+          · Stats      → en-tête « Mes stats » de l'Accueil, et le Profil.
+          Les appels imbriqués `navigate('Tabs', { screen: 'Challenges' })` ont
+          été convertis en `navigate('Challenges')` : les deux écrans ne sont
+          plus enfants du navigateur d'onglets. */}
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

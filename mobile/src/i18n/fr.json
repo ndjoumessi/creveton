@@ -409,7 +409,8 @@
       "games": "Parties",
       "successRate": "Taux",
       "streak": "Streak",
-      "rank": "Rang"
+      "rank": "Rang",
+      "openStats": "Voir mes statistiques"
     },
     "level": "Niveau {{n}} · {{name}}",
     "edit": "Modifier le profil",

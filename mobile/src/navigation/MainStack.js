@@ -11,6 +11,8 @@ import TournamentLiveScreen from '../screens/TournamentLiveScreen';
 import SessionsHistoryScreen from '../screens/SessionsHistoryScreen';
 import SessionDetailScreen from '../screens/SessionDetailScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
+import ChallengesScreen from '../screens/ChallengesScreen';
+import StatsScreen from '../screens/StatsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -30,6 +32,21 @@ export default function MainStack() {
       <Stack.Screen
         name="SessionDetail"
         component={SessionDetailScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      {/* Défis 1v1 — ANCIEN onglet, passé en pile (08-2026, 6 onglets → 4).
+          Atteignable : « Défier un ami » (Jouer), fin de duel (Résultats),
+          notification push, et le stub `Challenge`. */}
+      <Stack.Screen
+        name="Challenges"
+        component={ChallengesScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      {/* Statistiques & classement — ANCIEN onglet, passé en pile. Atteignable :
+          en-tête « Mes stats » de l'Accueil, et Profil › Mes statistiques. */}
+      <Stack.Screen
+        name="Stats"
+        component={StatsScreen}
         options={{ animation: 'slide_from_right' }}
       />
       {/* Changement de mot de passe — atteignable depuis Profil › Sécurité. */}

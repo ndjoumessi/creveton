@@ -10,7 +10,7 @@ import {
   Text,
   Dimensions,
 } from 'react-native';
-import { BarChart2, Trophy, Target, TrendingUp, WifiOff } from 'lucide-react-native';
+import { BarChart2, Trophy, Target, TrendingUp, WifiOff, ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Screen, Avatar, AppButton, Title, Heading, Body, Label, Skeleton, ErrorScreen, EmptyState, XpBar, FillBar, Podium, SessionCard, MiniLineChart, SegmentedTabs, PendingSyncBadge } from '../components';
 import Icon from '../components/Icon';
@@ -128,6 +128,17 @@ export default function StatsScreen({ navigation }) {
     >
       {/* Header sombre */}
       <View style={styles.header}>
+        {/* Retour : écran passé d'ONGLET à pile (08-2026, 6 onglets → 4) — sans
+            ça, plus aucune sortie une fois entré depuis l'Accueil ou le Profil. */}
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back', 'Retour')}
+        >
+          <Icon icon={ArrowLeft} size={24} color={colors.textOnDark} />
+        </Pressable>
         <View style={styles.headerRow}>
           <Avatar name={user?.name || ''} size={72} gold uri={avatarUri(user)} />
           <View style={styles.headerInfo}>
@@ -640,6 +651,13 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingTop: spacing.xxl,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
+  },
+  backBtn: {
+    minWidth: MIN_TOUCH,
+    minHeight: MIN_TOUCH,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   headerInfo: { flex: 1 },

@@ -27,7 +27,7 @@ function routeTap(data) {
         break;
       case 'challenge_received':
       case 'challenge_result':
-        navigationRef.navigate('Tabs', { screen: 'Challenges' });
+        navigationRef.navigate('Challenges');
         break;
       case 'level_up':
         navigationRef.navigate('Tabs', { screen: 'Profile' });

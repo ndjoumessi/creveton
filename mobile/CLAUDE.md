@@ -39,7 +39,17 @@ Pas de simulateur dispo ici : valider via `expo export` (build) + `expo start --
   - `notifications.js`, `socket.js`.
 - `store/` — `authStore`, `questionsStore`, `gameStore`, `leaderboardStore`, `networkStore` (état réseau), `offlineQueue` (parties jouées hors ligne, persistée AsyncStorage) (zustand).
 - `components/` — bibliothèque partagée, l'essentiel ré-exporté par `components/index.js` (sauf `Icon`/`NetworkWatcher`/`OfflineBanner`, importés en direct). Voir **« Bibliothèque de composants partagés »** plus bas : **réutiliser avant de coder un nouvel écran**.
-- `navigation/` — `AppNavigator` (AuthStack si non authentifié, sinon MainStack) → `AuthStack` (Splash/Register/OTP/Login), `MainStack` (Tabs + SessionsHistory/SessionDetail/ChangePassword/Quiz/Results/Challenge/TournamentLive), `BottomTabs` (Accueil/Jouer/Tournois/Défis/Stats/Profil).
+- `navigation/` — `AppNavigator` (AuthStack si non authentifié, sinon MainStack) → `AuthStack` (Splash/Register/OTP/Login), `MainStack` (Tabs + SessionsHistory/SessionDetail/ChangePassword/**Challenges**/**Stats**/Quiz/Results/Challenge/TournamentLive), `BottomTabs` (**4 onglets** : Accueil/Jouer/Tournois/Profil).
+  · **6 onglets → 4 (2026-08-08).** Six dépassait la recommandation iOS/Android (3–5) et diluait
+    l'action principale. `Challenges` et `Stats` sont passés en écrans de **pile** — aucun écran
+    supprimé. Conséquences à connaître avant d'y toucher :
+    – La navigation vers eux est **à plat** (`navigate('Challenges')`), plus imbriquée
+      (`navigate('Tabs', { screen: 'Challenges' })`) : ils ne sont plus enfants du navigateur
+      d'onglets. 4 appels ont été convertis (GameStart, Results, push, stub `Challenge`).
+    – Les deux écrans ont reçu un **bouton retour** (`ArrowLeft` + `goBack`) : en tant qu'onglets
+      ils n'en avaient pas besoin, en pile leur absence piégeait l'utilisateur.
+    – Portes d'entrée : Défis ← « Défier un ami » (Jouer), fin de duel, notification push ;
+      Stats ← bandeau de stats du Profil (pressable) et « Voir le classement » de l'Accueil.
 - `screens/` — **17 écrans** :
   - Auth : `SplashScreen` (ouverture animée → Login), `LoginScreen`, `RegisterScreen` (inscription 3 étapes), `OTPScreen` (6 chiffres, timer, renvoi).
   - Tabs : `HomeScreen` (tableau de bord : Jouer, tournois, podium, stats), `GameStartScreen` (onglet Jouer : grille thèmes + niveau + mode), `TournamentScreen` (liste tournois par statut + inscription), `ChallengesScreen` (hub duels 1v1 : onglets + bottom sheet « Nouveau défi »), `StatsScreen` (« Mes stats » KPI/courbe/historique + « Classement »), `ProfileScreen` (photo, réglages, badges, wallet, déconnexion).

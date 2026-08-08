@@ -16,10 +16,7 @@ export default function ChallengeScreen({ navigation }) {
   useEffect(() => {
     // « Challenges » est un onglet imbriqué sous le navigateur « Tabs » ; on passe donc
     // les params via la forme imbriquée (comme ResultsScreen/usePushNotifications).
-    navigation.replace('Tabs', {
-      screen: 'Challenges',
-      params: { openCreate: true },
-    });
+    navigation.replace('Challenges', { openCreate: true });
   }, [navigation]);
 
   // Pas de flash de contenu pendant la redirection.

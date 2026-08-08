@@ -519,8 +519,17 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* B. Rangée de stats (green700) — liseré haut coloré selon le rang */}
-      <View style={[styles.statsRow, { borderTopWidth: 3, borderTopColor: stripBorderColor }]}>
+      {/* B. Rangée de stats (green700) — liseré haut coloré selon le rang.
+          Devenue PRESSABLE (08-2026) : « Stats » ayant quitté la barre d'onglets,
+          c'est ici que passe l'accès aux statistiques détaillées et au classement.
+          Le bandeau affichait déjà ces quatre chiffres — le rendre cliquable est
+          le geste attendu, plutôt qu'une ligne de menu supplémentaire. */}
+      <Pressable
+        onPress={() => navigation.navigate('Stats')}
+        accessibilityRole="button"
+        accessibilityLabel={t('profile.stats.openStats', 'Voir mes statistiques')}
+        style={[styles.statsRow, { borderTopWidth: 3, borderTopColor: stripBorderColor }]}
+      >
         <ProfStat value={String(stats.totalGames || 0)} label={t('profile.stats.games', 'Parties')} />
         <ProfStat
           divider
@@ -539,7 +548,7 @@ export default function ProfileScreen() {
           valueColor={rankValueColor}
           label={t('profile.stats.rank', 'Rang')}
         />
-      </View>
+      </Pressable>
 
       <View style={styles.body}>
         {/* C. MON COMPTE */}

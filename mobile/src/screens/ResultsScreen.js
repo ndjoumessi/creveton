@@ -107,7 +107,7 @@ export default function ResultsScreen({ route, navigation }) {
   // même défi, et drawForMode ne sait pas tirer un set de défi).
   const goChallenges = () => {
     reset();
-    navigation.navigate('Tabs', { screen: 'Challenges' });
+    navigation.navigate('Challenges');
   };
 
   // « Rejouer » = relancer immédiatement une partie avec les MÊMES réglages

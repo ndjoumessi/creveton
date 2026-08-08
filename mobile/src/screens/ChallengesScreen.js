@@ -20,7 +20,7 @@ import {
   RefreshControl,
   StyleSheet,
 } from 'react-native';
-import { Swords } from 'lucide-react-native';
+import { Swords, ArrowLeft } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import {
   Screen,
@@ -288,6 +288,17 @@ export default function ChallengesScreen({ navigation, route }) {
         <View style={styles.headerTop}>
           <View style={styles.headerTitleWrap}>
             <View style={styles.titleRow}>
+              {/* Retour : cet écran était un ONGLET, il n'avait donc pas besoin
+                  de sortie. Passé en pile (08-2026, 6 onglets → 4), il en faut
+                  une — le geste de retour ne suffit pas sur Android. */}
+              <Pressable
+                onPress={() => navigation.goBack()}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.back', 'Retour')}
+              >
+                <Icon icon={ArrowLeft} size={24} color={colors.textOnDark} />
+              </Pressable>
               <Icon icon={Swords} size={22} color={colors.textOnDark} />
               <Title color={colors.textOnDark}>{t('challengesHub.title')}</Title>
             </View>

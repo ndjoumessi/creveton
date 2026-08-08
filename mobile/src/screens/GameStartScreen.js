@@ -452,12 +452,9 @@ export default function GameStartScreen({ navigation, route }) {
         title={t('gameStart.misc.challengeFriend')}
         variant="ghost"
         size="md"
-        onPress={() =>
-          navigation.navigate('Tabs', {
-            screen: 'Challenges',
-            params: { openCreate: true },
-          })
-        }
+        // `Challenges` est un écran de la PILE depuis le passage à 4 onglets
+        // (08-2026) : navigation à plat, plus imbriquée sous `Tabs`.
+        onPress={() => navigation.navigate('Challenges', { openCreate: true })}
         style={styles.challenge}
       />
     </Screen>

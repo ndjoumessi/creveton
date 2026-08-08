@@ -409,7 +409,8 @@
       "games": "Games",
       "successRate": "Rate",
       "streak": "Streak",
-      "rank": "Rank"
+      "rank": "Rank",
+      "openStats": "View my statistics"
     },
     "level": "Level {{n}} · {{name}}",
     "edit": "Edit profile",
