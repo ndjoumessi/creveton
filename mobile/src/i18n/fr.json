@@ -304,7 +304,8 @@
         "grand": "Grand",
         "premium": "Premium"
       }
-    }
+    },
+    "emptyCta": "Jouer une partie"
   },
   "challenge": {
     "title": "Challenges",
@@ -659,7 +660,8 @@
     "loadMore": "Charger plus",
     "empty": "Aucune partie jouée",
     "playNow": "Jouer maintenant",
-    "noMatch": "Aucune partie pour ce filtre"
+    "noMatch": "Aucune partie pour ce filtre",
+    "clearFilters": "Retirer les filtres"
   },
   "sessionDetail": {
     "title": "Détail de la partie",

@@ -39,6 +39,9 @@ export default function AppButton({
   const { colors, isDark } = useTheme();
   const VARIANTS = useMemo(() => makeVariants(colors, isDark), [colors, isDark]);
   const isDisabled = disabled || loading;
+  // `isInert` = réellement indisponible, par opposition à « occupé » (loading).
+  // Seul ce cas change d'apparence ; le chargement garde celle du variant.
+  const isInert = disabled && !loading;
   const v = VARIANTS[variant] || VARIANTS.primary;
   const s = SIZES[size] || SIZES.md;
 
@@ -80,15 +83,43 @@ export default function AppButton({
           styles.base,
           { height: s.height, paddingHorizontal: s.px },
           v.container,
-          isDisabled && styles.disabled,
+          // Désactivé : on REMPLACE l'apparence du variant au lieu de la
+          // ternir. Un `opacity: 0.45` posé sur un `ghost` (déjà pâle) sur fond
+          // sombre donnait un contrôle qui se lisait comme un bouton actif
+          // discret — le libellé « Indisponible » portait l'info tout seul.
+          // Un fond neutre plein rend l'état inerte quel que soit le variant
+          // de départ, et se comporte pareil en clair et en sombre.
+          // Le neutre diffère par thème : en clair, `surfaceCream` est le crème
+          // (#fdf6e9) — 1.07:1 sur une carte blanche, donc invisible. On prend
+          // le gris `border` comme APLAT, qui donne 1.24:1.
+          isInert && {
+            backgroundColor: isDark ? colors.surfaceCream : colors.border,
+            borderColor: isDark ? colors.border : colors.borderInput,
+            borderWidth: 1,
+          },
         ]}
       >
         {loading ? (
+          // En chargement on GARDE l'apparence du variant : neutraliser un CTA
+          // primaire pendant sa propre action le ferait passer pour cassé.
           <ActivityIndicator color={v.text.color} />
         ) : (
           <View style={styles.content}>
             {iconLeft}
-            <Text style={[styles.text, { fontSize: s.font }, v.text, textStyle]}>
+            <Text
+              style={[
+                styles.text,
+                { fontSize: s.font },
+                v.text,
+                // Le libellé n'est PAS terni : c'est lui qui porte le sens
+                // (« Indisponible », « Complet »), il doit rester lisible — AA
+                // exigé. Le signal de désactivation vient de l'aplat neutre et
+                // de l'absence d'or, pas d'un texte pâle. 8.33:1 en clair,
+                // 5.63:1 en sombre.
+                isInert && { color: isDark ? colors.textFaint : colors.textBody },
+                textStyle,
+              ]}
+            >
               {title}
             </Text>
             {iconRight}
@@ -108,7 +139,6 @@ const styles = StyleSheet.create({
   },
   content: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   text: { fontFamily: fonts.titleBold, letterSpacing: 0.2 },
-  disabled: { opacity: 0.45 },
 });
 
 // En sombre, `ghost` (contour vert) passe au vert clair (green300) pour rester

@@ -199,9 +199,16 @@ export default function SessionsHistoryScreen({ navigation }) {
     // Filtre actif mais aucune partie ne correspond (des parties existent).
     if (filtered.length === 0 && rows && rows.length > 0 && filtering) {
       return (
+        // L'action attendue ici n'est PAS de jouer (des parties existent, elles
+        // sont juste masquées) mais de retirer le filtre qui les cache.
         <EmptyState
           icon="🔍"
           title={t('sessionsHistory.noMatch', 'Aucune partie pour ce filtre')}
+          ctaLabel={t('sessionsHistory.clearFilters', 'Retirer les filtres')}
+          onCta={() => {
+            setSelectedTheme('all');
+            setSelectedLevel('all');
+          }}
           style={styles.empty}
           titleStyle={styles.emptyTitle}
         />

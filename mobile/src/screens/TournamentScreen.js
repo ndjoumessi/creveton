@@ -173,10 +173,16 @@ export default function TournamentScreen() {
             refreshing={items.length > 0 && refreshing}
             onRefresh={onRefresh}
             ListEmptyComponent={
+              // Sortie obligatoire : les trois onglets (Actifs / À venir /
+              // Terminés) peuvent être vides en même temps, et l'écran occupait
+              // alors la hauteur entière pour dire « reviens plus tard », sans
+              // autre issue que la barre d'onglets. On propose de jouer.
               <EmptyState
                 icon="🏆"
                 title={tr('tournaments.empty')}
                 message={tr('tournaments.emptySubtitle')}
+                ctaLabel={tr('tournaments.emptyCta')}
+                onCta={() => navigation.navigate('Play')}
                 style={styles.empty}
               />
             }
