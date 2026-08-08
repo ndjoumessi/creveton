@@ -44,7 +44,7 @@ import { THEMES, LEVELS } from '../constants/config';
 import { challenges, users } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { useGameStore } from '../store/gameStore';
-import { timeAgo } from '../utils/format';
+import { timeAgo, themeLabel } from '../utils/format';
 import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
@@ -382,7 +382,7 @@ export default function ChallengesScreen({ navigation, route }) {
           <ChoiceChips
             layout="grid"
             haptic
-            options={THEMES.map((th) => ({ key: th.key, label: th.label, emoji: th.emoji }))}
+            options={THEMES.map((th) => ({ key: th.key, label: themeLabel(th.key), emoji: th.emoji }))}
             value={theme}
             onChange={setTheme}
           />

@@ -21,6 +21,7 @@ import { AppButton, Skeleton, SessionCard, ErrorScreen, EmptyState, Heading, Lab
 import { users as usersApi } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { THEMES, LEVELS } from '../constants/config';
+import { themeLabel, levelLabel } from '../utils/format';
 import { fonts, radius, spacing, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
@@ -133,7 +134,7 @@ export default function SessionsHistoryScreen({ navigation }) {
         {THEMES.map((th) => (
           <FilterPill
             key={th.key}
-            label={th.label}
+            label={themeLabel(th.key)}
             emoji={th.emoji}
             active={selectedTheme === th.key}
             onPress={() => setSelectedTheme(th.key)}
@@ -153,7 +154,7 @@ export default function SessionsHistoryScreen({ navigation }) {
         {LEVELS.map((lv) => (
           <FilterPill
             key={lv.key}
-            label={lv.label}
+            label={levelLabel(lv.key)}
             active={selectedLevel === lv.key}
             onPress={() => setSelectedLevel(lv.key)}
             colors={colors}

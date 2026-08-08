@@ -42,7 +42,7 @@ import { TIMED_MODES } from '../constants/config';
 import { hapticSuccess, hapticLight } from '../utils/haptics';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { getOptionText, normalizeLang } from '../utils/i18n';
-import { formatDayMonth } from '../utils/format';
+import { formatDayMonth, formatNumber } from '../utils/format';
 import { colors, radius, spacing, motion } from '../constants/theme';
 
 // Android : LayoutAnimation nécessite ce flag (no-op sous Fabric / iOS).
@@ -788,8 +788,7 @@ function ResultsContent({ result, isMixed, mode, theme, level, onReplay, onHome,
               outlinedDots
               showLastValue
               scaleToData
-              lastValueColor={colors.green700}
-              formatValue={(v) => Number(v).toLocaleString('fr-FR')}
+              formatValue={formatNumber}
               xLabels={progressXLabels}
             />
           </AppCard>

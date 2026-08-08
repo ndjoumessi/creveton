@@ -13,10 +13,22 @@ export function avatarUri(user) {
   return /^https?:\/\//.test(path) ? path : `${SOCKET_URL}${path}`;
 }
 
+// Locale d'affichage dérivée de la langue active. Un seul endroit : le
+// `toLocaleString('fr-FR')` était recopié dans six fichiers (scores du podium,
+// des cartes de partie, des KPI, de la courbe, du détail…), tous figés en
+// français — « 40 067 » là où l'anglais attend « 40,067 ».
+export function localeTag() {
+  return i18n.language?.startsWith('en') ? 'en-GB' : 'fr-FR';
+}
+
+// Nombre → chaîne groupée dans la langue active. Helper partagé (cf. localeTag).
+export function formatNumber(n) {
+  return Number(n || 0).toLocaleString(localeTag());
+}
+
 // Montants en FCFA — entiers, pas de sous-unité (API §1)
 export function formatFcfa(amount) {
-  const n = Number(amount) || 0;
-  return `${n.toLocaleString('fr-FR')} FCFA`;
+  return `${formatNumber(amount)} FCFA`;
 }
 
 // Date ISO → relatif court (ex. « il y a 3 j »)
@@ -36,12 +48,14 @@ export function timeAgo(iso) {
   return i18n.t('common.agoMonths', { n: mo });
 }
 
-// Date ISO → format court FR (ex. 25 juin, 19:00)
+// Date ISO → format court localisé (ex. « 25 juin, 19:00 » / « 25 Jun, 19:00 »).
+// La locale était figée en fr-FR : en anglais, les tournois annonçaient
+// « 2 juil., 03:37 ». On suit la langue active, comme `formatDayMonth`.
 export function formatDateTime(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('fr-FR', {
+  return d.toLocaleString(localeTag(), {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
@@ -82,12 +96,22 @@ export function formatTimer(seconds) {
   return `${m}:${String(r).padStart(2, '0')}`;
 }
 
+// Libellés de thème et de difficulté — LOCALISÉS. `THEMES`/`LEVELS` (config.js)
+// portent des libellés français en dur : ces deux helpers les renvoyaient tels
+// quels, si bien qu'en anglais l'écran Jouer disait « Geography · Beginner »
+// (localisé sur place) pendant que l'historique, les statistiques, les pastilles
+// de tournoi et le détail de partie disaient « Géographie · Débutant ». Même
+// donnée, deux langues, parfois sur le même écran. On traduit ici, comme
+// `timeAgo` le fait déjà, plutôt qu'à chaque appel — les clés existent depuis
+// toujours sous `gameStart.themes.*` / `gameStart.levels.*`.
 export function levelLabel(key) {
-  return LEVELS.find((l) => l.key === key)?.label || key;
+  const fallback = LEVELS.find((l) => l.key === key)?.label || key;
+  return key ? i18n.t(`gameStart.levels.${key}`, { defaultValue: fallback }) : fallback;
 }
 
 export function themeLabel(key) {
-  return THEMES.find((t) => t.key === key)?.label || key;
+  const fallback = THEMES.find((t) => t.key === key)?.label || key;
+  return key ? i18n.t(`gameStart.themes.${key}`, { defaultValue: fallback }) : fallback;
 }
 
 export function themeEmoji(key) {

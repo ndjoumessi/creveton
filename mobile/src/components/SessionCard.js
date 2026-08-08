@@ -26,9 +26,9 @@ import { fonts, fontSizes, radius, spacing, motion } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { hapticLight } from '../utils/haptics';
-import { themeEmoji, themeLabel, levelLabel, timeAgo } from '../utils/format';
+import { themeEmoji, themeLabel, levelLabel, timeAgo, formatNumber } from '../utils/format';
 
-const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
+const fmt = formatNumber;
 
 // Emoji de repli pour les modes chronométrés (thème null → mix auto).
 const MODE_EMOJI = { normal: '⚡', blitz: '⏱', marathon: '🏃' };

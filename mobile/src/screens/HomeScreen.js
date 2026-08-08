@@ -48,7 +48,7 @@ import {
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { formatDateTime, avatarUri } from '../utils/format';
+import { formatDateTime, avatarUri, formatNumber } from '../utils/format';
 
 // Pastels des tuiles d'icônes de stats (décoratif, non sémantique).
 // Import statique de `colors` → valeurs claires figées dans les deux thèmes.
@@ -67,7 +67,7 @@ const PLAY_MODES = [
   { key: 'marathon', emoji: '🏃', color: colors.gold500, bg: colors.goldVeil },
 ];
 
-const fmtNum = (n) => Number(n || 0).toLocaleString('fr-FR');
+const fmtNum = formatNumber;
 
 // Couleur du taux de réussite : vert > 70 %, or 50–70 %, rouge < 50 %.
 function rateColor(pct, colors) {

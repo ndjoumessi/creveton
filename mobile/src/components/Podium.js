@@ -24,8 +24,9 @@ import Skeleton from './Skeleton';
 import { fonts, fontSizes, radius, spacing } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { medalEmoji, SILVER, BRONZE } from '../utils/rank';
+import { formatNumber } from '../utils/format';
 
-const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
+const fmt = formatNumber;
 
 // Ordre visuel des marches : index données 1 (2e) · 0 (1er) · 2 (3e).
 const ORDER = [1, 0, 2];

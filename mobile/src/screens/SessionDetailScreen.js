@@ -28,11 +28,11 @@ import { parseApiError } from '../services/api';
 import { useTheme } from '../hooks/useTheme';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
-import { levelLabel, formatDateTime } from '../utils/format';
+import { levelLabel, formatDateTime, formatNumber } from '../utils/format';
 import { radius, spacing } from '../constants/theme';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
-const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
+const fmt = formatNumber;
 
 // État visuel d'une option en relecture : bonne réponse → vert, choix erroné du
 // joueur → rouge, reste neutre. Aucune interaction (disabled).

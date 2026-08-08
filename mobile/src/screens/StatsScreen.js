@@ -27,7 +27,7 @@ import {
   MIN_TOUCH,
 } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
-import { levelProgress, avatarUri, formatDayMonth } from '../utils/format';
+import { levelProgress, avatarUri, formatDayMonth, themeLabel, formatNumber } from '../utils/format';
 import { normalizeLang } from '../utils/i18n';
 import { medalColor } from '../utils/rank';
 import { hapticLight } from '../utils/haptics';
@@ -43,7 +43,7 @@ const TABS = [
 // une invitation — la seule action qui change vraiment la situation.
 const MIN_RANKED_PLAYERS = 3;
 
-const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
+const fmt = formatNumber;
 
 // Médailles / couleurs de rang : voir `utils/rank.js` (medalColor ici ; le
 // podium top 3 est rendu par le composant partagé `Podium`, variante card).
@@ -440,7 +440,6 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
                 outlinedDots
                 showLastValue
                 scaleToData
-                lastValueColor={colors.green700}
                 formatValue={fmt}
               />
               <View style={styles.chartAxis}>
@@ -506,13 +505,13 @@ function StatsTab({ stats, history, loading, error, isOffline, onRetry, onPlay, 
             : {
                 onPress: () => onPlayTheme?.(theme.key),
                 accessibilityRole: 'button',
-                accessibilityLabel: `${theme.label} — ${t('stats.misc.themePlayCta')}`,
+                accessibilityLabel: `${themeLabel(theme.key)} — ${t('stats.misc.themePlayCta')}`,
               };
           return (
             <RowWrap key={theme.key} {...rowProps} style={[styles.themeRow, i === 0 && styles.themeRowFirst]}>
               <View style={styles.themeHead}>
                 <Body weight="medium" size="md" style={[styles.themeLabel, !played && styles.themeLabelMuted]}>
-                  {theme.emoji} {theme.label}
+                  {theme.emoji} {themeLabel(theme.key)}
                 </Body>
                 <View style={styles.themeMetaRow}>
                   <Label size="xs" color={played ? undefined : colors.green500}>

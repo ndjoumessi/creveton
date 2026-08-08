@@ -58,7 +58,7 @@ export default function MiniLineChart({
   // baseline (requiert paddingBottom ≥ 14, sinon ignoré pour ne pas mordre la courbe).
   xLabels,
 }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const reduceMotion = useReduceMotion();
   const autoWidth = width == null || width === 'auto';
   const [measuredW, setMeasuredW] = useState(0);
@@ -407,14 +407,21 @@ export default function MiniLineChart({
             strokeWidth={2.5}
           />
         ) : null}
-        {/* Valeur au-dessus du dernier point (masquée si son tooltip est ouvert). */}
+        {/* Valeur au-dessus du dernier point (masquée si son tooltip est ouvert).
+            La couleur est décidée ICI et non par l'appelant : les deux écrans
+            passaient `green700`, qui donne 9.16:1 sur une carte blanche mais
+            1.50:1 sur la carte sombre (#16331f) — la valeur du dernier point,
+            soit le chiffre le plus important de la courbe, était illisible en
+            thème sombre. `green300` remonte à 6.72:1 sur ce fond (et resterait à
+            2.05:1 sur blanc, d'où la bascule et non un remplacement). Une
+            surcharge explicite de l'appelant reste prioritaire. */}
         {showLastValue && sel !== n - 1 && !lastAtGrad ? (
           <SvgText
             x={points[n - 1].x}
             y={lastLabelY}
             fontSize={11}
             fontFamily={fonts.titleBold}
-            fill={lastValueColor || stroke}
+            fill={lastValueColor || (isDark ? colors.green300 : colors.green700)}
             textAnchor={n === 1 ? 'middle' : 'end'}
           >
             {formatValue(data[n - 1])}
