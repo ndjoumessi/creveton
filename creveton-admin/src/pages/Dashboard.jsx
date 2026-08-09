@@ -617,7 +617,7 @@ export default function Dashboard() {
         </div>
 
         {/* Col 2 — À modérer */}
-        <div className={`card card-pad dash-mod-card ${pending.length > 0 ? 'has-pending' : 'is-clear'}`}>
+        <div className="card card-pad dash-mod-card">
           <div className="dash-card-head">
             <div>
               <h3 className="card-title">{t('dashboard.moderation.title')}</h3>
@@ -674,9 +674,14 @@ export default function Dashboard() {
               </div>
             </>
           )}
-          <div className="dash-activity-foot">
-            <Link className="card-link" to="/questions">{t('dashboard.moderation.manage')} <ArrowRight size={14} /></Link>
-          </div>
+          {/* Pied de carte SEULEMENT quand il y a une file : l'état vide porte
+              déjà son propre « Gérer les questions », et les deux s'affichaient
+              l'un sous l'autre — deux fois le même lien vers la même page. */}
+          {pending.length > 0 && (
+            <div className="dash-activity-foot">
+              <Link className="card-link" to="/questions">{t('dashboard.moderation.manage')} <ArrowRight size={14} /></Link>
+            </div>
+          )}
         </div>
 
         {/* Col 3 — Système (carte sombre) */}

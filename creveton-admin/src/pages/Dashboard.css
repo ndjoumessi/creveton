@@ -84,9 +84,14 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Accent latéral : or si des questions attendent, vert si à jour. */
-.dash-mod-card.has-pending { border-left: 3px solid var(--gold); }
-.dash-mod-card.is-clear { border-left: 3px solid var(--green500); }
+/* Pas d'accent latéral d'état sur cette carte. Il y en avait deux (or si une
+   file attend, vert si à jour) et ils encodaient une quatrième fois un fait
+   déjà impossible à manquer : soit la carte affiche une coche verte et « Tout
+   est à jour », soit elle affiche un compteur ambre, une barre d'outils et la
+   liste des questions. Sur une rangée de trois cartes, un liseré permanent se
+   lit comme un ornement, pas comme un état — et l'or, que la charte réserve aux
+   CTA, à la nav active et aux récompenses, n'avait rien à faire sur une file de
+   modération. */
 
 .dash-mod-list { display: flex; flex-direction: column; gap: 10px; }
 .dash-q-item {
