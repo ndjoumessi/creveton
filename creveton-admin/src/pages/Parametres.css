@@ -36,6 +36,23 @@
    Un avertissement qui suit les commandes arrive trop tard. */
 .set-note--lead { margin-top: 0; margin-bottom: 16px; }
 
+/* Alertes non encore branchées : la mention vit sur la LIGNE, pas seulement dans
+   le bandeau du haut, pour qu'un admin qui arrive au milieu de la liste la voie.
+   Doublée de la bascule désactivée — la couleur ne code jamais seule. */
+.set-notif-row-end { display: inline-flex; align-items: center; gap: 12px; }
+.set-notif-soon {
+  font-family: var(--font-body);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--pastel-amber-fg-deep);
+  background: var(--pastel-amber);
+  border-radius: var(--radius-pill);
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
 /* ── Feature flags ── */
 .set-flags { display: flex; flex-direction: column; gap: 14px; }
 .set-flag { display: flex; align-items: center; justify-content: space-between; gap: 16px; }

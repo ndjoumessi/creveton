@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-06-25T00:00:00.000Z",
+  "generatedAt": "2026-08-09T00:00:00.000Z",
   "title": "Design System: Creveton Admin",
   "extensions": {
     "colorMeta": {
@@ -13,9 +13,9 @@
     "typographyMeta": {
       "display": { "displayName": "Display", "purpose": "Grandes valeurs KPI ; la donnée qu'on lit de loin." },
       "headline": { "displayName": "Headline", "purpose": "Titres de page." },
-      "title": { "displayName": "Title", "purpose": "Titres de carte, noms de joueurs et de tournois." },
+      "title": { "displayName": "Title", "purpose": "Titres de carte, noms propres (joueurs, tournois, membres, titulaire de compte) et marque. Un nom propre est un titre : Outfit, jamais la fonte de corps." },
       "body": { "displayName": "Body", "purpose": "Corps, cellules de table, valeurs." },
-      "label": { "displayName": "Label", "purpose": "En-têtes de colonnes et titres de section, en majuscules espacées." }
+      "label": { "displayName": "Label", "purpose": "En-têtes de colonnes et titres de section, en majuscules espacées." }, "mono": { "displayName": "Mono", "purpose": "Identifiants machine comparés caractère par caractère (session, transaction, clé). Pile système, jamais de prose ni de chiffre métier." }
     },
     "shadows": [
       { "name": "rest", "value": "0 1px 3px rgba(0,0,0,0.08)", "purpose": "Cartes, KPI, podium, bandeaux — quasi imperceptible, suggère la surface." },
@@ -121,6 +121,8 @@
       "Tout état est explicite : skeleton au chargement, message à vide, message à l'erreur."
     ],
     "rules": [
+      { "name": "La Règle de la Couleur Qui Dit Quelque Chose", "body": "Une teinte qui ne code rien coûte plus qu'elle ne rapporte : le lecteur cherche le code et n'en trouve pas. (1) Pas de teinte distribuée par POSITION — la prop `tone` de KpiCard était assignée dans l'ordre des cartes, la première verte parce que première. (2) Pas de feu tricolore sur une variable ORDONNÉE : la difficulté prend une rampe d'une seule teinte à intensité croissante, dont le sens s'inverse entre thèmes ; une variable qui a un bon côté, comme un taux de réussite, garde son axe coloré. (3) L'accent ne s'allume que quand le nombre le mérite — « 0 suspendus » est une bonne nouvelle, pas une alerte.", "section": "colors" },
+      { "name": "La Règle du Chiffre Honnête", "body": "Un pourcentage de variation sur un effectif minuscule est du bruit habillé en tendance : « 3 parties, −62 % vs hier » était 8 → 3. Sous MIN_DELTA_SAMPLE (20 observations sur la période précédente), on affiche la paire brute, sans flèche ni couleur. Et deux compteurs de portées différentes ne se ressemblent jamais sans le dire : un marqueur explicite, avec les MÊMES mots pour la même portée.", "section": "colors" },
       { "name": "La Règle de l'Or Rare", "body": "L'or ne couvre jamais plus de ~10 % d'un écran. Réservé au CTA primaire, à la navigation active, au logo et aux récompenses (podium, médailles). Le diluer, c'est tuer le signal. Sa rareté est le sujet.", "section": "colors" },
       { "name": "La Règle du Sens Doublé", "body": "Une information n'est jamais codée par la seule couleur. Un statut, un thème, une réussite portent toujours un libellé ou une icône en plus de la teinte (WCAG AA, daltonisme).", "section": "colors" },
       { "name": "La Règle Outfit-pour-les-Chiffres", "body": "Tout nombre qui compte (KPI, score, compteur, rang) est en Outfit, poids ≥ 700. Les chiffres sont les héros d'un cockpit ; ils ne s'affichent jamais dans la fonte de corps.", "section": "typography" },
@@ -136,6 +138,13 @@
       "Do laisser Escape fermer modales et drawers, et garder un focus visible au clavier."
     ],
     "donts": [
+      "Don't distribuer une teinte par position (première carte verte, deuxième or…) : une couleur qui ne code rien fait chercher un code inexistant.",
+      "Don't peindre une variable ORDONNÉE en feu tricolore (difficulté, ancienneté, taille) — rampe d'une seule teinte, intensité croissante.",
+      "Don't allumer un accent d'alerte sur un zéro : « 0 suspendus » est une bonne nouvelle.",
+      "Don't afficher un pourcentage de variation sur un effectif minuscule — paire brute.",
+      "Don't aligner des compteurs de portées différentes sans marqueur explicite.",
+      "Don't écrire une couleur en dur dans le JSX ni un rgba(255,255,255,…) dans un CSS de page : les deux échappent au thème.",
+      "Don't nommer une constante de police d'après la FONTE (SG, OUTFIT) : un nom de fonte se périme, un rôle non. DISPLAY / BODY.",
       "Don't noyer l'écran sous l'or ou les dégradés : pas de dashboard sur-gamifié ni de SaaS néon / crypto-casino.",
       "Don't retomber dans le template admin gris générique où rien ne hiérarchise.",
       "Don't poser une ombre lourde sur une carte ou une table ; l'ombre 0 10px 30px est réservée aux overlays.",

@@ -220,6 +220,12 @@ même portée, sépare « sur les lignes chargées » de « sur toute la banque 
 
 **Display Font:** Outfit (avec `system-ui, sans-serif`)
 **Body Font:** Inter (avec `system-ui, sans-serif`)
+**Mono:** pile système (`ui-monospace, SFMono-Regular, Menlo, monospace`) — *(08-2026)*
+réservée aux **identifiants machine** que l'humain compare caractère par caractère :
+identifiant de session, référence de transaction, clé. Jamais pour de la prose, un
+libellé ou un chiffre métier (ceux-là sont en Outfit, cf. La Règle
+Outfit-pour-les-Chiffres). Pile système et non fonte chargée : trois octets de plus
+pour un usage aussi rare ne se justifient pas.
 
 **Character:** Outfit est géométrique, confiant, légèrement condensé aux gros poids — il
 porte les chiffres et les titres avec autorité. Inter est dessinée pour l'interface dense :

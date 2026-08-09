@@ -451,29 +451,36 @@ function FlagsSection({ setMaintenance }) {
 }
 
 /* ───────────────────────── Notifications ───────────────────────── */
+// Les bascules sont DÉSACTIVÉES tant que l'envoi n'est pas branché.
+//
+// Elles étaient manœuvrables et persistées dans `localStorage`. J'avais d'abord
+// gardé cette manœuvrabilité en me disant qu'enregistrer une intention servirait
+// le jour où l'envoi arriverait. C'est faux : la préférence vit dans le
+// localStorage d'UN navigateur, et un moteur d'alertes côté serveur ne le lira
+// jamais. La valeur stockée ne peut pas migrer — elle n'a donc aucune valeur.
+//
+// Reste l'arbitrage : un interrupteur manœuvrable est une PROMESSE d'action.
+// Désactivé et légendé, il devient une information — « cette alerte est prévue,
+// elle n'est pas encore active » — que l'admin lit sur la ligne elle-même, sans
+// dépendre d'un bandeau qu'il peut avoir dépassé. La liste reste visible : elle
+// dit quelles alertes sont pensées, ce qui a sa propre utilité.
+//
+// `NOTIF_DEFAULTS` sert encore à montrer l'état PRÉVU de chaque alerte.
 function NotificationsSection() {
   const { t } = useTranslation();
-  const [prefs, setPrefs] = useState(loadNotifs);
-  const set = (key, val) => {
-    const next = { ...prefs, [key]: val };
-    setPrefs(next);
-    localStorage.setItem(NOTIF_KEY, JSON.stringify(next));
-  };
+  const [prefs] = useState(loadNotifs);
   const renderRow = (k, label) => (
     <div className="settings-row" key={k}>
       <span>{label}</span>
-      <Toggle checked={prefs[k]} onChange={(v) => set(k, v)} />
+      <span className="set-notif-row-end">
+        <span className="set-notif-soon">{t('settings.notifications.soon')}</span>
+        <Toggle checked={prefs[k]} onChange={() => {}} disabled />
+      </span>
     </div>
   );
   return (
     <>
-      {/* Avertissement remonté EN TÊTE. Il vivait après les trois cartes : un
-          admin qui active « Taux de crash > 1 % » tout en haut repartait
-          convaincu d'être couvert sans jamais atteindre la note. Neuf bascules
-          bien vivantes, persistées dans `localStorage`, branchées sur rien —
-          l'interrupteur ne coupe pas le courant, il faut le dire AVANT qu'on
-          l'actionne. On garde les bascules manœuvrables : enregistrer une
-          intention reste utile pour le jour où l'envoi sera câblé. */}
+      {/* Avertissement EN TÊTE, avant les commandes qu'il qualifie. */}
       <div className="set-note set-note--lead"><AlertTriangle size={14} /> {t('settings.notifications.localNote')}</div>
       <div className="card card-pad">
         <h3 className="card-title">{t('settings.notifications.email')}</h3>

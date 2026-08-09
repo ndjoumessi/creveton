@@ -1302,7 +1302,8 @@
       "highLatencyLong": "Latence API > 1 s",
       "diskSpaceLong": "Espace disque > 80 %",
       "dailySummaryRow": "Recevoir le résumé quotidien (inscriptions, parties)",
-      "localNote": "Aucune de ces alertes n'est encore envoyée. Les préférences ci-dessous sont enregistrées dans ce navigateur, en attendant que l'envoi soit branché."
+      "localNote": "Aucune de ces alertes n'est encore envoyée. La liste ci-dessous dit lesquelles sont prévues ; les bascules s'activeront quand l'envoi sera branché.",
+      "soon": "Bientôt"
     },
     "system": {
       "services": "État des services",
