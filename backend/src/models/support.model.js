@@ -233,7 +233,78 @@ async function getSupportKpis() {
   return rows[0];
 }
 
+
+/**
+ * Détection de triche par ÉCART STATISTIQUE (§ anti-triche).
+ *
+ * Le contrôle existant ne voit que la vitesse : au moins trois réponses sous
+ * 500 ms. Il n'attrape pas quelqu'un qui LIT les solutions et répond
+ * tranquillement — or ce cas reste possible pour les questions déjà jouées,
+ * dont la solution vit dans le cache du téléphone (cf. `patchQuestionSolution`).
+ *
+ * Le signal est ailleurs : un tel joueur réussit aussi les questions que tout
+ * le monde rate. On compare donc le nombre de bonnes réponses OBSERVÉ à celui
+ * ATTENDU pour un joueur moyen — la somme des `success_rate` des questions
+ * qu'il a effectivement reçues, pas une moyenne globale.
+ *
+ * Sous l'hypothèse « joueur moyen », le nombre de réussites suit une binomiale
+ * de Poisson : espérance `Σ p`, variance `Σ p(1−p)`. L'écart réduit
+ * `(observé − Σp) / √(Σp(1−p))` mesure donc l'invraisemblance en écarts-types,
+ * ce qu'un simple pourcentage ne saurait faire — réussir 9/10 sur des questions
+ * faciles n'a rien de suspect, sur des questions ratées par tous, si.
+ *
+ * ⚠️ Trois limites, à garder en tête avant de conclure quoi que ce soit :
+ *  · `success_rate` inclut les tentatives DU JOUEUR LUI-MÊME. Un gros joueur
+ *    tire donc la moyenne vers lui et son écart s'en trouve SOUS-estimé. Le
+ *    biais va dans le sens prudent, mais il existe.
+ *  · Il faut du volume. Sous quelques centaines de réponses, `success_rate`
+ *    n'est qu'un bruit et l'écart ne vaut rien — d'où le seuil `minAnswers`.
+ *  · Un très bon joueur produit le même signal qu'un tricheur. C'est un
+ *    SIGNALEMENT destiné à un humain, jamais une sanction automatique.
+ */
+async function detectAnomalies({ days = 30, minAnswers = 30, minZ = 4 } = {}) {
+  const { rows } = await db.query(
+    `WITH attempts AS (
+       SELECT gs.user_id,
+              gs.id AS session_id,
+              COALESCE((a->>'is_correct')::boolean, false) AS is_correct,
+              q.success_rate AS p
+         FROM game_sessions gs
+         CROSS JOIN LATERAL jsonb_array_elements(gs.answers) AS a
+         JOIN questions q ON q.id = (a->>'question_id')::uuid
+        WHERE q.success_rate IS NOT NULL
+          AND gs.played_at >= now() - ($1 || ' days')::interval
+     ),
+     agg AS (
+       SELECT user_id,
+              count(DISTINCT session_id)::int                      AS sessions,
+              count(*)::int                                        AS answers,
+              sum(CASE WHEN is_correct THEN 1 ELSE 0 END)::int     AS observed,
+              sum(p)::float                                        AS expected,
+              sum(p * (1 - p))::float                              AS variance
+         FROM attempts
+        GROUP BY user_id
+       HAVING count(*) >= $2
+     )
+     SELECT a.user_id, u.name, u.email, u.status,
+            a.sessions, a.answers, a.observed,
+            round(a.expected::numeric, 1)::float AS expected,
+            CASE WHEN a.variance > 0
+                 THEN round(((a.observed - a.expected) / sqrt(a.variance))::numeric, 2)::float
+                 ELSE NULL END AS z
+       FROM agg a
+       JOIN users u ON u.id = a.user_id
+      WHERE u.deleted_at IS NULL
+        AND a.variance > 0
+        AND (a.observed - a.expected) / sqrt(a.variance) >= $3
+      ORDER BY z DESC`,
+    [days, minAnswers, minZ]
+  );
+  return rows;
+}
+
 module.exports = {
+  detectAnomalies,
   listTickets,
   getTicket,
   createTicket,

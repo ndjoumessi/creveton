@@ -46,6 +46,8 @@ module.exports = {
   getReportsSummary: supportModel.getReportsSummary,
   updateReportStatus: supportModel.updateReportStatus,
   getSupportKpis: supportModel.getSupportKpis,
+  // Lecture pure : la logique statistique vit dans la requête (support.model).
+  detectAnomalies: supportModel.detectAnomalies,
   // Logique métier.
   replyTicket,
 };

@@ -1852,7 +1852,8 @@
       "open": "Ouverts",
       "inProgress": "En cours",
       "resolved": "Résolus",
-      "reports": "Signalements questions"
+      "reports": "Signalements questions",
+      "anticheat": "Anti-triche"
     },
     "priorities": {
       "urgent": "Urgent",
@@ -1923,13 +1924,25 @@
       "noDaily": "Aucun ticket sur la période.",
       "noTypes": "Rien à répartir pour l’instant.",
       "noReportsTitle": "Aucun signalement",
-      "noReports": "Aucune question signalée par les joueurs."
+      "noReports": "Aucune question signalée par les joueurs.",
+      "noAnticheatTitle": "Aucun écart signalé",
+      "noAnticheat": "Aucun joueur ne s'écarte significativement de ce qu'un joueur moyen obtiendrait sur les mêmes questions."
     },
     "notify": {
       "replied": "Réponse envoyée.",
       "resolved": "Ticket résolu.",
       "statusChanged": "Statut mis à jour.",
       "reportIgnored": "Signalement ignoré."
+    },
+    "anticheat": {
+      "disclaimer": "Un écart n'est pas une preuve : un très bon joueur produit le même signal. À instruire, jamais à sanctionner automatiquement.",
+      "columns": {
+        "player": "Joueur",
+        "sessions": "Parties",
+        "answers": "Réponses",
+        "observedVsExpected": "Réussies / attendues",
+        "deviation": "Écart"
+      }
     }
   },
   "finances": {

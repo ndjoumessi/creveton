@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send,
+  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send, AlertTriangle,
 } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis,
@@ -30,6 +30,7 @@ const TABS = [
   { key: 'in_progress', i18nKey: 'support.tabs.inProgress', status: 'in_progress' },
   { key: 'resolved', i18nKey: 'support.tabs.resolved', status: 'resolved' },
   { key: 'reports', i18nKey: 'support.tabs.reports', status: null },
+  { key: 'anticheat', i18nKey: 'support.tabs.anticheat', status: null },
 ];
 
 const PRIORITY_DOT = { urgent: '#dc2626', normal: '#d4a017', low: '#2a8a4f' };
@@ -80,6 +81,7 @@ function TicketsTooltip({ active, payload, label, t }) {
 const fetchKpi = () => supportService.kpi();
 const fetchStats = () => supportService.stats();
 const fetchReports = () => supportService.listReports();
+const fetchAnticheat = () => supportService.anticheat();
 // Membres assignables (admin/moderator). GET /admin/team est réservé aux admins
 // → pour un modérateur l'appel échoue : on retombe sur la saisie libre d'UUID.
 const fetchMembers = () => teamService.list({});
@@ -98,6 +100,7 @@ export default function SupportPage() {
   const { data: kpi, loading: kpiLoading } = useApiData(fetchKpi, []);
   const { data: stats, loading: statsLoading } = useApiData(fetchStats, []);
   const { data: reportsData, loading: reportsLoading, refetch: refetchReports } = useApiData(fetchReports, []);
+  const { data: anticheatRows, loading: anticheatLoading } = useApiData(fetchAnticheat, []);
   const { data: membersData } = useApiData(fetchMembers, []);
 
   const status = TABS.find((x) => x.key === tab)?.status ?? null;
@@ -254,6 +257,36 @@ export default function SupportPage() {
   }, [reports]);
 
   // Colonnes de la table des signalements.
+  // Colonnes anti-triche. On montre l'OBSERVÉ et l'ATTENDU côte à côte : sans
+  // les deux, l'écart réduit n'est qu'un nombre abstrait, et un modérateur ne
+  // peut pas juger.
+  const anticheatColumns = useMemo(() => [
+    {
+      accessorKey: 'name', header: t('support.anticheat.columns.player'), enableSorting: false,
+      cell: (c) => (
+        <div className="sup-ac-player">
+          <strong>{c.getValue()}</strong>
+          <span className="muted">{c.row.original.email || '—'}</span>
+        </div>
+      ),
+    },
+    { accessorKey: 'sessions', header: t('support.anticheat.columns.sessions'), enableSorting: false },
+    { accessorKey: 'answers', header: t('support.anticheat.columns.answers'), enableSorting: false },
+    {
+      id: 'ratio', header: t('support.anticheat.columns.observedVsExpected'), enableSorting: false,
+      cell: ({ row }) => (
+        <span className="sup-ac-ratio">
+          <strong>{num(row.original.observed)}</strong>
+          <span className="muted"> / {num(row.original.expected)}</span>
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'z', header: t('support.anticheat.columns.deviation'), enableSorting: false,
+      cell: (c) => <span className="sup-ac-z">{c.getValue()} σ</span>,
+    },
+  ], [t]);
+
   const reportColumns = useMemo(() => [
     {
       accessorKey: 'question_text', header: t('support.reports.columns.question'), enableSorting: false,
@@ -367,7 +400,26 @@ export default function SupportPage() {
       </div>
 
       {/* Contenu de l'onglet. */}
-      {tab === 'reports' ? (
+      {tab === 'anticheat' ? (
+        anticheatLoading ? (
+          <DataTable columns={anticheatColumns} data={[]} loading emptyMessage={t('support.empty.noAnticheat')} />
+        ) : (anticheatRows || []).length === 0 ? (
+          <div className="card card-pad">
+            <EmptyState title={t('support.empty.noAnticheatTitle')} message={t('support.empty.noAnticheat')} />
+          </div>
+        ) : (
+          <>
+            {/* Avertissement AVANT le tableau, pas après : un écart n'est pas
+                une preuve, et un modérateur qui lit d'abord la liste puis la
+                réserve a déjà formé son jugement. */}
+            <div className="card card-pad sup-anticheat-note">
+              <AlertTriangle size={16} aria-hidden="true" />
+              <span>{t('support.anticheat.disclaimer')}</span>
+            </div>
+            <DataTable columns={anticheatColumns} data={anticheatRows} emptyMessage={t('support.empty.noAnticheat')} />
+          </>
+        )
+      ) : tab === 'reports' ? (
         reportsLoading ? (
           <DataTable columns={reportColumns} data={[]} loading emptyMessage={t('support.empty.noReports')} />
         ) : reports.length === 0 ? (

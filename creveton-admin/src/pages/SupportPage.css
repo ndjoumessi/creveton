@@ -461,3 +461,16 @@
 
 /* ── Dark-mode semantic badge tints (hue-preserving) ── */
 [data-theme="dark"] .sup-count-badge--hot { background: rgba(231,76,60,0.18); border-color: rgba(231,76,60,0.35); color: var(--pastel-red-fg-dark); }
+
+/* ── Anti-triche ── */
+.sup-anticheat-note {
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px;
+  color: var(--pastel-amber-fg-deep); background: var(--cream);
+  border: 1px solid var(--cream-border); font-size: 13px;
+}
+[data-theme="dark"] .sup-anticheat-note { background: rgba(212,160,23,0.10); color: var(--gold); border-color: rgba(212,160,23,0.35); }
+.sup-ac-player { display: flex; flex-direction: column; gap: 2px; }
+.sup-ac-player .muted { font-size: 12px; }
+.sup-ac-ratio { font-variant-numeric: tabular-nums; }
+.sup-ac-z { font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--red); }
+[data-theme="dark"] .sup-ac-z { color: #f4867c; }

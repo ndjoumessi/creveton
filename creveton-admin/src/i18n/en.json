@@ -1852,7 +1852,8 @@
       "open": "Open",
       "inProgress": "In progress",
       "resolved": "Resolved",
-      "reports": "Question reports"
+      "reports": "Question reports",
+      "anticheat": "Anti-cheat"
     },
     "priorities": {
       "urgent": "Urgent",
@@ -1923,13 +1924,25 @@
       "noDaily": "No tickets over the period.",
       "noTypes": "Nothing to break down yet.",
       "noReportsTitle": "No reports",
-      "noReports": "No question reported by players."
+      "noReports": "No question reported by players.",
+      "noAnticheatTitle": "No deviation flagged",
+      "noAnticheat": "No player deviates significantly from what an average player would score on the same questions."
     },
     "notify": {
       "replied": "Reply sent.",
       "resolved": "Ticket resolved.",
       "statusChanged": "Status updated.",
       "reportIgnored": "Report ignored."
+    },
+    "anticheat": {
+      "disclaimer": "A deviation is not proof: a very strong player produces the same signal. To be reviewed, never sanctioned automatically.",
+      "columns": {
+        "player": "Player",
+        "sessions": "Games",
+        "answers": "Answers",
+        "observedVsExpected": "Correct / expected",
+        "deviation": "Deviation"
+      }
     }
   },
   "finances": {

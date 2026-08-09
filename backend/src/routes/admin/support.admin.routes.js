@@ -16,6 +16,16 @@ const REPORT_STATUS = ['pending', 'ignored', 'resolved'];
 
 const idParam = Joi.object({ id: Joi.string().uuid().required() });
 
+// Anti-triche. `minAnswers` par défaut à 30 : en dessous, `success_rate` est
+// trop bruité pour que l'écart signifie quoi que ce soit. `minZ` à 4 ≈ une
+// chance sur 30 000 sous l'hypothèse « joueur moyen » — volontairement sévère,
+// le coût d'un faux positif étant un soupçon porté sur un joueur honnête.
+const anticheatQuery = Joi.object({
+  days: Joi.number().integer().min(1).max(365).default(30),
+  minAnswers: Joi.number().integer().min(10).max(10000).default(30),
+  minZ: Joi.number().min(1).max(20).default(4),
+});
+
 const listTicketsQuery = Joi.object({
   status: Joi.string().valid(...TICKET_STATUS).optional(),
   priority: Joi.string().valid(...TICKET_PRIORITY).optional(),
@@ -73,6 +83,11 @@ router.get('/reports/summary', requirePermission('support:read'), validate(repor
 router.patch('/reports/:id/status', requirePermission('support:manage'), validate(idParam, 'params'), validate(reportStatusBody), ctrl.updateReportStatus);
 
 // ── KPIs ─────────────────────────────────────────────────────────────────────
+// Anti-triche : signalement statistique, LECTURE seule et permission de
+// lecture. Aucune action automatique n'y est attachée — c'est un dossier à
+// instruire par un humain, pas une sanction.
+router.get('/anticheat', requirePermission('support:read'), validate(anticheatQuery, 'query'), ctrl.getAnticheat);
+
 router.get('/kpis', requirePermission('support:read'), ctrl.getKpis);
 
 module.exports = router;

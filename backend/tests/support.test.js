@@ -270,3 +270,111 @@ t('GET /support/tickets/:id : 404 si id inconnu', async () => {
   expect(r.status).toBe(404);
   expect(r.body.error.code).toBe('NOT_FOUND');
 });
+
+// ── Anti-triche statistique ────────────────────────────────────────────────
+//
+// Le contrôle existant ne voit que la VITESSE (≥ 3 réponses sous 500 ms). Il
+// n'attrape pas quelqu'un qui lit les solutions et répond tranquillement. Le
+// signal est ailleurs : ce joueur réussit aussi les questions que tout le monde
+// rate. On compare donc l'observé à l'ATTENDU — la somme des `success_rate` des
+// questions réellement servies.
+
+/** Crée `n` questions approuvées de taux de réussite `rate`. */
+async function questionsWithRate(rate, n) {
+  const ids = [];
+  for (let i = 0; i < n; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const q = await H.createApprovedQuestion({ status: 'approved' });
+    // eslint-disable-next-line no-await-in-loop
+    await H.db.query('UPDATE questions SET success_rate = $1 WHERE id = $2', [rate, q.id]);
+    ids.push(q.id);
+  }
+  return ids;
+}
+
+/** Une partie où `correct` des `ids` sont réussies. */
+async function playSession(userId, ids, correct) {
+  const answers = ids.map((id, i) => ({ question_id: id, selected_index: 0, elapsed_ms: 9000, is_correct: i < correct }));
+  await H.db.query(
+    `INSERT INTO game_sessions (user_id, score, correct_count, question_count, answers)
+     VALUES ($1, 100, $2, $3, $4::jsonb)`,
+    [userId, correct, ids.length, JSON.stringify(answers)]
+  );
+}
+
+t('un joueur qui réussit ce que tout le monde rate est signalé', async () => {
+  const admin = await H.createUser({ role: 'admin' });
+  const tricheur = await H.createUser({ role: 'player' });
+  // 40 questions ratées par 90 % des joueurs… toutes réussies.
+  const dures = await questionsWithRate(0.1, 40);
+  await playSession(tricheur.id, dures, 40);
+
+  const r = await request(app)
+    .get('/api/v1/admin/support/anticheat')
+    .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+
+  expect(r.status).toBe(200);
+  const flag = r.body.data.find((x) => x.user_id === tricheur.id);
+  expect(flag).toBeDefined();
+  expect(flag.observed).toBe(40);
+  expect(flag.expected).toBeCloseTo(4, 0); // 40 × 0,1
+  expect(flag.z).toBeGreaterThan(4);
+});
+
+t('un score élevé sur des questions FACILES n’est pas suspect', async () => {
+  // Le cœur de la mesure : 100 % de réussite n'est anormal que rapporté à la
+  // difficulté. Un pourcentage brut aurait signalé ce joueur-ci aussi.
+  const admin = await H.createUser({ role: 'admin' });
+  const bon = await H.createUser({ role: 'player' });
+  const faciles = await questionsWithRate(0.95, 40);
+  await playSession(bon.id, faciles, 40);
+
+  const r = await request(app)
+    .get('/api/v1/admin/support/anticheat')
+    .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+
+  expect(r.body.data.find((x) => x.user_id === bon.id)).toBeUndefined();
+});
+
+t('sous le volume minimal, aucun signalement', async () => {
+  const admin = await H.createUser({ role: 'admin' });
+  const joueur = await H.createUser({ role: 'player' });
+  const dures = await questionsWithRate(0.1, 10); // 10 < minAnswers (30)
+  await playSession(joueur.id, dures, 10);
+
+  const r = await request(app)
+    .get('/api/v1/admin/support/anticheat')
+    .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+
+  // Sans volume, `success_rate` n'est que du bruit : mieux vaut ne rien dire.
+  expect(r.body.data.find((x) => x.user_id === joueur.id)).toBeUndefined();
+});
+
+t('les questions sans taux calculé sont ignorées, pas comptées à zéro', async () => {
+  // `success_rate` NULL = jamais recalculé, pas « personne ne réussit ». Les
+  // compter comme 0 ferait exploser l'écart de tout le monde.
+  const admin = await H.createUser({ role: 'admin' });
+  const joueur = await H.createUser({ role: 'player' });
+  const ids = [];
+  for (let i = 0; i < 40; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const q = await H.createApprovedQuestion({ status: 'approved' });
+    ids.push(q.id); // success_rate reste NULL
+  }
+  await playSession(joueur.id, ids, 40);
+
+  const r = await request(app)
+    .get('/api/v1/admin/support/anticheat')
+    .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+
+  expect(r.body.data.find((x) => x.user_id === joueur.id)).toBeUndefined();
+});
+
+t('un modérateur peut lire les signalements, un joueur non', async () => {
+  const moderator = await H.createUser({ role: 'moderator' });
+  const player = await H.createUser({ role: 'player' });
+  await request(app).get('/api/v1/admin/support/anticheat')
+    .set('Authorization', `Bearer ${H.tokenFor(moderator)}`).expect(200);
+  await request(app).get('/api/v1/admin/support/anticheat')
+    .set('Authorization', `Bearer ${H.tokenFor(player)}`).expect(403);
+});

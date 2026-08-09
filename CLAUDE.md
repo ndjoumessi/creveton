@@ -139,6 +139,18 @@ régénérer avec `/impeccable document`.
   questions** : `GET /reports`, `/reports/summary`, `PATCH /reports/:id/status`
   (pending/ignored/resolved). `GET /kpis` agrège les compteurs. Tests :
   `backend/tests/support.test.js`.
+- **Anti-triche statistique** (`support.model.detectAnomalies`, `GET /admin/support/anticheat`,
+  perm `support:read`) : le contrôle de vitesse ne voit pas quelqu'un qui LIT les solutions
+  et répond tranquillement. Ce joueur-là réussit aussi les questions que tout le monde rate.
+  On compare donc le nombre de bonnes réponses OBSERVÉ à celui ATTENDU — la somme des
+  `success_rate` des questions RÉELLEMENT servies, pas une moyenne globale. Sous l'hypothèse
+  « joueur moyen » les réussites suivent une binomiale de Poisson (espérance `Σp`, variance
+  `Σp(1−p)`) : l'écart réduit mesure l'invraisemblance en σ, là où un pourcentage brut
+  signalerait aussi un bon joueur tombé sur des questions faciles. Seuils : `minAnswers` 30
+  (sous ce volume `success_rate` n'est que du bruit), `minZ` 4 (≈ 1 sur 30 000). Les
+  questions à `success_rate` NULL sont IGNORÉES, pas comptées à zéro. **Signalement pour un
+  humain, jamais de sanction automatique** — un très bon joueur produit le même signal.
+  Onglet « Anti-triche » de la page Support. Tests : `backend/tests/support.test.js`.
 - **Anti-triche** : `/sessions/submit` ≥ 3 réponses < 500 ms (`scoreService.CHEAT_MIN_MS`)
   → `CHEAT_DETECTED`, **sauf en `blitz`/`marathon`** (cadence rapide voulue ; garde-fou =
   timer global 62 s) ; `/sessions/answer` (feedback immédiat, mode `normal` only) une

@@ -94,6 +94,17 @@ function listReports({ status, page, limit } = {}) {
     });
 }
 
+// ── Anti-triche : écart statistique (GET /admin/support/anticheat) ──────────
+//
+// Renvoie les joueurs dont le nombre de bonnes réponses dépasse trop largement
+// ce qu'un joueur moyen obtiendrait sur LES MÊMES questions. Lecture seule :
+// aucune action n'y est attachée, c'est un dossier à instruire.
+function anticheat(params = {}) {
+  return api
+    .get('/admin/support/anticheat', { params: cleanParams(params) })
+    .then((r) => (r.data && r.data.data) || []);
+}
+
 function updateReportStatus(id, status) {
   return api.patch(`/admin/support/reports/${id}/status`, { status }).then((r) => r.data);
 }
@@ -144,6 +155,7 @@ export default {
   assignTicket,
   listReports,
   updateReportStatus,
+  anticheat,
   kpi,
   stats,
   activity,

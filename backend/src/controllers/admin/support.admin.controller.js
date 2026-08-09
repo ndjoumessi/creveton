@@ -84,6 +84,12 @@ const updateReportStatus = asyncHandler(async (req, res) => {
 
 // ── KPIs ─────────────────────────────────────────────────────────────────────
 
+/** GET /admin/support/anticheat → 200 { data } — joueurs statistiquement hors norme. */
+const getAnticheat = asyncHandler(async (req, res) => {
+  const data = await supportService.detectAnomalies(req.query);
+  return ok(res, { data });
+});
+
 /** GET /admin/support/kpis — indicateurs du tableau de bord support. */
 const getKpis = asyncHandler(async (req, res) => {
   return ok(res, await supportService.getSupportKpis());
@@ -99,5 +105,6 @@ module.exports = {
   listReports,
   getReportsSummary,
   updateReportStatus,
+  getAnticheat,
   getKpis,
 };
