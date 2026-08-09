@@ -72,11 +72,15 @@ export default function Sidebar({ mobileNavOpen = false, onCloseMobileNav }) {
   return (
     <aside id="main-sidebar" ref={trapRef} className={`sidebar${mobileNavOpen ? ' is-open' : ''}`}>
       <Link to="/dashboard" className="sidebar-brand" aria-label="Tableau de bord Creveton" onClick={onCloseMobileNav}>
-        <img src="/logo.png" width={32} height={32} className="sidebar-logo-img" alt="Creveton" />
-        <span className="sidebar-brand-txt">
+        {/* Le sous-titre passe SOUS la rangée logo+nom au lieu d'être coincé à
+            côté : dans une colonne de 180 px, il ne restait que 105 px pour
+            « COCKPIT ÉMERAUDE » — seize capitales suivies à 2 px, soit 131 px.
+            Sur toute la largeur il en a 148 et retrouve son interlettrage. */}
+        <span className="sidebar-brand-row">
+          <img src="/logo.png" width={32} height={32} className="sidebar-logo-img" alt="Creveton" />
           <span className="sidebar-brand-name">Creveton</span>
-          <span className="sidebar-brand-sub">Cockpit Émeraude</span>
         </span>
+        <span className="sidebar-brand-sub">Cockpit Émeraude</span>
       </Link>
       <nav className="sidebar-nav">
         {sections.map((section) => (

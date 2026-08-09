@@ -286,12 +286,15 @@ input, select, textarea { font-family: inherit; }
 /* En dark, la sidebar réchauffée se confond avec le fond de page : un filet vert
    la redétache (mode clair inchangé — séparation déjà naturelle). */
 [data-theme="dark"] .sidebar { border-right: 1px solid var(--border-green); }
-.sidebar-brand { display: flex; align-items: center; gap: 11px; padding: 0 16px; height: var(--header-h); border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.sidebar-brand { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 0 16px; height: var(--header-h); border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.sidebar-brand-row { display: flex; align-items: center; gap: 11px; min-width: 0; }
 /* Logo = vrai PNG (public/logo.png), pas le monogramme or. */
 .sidebar-logo-img { width: 32px; height: 32px; border-radius: var(--radius-sm); object-fit: cover; flex: none; }
-.sidebar-brand-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
 .sidebar-brand-name { font-family: var(--font-body); font-weight: 700; color: #fff; font-size: 18px; letter-spacing: -0.2px; line-height: 1.1; }
-.sidebar-brand-sub { font-family: var(--font-body); font-weight: 600; font-size: var(--text-micro); letter-spacing: 2px; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
+/* Filet de sécurité : même sur toute la largeur, un rendu de police plus large
+   que prévu ne doit pas pouvoir baver hors de la barre. */
+.sidebar-brand-sub { font-family: var(--font-body); font-weight: 600; font-size: var(--text-micro); letter-spacing: 2px; text-transform: uppercase; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* `min-height: 0` est indispensable, pas décoratif : dans un conteneur
    `flex-direction: column`, la hauteur minimale d'un enfant vaut par défaut
    celle de son CONTENU. Sans lui, `flex: 1` ne peut pas rétrécir le nav,
@@ -688,8 +691,12 @@ table.data tbody tr:last-child td { border-bottom: none; }
 /* Tablette (768–1280) : rail icônes 72px. Mobile (< 768) : drawer coulissant. */
 @media (min-width: 768px) and (max-width: 1280px) {
   .sidebar { width: 64px; }
-  .sidebar-brand-txt, .nav-label, .nav-section-title, .nav-badge, .sidebar-foot-id { display: none; }
-  .sidebar-brand { justify-content: center; padding: 0; gap: 0; }
+  .sidebar-brand-name, .sidebar-brand-sub, .nav-label, .nav-section-title, .nav-badge, .sidebar-foot-id { display: none; }
+  /* La marque est passée en COLONNE (le sous-titre est sous le logo) : sur le
+     rail, c'est donc `align-items` qui centre horizontalement, plus
+     `justify-content`. */
+  .sidebar-brand { align-items: center; justify-content: center; padding: 0; gap: 0; }
+  .sidebar-brand-row { justify-content: center; }
   .nav-item { justify-content: center; padding: 11px 0; margin-right: 0; border-radius: 0; }
   .sidebar-foot { flex-direction: column; justify-content: center; gap: 8px; padding: 10px 0; }
   .app-main { margin-left: 64px; }
