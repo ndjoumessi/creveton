@@ -6,6 +6,15 @@ import useThemeStore from '../../store/themeStore';
 import { triggerRefresh } from '../../hooks/useApiData';
 import { notify } from '../Toast';
 
+/**
+ * Fil d'Ariane : route → clé de titre.
+ *
+ * La table couvrait 7 routes sur les 12 de la console. Finances, Membres de
+ * l'équipe, Rôles & permissions et Support tombaient donc sur le repli et
+ * affichaient « Console / Console » — un fil d'Ariane qui ne nomme pas la page
+ * où l'on est. Le détail d'un tournoi, dont l'URL porte un identifiant, ne
+ * pouvait de toute façon pas correspondre à une clé fixe.
+ */
 const TITLE_KEYS = {
   '/dashboard': 'nav.dashboard',
   '/classement': 'nav.leaderboard',
@@ -13,8 +22,25 @@ const TITLE_KEYS = {
   '/sessions': 'nav.sessions',
   '/tournaments': 'nav.tournaments',
   '/users': 'nav.users',
+  '/finances': 'nav.finances',
+  '/team': 'nav.team',
+  '/team/roles': 'nav.roles',
+  '/support': 'nav.support',
   '/settings': 'nav.settings',
 };
+
+/**
+ * Correspondance exacte, sinon le PRÉFIXE le plus long : `/tournaments/<id>`
+ * retombe ainsi sur « Tournois ». Tri décroissant pour que `/team/roles`
+ * l'emporte sur `/team`.
+ */
+const ROUTE_PREFIXES = Object.keys(TITLE_KEYS).sort((a, b) => b.length - a.length);
+
+function titleKeyFor(pathname) {
+  if (TITLE_KEYS[pathname]) return TITLE_KEYS[pathname];
+  const match = ROUTE_PREFIXES.find((r) => pathname.startsWith(`${r}/`));
+  return match ? TITLE_KEYS[match] : null;
+}
 
 export default function Header({ mobileNavOpen, onToggleMobileNav }) {
   const { t } = useTranslation();
@@ -28,7 +54,8 @@ export default function Header({ mobileNavOpen, onToggleMobileNav }) {
     notify.success(isDark ? t('settings.account.themeToastLight') : t('settings.account.themeToastDark'));
   };
 
-  const title = TITLE_KEYS[pathname] ? t(TITLE_KEYS[pathname]) : t('header.console');
+  const titleKey = titleKeyFor(pathname);
+  const title = titleKey ? t(titleKey) : t('header.console');
 
   const onRefresh = () => {
     triggerRefresh();
