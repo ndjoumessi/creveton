@@ -441,6 +441,7 @@ export default function RegisterScreen({ navigation }) {
               data={filteredCities}
               keyExtractor={(c) => c}
               keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.pickerListContent}
               ListEmptyComponent={
                 customCity ? (
                   <Pressable
@@ -508,6 +509,11 @@ export default function RegisterScreen({ navigation }) {
               data={filteredCountries}
               keyExtractor={(c) => c.iso}
               keyboardShouldPersistTaps="handled"
+              // L'ascenseur Android se dessine PAR-DESSUS le contenu, au ras du
+              // bord droit — c'est-à-dire pile sur la coche de la ligne
+              // sélectionnée. Quelques pixels de retrait suffisent à lui laisser
+              // sa gouttière.
+              contentContainerStyle={styles.pickerListContent}
               ListEmptyComponent={
                 <Body muted style={styles.pickerEmpty}>
                   {t('auth.register.misc.countryNoResult')}
@@ -524,7 +530,15 @@ export default function RegisterScreen({ navigation }) {
                     {`${item.flag}  ${countryName(item, uiLang)}`}
                   </Body>
                   <Body color={colors.textMuted}>{`+${callingCodeFor(item.iso)}`}</Body>
-                  {country === item.iso ? <Icon icon={Check} size={18} color={colors.green500} strokeWidth={3} /> : null}
+                  {/* Emplacement de coche TOUJOURS rendu : sans lui, la ligne
+                      sélectionnée était la seule à décaler son indicatif vers la
+                      gauche pour faire place à la coche, et la colonne des
+                      indicatifs perdait son alignement sur cette ligne-là. */}
+                  <View style={styles.checkSlot}>
+                    {country === item.iso ? (
+                      <Icon icon={Check} size={18} color={colors.green500} strokeWidth={3} />
+                    ) : null}
+                  </View>
                 </Pressable>
               )}
             />
@@ -663,6 +677,8 @@ const makeStyles = (colors) => StyleSheet.create({
     marginHorizontal: -spacing.lg, // pleine largeur de la feuille (qui est paddée)
   },
   pickerEmpty: { textAlign: 'center', paddingVertical: spacing.xl },
+  pickerListContent: { paddingRight: spacing.sm },
+  checkSlot: { width: 18, marginLeft: spacing.sm, alignItems: 'flex-end' },
   modalTitle: { marginBottom: spacing.md },
   cityRow: {
     flexDirection: 'row',
