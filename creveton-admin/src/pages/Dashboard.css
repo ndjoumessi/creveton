@@ -37,7 +37,7 @@
   font-family: var(--font-body); font-weight: 600; font-size: var(--text-2xs);
   letter-spacing: 0.5px; text-transform: uppercase;
   color: var(--green500);
-  background: #e3f3ea; border-radius: 999px; padding: 3px 9px;
+  background: var(--green-tint); border-radius: 999px; padding: 3px 9px;
 }
 .dash-live-dot {
   width: 7px; height: 7px; border-radius: 50%; background: var(--green500);
@@ -276,7 +276,7 @@
 /* Teinte unique : les variantes --green/gold/blue/violet étaient distribuées par
    position, comme sur les grandes cartes (cf. KpiCard.jsx). Le survol part avec
    elles — ces tuiles ne sont pas cliquables. */
-.dash-kpi2-ic { width: 32px; height: 32px; border-radius: var(--radius-sm); display: grid; place-items: center; flex: none; background: #e3f3ea; color: var(--green500); }
+.dash-kpi2-ic { width: 32px; height: 32px; border-radius: var(--radius-sm); display: grid; place-items: center; flex: none; background: var(--green-tint); color: var(--green500); }
 .dash-kpi2-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .dash-kpi2-val { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .dash-kpi2-lbl { font-family: var(--font-body); font-size: var(--text-2xs); color: var(--muted); }
@@ -288,7 +288,7 @@
   transition: var(--t-fast); flex: none;
 }
 .dash-sound:hover { color: var(--ink); border-color: var(--border); }
-.dash-sound.is-on { background: #e3f3ea; color: var(--green500); border-color: var(--green300); }
+.dash-sound.is-on { background: var(--green-tint); color: var(--green500); border-color: var(--green300); }
 
 /* ── Filtres du feed ── */
 .dash-feed-filters { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border); }

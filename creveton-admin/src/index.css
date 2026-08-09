@@ -25,6 +25,15 @@
   --gold: #d4a017;
   --gold500: #d4a017;
   --gold400: #e8b830;
+  /* Voile vert très clair — fond des pastilles, carrés d'icône, tags « ok ».
+     Écrit en dur (`var(--green-tint)`) à une dizaine d'endroits : c'était déjà un token,
+     il ne portait simplement pas de nom. Bascule en nuit avec le thème. */
+  --green-tint: #e3f3ea;
+  /* Or en rôle de TEXTE. `--gold` est calibré pour des aplats et des icônes ; en
+     petit texte sur fond clair il tombe à 2,2:1. Cette version assombrie donne
+     4,9:1 sur blanc. Elle existait déjà, écrite en dur (`#8a6a12`) à trois
+     endroits — bandeau verrouillé, statut de feature flag, badge or doux. */
+  --gold-text: #8a6a12;
   /* Vert LISIBLE en rôle de texte sur une surface thémée.
      --green700 / --green900 sont des couleurs de MARQUE : elles ne basculent
      pas en nuit (c'est voulu — elles servent aussi de fonds pleins). Un texte
@@ -189,6 +198,11 @@
   --surface-2: #1d4128;      /* 1.20:1 sur --surface — survol / strate élevée */
   --bg-input: #0f2616;       /* sous --surface : le champ se lit comme un creux */
   --bg-mute: #142c1b;
+  /* Voile vert : en nuit il devient un émeraude translucide posé sur la surface,
+     et non un pastel clair qui trouerait l'écran. Miroir de ce que faisaient
+     déjà, à la main, les surcharges `[data-theme="dark"] .kpi-icon` & co. */
+  --green-tint: rgba(42, 138, 79, 0.18);
+  --gold-text: var(--gold400);
   --border: #356b45;         /* 2.19:1 sur --surface (était 1.35:1) — la bordure 1px existe enfin */
   --border-green: #47845a;   /* bordure d'accent, un cran au-dessus */
   --text: #d6e4d8;           /* 10.44:1 — quasi neutre, très léger biais vert */
@@ -414,7 +428,7 @@ input, select, textarea { font-family: inherit; }
 .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .kpi-label { color: var(--muted); font-family: var(--font-body); font-size: var(--text-sm); font-weight: 500; }
 .kpi-value { font-family: var(--font-display); font-weight: 800; font-size: 44px; color: var(--ink); line-height: 1.05; letter-spacing: -0.6px; font-variant-numeric: tabular-nums; }
-.kpi-icon { width: 48px; height: 48px; border-radius: var(--radius); display: grid; place-items: center; flex: none; background: #e3f3ea; color: var(--green500); }
+.kpi-icon { width: 48px; height: 48px; border-radius: var(--radius); display: grid; place-items: center; flex: none; background: var(--green-tint); color: var(--green500); }
 .kpi-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
 .kpi-delta { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-sm); font-weight: 600; font-family: var(--font-display); }
 .kpi-delta.up { color: var(--success-text); }
@@ -444,7 +458,7 @@ input, select, textarea { font-family: inherit; }
 @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 .badge-theme { padding-left: 7px; }
 .badge-emoji { font-size: var(--text-xs); line-height: 1; }
-.badge-level { background: #e3f3ea; color: var(--green700); }
+.badge-level { background: var(--green-tint); color: var(--green700); }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: var(--radius-pill); font-size: var(--text-sm); font-weight: 600; }
 
 /* ===================== Tables ===================== */
@@ -528,7 +542,7 @@ table.data tbody tr:last-child td { border-bottom: none; }
 
 /* ===================== Misc utils ===================== */
 .banner { display: flex; align-items: center; gap: 10px; background: var(--cream); border: 1px solid var(--cream-border); color: var(--cream-fg); padding: 13px 16px; border-radius: var(--radius); font-size: var(--text-md); font-weight: 500; margin-bottom: 20px; }
-.banner-locked { background: rgba(212, 160, 23, 0.08); border-color: rgba(212, 160, 23, 0.4); color: #8a6a12; }
+.banner-locked { background: rgba(212, 160, 23, 0.08); border-color: rgba(212, 160, 23, 0.4); color: var(--gold-text); }
 .empty { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 56px 24px; color: var(--muted); text-align: center; }
 .empty-illus { color: var(--green300); }
 .empty h3 { margin: 0; color: var(--ink); font-size: 17px; }

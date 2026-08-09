@@ -57,7 +57,7 @@
   font-size: var(--text-xs); font-weight: 600; padding: 3px 10px; border-radius: 999px;
   border: 1px solid transparent; line-height: 1.6; white-space: nowrap;
 }
-.roles-pill-on { color: var(--green700); background: #e3f3ea; border-color: var(--border-green); }
+.roles-pill-on { color: var(--green700); background: var(--green-tint); border-color: var(--border-green); }
 .roles-pill-off { color: var(--muted); background: var(--bg-mute); border-color: var(--border); text-decoration: line-through; }
 
 .roles-super { display: flex; flex-direction: column; gap: 10px; }

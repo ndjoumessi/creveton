@@ -182,9 +182,9 @@
    et chaque page de modération semblait pleine d'incidents. La difficulté est
    ordonnée, elle n'a pas de mauvais côté. Le libellé reste écrit dans la
    pastille (Règle du Sens Doublé) et la rampe se lit en niveaux de gris. */
-.q-level-beginner { background: #e3f3ea; color: var(--green700); }
+.q-level-beginner { background: var(--green-tint); color: var(--green700); }
 .q-level-intermediate { background: #a9dcc0; color: #124b2a; }
-.q-level-expert { background: var(--green700); color: #e3f3ea; }
+.q-level-expert { background: var(--green700); color: var(--green-tint); }
 
 /* Statut : point + libellé */
 .q-status-dot {
@@ -424,7 +424,7 @@
   font-weight: 700;
 }
 .q-verdict-hard { background: var(--pastel-red); color: var(--pastel-red-fg-deep); }
-.q-verdict-balanced { background: #e3f3ea; color: var(--green700); }
+.q-verdict-balanced { background: var(--green-tint); color: var(--green700); }
 .q-verdict-easy { background: var(--pastel-blue); color: var(--pastel-blue-fg-strong); }
 .q-stats-note {
   display: flex;
@@ -550,7 +550,7 @@
   text-transform: uppercase;
   padding: 2px 6px;
   border-radius: var(--radius-sm);
-  background: #e3f3ea;
+  background: var(--green-tint);
   color: var(--green700);
 }
 
@@ -576,7 +576,7 @@
   gap: 5px;
   padding: 3px 9px;
   border-radius: var(--radius-sm);
-  background: #e3f3ea;
+  background: var(--green-tint);
   color: var(--green700);
   font-size: var(--text-xs);
   font-weight: 600;
@@ -815,7 +815,7 @@
 .q-dist-bar.distractor { background: var(--gold); }
 .q-dist-pct { flex: none; min-width: 38px; text-align: right; font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm); color: var(--ink); font-variant-numeric: tabular-nums; }
 .q-dist-tag { flex: none; font-size: var(--text-2xs); font-weight: 600; padding: 2px 8px; border-radius: 999px; }
-.q-dist-tag.ok { background: #e3f3ea; color: var(--green700); }
+.q-dist-tag.ok { background: var(--green-tint); color: var(--green700); }
 .q-stats-insight { display: flex; align-items: center; gap: 8px; font-size: var(--text-sm); color: var(--cream-fg); background: var(--cream); border: 1px solid var(--cream-border); border-radius: var(--radius); padding: 10px 12px; margin: 0 0 10px; }
 .q-compare { font-size: var(--text-md); font-weight: 500; border-radius: var(--radius); padding: 10px 12px; margin: 0; }
 .q-compare-hard { background: #fef2f2; color: var(--pastel-red-fg-deep); }
@@ -1115,7 +1115,7 @@
   padding: 6px 14px;
   border: 1px solid var(--green500);
   border-radius: var(--radius-pill);
-  background: #e3f3ea;
+  background: var(--green-tint);
   color: var(--green700);
   font-size: var(--text-sm);
   font-weight: 700;
@@ -1139,7 +1139,7 @@
   font-size: var(--text-md);
   transition: background var(--t-fast);
 }
-.q-translate-mini:hover:not(:disabled) { background: #e3f3ea; }
+.q-translate-mini:hover:not(:disabled) { background: var(--green-tint); }
 .q-translate-mini:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Ligne d'option bilingue : lettre | (FR | 🌐 | EN) | radio */
@@ -1163,14 +1163,14 @@
   border-radius: var(--radius-sm);
   white-space: nowrap;
 }
-.q-lang-badge--both { background: #e3f3ea; color: var(--green700); }
+.q-lang-badge--both { background: var(--green-tint); color: var(--green700); }
 .q-lang-badge--fr { background: var(--bg-mute); color: var(--muted); }
 .q-lang-badge--en { background: var(--pastel-amber); color: var(--pastel-amber-fg); }
 
 /* Section EN du drawer + état non traduit */
 .q-section-label--bi { display: flex; align-items: center; gap: 8px; }
 .q-bi-badge { font-family: var(--font-body); font-size: var(--text-micro); font-weight: 700; padding: 2px 6px; border-radius: var(--radius-sm); }
-.q-bi-badge--ok { background: #e3f3ea; color: var(--green700); }
+.q-bi-badge--ok { background: var(--green-tint); color: var(--green700); }
 .q-bi-badge--missing { background: var(--bg-mute); color: var(--muted); }
 
 /* Options FR/EN côte à côte (drawer) */
@@ -1221,7 +1221,7 @@
   padding: 10px 12px;
   border: 1px solid var(--green300);
   border-radius: var(--radius);
-  background: #e3f3ea;
+  background: var(--green-tint);
   color: var(--green700);
   font-family: var(--font-body);
   font-weight: 700;
