@@ -8,6 +8,7 @@ import {
 import teamService from '../services/team.service';
 import usersService from '../services/users.service';
 import { useApiData } from '../hooks/useApiData';
+import { phoneFlag } from '../utils/phoneFlag';
 import { useAuthStore } from '../store/authStore';
 import {
   MODULES, ACTIONS, isApplicable, ROLE_META,
@@ -209,7 +210,7 @@ function ProfilTab({ member }) {
     <dl className="team-kv">
       <div><dt>{t('team.modal.email')}</dt><dd>{member.email || '—'}</dd></div>
       <div><dt>{t('team.modal.name')}</dt><dd>{member.name || '—'}</dd></div>
-      <div><dt>Téléphone</dt><dd>{member.phone ? <span className="team-phone"><span aria-hidden="true">🇨🇲</span>{member.phone}</span> : '—'}</dd></div>
+      <div><dt>Téléphone</dt><dd>{member.phone ? <span className="team-phone"><span aria-hidden="true">{phoneFlag(member.phone)}</span>{member.phone}</span> : '—'}</dd></div>
       <div><dt>Ville</dt><dd>{member.ville || '—'}</dd></div>
       <div className="team-kv-full">
         <dt>{t('team.drawer.currentRole')}</dt>

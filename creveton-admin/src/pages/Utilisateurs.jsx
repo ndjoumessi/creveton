@@ -13,6 +13,7 @@ import { Icon } from '../components/Icon';
 import usersService from '../services/users.service';
 import sessionsService from '../services/sessions.service';
 import { useApiData } from '../hooks/useApiData';
+import { phoneFlag } from '../utils/phoneFlag';
 import i18n from '../i18n';
 import { useAuthStore } from '../store/authStore';
 import { USER_STATUS_KEYS } from '../constants/enums';
@@ -207,7 +208,7 @@ function ProfilTab({ user, detail, copyCode, copied }) {
         <div className="u-section-title">{t('users.drawer.information')}</div>
         <dl className="u-kv">
           <div><dt>{t('users.fields.email')}</dt><dd>{d.email || '—'}</dd></div>
-          <div><dt>{t('users.columns.contact')}</dt><dd>{d.phone ? <span className="u-phone"><span className="u-flag">🇨🇲</span>{d.phone}</span> : '—'}</dd></div>
+          <div><dt>{t('users.columns.contact')}</dt><dd>{d.phone ? <span className="u-phone"><span className="u-flag" aria-hidden="true">{phoneFlag(d.phone)}</span>{d.phone}</span> : '—'}</dd></div>
           <div><dt>{t('users.fields.city')}</dt><dd>{d.ville || '—'}</dd></div>
           <div><dt>{t('users.fields.age')}</dt><dd>{d.age ?? '—'}</dd></div>
           <div><dt>{t('users.fields.gender')}</dt><dd>{d.sexe ?? '—'}</dd></div>
@@ -809,7 +810,7 @@ export default function Utilisateurs() {
         const u = row.original;
         return (
           <div className="u-contact">
-            {u.phone ? <span className="u-phone"><span className="u-flag">🇨🇲</span>{u.phone}</span> : <span className="muted">—</span>}
+            {u.phone ? <span className="u-phone"><span className="u-flag" aria-hidden="true">{phoneFlag(u.phone)}</span>{u.phone}</span> : <span className="muted">—</span>}
             <span className="u-contact-city"><Icon icon={MapPin} size={13} /> {u.ville || '—'}</span>
           </div>
         );
