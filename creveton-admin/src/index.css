@@ -91,7 +91,15 @@
   --bg-sidebar: #0b2e1a;
   --bg-header: #0b2e1a;
   /* Layout */
-  --sidebar-w: 180px;
+  /* 208px et non 180 : le libellé le plus long, « Membres de l'équipe », mesure
+     131px en Outfit 700 (le poids de l'item ACTIF) et le chrome de `.nav-item`
+     en consomme 75 — bordure gauche 3 + padding 16×2 + icône 18 + gap 12 +
+     marge droite 10. Il fallait donc 206px : à 180 le texte sortait de la barre
+     latérale, de 7px sur « Membres de l'équipe » et de 1px sur « Rôles &
+     permissions », et l'anglais « Roles & permissions » débordait aussi.
+     Ne concerne que > 1280px — sous ce seuil la barre passe en rail d'icônes
+     de 64px, avec sa propre valeur littérale. */
+  --sidebar-w: 208px;
   --header-h: 64px;
   /* Rayons */
   --radius-sm: 8px;
@@ -312,6 +320,14 @@ input, select, textarea { font-family: inherit; }
 .nav-item.active { background: rgba(212, 160, 23, 0.12); color: var(--gold); font-weight: 700; border-left-color: var(--gold); }
 .nav-item.active .nav-icon { color: var(--gold); }
 .nav-icon { flex: none; color: currentColor; }
+/* Garde-fou. `--sidebar-w` est dimensionnée pour les libellés ACTUELS, dans les
+   deux langues ; ces trois lignes garantissent que le jour où un libellé plus
+   long arrive (ou qu'une traduction s'allonge), il se tronque À L'INTÉRIEUR de
+   la barre au lieu d'en sortir. C'est la troisième fois que quelque chose
+   déborde de cette sidebar : mieux vaut une ellipse qu'un texte qui bave sur le
+   contenu. Le `title` porté par le NavLink donne le libellé complet au survol. */
+.nav-item { max-width: 100%; min-width: 0; }
+.nav-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .nav-badge { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--gold); color: var(--green900); font-family: var(--font-display); font-weight: 700; font-size: var(--text-2xs); display: grid; place-items: center; }
 
 /* ── Pied de sidebar : profil connecté + déconnexion ── */
