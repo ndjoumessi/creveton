@@ -406,7 +406,8 @@
       "reasonOk": "Motif suffisant",
       "reasonMin": "Indiquez un motif (3 caractères min.)",
       "correctHasText": "La bonne réponse doit avoir un texte",
-      "completeToSaveShort": "Complétez l’énoncé et les réponses"
+      "completeToSaveShort": "Complétez l’énoncé et les réponses",
+      "statementRequirement": "{{min}} caractères minimum."
     },
     "confirm": {
       "rejectTitle": "Rejeter la question",
@@ -826,7 +827,7 @@
       "title": "Détail de la partie",
       "viewProfile": "Voir le profil du joueur",
       "scoreCard": "Score final",
-      "maxPts": "/ 1000 pts max",
+      "maxPts": "/ {{max}} pts max",
       "correct": "Bonnes",
       "wrong": "Fausses",
       "xp": "XP",

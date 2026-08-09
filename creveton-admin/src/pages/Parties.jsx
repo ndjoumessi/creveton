@@ -103,6 +103,30 @@ function ratioColor(ratio) {
   return 'var(--red)';
 }
 
+// Plafond THÉORIQUE d'une partie, dérivé du barème serveur
+// (`backend/src/services/scoreService.js`) : points de base par niveau, plus le
+// bonus de vitesse de +50 % si chaque réponse tombe sous 5 s.
+//
+// Le tiroir affichait « / 1000 pts max », un nombre en dur qui ne correspond à
+// rien : une partie Débutant de 10 questions plafonne à 750, une Expert à
+// 1 500. Le même score se lisait donc systématiquement plus faible qu'il ne
+// l'est — 275/1000 (27 %) au lieu de 275/750 (37 %).
+//
+// `null` pour blitz et marathon : leurs niveaux sont mélangés par question et
+// le marathon ajoute un multiplicateur de série thématique. Le plafond n'est
+// pas calculable côté console, donc on n'en affiche pas.
+const BASE_POINTS = { beginner: 50, intermediate: 75, expert: 100 };
+const SPEED_BONUS_RATE = 1.5;
+
+function maxScoreOf(session) {
+  if (!session) return null;
+  if (session.mode && session.mode !== 'normal') return null;
+  const base = BASE_POINTS[session.level];
+  const n = Number(session.question_count) || 0;
+  if (!base || !n) return null;
+  return Math.round(base * SPEED_BONUS_RATE) * n;
+}
+
 const ratioOf = (correct, total) => (total ? Math.min(1, correct / total) : 0);
 
 /** Suspicion de triche : ≥ 2 réponses sous 1 s (dérivé du détail, pas d'un flag serveur). */
@@ -508,7 +532,11 @@ export default function Parties() {
             {/* Carte score blanche. */}
             <div className="ses-score-card">
               <div className="ses-score-big" style={{ color: 'var(--gold)' }}>{num(selected.score)}</div>
-              <div className="ses-score-unit">{t('sessions.drawer.maxPts')}</div>
+              {maxScoreOf(selected) ? (
+                <div className="ses-score-unit">{t('sessions.drawer.maxPts', { max: num(maxScoreOf(selected)) })}</div>
+              ) : (
+                <div className="ses-score-unit">{t('common.pts')}</div>
+              )}
               <div className="ses-score-stats">
                 <div className="ses-sstat">
                   <div className="ses-sstat-v ok"><Check size={14} />{num(selected.correct_count)}</div>

@@ -1030,15 +1030,26 @@
 .q-field-head label { margin: 0; }
 
 /* Bouton correcteur IA — pastille or */
+/* « Améliorer » était un aplat d'OR, comme « Suivant ». La modale de création
+   en compte quatre (énoncé FR, énoncé EN, explication, explication EN) : cinq
+   aplats dorés sur un écran, alors que la charte réserve l'or au CTA primaire
+   et le plafonne à 10 % de la surface. Pire, « Traduire » — son voisin
+   immédiat, action de même rang — était déjà en contour vert. Deux actions
+   jumelles, deux poids visuels. « Améliorer » adopte donc le même contour, et
+   l'or ne désigne plus que « Suivant ». */
 .q-ai-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border: none;
+  border: 1px solid var(--gold);
   border-radius: var(--radius-pill);
-  background: var(--gold);
-  color: var(--green900);
+  background: var(--cream);
+  /* Littéral, PAS `--accent-fg` : le fond crème ne bascule pas en nuit alors
+     que le token, lui, passe au vert clair — 8,52:1 deviendrait 1,90:1. Même
+     piège que `.explain` juste au-dessus, qui se traite en surchargeant le
+     bloc entier (voir la règle `[data-theme="dark"]` plus bas). */
+  color: #1a5230;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
@@ -1238,6 +1249,9 @@
 [data-theme="dark"] .q-lang-badge--both { background: rgba(42,138,79,0.18); color: var(--green300); }
 [data-theme="dark"] .q-bi-badge--ok { background: rgba(42,138,79,0.18); color: var(--green300); }
 [data-theme="dark"] .q-translate-btn { background: rgba(42,138,79,0.18); color: var(--green300); }
+/* Nuit : voile d'or au lieu du crème (même traitement que `.explain`).
+   Mesuré 4,84:1 pour le texte et la bordure sur le voile composé. */
+[data-theme="dark"] .q-ai-btn { background: rgba(212,160,23,0.10); color: var(--gold); }
 [data-theme="dark"] .q-bilingual-toggle { background: rgba(42,138,79,0.18); color: var(--green300); }
 /* Green correct-answer surfaces */
 [data-theme="dark"] .q-opt-row.is-correct { background: rgba(42,138,79,0.12); }

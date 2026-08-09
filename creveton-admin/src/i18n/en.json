@@ -406,7 +406,8 @@
       "reasonOk": "Reason sufficient",
       "reasonMin": "Provide a reason (3 characters min.)",
       "correctHasText": "The correct answer must have text",
-      "completeToSaveShort": "Complete the statement and answers"
+      "completeToSaveShort": "Complete the statement and answers",
+      "statementRequirement": "{{min}} characters minimum."
     },
     "confirm": {
       "rejectTitle": "Reject the question",
@@ -826,7 +827,7 @@
       "title": "Game detail",
       "viewProfile": "View player profile",
       "scoreCard": "Final score",
-      "maxPts": "/ 1000 pts max",
+      "maxPts": "/ {{max}} pts max",
       "correct": "Correct",
       "wrong": "Wrong",
       "xp": "XP",

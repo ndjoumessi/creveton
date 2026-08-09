@@ -701,6 +701,8 @@ table.data tbody tr:last-child td { border-bottom: none; }
 .valid-hint { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; }
 .valid-hint.ok { color: var(--green500); }
 .valid-hint.ko { color: var(--red); }
+/* Champ encore vide : rappel de la contrainte, pas reproche. */
+.valid-hint.neutral { color: var(--muted); font-weight: 400; }
 
 /* Compteur de caractères */
 .char-count { font-size: 11.5px; color: var(--muted); text-align: right; }

@@ -401,6 +401,7 @@ const STEP_META = [
 ];
 
 const MAX_TEXT = 300;
+const MIN_TEXT = 10;
 const EMPTY_DRAFT = {
   textFr: '', textEn: '', opts: ['', '', '', ''], optsEn: ['', '', '', ''], correct: 0,
   explanation: '', explanationEn: '', theme: 'culture', level: 'beginner', tags: [],
@@ -558,7 +559,7 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill, duplicate =
   const isEn = i18n.language === 'en';
   const trimmed = textFr.trim(); // source de vérité enregistrée (text_fr)
   const primaryStmt = isEn ? textEn : textFr;
-  const stmtOk = primaryStmt.trim().length >= 10;
+  const stmtOk = primaryStmt.trim().length >= MIN_TEXT;
   const stmtOver = primaryStmt.length > MAX_TEXT;
   const optsOk = Boolean(opts[0].trim() && opts[1].trim());
   const correctOk = Boolean(opts[correct]?.trim());
@@ -677,12 +678,23 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill, duplicate =
         />
         {ai.panel}
         <div className={`char-count ${over ? 'over' : value.length > 270 ? 'warn' : ''}`}>{value.length} / {MAX_TEXT}</div>
+        {/* Trois états, pas deux. Le champ vide tombait dans la branche « ko » :
+            à l'ouverture de « Nouvelle question », l'énoncé affichait
+            « ⚠ Énoncé trop court » en rouge avant que l'utilisateur ait tapé
+            quoi que ce soit. Reprocher une faute non commise. Vide = simple
+            rappel de la contrainte, en gris. */}
         {isPrimary && (
-          <div className={`valid-hint ${stmtOk && !stmtOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
-            {stmtOk && !stmtOver
-              ? <><Check size={13} /> {t('questions.validation.statementOk')}</>
-              : <><AlertCircle size={13} /> {stmtOver ? t('questions.validation.statementTooLong', { max: MAX_TEXT }) : t('questions.validation.statementTooShort')}</>}
-          </div>
+          value.length === 0 ? (
+            <div className="valid-hint neutral" style={{ marginTop: 4 }}>
+              {t('questions.validation.statementRequirement', { min: MIN_TEXT })}
+            </div>
+          ) : (
+            <div className={`valid-hint ${stmtOk && !stmtOver ? 'ok' : 'ko'}`} style={{ marginTop: 4 }}>
+              {stmtOk && !stmtOver
+                ? <><Check size={13} /> {t('questions.validation.statementOk')}</>
+                : <><AlertCircle size={13} /> {stmtOver ? t('questions.validation.statementTooLong', { max: MAX_TEXT }) : t('questions.validation.statementTooShort')}</>}
+            </div>
+          )
         )}
       </div>
     );
