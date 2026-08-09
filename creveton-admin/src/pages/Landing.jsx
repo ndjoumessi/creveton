@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
 import { useCountUp } from '../hooks/useCountUp';
+import { useHashScroll } from '../hooks/useHashScroll';
 import { PRODUCT_FACTS, PUBLIC_THEMES } from '../constants/product';
 import './Landing.css';
 
@@ -148,6 +149,9 @@ function PhoneMockup({ t }) {
 
 export default function Landing() {
   const { t } = useTranslation();
+  // Lien partagé ou rafraîchissement sur `/landing#themes` : le saut natif a eu
+  // lieu avant que React ne rende les sections, il n'a rien trouvé.
+  useHashScroll();
   // Switcher de langue autonome (la Landing publique n'a pas la navbar admin).
   // setLang → i18n.changeLanguage + localStorage ; useTranslation re-render seul.
   const lang = useUiStore((s) => s.lang);
