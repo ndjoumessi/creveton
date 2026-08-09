@@ -93,8 +93,25 @@ export default function EmailVerifySheet({ visible, onClose, email, onVerified }
     }
   };
 
-  const confirm = async () => {
-    if (code.length !== LENGTH) {
+  /**
+   * @param {string|object} [full] code complet quand l'appel vient de
+   *   `onComplete` ; événement de press quand il vient du bouton « Confirmer ».
+   *
+   * Le paramètre est indispensable. `CodeInput.emit` appelle `onChange(joined)`
+   * — donc un `setCode` ASYNCHRONE — puis `onComplete(joined)` dans le même
+   * tour : en lisant `code` depuis l'état, `confirm` voyait encore la valeur
+   * d'AVANT le dernier chiffre, refusait pour longueur insuffisante et
+   * affichait « Saisis les 6 chiffres » sur six cases pleines. La vérification
+   * d'adresse par saisie du 6e chiffre n'a donc jamais pu aboutir.
+   *
+   * `typeof full === 'string'` et non `full ?? code` : en press, React Native
+   * passe l'événement en premier argument, et un objet passerait le test.
+   * `OTPScreen.submit(full)` applique déjà ce contrat — c'est pourquoi la
+   * vérification du TÉLÉPHONE fonctionnait, elle.
+   */
+  const confirm = async (full) => {
+    const value = typeof full === 'string' ? full : code;
+    if (value.length !== LENGTH) {
       setError(t('profile.email.codeRequired'));
       codeRef.current?.shake();
       return;
@@ -102,7 +119,7 @@ export default function EmailVerifySheet({ visible, onClose, email, onVerified }
     setError(null);
     setBusy(true);
     try {
-      const res = await usersApi.verifyEmail(code);
+      const res = await usersApi.verifyEmail(value);
       toast.show({
         type: 'success',
         message: res?.changed ? t('profile.email.notify.changed') : t('profile.email.notify.verified'),
