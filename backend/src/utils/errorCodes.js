@@ -90,7 +90,11 @@ const ERROR_CODES = {
 
   INTERNAL_ERROR: { http: 500, fr: 'Erreur serveur.', en: 'Server error.' },
   NOT_IMPLEMENTED: { http: 501, fr: 'Endpoint non encore implémenté (scaffold).', en: 'Endpoint not implemented yet (scaffold).' },
-  SMS_PROVIDER_UNAVAILABLE: { http: 503, fr: 'Service SMS temporairement indisponible.', en: 'SMS service temporarily unavailable.' },
+  // Remplace SMS_PROVIDER_UNAVAILABLE : depuis l'introduction d'`otpChannel`,
+  // le code peut partir par WhatsApp, SMS ou email — parler de « service SMS »
+  // désignait un coupable au hasard. Le message reste volontairement muet sur le
+  // canal : le joueur n'a pas à savoir lequel a lâché, il doit juste réessayer.
+  OTP_DELIVERY_FAILED: { http: 503, fr: "Impossible d'envoyer le code pour le moment, réessayez dans quelques instants.", en: 'Unable to send the code right now, please try again shortly.' },
   PAYMENT_PROVIDER_UNAVAILABLE: { http: 503, fr: 'Service de paiement temporairement indisponible.', en: 'Payment service temporarily unavailable.' },
   EMAIL_SEND_FAILED: { http: 503, fr: "L'envoi de l'email a échoué, réessayez plus tard.", en: 'Sending the email failed, try again later.' },
   AI_NOT_CONFIGURED: { http: 503, fr: 'Correcteur IA non configuré (clé absente).', en: 'AI corrector not configured (missing key).' },

@@ -78,7 +78,12 @@ describe('authService.register', () => {
     const passedHash = userModel.create.mock.calls[0][0].password_hash;
     expect(passedHash).toMatch(/^\$2[aby]\$12\$/);
     expect(await bcrypt.compare('MotDePasse1', passedHash)).toBe(true);
-    expect(otpService.issue).toHaveBeenCalledWith('+237690000000');
+    // Le second argument ne sert QU'au repli email d'`otpChannel` : le code
+    // reste indexé sur le numéro, l'adresse n'est qu'un tuyau de secours.
+    expect(otpService.issue).toHaveBeenCalledWith(
+      '+237690000000',
+      expect.objectContaining({ email: 'awa@example.cm', name: 'Awa Mballa' })
+    );
   });
 
   test('email déjà utilisé → EMAIL_ALREADY_USED', async () => {

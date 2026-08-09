@@ -180,6 +180,30 @@ régénérer avec `/impeccable document`.
     ON DELETE CASCADE — un `DELETE` effacerait `game_sessions`, donc réécrirait les
     classements et fausserait `success_rate`. La forme correcte est une ANONYMISATION, et
     la durée de rétention est un choix juridique. Tests : `backend/tests/jobs.test.js`.
+- **Acheminement des OTP** (`src/services/otpChannel.js`) : `otpService` ne connaît plus
+  qu'UN point d'envoi — `otpChannel.sendCode({ phone, email, name, lang }, code)`. Il
+  essaie les canaux dans l'ordre de `OTP_CHANNELS` (défaut `whatsapp,sms,email`), saute
+  ceux qui ne sont pas configurés, et bascule au suivant à chaque échec. **Séquentiel à
+  dessein** : un même code livré deux fois double la surface d'interception et facture
+  deux envois.
+  · **WhatsApp d'abord** (`whatsappService.js`, API Cloud de Meta, `fetch` natif — aucune
+    dépendance ajoutée) : au Cameroun, une vérification y coûte un ordre de grandeur de
+    moins qu'un SMS vers un +237, qui est le poste le plus cher de l'inscription. Le
+    message DOIT être un template de catégorie `AUTHENTICATION` approuvé par Meta (corps
+    à un paramètre + bouton « copier le code ») — hors fenêtre de 24 h, le texte libre est
+    refusé. Variables : `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
+    `WHATSAPP_TEMPLATE_NAME`, `WHATSAPP_TEMPLATE_LANG`, `WHATSAPP_API_VERSION`.
+  · **L'email est un SECOURS, jamais le canal principal** : l'adresse est facultative à
+    l'inscription et non vérifiée à ce stade — elle ne peut pas porter un code qui prouve
+    un NUMÉRO. Le rate-limit, le stockage Redis et la vérification restent indexés sur le
+    téléphone ; `contact` n'est là que pour le repli.
+  · **Rien n'est cassé sans configuration** : tant que les variables WhatsApp sont
+    absentes, le canal est sauté et le SMS d'aujourd'hui continue de servir. Hors
+    production et sans aucun canal, l'envoi est simulé (journalisé) pour ne pas bloquer le
+    développement — **en production, on lève** plutôt que de feindre un succès.
+  · `SMS_PROVIDER_UNAVAILABLE` a été remplacé par **`OTP_DELIVERY_FAILED`** : il désignait
+    un coupable au hasard dès que le canal en échec n'était pas le SMS.
+    Tests : `backend/tests/otpChannel.test.js` (ordre, saut, repli, prod vs dev).
 - **Vérification d'adresse email** (`src/services/emailVerificationService.js`,
   migration `026_users_email_verified.sql`) : code à 6 chiffres par email, Redis
   `emailverify:<user_id>` (stocke aussi l'adresse **VISÉE** — un code demandé pour une

@@ -30,7 +30,22 @@ const COLORS = {
   border: '#e5e7eb',
 };
 
-const FONT = "'Space Grotesk', 'Helvetica Neue', Arial, sans-serif";
+/**
+ * Polices des emails, par RÔLE — miroir de DESIGN.md § Typography.
+ *
+ * Space Grotesk figurait encore ici : c'était la fonte de corps d'origine,
+ * remplacée par Inter en 08-2026. Un email ne peut pas lire `var(--font-body)`,
+ * donc un littéral est normal — mais il faut le resynchroniser à la main, et
+ * personne ne l'avait fait.
+ *
+ * Chaque pile part de la fonte de marque et retombe sur des familles présentes
+ * sur les systèmes : aucun client mail grand public ne charge de webfont, la
+ * première entrée ne sert qu'aux rares qui l'ont localement. Ce qui compte
+ * vraiment est le REPLI — d'où Segoe UI (Windows/Outlook), Roboto (Android,
+ * majoritaire chez nos joueurs), Helvetica Neue (Apple), puis Arial.
+ */
+const FONT_DISPLAY = "'Outfit', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+const FONT_BODY = "'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
 // Client Resend initialisé paresseusement (pas d'instanciation sans clé).
 let client = null;
@@ -92,11 +107,11 @@ function layout({ preheader, bodyHtml, ctaLabel, ctaUrl, footerHtml }) {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid ${COLORS.border};">
         <tr>
           <td style="background-color:${COLORS.green900};padding:28px 32px;text-align:center;">
-            <span style="font-family:${FONT};font-size:26px;font-weight:700;color:${COLORS.gold};letter-spacing:0.5px;">Creveton</span>
+            <span style="font-family:${FONT_DISPLAY};font-size:26px;font-weight:700;color:${COLORS.gold};letter-spacing:0.5px;">Creveton</span>
           </td>
         </tr>
         <tr>
-          <td style="padding:32px;font-family:${FONT};color:${COLORS.ink};font-size:15px;line-height:1.6;">
+          <td style="padding:32px;font-family:${FONT_BODY};color:${COLORS.ink};font-size:15px;line-height:1.6;">
             ${bodyHtml}
             ${
               // CTA optionnel : l'email de réinitialisation porte un CODE à
@@ -105,16 +120,16 @@ function layout({ preheader, bodyHtml, ctaLabel, ctaUrl, footerHtml }) {
               ctaUrl
                 ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 8px;">
               <tr><td style="border-radius:8px;background-color:${COLORS.gold};">
-                <a href="${safeCtaUrl}" target="_blank" style="display:inline-block;padding:14px 28px;font-family:${FONT};font-size:15px;font-weight:700;color:${COLORS.green900};text-decoration:none;border-radius:8px;">${esc(ctaLabel)}</a>
+                <a href="${safeCtaUrl}" target="_blank" style="display:inline-block;padding:14px 28px;font-family:${FONT_DISPLAY};font-size:15px;font-weight:700;color:${COLORS.green900};text-decoration:none;border-radius:8px;">${esc(ctaLabel)}</a>
               </td></tr>
             </table>
-            <p style="font-family:${FONT};font-size:12px;color:${COLORS.muted};margin:16px 0 0;word-break:break-all;">${safeCtaUrl}</p>`
+            <p style="font-family:${FONT_BODY};font-size:12px;color:${COLORS.muted};margin:16px 0 0;word-break:break-all;">${safeCtaUrl}</p>`
                 : ''
             }
           </td>
         </tr>
         <tr>
-          <td style="padding:18px 32px;border-top:1px solid ${COLORS.border};font-family:${FONT};font-size:12px;color:${COLORS.muted};text-align:center;">
+          <td style="padding:18px 32px;border-top:1px solid ${COLORS.border};font-family:${FONT_BODY};font-size:12px;color:${COLORS.muted};text-align:center;">
             ${footerHtml}
           </td>
         </tr>
@@ -270,7 +285,7 @@ async function sendPasswordResetCode({ to, name, code, expiresMinutes, lang = 'f
   // d'œil dans l'aperçu de notification comme dans le corps du message.
   const codeBlock = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
       <tr><td style="background-color:${COLORS.cream};border:1px solid ${COLORS.border};border-radius:10px;padding:18px 28px;text-align:center;">
-        <span style="font-family:${FONT};font-size:32px;font-weight:700;letter-spacing:8px;color:${COLORS.green900};">${codeEsc}</span>
+        <span style="font-family:${FONT_DISPLAY};font-size:32px;font-weight:700;letter-spacing:8px;color:${COLORS.green900};">${codeEsc}</span>
       </td></tr>
     </table>`;
 
@@ -325,7 +340,7 @@ async function sendEmailVerificationCode({ to, name, code, expiresMinutes, isCha
 
   const codeBlock = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
       <tr><td style="background-color:${COLORS.cream};border:1px solid ${COLORS.border};border-radius:10px;padding:18px 28px;text-align:center;">
-        <span style="font-family:${FONT};font-size:32px;font-weight:700;letter-spacing:8px;color:${COLORS.green900};">${codeEsc}</span>
+        <span style="font-family:${FONT_DISPLAY};font-size:32px;font-weight:700;letter-spacing:8px;color:${COLORS.green900};">${codeEsc}</span>
       </td></tr>
     </table>`;
 
@@ -369,9 +384,60 @@ async function sendEmailVerificationCode({ to, name, code, expiresMinutes, isCha
   return send({ to, subject, html, logSubject: "Code de vérification d'adresse Creveton" });
 }
 
+/**
+ * Code OTP d'INSCRIPTION, servi par email quand ni WhatsApp ni SMS n'aboutissent
+ * (cf. services/otpChannel.js). Distinct de `sendEmailVerificationCode` : celui-ci
+ * prouve un NUMÉRO de téléphone, pas l'adresse email — la formulation doit le
+ * dire, sinon le joueur croit valider son adresse.
+ */
+async function sendOtpCode({ to, name, code, expiresMinutes, lang = 'fr' }) {
+  const isFr = lang !== 'en';
+  const nameEsc = esc(name || '');
+  const codeEsc = esc(code);
+  const hello = name
+    ? `${isFr ? 'Bonjour' : 'Hi'} ${nameEsc},`
+    : `${isFr ? 'Bonjour,' : 'Hello,'}`;
+
+  const subject = isFr
+    ? `Ton code Creveton : ${code}`
+    : `Your Creveton code: ${code}`;
+
+  const codeBlock = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+      <tr><td style="background-color:${COLORS.cream};border:1px solid ${COLORS.border};border-radius:10px;padding:18px 28px;text-align:center;">
+        <span style="font-family:${FONT_DISPLAY};font-size:32px;font-weight:700;letter-spacing:8px;color:${COLORS.green900};">${codeEsc}</span>
+      </td></tr>
+    </table>`;
+
+  const bodyHtml = isFr
+    ? `<p style="margin:0 0 12px;">${hello}</p>
+       <p style="margin:0 0 12px;">Voici ton code pour confirmer ton numéro et activer ton compte :</p>
+       ${codeBlock}
+       <p style="margin:0 0 12px;">Il est valable <strong>${expiresMinutes} minutes</strong> et ne sert qu'une fois.</p>
+       <p style="margin:0;color:${COLORS.muted};font-size:13px;">Tu n'as pas créé de compte Creveton ? Ignore cet email.</p>`
+    : `<p style="margin:0 0 12px;">${hello}</p>
+       <p style="margin:0 0 12px;">Here is your code to confirm your number and activate your account:</p>
+       ${codeBlock}
+       <p style="margin:0 0 12px;">It is valid for <strong>${expiresMinutes} minutes</strong> and can only be used once.</p>
+       <p style="margin:0;color:${COLORS.muted};font-size:13px;">Didn't create a Creveton account? Ignore this email.</p>`;
+
+  const html = layout({
+    preheader: isFr
+      ? `Code ${code} — valable ${expiresMinutes} min`
+      : `Code ${code} — valid for ${expiresMinutes} min`,
+    bodyHtml,
+    footerHtml: isFr
+      ? 'Creveton · Ne partage jamais ce code.'
+      : 'Creveton · Never share this code.',
+  });
+
+  // Le sujet porte le code : caviardé dans les journaux (cf. send).
+  return send({ to, subject, html, logSubject: "Code d'inscription Creveton" });
+}
+
 module.exports = {
   sendTeamInvitation,
   sendPlayerReferral,
   sendPasswordResetCode,
   sendEmailVerificationCode,
+  sendOtpCode,
 };

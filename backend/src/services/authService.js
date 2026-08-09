@@ -123,9 +123,15 @@ async function register(input) {
   // l'exige) — la faire attendre ici rallongerait l'inscription pour rien.
   emailVerificationService.issueOnRegister(user);
 
-  // Envoi OTP. Si Twilio est indisponible (503), le compte existe déjà : la
+  // Envoi OTP. Si AUCUN canal n'aboutit (503), le compte existe déjà : la
   // récupération se fait via /auth/resend-otp.
-  const otp = await otpService.issue(user.phone);
+  // On passe l'adresse et le prénom : ils ne servent qu'au repli email
+  // d'`otpChannel`, quand ni WhatsApp ni SMS n'ont pu délivrer.
+  const otp = await otpService.issue(user.phone, {
+    email: user.email,
+    name: user.name,
+    lang: user.lang,
+  });
 
   return {
     user_id: user.id,
@@ -157,7 +163,11 @@ async function resendOtp(phone) {
   const user = await userModel.findByPhone(phone);
   if (!user) throw new ApiError('USER_NOT_FOUND');
 
-  const otp = await otpService.issue(phone);
+  const otp = await otpService.issue(phone, {
+    email: user.email,
+    name: user.name,
+    lang: user.lang,
+  });
   return { otp_sent: otp.otp_sent, otp_expires_at: otp.otp_expires_at };
 }
 

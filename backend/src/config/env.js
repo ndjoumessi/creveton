@@ -53,6 +53,22 @@ const env = {
     expiresMinutes: int(process.env.OTP_EXPIRES_MINUTES, 10),
     maxAttempts: int(process.env.OTP_MAX_ATTEMPTS, 3),
     resendLimitPerHour: int(process.env.OTP_RESEND_LIMIT_PER_HOUR, 5),
+    // Ordre des canaux d'acheminement (cf. services/otpChannel.js). Un canal
+    // non configuré est sauté : laisser la valeur par défaut suffit à déployer
+    // WhatsApp progressivement — tant que ses variables sont absentes, le SMS
+    // d'aujourd'hui continue de servir.
+    channels: process.env.OTP_CHANNELS || 'whatsapp,sms,email',
+  },
+
+  // WhatsApp Cloud API (Meta) — canal OTP privilégié : au Cameroun il coûte un
+  // ordre de grandeur de moins qu'un SMS vers un +237.
+  whatsapp: {
+    token: process.env.WHATSAPP_TOKEN || '',
+    phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
+    // Modèle de catégorie AUTHENTICATION, approuvé côté Meta.
+    templateName: process.env.WHATSAPP_TEMPLATE_NAME || 'creveton_otp',
+    templateLang: process.env.WHATSAPP_TEMPLATE_LANG || 'fr',
+    apiVersion: process.env.WHATSAPP_API_VERSION || 'v21.0',
   },
 
   // Vérification d'adresse email (inscription + changement d'adresse). Mêmes
