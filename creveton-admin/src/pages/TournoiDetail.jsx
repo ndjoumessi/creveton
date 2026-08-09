@@ -10,7 +10,7 @@ import { Icon } from '../components/Icon';
 import tournamentsService from '../services/tournaments.service';
 import { list as searchUsers } from '../services/users.service';
 import { useApiData } from '../hooks/useApiData';
-import { themeBadgeColors, themeLabels, tournamentStatusColors } from '../constants/theme';
+import { themeBadgeColors, themeLabel, tournamentStatusColors } from '../constants/theme';
 import { num, fcfa, dateShort, dateTimeShort, pct } from '../utils/format';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
@@ -174,7 +174,8 @@ export default function TournoiDetail() {
   const cfg = themeBadgeColors[tour.theme];
   const emoji = cfg?.icon || '🏆';
   const fillPct = tour.max_players ? Math.min(100, Math.round((tour.registered_players / tour.max_players) * 100)) : 0;
-  const themeLabel = t(`questions.themes.${tour.theme}`, themeLabels[tour.theme] || tour.theme || t('tournaments.detail.mixedThemes'));
+  // `theme` est NUL pour un tournoi multi-thèmes — d'où le libellé dédié.
+  const themeName = tour.theme ? themeLabel(tour.theme) : t('tournaments.detail.mixedThemes');
   // Nb d'inscrits : sert à neutraliser les scores (« — » au lieu de « 0 » quand
   // personne n'est inscrit, un « 0 » se lisant comme un vrai score).
   const inscrits = stats?.registered ?? tour.registered_players ?? 0;
@@ -197,7 +198,7 @@ export default function TournoiDetail() {
                 {Number(tour.entry_fee) > 0 ? t('tournaments.card.paid') : t('tournaments.card.free')}
               </span>
               {cfg && (
-                <span className="td-hero-badge">{emoji} {themeLabel}</span>
+                <span className="td-hero-badge">{emoji} {themeName}</span>
               )}
             </div>
             <h1 className="td-hero-title">{tour.name}</h1>
@@ -314,7 +315,7 @@ export default function TournoiDetail() {
 
             <div className="td-field">
               <span className="td-field-label">{t('tournaments.modal.theme')}</span>
-              <span className="td-field-value">{emoji} {themeLabel}</span>
+              <span className="td-field-value">{emoji} {themeName}</span>
             </div>
             <div className="td-field">
               <span className="td-field-label">{t('tournaments.detail.end')}</span>

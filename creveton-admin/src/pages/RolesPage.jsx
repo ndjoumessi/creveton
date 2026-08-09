@@ -64,18 +64,19 @@ function RoleCard({ role, onEdit }) {
       <div className="roles-card-body">
         <p className="roles-card-desc">{t(`roles.descriptions.${role.role}`)}</p>
 
+        {/* Ni la pastille « Accès total » ni le sous-titre joueur : tous deux
+            répétaient MOT POUR MOT la description juste au-dessus
+            (« Full access to all features. » puis une pastille « Full access to
+            all features »). Une phrase déguisée en permission ne devient pas
+            une information de plus. */}
         {isSuper ? (
           <div className="roles-super">
-            <span className="roles-pill roles-pill-on">{t('roles.fullAccess')}</span>
             <p className="roles-super-risk"><ShieldAlert size={14} aria-hidden="true" /> {t('roles.superAdminRisk')}</p>
           </div>
         ) : isPlayer ? (
-          <>
-            <p className="roles-card-sub">{t('roles.playerDesc')}</p>
-            <div className="roles-pills">
-              <span className="roles-pill roles-pill-off">{t('roles.playerDenied')}</span>
-            </div>
-          </>
+          <div className="roles-pills">
+            <span className="roles-pill roles-pill-off">{t('roles.playerDenied')}</span>
+          </div>
         ) : (
           <div className="roles-pills">
             {allowed.map((k) => (

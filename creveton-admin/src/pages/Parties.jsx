@@ -15,7 +15,7 @@ import i18n from '../i18n';
 import { chartTheme } from '../utils/chartTheme';
 import useThemeStore from '../store/themeStore';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
-import { themeLabels, levelLabels, themeBadgeColors } from '../constants/theme';
+import { themeLabel, levelLabel, themeBadgeColors } from '../constants/theme';
 import { num, pct, dateShort, dateTimeShort } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
@@ -187,7 +187,7 @@ export default function Parties() {
       // pastille de couleur et AUCUN libellé, comme un défaut de rendu.
       .map(([theme, value]) => ({
         theme,
-        name: themeBadgeColors[theme]?.label || themeLabels[theme] || theme || t('sessions.misc.noTheme'),
+        name: theme ? themeLabel(theme) : t('sessions.misc.noTheme'),
         value,
         share: value / total,
         color: themeBadgeColors[theme]?.fg || 'var(--muted)',
@@ -259,7 +259,7 @@ export default function Parties() {
     },
     {
       accessorKey: 'level', header: t('sessions.columns.level'), enableSorting: false,
-      cell: (c) => <span className="badge badge-level">{levelLabels[c.getValue()] || c.getValue() || '—'}</span>,
+      cell: (c) => <span className="badge badge-level">{levelLabel(c.getValue()) || c.getValue() || '—'}</span>,
     },
     {
       accessorKey: 'score', header: t('sessions.columns.score'),
@@ -446,11 +446,11 @@ export default function Parties() {
           </div>
           <select className="select" value={filters.theme} onChange={(e) => setF('theme', e.target.value)}>
             <option value="">{t('sessions.allThemes')}</option>
-            {THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabels[t]}</option>)}
+            {THEME_KEYS.map((t) => <option key={t} value={t}>{themeLabel(t)}</option>)}
           </select>
           <select className="select" value={filters.level} onChange={(e) => setF('level', e.target.value)}>
             <option value="">{t('sessions.allLevels')}</option>
-            {LEVEL_KEYS.map((l) => <option key={l} value={l}>{levelLabels[l]}</option>)}
+            {LEVEL_KEYS.map((l) => <option key={l} value={l}>{levelLabel(l)}</option>)}
           </select>
         </div>
         <div className="ses-pills">
@@ -512,7 +512,7 @@ export default function Parties() {
                   </button>
                   <div className="row wrap" style={{ gap: 7, marginTop: 2 }}>
                     <ThemeBadge theme={selected.theme} />
-                    <span className="badge badge-level">{levelLabels[selected.level] || selected.level}</span>
+                    <span className="badge badge-level">{levelLabel(selected.level) || selected.level}</span>
                   </div>
                   <div className="ses-ddate" title={dateTimeShort(selected.played_at)}>
                     {dateShort(selected.played_at)}

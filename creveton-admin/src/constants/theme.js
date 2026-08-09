@@ -1,5 +1,7 @@
 // Système de design Creveton (charte CDC §9) — source de vérité côté JS.
 
+import i18n from '../i18n';
+
 export const colors = {
   green900: '#0b2e1a',
   green700: '#1a5230',
@@ -49,13 +51,16 @@ export const pastels = {
 export const chartColors = ['#2a8a4f', '#d4a017', '#5eca84', '#3b82f6', '#8b5cf6'];
 
 // Badges de THÈME — couleur distinctive + emoji par thème (spec redesign senior).
+// `label` n'est plus ici : il était français en dur et ressortait tel quel dans
+// la console anglaise (« Géographie », « Histoire »). Couleur et icône restent —
+// elles n'ont pas de langue. Le mot vient de `themeLabel()` plus bas.
 export const themeBadgeColors = {
-  culture: { bg: pastels.violet, fg: pastels.violetFg, label: 'Culture', icon: '📚' },
-  geographie: { bg: pastels.blue, fg: pastels.blueFg, label: 'Géographie', icon: '🌍' },
-  histoire: { bg: pastels.orange, fg: pastels.orangeFg, label: 'Histoire', icon: '🏛️' },
-  industrie: { bg: pastels.mint, fg: pastels.mintFg, label: 'Industrie', icon: '🏭' },
-  sport: { bg: pastels.red, fg: pastels.roseFg, label: 'Sport', icon: '⚽' },
-  science: { bg: pastels.cyan, fg: pastels.cyanFg, label: 'Science', icon: '🔬' },
+  culture: { bg: pastels.violet, fg: pastels.violetFg, icon: '📚' },
+  geographie: { bg: pastels.blue, fg: pastels.blueFg, icon: '🌍' },
+  histoire: { bg: pastels.orange, fg: pastels.orangeFg, icon: '🏛️' },
+  industrie: { bg: pastels.mint, fg: pastels.mintFg, icon: '🏭' },
+  sport: { bg: pastels.red, fg: pastels.roseFg, icon: '⚽' },
+  science: { bg: pastels.cyan, fg: pastels.cyanFg, icon: '🔬' },
 };
 
 // Badges de STATUT — questions (workflow CDC §3.3). `archived` = gris bespoke (hors palette).
@@ -98,17 +103,19 @@ export const providerLabels = {
   campay: 'Campay',
 };
 
-export const themeLabels = {
-  culture: 'Culture',
-  geographie: 'Géographie',
-  histoire: 'Histoire',
-  industrie: 'Industrie',
-  sport: 'Sport',
-  science: 'Science',
-};
-
-export const levelLabels = {
-  beginner: 'Débutant',
-  intermediate: 'Intermédiaire',
-  expert: 'Expert',
-};
+/**
+ * Libellés de thème et de niveau — LOCALISÉS.
+ *
+ * C'étaient deux tables françaises en dur, importées par neuf écrans. En
+ * anglais, la console affichait donc « Débutant », « Géographie », « Histoire »
+ * au milieu de « Recent activity » et « Theme distribution ». Les traductions
+ * existaient pourtant depuis toujours dans les catalogues
+ * (`questions.themes.*`, `questions.levels.*`) — personne ne les lisait.
+ *
+ * Des FONCTIONS, pas des objets : un objet figé serait résolu une fois à
+ * l'import, avant même que i18n ait choisi sa langue, et ne suivrait pas la
+ * bascule FR/EN à chaud. Le repli sur la clé brute évite le vide si un thème
+ * apparaît en base sans traduction.
+ */
+export const themeLabel = (key) => i18n.t(`questions.themes.${key}`, { defaultValue: key || '—' });
+export const levelLabel = (key) => i18n.t(`questions.levels.${key}`, { defaultValue: key || '—' });

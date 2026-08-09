@@ -11,7 +11,7 @@ import { Icon } from '../components/Icon';
 import tournamentsService from '../services/tournaments.service';
 import { useApiData } from '../hooks/useApiData';
 import { THEME_KEYS } from '../constants/enums';
-import { themeBadgeColors, themeLabels, tournamentStatusColors } from '../constants/theme';
+import { themeBadgeColors, themeLabel, tournamentStatusColors } from '../constants/theme';
 import { num, fcfa, dateShort, dateTimeShort, tournamentStart } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
@@ -128,7 +128,7 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
         <div className="tour-card-name">{tour.name || t('tournaments.card.placeholderName')}</div>
         <div className="tour-card-badges">
           <span className="tour-badge tour-badge-free">{Number(tour.entry_fee) > 0 ? t('tournaments.card.paid') : t('tournaments.card.free')}</span>
-          {tour.theme && <span className={`tour-badge tour-theme--${tour.theme}`}>{t(`questions.themes.${tour.theme}`, themeLabels[tour.theme] || tour.theme)}</span>}
+          {tour.theme && <span className={`tour-badge tour-theme--${tour.theme}`}>{t(`questions.themes.${tour.theme}`, themeLabel(tour.theme) || tour.theme)}</span>}
           {tour.format && <span className="tour-badge tour-badge-soft">{t('tournaments.card.formatBadge', { q: tour.format.questions, s: tour.format.time_per_q_s })}</span>}
         </div>
 
@@ -283,7 +283,7 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
                 <div className="field" style={{ marginBottom: 0 }}>
                   <label><Palette size={13} /> {t('tournaments.modal.theme')}</label>
                   <select className="select" value={d.theme} onChange={(e) => set('theme', e.target.value)}>
-                    {THEME_KEYS.map((k) => <option key={k} value={k}>{(themeBadgeColors[k] && themeBadgeColors[k].icon) || ''} {t(`questions.themes.${k}`, themeLabels[k])}</option>)}
+                    {THEME_KEYS.map((k) => <option key={k} value={k}>{(themeBadgeColors[k] && themeBadgeColors[k].icon) || ''} {t(`questions.themes.${k}`, themeLabel(k))}</option>)}
                   </select>
                 </div>
               </div>
@@ -342,7 +342,7 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
           {step === 2 && (
             <div className="tcm-summary">
               <div className="tcm-sum-row"><span className="tcm-sum-ico"><Tag size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.nameLabel')}</span><span className="tcm-sum-v">{d.name || '—'}</span></div>
-              <div className="tcm-sum-row"><span className="tcm-sum-ico"><Palette size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.theme')}</span><span className="tcm-sum-v">{(themeBadgeColors[d.theme] && themeBadgeColors[d.theme].icon) || ''} {t(`questions.themes.${d.theme}`, themeLabels[d.theme])}</span></div>
+              <div className="tcm-sum-row"><span className="tcm-sum-ico"><Palette size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.theme')}</span><span className="tcm-sum-v">{(themeBadgeColors[d.theme] && themeBadgeColors[d.theme].icon) || ''} {t(`questions.themes.${d.theme}`, themeLabel(d.theme))}</span></div>
               <div className="tcm-sum-row"><span className="tcm-sum-ico"><Users size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.maxPlayersShort')}</span><span className="tcm-sum-v">{d.max_players}</span></div>
               <div className="tcm-sum-row"><span className="tcm-sum-ico"><Hash size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.formatLabel')}</span><span className="tcm-sum-v">{t('tournaments.modal.formatValue', { q: d.questions, s: d.time_per_q_s })}</span></div>
               <div className="tcm-sum-row"><span className="tcm-sum-ico"><Calendar size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.startLabel')}</span><span className="tcm-sum-v">{startsAt ? dateTimeShort(startsAt) : '—'}</span></div>
@@ -463,7 +463,7 @@ export default function Tournois() {
       id: 'theme', header: t('tournaments.table.theme'), enableSorting: false,
       cell: ({ row }) => (
         row.original.theme
-          ? <span className={`tour-badge tour-theme--${row.original.theme}`}>{t(`questions.themes.${row.original.theme}`, themeLabels[row.original.theme] || row.original.theme)}</span>
+          ? <span className={`tour-badge tour-theme--${row.original.theme}`}>{t(`questions.themes.${row.original.theme}`, themeLabel(row.original.theme) || row.original.theme)}</span>
           : <span className="muted">—</span>
       ),
     },

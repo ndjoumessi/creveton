@@ -16,7 +16,7 @@ import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
 import { useAuthStore } from '../store/authStore';
 import { USER_STATUS_KEYS } from '../constants/enums';
-import { pastels, themeBadgeColors, levelLabels } from '../constants/theme';
+import { pastels, themeBadgeColors, levelLabel } from '../constants/theme';
 import {
   num, dateShort, dateTimeShort, dateLocale, isToday, dayKey, lastDays,
 } from '../utils/format';
@@ -395,7 +395,7 @@ function HistoriqueTab({ sessions, loading }) {
         return (
           <div className={`u-hist-card u-hist-card--${g.theme || 'unknown'}`} key={g.id}>
             <div className="u-hist-top">
-              <span className="u-hist-theme">{cfg.icon} {cfg.label} · {levelLabels[g.level] || g.level}</span>
+              <span className="u-hist-theme">{cfg.icon} {cfg.label} · {levelLabel(g.level) || g.level}</span>
               <span className={`u-hist-mark u-mark-${mark[1]}`}>{mark[0]} {correct}/{total}</span>
             </div>
             <div className="u-hist-mid">{t('common.score')} : {num(g.score)} {t('common.pts')} · XP : +{num(g.xp_earned)}</div>

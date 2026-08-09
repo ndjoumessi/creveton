@@ -27,7 +27,7 @@ import { parseISO, format } from 'date-fns';
 import { num, dateShort, dateTimeShort, dateFnsLocale, tournamentStart } from '../utils/format';
 import { chartTheme } from '../utils/chartTheme';
 import useThemeStore from '../store/themeStore';
-import { themeLabels, themeBadgeColors, levelLabels } from '../constants/theme';
+import { themeLabel, themeBadgeColors, levelLabel } from '../constants/theme';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
@@ -351,15 +351,15 @@ export default function Dashboard() {
         to: '/sessions',
         node: (
           <>
-            <strong>{(s.user && s.user.name) || '?'}</strong> {t('dashboard.misc.feedPlayed')} {themeLabels[s.theme] || s.theme}
-            {' · '}{levelLabels[s.level] || s.level}{s.score != null ? ` · ${num(s.score)} ${t('dashboard.misc.pts')}` : ''}
+            <strong>{(s.user && s.user.name) || '?'}</strong> {t('dashboard.misc.feedPlayed')} {themeLabel(s.theme) || s.theme}
+            {' · '}{levelLabel(s.level) || s.level}{s.score != null ? ` · ${num(s.score)} ${t('dashboard.misc.pts')}` : ''}
           </>
         ),
       })),
       ...pending.map((q) => ({
         key: `q-${q.id}`, kind: 'moderation', date: q.created_at, name: q.text_fr || t('dashboard.misc.questionFallback'),
         to: '/questions',
-        node: <>{t('dashboard.misc.feedModeration')} · {themeLabels[q.theme] || q.theme}</>,
+        node: <>{t('dashboard.misc.feedModeration')} · {themeLabel(q.theme) || q.theme}</>,
       })),
     ];
     return items
@@ -418,7 +418,7 @@ export default function Dashboard() {
       slices: Object.entries(counts)
         .map(([theme, count]) => ({
           theme,
-          label: themeLabels[theme] || theme,
+          label: themeLabel(theme) || theme,
           color: (themeBadgeColors[theme] && themeBadgeColors[theme].fg) || '#6b7280',
           count,
           pct: total ? Math.round((count / total) * 100) : 0,
@@ -668,7 +668,7 @@ export default function Dashboard() {
                     <div className="dash-q-text">{truncate(q.text_fr)}</div>
                     <div className="dash-q-meta">
                       <ThemeBadge theme={q.theme} />
-                      {q.level && <span className="dash-q-level">{levelLabels[q.level] || q.level}</span>}
+                      {q.level && <span className="dash-q-level">{levelLabel(q.level) || q.level}</span>}
                     </div>
                     <div className="dash-q-actions">
                       <button className="btn btn-sm btn-success" onClick={() => decide(q, 'approved')}>
@@ -785,7 +785,7 @@ export default function Dashboard() {
                   <div className={`dash-pool-row ${p.count === 0 ? 'is-empty' : ''}`} key={p.theme}>
                     <span className="dash-pool-name">
                       <span className="dash-pool-emoji" aria-hidden="true">{(themeBadgeColors[p.theme] && themeBadgeColors[p.theme].icon) || '•'}</span>
-                      {themeLabels[p.theme] || p.theme}
+                      {themeLabel(p.theme) || p.theme}
                     </span>
                     {p.count === 0 ? (
                       <Link to={`/questions?theme=${p.theme}`} className="dash-pool-alert">

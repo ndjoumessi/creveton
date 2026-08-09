@@ -5,7 +5,7 @@ import Modal from './Modal';
 import FilterSelect from './FilterSelect';
 import { notify } from './Toast';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
-import { themeLabels, levelLabels } from '../constants/theme';
+import { themeLabel, levelLabel } from '../constants/theme';
 import questionsService from '../services/questions.service';
 
 /**
@@ -27,8 +27,8 @@ export default function GenerateModal({ open, onClose, onGenerated, onReview }) 
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
 
-  const themeOptions = THEME_KEYS.map((k) => ({ value: k, label: t(`questions.themes.${k}`, themeLabels[k]) }));
-  const levelOptions = LEVEL_KEYS.map((k) => ({ value: k, label: t(`questions.levels.${k}`, levelLabels[k]) }));
+  const themeOptions = THEME_KEYS.map((k) => ({ value: k, label: t(`questions.themes.${k}`, themeLabel(k)) }));
+  const levelOptions = LEVEL_KEYS.map((k) => ({ value: k, label: t(`questions.levels.${k}`, levelLabel(k)) }));
   const canGenerate = theme && level && count >= 1 && count <= 20 && !busy;
 
   const reset = () => { setResult(null); setBusy(false); };

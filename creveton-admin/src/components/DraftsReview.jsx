@@ -9,7 +9,7 @@ import ThemeBadge from './ThemeBadge';
 import { notify } from './Toast';
 import { useApiData, triggerRefresh } from '../hooks/useApiData';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
-import { themeLabels, levelLabels } from '../constants/theme';
+import { themeLabel, levelLabel } from '../constants/theme';
 import questionsService from '../services/questions.service';
 
 /**
@@ -36,8 +36,8 @@ export default function DraftsReview({ onEditDraft, onClose, onOpenGenerate }) {
   );
   const drafts = useMemo(() => data?.data || [], [data]);
 
-  const themeOptions = THEME_KEYS.map((k) => ({ value: k, label: t(`questions.themes.${k}`, themeLabels[k]) }));
-  const levelOptions = LEVEL_KEYS.map((k) => ({ value: k, label: t(`questions.levels.${k}`, levelLabels[k]) }));
+  const themeOptions = THEME_KEYS.map((k) => ({ value: k, label: t(`questions.themes.${k}`, themeLabel(k)) }));
+  const levelOptions = LEVEL_KEYS.map((k) => ({ value: k, label: t(`questions.levels.${k}`, levelLabel(k)) }));
 
   const toggle = (id) => setSelected((s) => {
     const next = new Set(s);
@@ -138,7 +138,7 @@ export default function DraftsReview({ onEditDraft, onClose, onOpenGenerate }) {
                   <div className="q-draft-body">
                     <div className="q-draft-meta">
                       <ThemeBadge theme={d.theme} />
-                      <span className="q-draft-level">{t(`questions.levels.${d.level}`, levelLabels[d.level])}</span>
+                      <span className="q-draft-level">{t(`questions.levels.${d.level}`, levelLabel(d.level))}</span>
                     </div>
                     <p className="q-draft-text">{d.text_fr}</p>
                     <ul className="q-draft-opts">

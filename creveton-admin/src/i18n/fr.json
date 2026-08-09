@@ -1793,8 +1793,6 @@
     "editPermissions": "Modifier les permissions",
     "membersCount": "{{count}} membre(s)",
     "allModules": "Tous les modules",
-    "fullAccess": "Accès total à toutes les fonctionnalités",
-    "playerDesc": "Accès limité à l'application mobile uniquement",
     "playerDenied": "Console admin complète",
     "superAdminRisk": "⚠️ Attribuez ce rôle avec parcimonie",
     "descriptions": {

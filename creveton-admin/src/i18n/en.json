@@ -1793,8 +1793,6 @@
     "editPermissions": "Edit permissions",
     "membersCount": "{{count}} member(s)",
     "allModules": "All modules",
-    "fullAccess": "Full access to all features",
-    "playerDesc": "Limited to the mobile app only",
     "playerDenied": "Full admin console",
     "superAdminRisk": "⚠️ Assign this role sparingly",
     "descriptions": {

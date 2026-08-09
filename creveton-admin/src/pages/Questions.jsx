@@ -16,7 +16,7 @@ import { useApiData, triggerRefresh } from '../hooks/useApiData';
 import GenerateModal from '../components/GenerateModal';
 import DraftsReview from '../components/DraftsReview';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
-import { themeLabels, levelLabels, questionStatusColors } from '../constants/theme';
+import { themeLabel, levelLabel, questionStatusColors } from '../constants/theme';
 import { pct, dateShort, dateTimeShort } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import ThemeBadge from '../components/ThemeBadge';
@@ -89,14 +89,14 @@ function BilingualBadge({ q }) {
 function LevelPill({ level }) {
   const { t } = useTranslation();
   return (
-    <span className={`q-level-pill q-level-${level}`}>{t(`questions.levels.${level}`, levelLabels[level] || level)}</span>
+    <span className={`q-level-pill q-level-${level}`}>{t(`questions.levels.${level}`, levelLabel(level) || level)}</span>
   );
 }
 /* Alias conservé pour la plomberie de l'aperçu mobile de CreateModal. */
 const LevelBadge = ({ level }) => {
   const { t } = useTranslation();
   return (
-    <span className="badge badge-level">{t(`questions.levels.${level}`, levelLabels[level] || level)}</span>
+    <span className="badge badge-level">{t(`questions.levels.${level}`, levelLabel(level) || level)}</span>
   );
 };
 
@@ -841,14 +841,14 @@ function CreateModal({ open, onClose, onCreate, submitting, prefill, duplicate =
               <div className="field">
                 <label>{t('questions.modal.theme')}</label>
                 <select className="select" value={theme} onChange={(e) => setTheme(e.target.value)}>
-                  {THEME_KEYS.map((k) => <option key={k} value={k}>{`${THEME_EMOJI[k] || ''} ${t(`questions.themes.${k}`, themeLabels[k])}`}</option>)}
+                  {THEME_KEYS.map((k) => <option key={k} value={k}>{`${THEME_EMOJI[k] || ''} ${t(`questions.themes.${k}`, themeLabel(k))}`}</option>)}
                 </select>
               </div>
               <div className="field">
                 <label>{t('questions.modal.level')}</label>
                 <div className="q-level-pills">
                   {LEVEL_KEYS.map((k) => (
-                    <button type="button" key={k} className={`q-level-choice ${level === k ? 'is-active' : ''}`} onClick={() => setLevel(k)}>{t(`questions.levels.${k}`, levelLabels[k])}</button>
+                    <button type="button" key={k} className={`q-level-choice ${level === k ? 'is-active' : ''}`} onClick={() => setLevel(k)}>{t(`questions.levels.${k}`, levelLabel(k))}</button>
                   ))}
                 </div>
               </div>
@@ -1029,7 +1029,7 @@ function GlobalStatsPanel({ open }) {
           <div className="q-stats-gauges">
             {byTheme.map((th) => (
               <div className="q-stats-gauge" key={th.theme}>
-                <Gauge value={th.avg_rate != null ? Math.round(th.avg_rate * 100) : 0} size={120} label={themeLabels[th.theme] || th.theme} />
+                <Gauge value={th.avg_rate != null ? Math.round(th.avg_rate * 100) : 0} size={120} label={themeLabel(th.theme) || th.theme} />
                 <span className="q-stats-gauge-sub">{th.approved} {th.approved > 1 ? t('questions.misc.approvedPlural') : t('questions.misc.approvedSingular')}{th.avg_rate == null ? ` · ${t('questions.misc.neverAsked')}` : ''}</span>
               </div>
             ))}
@@ -1094,7 +1094,7 @@ function StatsPane({ question }) {
   let comparison = null;
   if (data.success_rate != null && data.theme_avg_rate != null) {
     const diff = Math.round((data.success_rate - data.theme_avg_rate) * 100);
-    const themeName = themeLabels[data.theme] || data.theme;
+    const themeName = themeLabel(data.theme) || data.theme;
     if (diff <= -3) comparison = { tone: 'hard', text: t('questions.misc.harderThanAvg', { n: Math.abs(diff), theme: themeName }) };
     else if (diff >= 3) comparison = { tone: 'easy', text: t('questions.misc.easierThanAvg', { n: diff, theme: themeName }) };
     else comparison = { tone: 'balanced', text: t('questions.misc.inLineWithAvg', { theme: themeName }) };
@@ -1703,8 +1703,8 @@ export default function Questions() {
     const csv = Papa.unparse(picked.map((q) => ({
       id: q.id,
       enonce: q.text_fr,
-      theme: t(`questions.themes.${q.theme}`, themeLabels[q.theme] || q.theme),
-      niveau: t(`questions.levels.${q.level}`, levelLabels[q.level] || q.level),
+      theme: t(`questions.themes.${q.theme}`, themeLabel(q.theme) || q.theme),
+      niveau: t(`questions.levels.${q.level}`, levelLabel(q.level) || q.level),
       statut: t(`questions.statuses.${q.status}`, questionStatusColors[q.status]?.label || q.status),
       taux_reussite: q.success_rate == null ? '' : Math.round(q.success_rate * 100),
       creee_le: q.created_at || '',
@@ -1776,15 +1776,15 @@ export default function Questions() {
   };
 
   // Options des selects custom (réutilise les libellés i18n existants).
-  const themeOptions = [{ value: '', label: t('questions.allThemes') }, ...THEME_KEYS.map((k) => ({ value: k, label: t(`questions.themes.${k}`, themeLabels[k]), icon: THEME_EMOJI[k] }))];
-  const levelOptions = [{ value: '', label: t('questions.allLevels') }, ...LEVEL_KEYS.map((k) => ({ value: k, label: t(`questions.levels.${k}`, levelLabels[k]), icon: LEVEL_EMOJI[k] }))];
+  const themeOptions = [{ value: '', label: t('questions.allThemes') }, ...THEME_KEYS.map((k) => ({ value: k, label: t(`questions.themes.${k}`, themeLabel(k)), icon: THEME_EMOJI[k] }))];
+  const levelOptions = [{ value: '', label: t('questions.allLevels') }, ...LEVEL_KEYS.map((k) => ({ value: k, label: t(`questions.levels.${k}`, levelLabel(k)), icon: LEVEL_EMOJI[k] }))];
   const statusOptions = [{ value: '', label: t('questions.allStatuses') }, ...STATUSES.map((s) => ({ value: s, label: t(`questions.statuses.${s}`, questionStatusColors[s].label), dot: questionStatusColors[s].fg }))];
   const periodOptions = [{ value: '', label: t('questions.filters.allPeriods') }, ...PERIODS.map((p) => ({ value: p, label: t(`questions.filters.periods.${p}`), icon: '📅' }))];
 
   // Résumé des filtres actifs (segments de la barre de statut).
   const activeSegments = [
-    filters.theme && `${t('questions.columns.theme')}: ${t(`questions.themes.${filters.theme}`, themeLabels[filters.theme])}`,
-    filters.level && `${t('questions.columns.level')}: ${t(`questions.levels.${filters.level}`, levelLabels[filters.level])}`,
+    filters.theme && `${t('questions.columns.theme')}: ${t(`questions.themes.${filters.theme}`, themeLabel(filters.theme))}`,
+    filters.level && `${t('questions.columns.level')}: ${t(`questions.levels.${filters.level}`, levelLabel(filters.level))}`,
     filters.status && `${t('questions.columns.status')}: ${t(`questions.statuses.${filters.status}`, questionStatusColors[filters.status]?.label)}`,
     period && t(`questions.filters.periods.${period}`),
     filters.q && `${t('common.search')}: « ${filters.q} »`,
@@ -1798,8 +1798,8 @@ export default function Questions() {
   };
   const pillLabel = (p) => {
     if (p.type === 'all') return t('questions.filters.quickAll');
-    if (p.type === 'theme') return t(`questions.themes.${p.value}`, themeLabels[p.value]);
-    if (p.type === 'level') return t(`questions.levels.${p.value}`, levelLabels[p.value]);
+    if (p.type === 'theme') return t(`questions.themes.${p.value}`, themeLabel(p.value));
+    if (p.type === 'level') return t(`questions.levels.${p.value}`, levelLabel(p.value));
     return t(`questions.statuses.${p.value}`, questionStatusColors[p.value]?.label);
   };
 
@@ -2019,7 +2019,7 @@ export default function Questions() {
                         <td className="q-cell-edit" onClick={(e) => e.stopPropagation()}>
                           {editing && editing.id === q.id && editing.field === 'theme' ? (
                             <select className="select q-inline-select" defaultValue={q.theme} autoFocus onChange={(e) => saveInline(q, 'theme', e.target.value)} onBlur={() => setEditing(null)}>
-                              {THEME_KEYS.map((k) => <option key={k} value={k}>{t(`questions.themes.${k}`, themeLabels[k])}</option>)}
+                              {THEME_KEYS.map((k) => <option key={k} value={k}>{t(`questions.themes.${k}`, themeLabel(k))}</option>)}
                             </select>
                           ) : (
                             <button type="button" className="q-inline-trigger" onClick={() => setEditing({ id: q.id, field: 'theme' })} title={t('questions.a11y.editThemeTitle')}><ThemeBadge theme={q.theme} /></button>
@@ -2028,7 +2028,7 @@ export default function Questions() {
                         <td className="q-cell-edit" onClick={(e) => e.stopPropagation()}>
                           {editing && editing.id === q.id && editing.field === 'level' ? (
                             <select className="select q-inline-select" defaultValue={q.level} autoFocus onChange={(e) => saveInline(q, 'level', e.target.value)} onBlur={() => setEditing(null)}>
-                              {LEVEL_KEYS.map((k) => <option key={k} value={k}>{t(`questions.levels.${k}`, levelLabels[k])}</option>)}
+                              {LEVEL_KEYS.map((k) => <option key={k} value={k}>{t(`questions.levels.${k}`, levelLabel(k))}</option>)}
                             </select>
                           ) : (
                             <button type="button" className="q-inline-trigger" onClick={() => setEditing({ id: q.id, field: 'level' })} title={t('questions.a11y.editLevelTitle')}><LevelPill level={q.level} /></button>

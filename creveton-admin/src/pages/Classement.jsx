@@ -5,7 +5,7 @@ import { Trophy, Globe, Target, CalendarDays, CalendarRange, AlertTriangle } fro
 import { Icon } from '../components/Icon';
 import leaderboardService from '../services/leaderboard.service';
 import { useApiData } from '../hooks/useApiData';
-import { themeLabels } from '../constants/theme';
+import { themeLabel } from '../constants/theme';
 import { THEME_KEYS } from '../constants/enums';
 import { num } from '../utils/format';
 import PageHeader from '../components/PageHeader';
@@ -153,7 +153,7 @@ export default function Classement() {
               onChange={(e) => setTheme(e.target.value)}
             >
               {THEME_KEYS.map((t) => (
-                <option key={t} value={t}>{themeLabels[t]}</option>
+                <option key={t} value={t}>{themeLabel(t)}</option>
               ))}
             </select>
           </div>
