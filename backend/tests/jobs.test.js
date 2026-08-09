@@ -175,8 +175,58 @@ t('tournament-lifecycle ouvre les inscriptions et signale les retards', async ()
 
   expect(await statusOf(imminent)).toBe('open');
   expect(await statusOf(lointain)).toBe('scheduled');
-  // La tâche ne DÉMARRE jamais un tournoi — décision produit, laissée à un humain.
+  // La tâche ne DÉMARRE jamais un tournoi — décision produit, laissée à un
+  // humain. Et à 5 h de retard elle ne l'expire pas non plus : l'expiration
+  // n'intervient qu'au-delà de 24 h (cf. test suivant).
   expect(await statusOf(enRetard)).toBe('open');
+  expect(res.expired).toBe(0);
+});
+
+t('tournament-lifecycle expire les tournois morts, et EUX SEULS', async () => {
+  const mk = async ({ hours, fee = 0, players = 0 }) => {
+    const { rows } = await H.db.query(
+      `INSERT INTO tournaments (name, theme, max_players, entry_fee, prize_pool, status, starts_at)
+       VALUES ($1,'culture',8,$2,0,'open', now() - ($3 || ' hours')::interval)
+       RETURNING id`,
+      [`T-${Math.random().toString(36).slice(2, 7)}`, fee, hours]
+    );
+    const id = rows[0].id;
+    for (let i = 0; i < players; i += 1) {
+      const u = await H.createUser();
+      await H.db.query('INSERT INTO tournament_participants (tournament_id, user_id) VALUES ($1,$2)', [id, u.id]);
+    }
+    return id;
+  };
+
+  // Mort : cinq semaines de retard, gratuit, personne inscrit. Le cas constaté
+  // sur staging, qui gonflait le KPI « Tournois ouverts ».
+  const mort = await mk({ hours: 24 * 35 });
+  // Vivant : assez de joueurs pour démarrer — l'annuler détruirait de vraies
+  // inscriptions pour corriger un oubli humain.
+  const jouable = await mk({ hours: 24 * 35, players: 2 });
+  // Payant : tant que le remboursement n'est pas implémenté, une tâche
+  // automatique n'annule pas ce à quoi de l'argent est attaché.
+  const payant = await mk({ hours: 24 * 35, fee: 500 });
+  // Dans la fenêtre de grâce : en retard, mais pas encore mort.
+  const recent = await mk({ hours: 5 });
+
+  const res = await tournamentLifecycle.run();
+  expect(res.expired).toBe(1);
+
+  const statusOf = async (id) =>
+    (await H.db.query('SELECT status FROM tournaments WHERE id = $1', [id])).rows[0].status;
+
+  expect(await statusOf(mort)).toBe('cancelled');
+  expect(await statusOf(jouable)).toBe('open');
+  expect(await statusOf(payant)).toBe('open');
+  expect(await statusOf(recent)).toBe('open');
+
+  // Ce qui survit reste SIGNALÉ : trois tournois toujours en retard.
+  expect(res.overdue).toBe(3);
+
+  // Idempotent : un second passage ne retrouve rien à expirer.
+  const again = await tournamentLifecycle.run();
+  expect(again.expired).toBe(0);
 });
 
 // ── email-verify-nudge ─────────────────────────────────────────────────────

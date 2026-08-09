@@ -784,7 +784,14 @@ export default function Utilisateurs() {
             <div className="u-id">
               <span className="u-id-line">
                 <span className="cell-strong u-id-name">{u.name}</span>
-                {isAdminRole(u.role) && <span className="badge badge-admin" title={t(`users.roles.${u.role}`)}><ShieldCheck size={11} /> {t('users.roles.admin')}</span>}
+                {/* Le libellé était figé sur « Admin » pour TOUT rôle
+                    administrateur, la valeur réelle n'étant qu'en infobulle.
+                    Un super_admin portait donc « Admin » à côté de son nom et
+                    « Super Admin » dans la colonne RÔLE — deux rôles sur une
+                    même ligne, alors que la page Rôles & permissions les
+                    compte séparément (« Admin · 0 membre(s) »). Le badge dit
+                    maintenant le rôle exact. */}
+                {isAdminRole(u.role) && <span className="badge badge-admin"><ShieldCheck size={11} /> {t(`users.roles.${u.role}`)}</span>}
               </span>
               <span className="list-sub u-id-mail">{u.email}</span>
             </div>
