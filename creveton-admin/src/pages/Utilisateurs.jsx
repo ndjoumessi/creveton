@@ -99,8 +99,8 @@ function relativeFr(iso) {
   const d = Math.round(h / 24);
   if (d < 30) return i18n.t('common.agoDays', { count: d });
   const mo = Math.round(d / 30);
-  if (mo < 12) return i18n.t('common.agoMonths', { n: mo });
-  return i18n.t('common.agoYears', { n: Math.round(mo / 12) });
+  if (mo < 12) return i18n.t('common.agoMonths', { count: mo });
+  return i18n.t('common.agoYears', { count: Math.round(mo / 12) });
 }
 
 /** Agrège les vraies parties d'un joueur en métriques de fiche. */

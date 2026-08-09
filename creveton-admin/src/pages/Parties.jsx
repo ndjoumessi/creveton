@@ -116,7 +116,13 @@ function ratioColor(ratio) {
 // le marathon ajoute un multiplicateur de série thématique. Le plafond n'est
 // pas calculable côté console, donc on n'en affiche pas.
 const BASE_POINTS = { beginner: 50, intermediate: 75, expert: 100 };
-const SPEED_BONUS_RATE = 1.5;
+// ⚠️ Le serveur définit `SPEED_BONUS_RATE = 0.5` et l'applique en ADDITION :
+// `points = base + round(base × 0,5)`. On dérive donc le multiplicateur au lieu
+// de le recopier — reprendre le nom du serveur avec la valeur 1,5 invitait à
+// « corriger » 1,5 en 0,5 lors d'une synchronisation des constantes, ce qui
+// aurait ramené tous les plafonds au tiers (250 au lieu de 750) en silence.
+const SPEED_BONUS_RATE = 0.5; // miroir de scoreService.SPEED_BONUS_RATE
+const SPEED_BONUS_MULTIPLIER = 1 + SPEED_BONUS_RATE;
 
 function maxScoreOf(session) {
   if (!session) return null;
@@ -124,7 +130,7 @@ function maxScoreOf(session) {
   const base = BASE_POINTS[session.level];
   const n = Number(session.question_count) || 0;
   if (!base || !n) return null;
-  return Math.round(base * SPEED_BONUS_RATE) * n;
+  return Math.round(base * SPEED_BONUS_MULTIPLIER) * n;
 }
 
 const ratioOf = (correct, total) => (total ? Math.min(1, correct / total) : 0);

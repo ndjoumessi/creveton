@@ -210,8 +210,16 @@ export default function TournamentLiveScreen({ navigation, route }) {
                 fil temps réel ne transporte pas d'id (cf. `mapQuestion`), et
                 sans second terme les dix manches partageraient une seule et
                 même permutation. */}
-            {shuffleOptions(question.options || [], tournamentId, question.index).map((opt, i) => {
-              const idx = opt.index ?? i;
+            {shuffleOptions(
+              // `index` posé AVANT le mélange, comme dans QuizScreen : c'est
+              // l'identité renvoyée au serveur. Le poser après, en repli sur le
+              // rang de rendu, désignerait une AUTRE option que celle touchée.
+              (question.options || []).map((o, i) => ({ ...o, index: o.index ?? i })),
+              tournamentId,
+              question.index,
+            ).map((opt, i) => {
+              // `i` = rang de rendu (la LETTRE) ; `opt.index` = identité (le serveur).
+              const idx = opt.index;
               const revealing = phase === 'reveal';
               const isPicked = picked === idx;
               let state = 'idle';

@@ -602,7 +602,6 @@
     "rank": "#{{n}}",
     "games": "parties",
     "questions": "questions",
-    "agoMonths": "il y a {{n}} mois",
     "justNow": "à l'instant",
     "today": "Aujourd'hui",
     "yesterday": "Hier",
@@ -620,7 +619,9 @@
     "agoHours_one": "il y a {{count}} h",
     "agoHours_other": "il y a {{count}} h",
     "agoDays_one": "il y a {{count}} j",
-    "agoDays_other": "il y a {{count}} j"
+    "agoDays_other": "il y a {{count}} j",
+    "agoMonths_one": "il y a {{count}} mois",
+    "agoMonths_other": "il y a {{count}} mois"
   },
   "tabs": {
     "home": "Accueil",

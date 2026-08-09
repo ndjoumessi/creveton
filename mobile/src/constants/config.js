@@ -17,7 +17,6 @@ export const STORAGE_KEYS = {
   user: 'crv.user',
   lastEmail: 'crv.last_email', // dernier email connecté (pré-remplissage Login) — non sensible
   lastSyncAt: 'crv.last_sync_at',
-  // Horodatage (ms) du dernier sync des solutions offline — throttle 1 h côté
   // URL de l'API utilisée lors du dernier sync — sert à invalider le cache de
   // questions si l'on change d'environnement (ex. local → staging).
   cacheApiUrl: 'crv.cache_api_url',

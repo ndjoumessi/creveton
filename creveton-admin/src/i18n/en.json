@@ -1573,8 +1573,6 @@
     "minutes": "min",
     "hours": "h",
     "days": "d",
-    "agoMonths": "{{n}} mo ago",
-    "agoYears": "{{n}} yr ago",
     "inMinutes": "in {{n}} min",
     "inHoursMinutes": "in {{h}} h {{m}} min",
     "inDays": "in {{n}} d",
@@ -1609,7 +1607,11 @@
     "agoHours_other": "{{count}} hours ago",
     "agoDays_one": "{{count}} day ago",
     "agoDays_other": "{{count}} days ago",
-    "clear": "Clear"
+    "clear": "Clear",
+    "agoMonths_one": "{{count}} month ago",
+    "agoMonths_other": "{{count}} months ago",
+    "agoYears_one": "{{count}} year ago",
+    "agoYears_other": "{{count}} years ago"
   },
   "toast": {
     "success": "Success",

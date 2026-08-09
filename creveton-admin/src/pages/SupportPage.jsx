@@ -81,7 +81,6 @@ function TicketsTooltip({ active, payload, label, t }) {
 const fetchKpi = () => supportService.kpi();
 const fetchStats = () => supportService.stats();
 const fetchReports = () => supportService.listReports();
-const fetchAnticheat = () => supportService.anticheat();
 // Membres assignables (admin/moderator). GET /admin/team est réservé aux admins
 // → pour un modérateur l'appel échoue : on retombe sur la saisie libre d'UUID.
 const fetchMembers = () => teamService.list({});
@@ -100,7 +99,14 @@ export default function SupportPage() {
   const { data: kpi, loading: kpiLoading } = useApiData(fetchKpi, []);
   const { data: stats, loading: statsLoading } = useApiData(fetchStats, []);
   const { data: reportsData, loading: reportsLoading, refetch: refetchReports } = useApiData(fetchReports, []);
-  const { data: anticheatRows, loading: anticheatLoading } = useApiData(fetchAnticheat, []);
+  // Chargé SEULEMENT quand son onglet est ouvert. La requête déroule toutes les
+  // réponses de toutes les parties sur 30 jours (LATERAL sur `answers`) : la
+  // lancer à chaque visite de la page, pour un onglet rarement consulté, coûte
+  // un ordre de grandeur de plus que ses trois voisines (lectures indexées).
+  const { data: anticheatRows, loading: anticheatLoading } = useApiData(
+    () => (tab === 'anticheat' ? supportService.anticheat() : Promise.resolve([])),
+    [tab],
+  );
   const { data: membersData } = useApiData(fetchMembers, []);
 
   const status = TABS.find((x) => x.key === tab)?.status ?? null;

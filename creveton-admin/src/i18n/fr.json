@@ -1573,8 +1573,6 @@
     "minutes": "min",
     "hours": "h",
     "days": "j",
-    "agoMonths": "il y a {{n}} mois",
-    "agoYears": "il y a {{n}} an(s)",
     "inMinutes": "dans {{n}} min",
     "inHoursMinutes": "dans {{h}} h {{m}} min",
     "inDays": "dans {{n}} j",
@@ -1609,7 +1607,11 @@
     "agoHours_other": "il y a {{count}} h",
     "agoDays_one": "il y a {{count}} j",
     "agoDays_other": "il y a {{count}} j",
-    "clear": "Effacer"
+    "clear": "Effacer",
+    "agoMonths_one": "il y a {{count}} mois",
+    "agoMonths_other": "il y a {{count}} mois",
+    "agoYears_one": "il y a {{count}} an",
+    "agoYears_other": "il y a {{count}} ans"
   },
   "toast": {
     "success": "Succès",

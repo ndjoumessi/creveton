@@ -58,7 +58,7 @@ export function timeAgo(iso) {
   const d = Math.floor(h / 24);
   if (d < 30) return i18n.t('common.agoDays', { count: d });
   const mo = Math.floor(d / 30);
-  return i18n.t('common.agoMonths', { n: mo });
+  return i18n.t('common.agoMonths', { count: mo });
 }
 
 // Date ISO → format court localisé (ex. « 25 juin, 19:00 » / « 25 Jun, 19:00 »).

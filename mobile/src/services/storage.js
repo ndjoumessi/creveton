@@ -96,7 +96,6 @@ export const getLastSyncAt = () => getItem(STORAGE_KEYS.lastSyncAt);
 export const setLastSyncAt = (iso) => setItem(STORAGE_KEYS.lastSyncAt, iso);
 export const clearLastSyncAt = () => removeItem(STORAGE_KEYS.lastSyncAt);
 
-// Horodatage (ms) du dernier sync des solutions offline (throttle 1 h client).
 // URL de l'API du dernier sync (invalidation de cache au changement d'environnement).
 export const getCacheApiUrl = () => getItem(STORAGE_KEYS.cacheApiUrl);
 export const setCacheApiUrl = (url) => setItem(STORAGE_KEYS.cacheApiUrl, url);

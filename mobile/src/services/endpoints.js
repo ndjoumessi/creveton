@@ -40,8 +40,9 @@ export const questions = {
   delta: (since) =>
     api.get('/questions/delta', { params: { since } }).then((r) => r.data),
   all: (params) => api.get('/questions/all', { params }).then((r) => r.data),
-  // Sync des solutions vers le cache offline (POST : liste d'IDs dans le body).
-  // → { solutions: [{ id, correct_index, explanation, explanation_en }] }
+  // Pas de sync de solutions en masse : `POST /questions/solutions` a été retiré
+  // (il servait le corrigé de toute la banque à n'importe quel jeton). La
+  // révélation vient de `sessions.answer`, question par question, après réponse.
 };
 
 // --- Sessions (API §6) ---------------------------------------------------
