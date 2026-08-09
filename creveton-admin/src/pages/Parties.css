@@ -200,16 +200,24 @@
   /* `scaleX` : remplissage à couleur unie (ratioColor), rien à déformer. */
   transition: transform var(--t-modal, 220ms);
 }
+/* La colonne XP était en OR sur chaque ligne — vingt marques dorées par page,
+   cent sur la liste. C'était la vraie entorse à la Règle de l'Or Rare sur cette
+   page : l'or y perdait tout pouvoir de signal, et il n'en restait plus pour ce
+   qui compte. L'XP est une récompense, mais une récompense que TOUTE ligne
+   porte n'est plus distinctive — c'est une colonne de données, le titre de
+   colonne suffit à la nommer.
+   Le nombre passe aussi en Outfit : « tout chiffre qui compte est en Outfit
+   ≥ 700 » (DESIGN.md § Typography), il était en fonte de corps. */
 .ses-xp {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-family: var(--font-body);
-  font-weight: 600;
-  color: var(--gold);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
-.ses-xp-ico { color: var(--gold); flex: none; }
+.ses-xp-ico { color: var(--muted); flex: none; }
 .ses-dur, .ses-date {
   font-variant-numeric: tabular-nums;
   color: var(--text);

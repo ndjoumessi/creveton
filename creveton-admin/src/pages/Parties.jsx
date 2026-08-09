@@ -101,10 +101,22 @@ function scoreColor(score) {
   return 'var(--muted)';
 }
 
-/** Couleur de la mini-barre de réussite : < 50 % rouge, 50–70 % or, > 70 % vert. */
+/**
+ * Couleur de la mini-barre de réussite : < 50 % rouge, 50–70 % ambre, > 70 % vert.
+ *
+ * Le feu tricolore est LÉGITIME ici, à la différence de celui qui peignait la
+ * difficulté : un taux de réussite a un bon et un mauvais côté, et le rapport
+ * « 7/10 » écrit à côté double l'information.
+ *
+ * Ce qui ne l'était pas, c'est que la bande médiane tirait sur `--gold`, l'or de
+ * marque : combinée à la colonne XP, elle mettait de l'or sur la moitié des
+ * lignes. On prend un vrai ambre (`--pastel-amber-fg-deep`, déjà utilisé pour
+ * « suspendu » et « clôturé »). L'or reste au CTA, à la nav active, au logo et
+ * aux récompenses — pas à une graduation intermédiaire.
+ */
 function ratioColor(ratio) {
   if (ratio > 0.7) return 'var(--green500)';
-  if (ratio >= 0.5) return 'var(--gold)';
+  if (ratio >= 0.5) return 'var(--pastel-amber-fg-deep)';
   return 'var(--red)';
 }
 
