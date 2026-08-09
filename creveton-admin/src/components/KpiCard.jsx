@@ -14,9 +14,9 @@ import i18n from '../i18n';
 // `deltaLabel` par DÉFAUT et non littéral : c'était `'vs hier'` en dur, et
 // aucune des quatre cartes du tableau de bord ne passe la prop — la console
 // anglaise affichait donc « -100% vs hier » sous « Games today ». La clé
-// existait déjà (`dashboard.misc.vsYesterday`), personne ne la lisait.
+// existait déjà (`common.vsYesterday`), personne ne la lisait.
 export default function KpiCard({ icon, label, value, tone = 'green', delta = null, deltaLabel, spark = [] }) {
-  const deltaText = deltaLabel ?? i18n.t('dashboard.misc.vsYesterday');
+  const deltaText = deltaLabel ?? i18n.t('common.vsYesterday');
   // Zéro n'est ni une hausse ni une baisse. La condition était `>= 0`, donc
   // « +0 % » s'affichait en vert avec une flèche montante : sur la page
   // Finances, trois cartes à zéro annonçaient toutes une croissance. Trois

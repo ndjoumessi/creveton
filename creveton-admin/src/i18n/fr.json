@@ -43,7 +43,7 @@
   },
   "dashboard": {
     "title": "Tableau de bord",
-    "subtitle": "Vue d'ensemble et actions rapides — MVP gratuit.",
+    "subtitle": "Vue d'ensemble et actions rapides",
     "kpi": {
       "users": "Utilisateurs inscrits",
       "gamesToday": "Parties aujourd'hui",
@@ -1608,7 +1608,8 @@
     "agoHours_one": "il y a {{count}} h",
     "agoHours_other": "il y a {{count}} h",
     "agoDays_one": "il y a {{count}} j",
-    "agoDays_other": "il y a {{count}} j"
+    "agoDays_other": "il y a {{count}} j",
+    "clear": "Effacer"
   },
   "toast": {
     "success": "Succès",

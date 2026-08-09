@@ -105,7 +105,7 @@ export default function ParticipantsPanel({
           <button
             className="cve-panel__search-clear"
             onClick={() => setQuery('')}
-            aria-label={t('common.clear', 'Effacer')}
+            aria-label={t('common.clear')}
           >
             <X size={14} strokeWidth={2} />
           </button>
