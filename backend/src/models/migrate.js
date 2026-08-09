@@ -51,10 +51,23 @@ async function getApplied(client) {
   return new Set(rows.map((r) => r.filename));
 }
 
+// Verrou consultatif Postgres : deux instances qui démarrent en même temps ne
+// doivent pas rejouer les mêmes fichiers. Le suivi par `filename` (clé primaire)
+// les protégeait déjà d'une double application, mais la seconde instance
+// PLANTAIT sur le conflit d'insertion au lieu d'attendre — ce qui, depuis que
+// les migrations tournent au démarrage du conteneur, ferait échouer un déploiement
+// dès que `numReplicas` passe à 2. L'entier est arbitraire mais fixe.
+const LOCK_ID = 4_242_026;
+
 async function migrate() {
   const client = await db.getClient();
   let applied = 0;
+  let locked = false;
   try {
+    // Bloquant : la seconde instance attend la fin de la première, puis constate
+    // qu'il n'y a plus rien en attente et repart. C'est le comportement voulu.
+    await client.query('SELECT pg_advisory_lock($1)', [LOCK_ID]);
+    locked = true;
     await ensureMigrationsTable(client);
     const alreadyApplied = await getApplied(client);
     const files = listMigrationFiles();
@@ -86,6 +99,12 @@ async function migrate() {
 
     logger.info('Migrations terminées', { applied });
   } finally {
+    // Le verrou est lié à la SESSION : on le rend explicitement avant de
+    // remettre la connexion au pool, sinon elle repartirait en circulation en
+    // le tenant toujours, et le prochain démarrage attendrait indéfiniment.
+    if (locked) {
+      await client.query('SELECT pg_advisory_unlock($1)', [LOCK_ID]).catch(() => {});
+    }
     client.release();
   }
 }

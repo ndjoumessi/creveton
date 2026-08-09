@@ -37,6 +37,29 @@ push main → CI (ci.yml) → si CI verte → workflow_run → deploy-staging.ym
   qui déploie le backend. Cette désactivation est **volontaire** : sans elle, le backend
   se déploierait deux fois par push (natif + workflow).
 
+### Migrations — appliquées au démarrage du conteneur
+
+Le `Dockerfile` lance `node src/models/migrate.js && node src/server.js`.
+
+Ce n'était **pas** le cas avant le 09-08-2026 : l'image démarrait le serveur seul, et
+aucune migration n'était jamais appliquée au déploiement. Un fichier SQL poussé dans le
+dépôt n'avait donc aucun effet sur staging tant que quelqu'un ne lançait pas `npm run
+migrate` à la main — ce que rien ne rappelait. Symptôme observé : la migration `028`
+déployée, puis la console continuant pendant plusieurs minutes de refuser une
+réinitialisation de mot de passe pour un motif que cette migration corrigeait justement.
+
+Deux propriétés à connaître :
+
+- **`&&` et non `;`** — si une migration échoue, le conteneur ne démarre pas. Un serveur
+  qui tourne sur un schéma qu'il ne comprend pas est pire qu'un déploiement rouge : le
+  rouge se voit, la corruption silencieuse non. Railway conservera l'ancien déploiement.
+- **Verrou consultatif Postgres** (`pg_advisory_lock`, `migrate.js`) — deux instances qui
+  démarrent ensemble ne rejouent pas les mêmes fichiers. `numReplicas: 1` aujourd'hui,
+  mais la garantie ne doit pas dépendre d'un réglage de tableau de bord.
+
+`migrate()` reste idempotent (suivi par nom de fichier dans `schema_migrations`, une
+transaction par migration) : redémarrer un conteneur ne rejoue rien.
+
 ### Historique / pourquoi cette config
 
 Le workflow utilisait l'action tierce `bervProject/railway-deploy@main` (non épinglée),
