@@ -1573,9 +1573,6 @@
     "minutes": "min",
     "hours": "h",
     "days": "d",
-    "agoMinutes": "{{n}} min ago",
-    "agoHours": "{{n}} h ago",
-    "agoDays": "{{n}} d ago",
     "agoMonths": "{{n}} mo ago",
     "agoYears": "{{n}} yr ago",
     "inMinutes": "in {{n}} min",
@@ -1605,7 +1602,13 @@
     "to": "to",
     "of": "of",
     "vsYesterday": "vs yesterday",
-    "vsPrevious": "vs previous period"
+    "vsPrevious": "vs previous period",
+    "agoMinutes_one": "{{count}} minute ago",
+    "agoMinutes_other": "{{count}} minutes ago",
+    "agoHours_one": "{{count}} hour ago",
+    "agoHours_other": "{{count}} hours ago",
+    "agoDays_one": "{{count}} day ago",
+    "agoDays_other": "{{count}} days ago"
   },
   "toast": {
     "success": "Success",

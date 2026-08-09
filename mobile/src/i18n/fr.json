@@ -602,9 +602,6 @@
     "rank": "#{{n}}",
     "games": "parties",
     "questions": "questions",
-    "agoMinutes": "il y a {{n}} min",
-    "agoHours": "il y a {{n}} h",
-    "agoDays": "il y a {{n}} j",
     "agoMonths": "il y a {{n}} mois",
     "justNow": "à l'instant",
     "today": "Aujourd'hui",
@@ -617,7 +614,13 @@
       "5": "Champion"
     },
     "oops": "Oups…",
-    "timeout": "Délai dépassé."
+    "timeout": "Délai dépassé.",
+    "agoMinutes_one": "il y a {{count}} min",
+    "agoMinutes_other": "il y a {{count}} min",
+    "agoHours_one": "il y a {{count}} h",
+    "agoHours_other": "il y a {{count}} h",
+    "agoDays_one": "il y a {{count}} j",
+    "agoDays_other": "il y a {{count}} j"
   },
   "tabs": {
     "home": "Accueil",

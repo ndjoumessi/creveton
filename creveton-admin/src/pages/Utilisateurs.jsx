@@ -93,11 +93,11 @@ function relativeFr(iso) {
   if (diff < 0) return dateShort(iso);
   const min = Math.round(diff / 60000);
   if (min < 1) return i18n.t('common.justNow');
-  if (min < 60) return i18n.t('common.agoMinutes', { n: min });
+  if (min < 60) return i18n.t('common.agoMinutes', { count: min });
   const h = Math.round(min / 60);
-  if (h < 24) return i18n.t('common.agoHours', { n: h });
+  if (h < 24) return i18n.t('common.agoHours', { count: h });
   const d = Math.round(h / 24);
-  if (d < 30) return i18n.t('common.agoDays', { n: d });
+  if (d < 30) return i18n.t('common.agoDays', { count: d });
   const mo = Math.round(d / 30);
   if (mo < 12) return i18n.t('common.agoMonths', { n: mo });
   return i18n.t('common.agoYears', { n: Math.round(mo / 12) });

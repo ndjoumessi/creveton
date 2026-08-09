@@ -50,11 +50,11 @@ function relativeFr(iso) {
   if (Number.isNaN(diff)) return '—';
   const min = Math.floor(diff / 60000);
   if (min < 1) return i18n.t('common.justNow');
-  if (min < 60) return i18n.t('common.agoMinutes', { n: min });
+  if (min < 60) return i18n.t('common.agoMinutes', { count: min });
   const h = Math.floor(min / 60);
-  if (h < 24) return i18n.t('common.agoHours', { n: h });
+  if (h < 24) return i18n.t('common.agoHours', { count: h });
   const d = Math.floor(h / 24);
-  if (d < 7) return i18n.t('common.agoDays', { n: d });
+  if (d < 7) return i18n.t('common.agoDays', { count: d });
   return dateShort(iso);
 }
 
