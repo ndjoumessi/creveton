@@ -34,6 +34,7 @@ import {
 } from '../utils/validation';
 import { COUNTRIES, countryName, countryByIso, matchesQuery } from '../constants/countries';
 import { normalizeLang } from '../utils/i18n';
+import { searchNormalize } from '../utils/format';
 import { SEXES, LANGS } from '../constants/config';
 import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
@@ -88,6 +89,7 @@ export default function RegisterScreen({ navigation }) {
   const [lang, setLang] = useState('fr');
   const uiLang = normalizeLang(i18n.language);
   const [countryQuery, setCountryQuery] = useState('');
+  const [cityQuery, setCityQuery] = useState('');
   const [cityOpen, setCityOpen] = useState(false);
   // Pays de l'indicatif. Défaut Cameroun (marché principal) ; la diaspora en
   // change au premier écran. Ne concerne QUE le téléphone du compte — le
@@ -110,6 +112,36 @@ export default function RegisterScreen({ navigation }) {
     () => COUNTRIES.filter((c) => matchesQuery(c, countryQuery, callingCodeFor(c.iso))),
     [countryQuery]
   );
+
+  // Villes : même recherche insensible aux accents. « ngaoundere » trouve
+  // « Ngaoundéré » — personne ne compose les accents au clavier d'un téléphone.
+  const filteredCities = useMemo(
+    () => CITIES.filter((c) => searchNormalize(c).includes(searchNormalize(cityQuery))),
+    [cityQuery]
+  );
+
+  // Saisie LIBRE quand rien ne correspond. La liste est camerounaise et le
+  // sélecteur de pays est international depuis 08-2026 : un joueur tchadien
+  // n'avait que « Autre », qui stocke littéralement la chaîne « Autre » — une
+  // donnée sans valeur. Le champ `ville` est déjà du texte libre côté serveur
+  // (Joi `string().max(100)`) ET côté profil, où l'édition est un simple champ
+  // texte : on n'ouvre donc rien de nouveau, on rattrape l'inscription.
+  //
+  // Première lettre capitalisée : le filtre admin compare `ville = $1` À
+  // L'IDENTIQUE ; « douala » saisi en minuscules ne remonterait pas avec
+  // « Douala ». Ça ne règle pas les fautes de frappe, mais ça règle le cas
+  // dominant.
+  const customCity = useMemo(() => {
+    const v = cityQuery.trim();
+    if (!v || filteredCities.length) return null;
+    return v.charAt(0).toUpperCase() + v.slice(1);
+  }, [cityQuery, filteredCities.length]);
+
+  const chooseCity = (value) => {
+    setVille(value);
+    setCityOpen(false);
+    setCityQuery('');
+  };
 
   const onSelectCountry = (iso) => {
     setCountry(iso);
@@ -366,22 +398,46 @@ export default function RegisterScreen({ navigation }) {
       <Modal visible={cityOpen} transparent animationType="slide" onRequestClose={() => setCityOpen(false)}>
         <Pressable
           style={styles.modalBackdrop}
-          onPress={() => setCityOpen(false)}
+          onPress={() => {
+            setCityOpen(false);
+            setCityQuery('');
+          }}
           accessible={false}
           importantForAccessibility="no"
         >
           <View style={styles.modalSheet} onStartShouldSetResponder={() => true}>
             <Heading style={styles.modalTitle}>{t('auth.register.misc.cityPickerTitle')}</Heading>
+            <TextInput
+              style={styles.searchInput}
+              value={cityQuery}
+              onChangeText={setCityQuery}
+              placeholder={t('auth.register.misc.citySearch')}
+              placeholderTextColor={colors.textFaint}
+              autoCorrect={false}
+              returnKeyType="search"
+              accessibilityLabel={t('auth.register.misc.citySearch')}
+            />
             <FlatList
-              data={CITIES}
+              data={filteredCities}
               keyExtractor={(c) => c}
+              keyboardShouldPersistTaps="handled"
+              ListEmptyComponent={
+                customCity ? (
+                  <Pressable
+                    style={styles.cityRow}
+                    onPress={() => chooseCity(customCity)}
+                    accessibilityRole="button"
+                  >
+                    <Body weight="medium" color={colors.green500}>
+                      {t('auth.register.misc.cityUse', { city: customCity })}
+                    </Body>
+                  </Pressable>
+                ) : null
+              }
               renderItem={({ item }) => (
                 <Pressable
                   style={styles.cityRow}
-                  onPress={() => {
-                    setVille(item);
-                    setCityOpen(false);
-                  }}
+                  onPress={() => chooseCity(item)}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: ville === item, checked: ville === item }}
                 >

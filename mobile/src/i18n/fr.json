@@ -60,7 +60,9 @@
         "ageHint": "Facultatif — entre 6 et 99 ans.",
         "countrySearch": "Rechercher un pays ou un indicatif",
         "countryNoResult": "Aucun pays trouvé",
-        "cityOther": "Autre"
+        "cityOther": "Autre",
+        "citySearch": "Rechercher ou saisir une ville",
+        "cityUse": "Utiliser « {{city}} »"
       }
     },
     "otp": {

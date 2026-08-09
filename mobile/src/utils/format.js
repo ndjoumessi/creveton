@@ -21,6 +21,19 @@ export function localeTag() {
   return i18n.language?.startsWith('en') ? 'en-GB' : 'fr-FR';
 }
 
+/**
+ * Normalise une chaîne pour la RECHERCHE : minuscules, sans accents.
+ * « Ngaoundéré » devient « ngaoundere », donc trouvable sans composer les
+ * accents au clavier — ce que personne ne fait sur un téléphone.
+ */
+export function searchNormalize(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 // Nombre → chaîne groupée dans la langue active. Helper partagé (cf. localeTag).
 export function formatNumber(n) {
   return Number(n || 0).toLocaleString(localeTag());

@@ -10,6 +10,8 @@
 // (`callingCodeFor`, utils/validation.js) pour éviter toute divergence avec la
 // table qui sert ensuite à valider.
 
+import { searchNormalize } from '../utils/format';
+
 export const COUNTRIES = [
   { iso: 'CM', flag: '🇨🇲', fr: 'Cameroun', en: 'Cameroon' },
 
@@ -79,23 +81,14 @@ export function countryName(country, lang) {
  *   libphonenumber ici — cf. l'en-tête sur la non-duplication des indicatifs).
  */
 export function matchesQuery(country, query, callingCode) {
-  const q = normalize(query);
+  const q = searchNormalize(query);
   if (!q) return true;
   return (
-    normalize(country.fr).includes(q) ||
-    normalize(country.en).includes(q) ||
+    searchNormalize(country.fr).includes(q) ||
+    searchNormalize(country.en).includes(q) ||
     country.iso.toLowerCase().includes(q) ||
     String(callingCode || '').includes(q.replace(/^\+/, ''))
   );
-}
-
-/** Minuscules sans accents ni diacritiques — « Guinée » trouve « guinee ». */
-function normalize(value) {
-  return String(value || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
 }
 
 /** Retrouve une entrée par code ISO. */
