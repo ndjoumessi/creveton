@@ -3,7 +3,8 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts, fontSizes, radius, spacing, themeAccent } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, themeAccent, themeAccentOnDark } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { themeLabel, themeEmoji } from '../utils/format';
 
 function hexToRgba(hex, a) {
@@ -15,14 +16,24 @@ function hexToRgba(hex, a) {
 }
 
 export default function ThemeBadge({ theme, size = 'md', showLabel = true, style }) {
-  const accent = themeAccent[theme] || colors.green500;
+  // `themeAccent` est une palette de FONDS (dégradés des cartes « Jouer ») :
+  // saturée et sombre. Employée ici comme texte sur un voile de 14 % d'elle-même
+  // posé sur la carte SOMBRE, elle donnait 1.42 à 2.37:1 — les six pastilles de
+  // thème étaient illisibles en thème sombre. `themeAccentOnDark` garde la
+  // teinte et remonte la luminosité au-dessus de 4.5:1.
+  const { colors, isDark } = useTheme();
+  const palette = isDark ? themeAccentOnDark : themeAccent;
+  const accent = palette[theme] || (isDark ? colors.green300 : colors.green500);
   const small = size === 'sm';
   return (
     <View
       style={[
         styles.badge,
         {
-          backgroundColor: hexToRgba(accent, 0.14),
+          // 0.16 en sombre : les accents clairs y sont peu saturés, un voile
+          // trop léger ne dessinerait plus la pastille. Le ratio est calculé
+          // avec cette valeur (cf. themeAccentOnDark).
+          backgroundColor: hexToRgba(accent, isDark ? 0.16 : 0.14),
           paddingVertical: small ? 3 : 5,
           paddingHorizontal: small ? spacing.sm : spacing.md,
         },

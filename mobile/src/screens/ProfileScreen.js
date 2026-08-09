@@ -53,7 +53,7 @@ import { wallet, users } from '../services/endpoints';
 import { parseApiError } from '../services/api';
 import { setLanguage } from '../i18n';
 import { SEXES } from '../constants/config';
-import { fonts, radius, spacing, shadow, motion, MIN_TOUCH } from '../constants/theme';
+import { fonts, radius, spacing, shadow, motion, MIN_TOUCH, goldOnVeil } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { successRateColor } from '../utils/rank';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
@@ -744,7 +744,10 @@ export default function ProfileScreen() {
                   )}
                   <Label
                     weight="semibold"
-                    color={b.unlocked ? colors.gold500 : colors.textFaint}
+                    // Sur le voile d'or, `gold500` ne vaut que 1.99:1 en thème
+                    // CLAIR : l'or sur fond d'or ne se lit que si l'un des deux
+                    // s'écarte. En sombre il tient (5.97:1), d'où la bascule.
+                    color={b.unlocked ? (isDark ? colors.gold500 : goldOnVeil) : colors.textFaint}
                     style={styles.badgeLabel}
                   >
                     {b.label}
@@ -1132,7 +1135,11 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     backgroundColor: colors.surfaceCream,
-    opacity: 0.5,
+    // `opacity: 0.5` retiré : il ternissait le bloc ENTIER et faisait tomber son
+    // texte à 3.34:1 (6.99:1 sans lui). Même erreur que l'ancien état désactivé
+    // d'AppButton — l'indisponibilité doit être portée par le CONTENU (cadenas,
+    // titre en `textMuted`, sous-titre « disponible avec les tournois payants »),
+    // jamais par un voile qui rend l'explication illisible.
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.lg,

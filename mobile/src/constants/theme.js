@@ -219,8 +219,38 @@ export const themeAccent = {
   histoire: '#8b4513',
   industrie: '#4b5563',
   sport: '#8e2d2d',
-  science: '#0f7b75',
+  // Assombri de 2 % de luminosité (#0f7b75 → #0e726c) : sur son propre voile en
+  // thème clair, ThemeBadge affichait 4.23:1, sous le seuil AA. Échec
+  // PRÉEXISTANT, révélé en mesurant les six accents. L'écart est invisible là où
+  // l'accent sert de fond (liseré des cartes tournoi, pastilles d'avatar).
+  science: '#0e726c',
 };
+
+// Accents de thème pour SURFACE SOMBRE.
+//
+// `themeAccent` a été conçu pour des FONDS (dégradés des cartes « Jouer ») : ce
+// sont des couleurs saturées et sombres. Employées comme TEXTE sur la carte
+// sombre — ce que fait ThemeBadge, sur un voile de 14 % de l'accent lui-même —
+// elles tombaient entre 1.42:1 (culture) et 2.37:1 (science). Les six pastilles
+// de thème étaient donc illisibles en thème sombre, sur l'historique, le détail
+// de partie, les tournois et les défis.
+//
+// Chaque valeur ci-dessous conserve la TEINTE de son accent (l'identité de
+// couleur du thème est le point du badge) et remonte la luminosité jusqu'à
+// franchir 4.5:1 sur son propre voile posé sur `#16331f`.
+export const themeAccentOnDark = {
+  geographie: '#94b3d6', // 4.69:1
+  culture: '#bea3db', // 4.61:1
+  histoire: '#e09f70', // 4.63:1
+  industrie: '#aab1bb', // 4.68:1
+  sport: '#da9f9f', // 4.66:1
+  science: '#27c3bb', // 4.62:1
+};
+
+// Or assombri, lisible sur le VOILE d'or en thème clair (4.82:1). `gold500` y
+// vaut 1.99:1 — l'or sur fond d'or ne se lit que si l'un des deux s'écarte.
+// En sombre, `gold500` sur le même voile donne 5.97:1 : rien à corriger.
+export const goldOnVeil = '#81610e';
 
 // Dégradé signature (header sombre, carte « Jouer »).
 export const emeraldGradient = ['#0b2e1a', '#1a5230'];
