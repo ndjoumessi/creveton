@@ -57,7 +57,10 @@
         "stepCounter": "Step {{n}}",
         "cityPickerTitle": "Choose your city",
         "countryPickerTitle": "Choose your country",
-        "ageHint": "Optional — between 6 and 99."
+        "ageHint": "Optional — between 6 and 99.",
+        "countrySearch": "Search a country or dialling code",
+        "countryNoResult": "No country found",
+        "cityOther": "Other"
       }
     },
     "otp": {

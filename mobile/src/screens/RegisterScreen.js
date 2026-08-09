@@ -14,6 +14,7 @@ import {
   FlatList,
   StatusBar,
   StyleSheet,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WifiOff, Check } from 'lucide-react-native';
@@ -31,9 +32,10 @@ import {
   callingCodeFor,
   DEFAULT_COUNTRY,
 } from '../utils/validation';
-import { COUNTRIES, countryName, countryByIso } from '../constants/countries';
+import { COUNTRIES, countryName, countryByIso, matchesQuery } from '../constants/countries';
+import { normalizeLang } from '../utils/i18n';
 import { SEXES, LANGS } from '../constants/config';
-import { fontSizes, radius, spacing, shadow } from '../constants/theme';
+import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
 const STEPS = [
@@ -42,14 +44,22 @@ const STEPS = [
   { titleKey: 'auth.register.step3', n: '3/3' },
 ];
 
+// Sentinelle « autre ville » — stockée telle quelle en base (le backend accepte
+// `ville` libre) mais AFFICHÉE traduite.
+const OTHER_CITY = 'Autre';
+
 const CITIES = [
   'Yaoundé', 'Douala', 'Bafoussam', 'Bamenda', 'Garoua', 'Maroua',
   'Ngaoundéré', 'Bertoua', 'Ebolowa', 'Buea', 'Kribi', 'Limbe',
-  'Edéa', 'Kumba', 'Dschang', 'Foumban', 'Autre',
+  'Edéa', 'Kumba', 'Dschang', 'Foumban',
+  // `OTHER_CITY` sort de la liste : les autres entrées sont des noms propres
+  // (invariants d'une langue à l'autre), celui-ci est un MOT — il affichait
+  // « Autre » dans une interface anglaise.
+  OTHER_CITY,
 ];
 
 export default function RegisterScreen({ navigation }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const register = useAuthStore((s) => s.register);
@@ -70,7 +80,14 @@ export default function RegisterScreen({ navigation }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [ville, setVille] = useState('');
   const [sexe, setSexe] = useState('N');
+  // ⚠ `lang` est la langue DU COMPTE en cours de création (choisie à l'étape 3),
+  // pas celle de l'interface. Le sélecteur de pays s'en servait pour AFFICHER les
+  // noms : sur une interface anglaise, il listait donc « Cameroun / Tchad /
+  // Centrafrique » — la valeur par défaut du futur compte, décidée deux étapes
+  // plus loin. L'affichage suit désormais `uiLang`.
   const [lang, setLang] = useState('fr');
+  const uiLang = normalizeLang(i18n.language);
+  const [countryQuery, setCountryQuery] = useState('');
   const [cityOpen, setCityOpen] = useState(false);
   // Pays de l'indicatif. Défaut Cameroun (marché principal) ; la diaspora en
   // change au premier écran. Ne concerne QUE le téléphone du compte — le
@@ -86,10 +103,19 @@ export default function RegisterScreen({ navigation }) {
   // « Douala » puis bascule sur 🇫🇷 enverrait une ville camerounaise avec un
   // compte français — le champ étant devenu invisible, il ne pourrait plus
   // la corriger.
+  // Filtrage mémoïsé : la liste se recalcule à chaque frappe, sur 35 entrées —
+  // négligeable, mais `useMemo` évite aussi de recréer le tableau à chaque rendu
+  // du formulaire (qui se re-rend à chaque étape).
+  const filteredCountries = useMemo(
+    () => COUNTRIES.filter((c) => matchesQuery(c, countryQuery, callingCodeFor(c.iso))),
+    [countryQuery]
+  );
+
   const onSelectCountry = (iso) => {
     setCountry(iso);
     if (iso !== DEFAULT_COUNTRY) setVille('');
     setCountryOpen(false);
+    setCountryQuery(''); // sinon la prochaine ouverture rouvre sur l'ancien filtre
   };
 
   const setErr = (e) => setErrors(e);
@@ -344,7 +370,7 @@ export default function RegisterScreen({ navigation }) {
           accessible={false}
           importantForAccessibility="no"
         >
-          <View style={styles.modalSheet}>
+          <View style={styles.modalSheet} onStartShouldSetResponder={() => true}>
             <Heading style={styles.modalTitle}>{t('auth.register.misc.cityPickerTitle')}</Heading>
             <FlatList
               data={CITIES}
@@ -359,7 +385,9 @@ export default function RegisterScreen({ navigation }) {
                   accessibilityRole="radio"
                   accessibilityState={{ selected: ville === item, checked: ville === item }}
                 >
-                  <Body weight="medium" color={colors.textDark}>{item}</Body>
+                  <Body weight="medium" color={colors.textDark}>
+                    {item === OTHER_CITY ? t('auth.register.misc.cityOther') : item}
+                  </Body>
                   {ville === item ? <Icon icon={Check} size={18} color={colors.green500} strokeWidth={3} /> : null}
                 </Pressable>
               )}
@@ -372,15 +400,42 @@ export default function RegisterScreen({ navigation }) {
       <Modal visible={countryOpen} transparent animationType="slide" onRequestClose={() => setCountryOpen(false)}>
         <Pressable
           style={styles.modalBackdrop}
-          onPress={() => setCountryOpen(false)}
+          onPress={() => {
+            setCountryOpen(false);
+            setCountryQuery('');
+          }}
           accessible={false}
           importantForAccessibility="no"
         >
-          <View style={styles.modalSheet}>
+          {/* `onStartShouldSetResponder` : sans lui, un tap DANS la feuille
+              remonterait au voile et fermerait la modale — y compris un tap dans
+              le champ de recherche. */}
+          <View style={styles.modalSheet} onStartShouldSetResponder={() => true}>
             <Heading style={styles.modalTitle}>{t('auth.register.misc.countryPickerTitle')}</Heading>
+            {/* Recherche : 35 pays, c'est trois écrans de défilement pour qui
+                n'est pas camerounais. Pas d'`autoFocus` — le Cameroun est en
+                TÊTE de liste et couvre le cas majoritaire ; ouvrir le clavier
+                d'office masquerait la moitié de la liste pour rien. */}
+            <TextInput
+              style={styles.searchInput}
+              value={countryQuery}
+              onChangeText={setCountryQuery}
+              placeholder={t('auth.register.misc.countrySearch')}
+              placeholderTextColor={colors.textFaint}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+              accessibilityLabel={t('auth.register.misc.countrySearch')}
+            />
             <FlatList
-              data={COUNTRIES}
+              data={filteredCountries}
               keyExtractor={(c) => c.iso}
+              keyboardShouldPersistTaps="handled"
+              ListEmptyComponent={
+                <Body muted style={styles.pickerEmpty}>
+                  {t('auth.register.misc.countryNoResult')}
+                </Body>
+              }
               renderItem={({ item }) => (
                 <Pressable
                   style={styles.cityRow}
@@ -389,7 +444,7 @@ export default function RegisterScreen({ navigation }) {
                   accessibilityState={{ selected: country === item.iso, checked: country === item.iso }}
                 >
                   <Body weight="medium" color={colors.textDark} style={styles.countryLabel}>
-                    {`${item.flag}  ${countryName(item, lang)}`}
+                    {`${item.flag}  ${countryName(item, uiLang)}`}
                   </Body>
                   <Body color={colors.textMuted}>{`+${callingCodeFor(item.iso)}`}</Body>
                   {country === item.iso ? <Icon icon={Check} size={18} color={colors.green500} strokeWidth={3} /> : null}
@@ -483,8 +538,27 @@ const makeStyles = (colors) => StyleSheet.create({
     borderTopRightRadius: radius.sheet,
     paddingTop: spacing.lg,
     paddingHorizontal: spacing.lg,
-    maxHeight: '60%',
+    // Marge basse ajoutée : la feuille s'arrêtait pile au bord de l'écran, donc
+    // la dernière ligne tombait sous la barre de gestes. `maxHeight` monté à
+    // 75 % pour compenser la hauteur prise par le champ de recherche — sinon on
+    // gagnait une recherche mais on perdait deux lignes de résultats.
+    paddingBottom: spacing.xl,
+    maxHeight: '75%',
   },
+  // Champ de recherche du sélecteur de pays.
+  searchInput: {
+    minHeight: 46,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.borderInput,
+    backgroundColor: colors.surfaceElevated,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.base,
+    color: colors.textDark,
+  },
+  pickerEmpty: { textAlign: 'center', paddingVertical: spacing.xl },
   modalTitle: { marginBottom: spacing.md },
   cityRow: {
     flexDirection: 'row',

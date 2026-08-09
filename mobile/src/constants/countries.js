@@ -61,6 +61,43 @@ export function countryName(country, lang) {
   return lang === 'en' ? country.en : country.fr;
 }
 
+/**
+ * Recherche dans le sélecteur : normalise accents et casse, et interroge les
+ * DEUX langues plus l'indicatif.
+ *
+ * Les deux langues volontairement : un utilisateur francophone sur une interface
+ * anglaise tapera « Tchad » devant une liste qui affiche « Chad », et
+ * réciproquement. Refuser sa saisie parce qu'elle est dans l'autre langue serait
+ * absurde — il cherche un pays, pas une traduction.
+ *
+ * L'indicatif aussi : « 237 » ou « +237 » trouve le Cameroun. C'est souvent ce
+ * qu'on connaît par cœur quand le nom du pays est ambigu (Congo / RD Congo).
+ *
+ * @param {object} country
+ * @param {string} query
+ * @param {string} callingCode indicatif déjà résolu (évite de réimporter
+ *   libphonenumber ici — cf. l'en-tête sur la non-duplication des indicatifs).
+ */
+export function matchesQuery(country, query, callingCode) {
+  const q = normalize(query);
+  if (!q) return true;
+  return (
+    normalize(country.fr).includes(q) ||
+    normalize(country.en).includes(q) ||
+    country.iso.toLowerCase().includes(q) ||
+    String(callingCode || '').includes(q.replace(/^\+/, ''))
+  );
+}
+
+/** Minuscules sans accents ni diacritiques — « Guinée » trouve « guinee ». */
+function normalize(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 /** Retrouve une entrée par code ISO. */
 export function countryByIso(iso) {
   return COUNTRIES.find((c) => c.iso === iso) || COUNTRIES[0];

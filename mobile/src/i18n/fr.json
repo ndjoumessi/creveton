@@ -57,7 +57,10 @@
         "stepCounter": "Étape {{n}}",
         "cityPickerTitle": "Choisis ta ville",
         "countryPickerTitle": "Choisis ton pays",
-        "ageHint": "Facultatif — entre 6 et 99 ans."
+        "ageHint": "Facultatif — entre 6 et 99 ans.",
+        "countrySearch": "Rechercher un pays ou un indicatif",
+        "countryNoResult": "Aucun pays trouvé",
+        "cityOther": "Autre"
       }
     },
     "otp": {
