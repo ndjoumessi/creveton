@@ -266,7 +266,7 @@
 .u-theme-row { display: grid; grid-template-columns: 130px 1fr 42px; align-items: center; gap: 10px; }
 .u-theme-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .u-theme-track { height: 4px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
-.u-theme-fill { display: block; height: 100%; width: 100%; border-radius: 999px; transform-origin: left; transition: transform 800ms ease; }
+.u-theme-fill { display: block; height: 100%; width: 100%; border-radius: 999px; transform-origin: left; transition: transform var(--t-modal); }
 .u-theme-pct { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #0b2e1a; text-align: right; }
 
 /* Onglet Historique */

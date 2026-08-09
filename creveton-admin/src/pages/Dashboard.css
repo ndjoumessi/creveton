@@ -347,11 +347,11 @@
 /* Thème sans aucune question approuvée. La barre vide n'apprenait rien : elle
    cède la place au motif, cliquable vers la liste filtrée sur ce thème. Le
    rouge du compteur est doublé du libellé — une couleur seule n'informe pas. */
-.dash-pool-row.is-empty .dash-pool-count { color: var(--red); }
+.dash-pool-row.is-empty .dash-pool-count { color: var(--danger-text); }
 .dash-pool-alert {
   flex: 1; display: inline-flex; align-items: center; gap: 5px;
   font-family: var(--font-body); font-size: 11.5px; font-weight: 600;
-  color: var(--red); text-decoration: none;
+  color: var(--danger-text); text-decoration: none;
 }
 .dash-pool-alert:hover { text-decoration: underline; }
 
