@@ -106,7 +106,9 @@
       "week": "Week",
       "month": "Month",
       "a11yCaption": "Sign-ups and games per period — text equivalent of the chart",
-      "a11yPeriod": "Period"
+      "a11yPeriod": "Period",
+      "hideSeries": "Hide this series",
+      "showSeries": "Show this series"
     },
     "topPlayers": "Top players of the day",
     "themeDistribution": "Distribution by theme",

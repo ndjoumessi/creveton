@@ -489,7 +489,8 @@ export default function SupportPage() {
           ) : !hasDaily ? (
             <div className="sup-chart-empty">{t('support.empty.noDaily')}</div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
+            <div className="chart-box chart-box--sm">
+            <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={daily} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                 <defs>
                   <linearGradient id="supGradTickets" x1="0" y1="0" x2="0" y2="1">
@@ -504,6 +505,7 @@ export default function SupportPage() {
                 <Area type="monotone" dataKey="tickets" stroke="#2a8a4f" strokeWidth={2} fill="url(#supGradTickets)" dot={false} activeDot={{ r: 4 }} />
               </AreaChart>
             </ResponsiveContainer>
+            </div>
           )}
         </div>
 

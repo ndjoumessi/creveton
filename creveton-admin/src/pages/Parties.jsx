@@ -416,7 +416,8 @@ export default function Parties() {
           ) : !hasLevelData ? (
             <div className="ses-chart-empty">{t('common.noData')}</div>
           ) : (
-            <ResponsiveContainer width="100%" height={180}>
+            <div className="chart-box chart-box--sm">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={levelData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                 <XAxis
                   dataKey="label" tickLine={false} axisLine={false}
@@ -436,6 +437,7 @@ export default function Parties() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            </div>
           )}
         </div>
       </div>

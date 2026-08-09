@@ -172,8 +172,22 @@
 .dash-pill:hover { color: var(--ink); }
 .dash-pill.is-active { background: var(--green900); color: var(--gold); }
 
-.dash-chart-legend { display: inline-flex; align-items: center; gap: 16px; }
-.dash-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--muted); }
+.dash-chart-legend { display: inline-flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+/* Série masquée : opacité ET pastille vidée — l'état ne tient pas qu'à la
+   couleur, il se lit aussi en niveaux de gris. */
+.dash-legend-item.is-off { opacity: 0.45; text-decoration: line-through; }
+.dash-legend-item.is-off .dash-legend-sw { background: transparent !important; box-shadow: inset 0 0 0 2px currentColor; }
+.dash-legend-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-xs); color: var(--muted);
+  /* Bouton depuis qu'on peut masquer une série : on annule le style natif
+     sans perdre l'élément interactif (donc le focus et le clavier). */
+  background: none; border: 0; font-family: inherit;
+  padding: 4px 6px; margin: -4px -6px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: opacity var(--t-fast);
+}
+.dash-legend-item:hover { opacity: 0.75; }
 .dash-legend-sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
 
 /* Tooltip custom du graphe. */
@@ -214,7 +228,9 @@
 
 /* Donut répartition thèmes. */
 .dash-donut-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
-.dash-donut { position: relative; width: 160px; height: 160px; flex: none; }
+/* Le donut suivait une largeur figée de 160 px : à 320 px de viewport il
+   occupait la moitié de la carte, légende comprise. */
+.dash-donut { position: relative; width: clamp(132px, 38vw, 168px); aspect-ratio: 1; flex: none; }
 .dash-donut-center {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center; pointer-events: none;

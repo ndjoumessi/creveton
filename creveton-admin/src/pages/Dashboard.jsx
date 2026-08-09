@@ -211,6 +211,12 @@ const GRANULARITIES = [
   { key: 'month', i18nKey: 'dashboard.chart.month' },
 ];
 
+// Séries du graphe d'activité — source unique pour la légende ET les tracés.
+const CHART_SERIES = [
+  { key: 'inscriptions', i18nKey: 'dashboard.chart.signups', color: '#2a8a4f' },
+  { key: 'parties', i18nKey: 'dashboard.chart.games', color: '#d4a017' },
+];
+
 const MOD_SORTS = [
   { key: 'recent', i18nKey: 'dashboard.misc.sortRecent' },
   { key: 'theme', i18nKey: 'dashboard.misc.sortTheme' },
@@ -407,6 +413,21 @@ export default function Dashboard() {
   // Au-delà d'un mois de relevés, les points deviennent du bruit — on les
   // retire, la densité de la courbe suffit alors à dire qu'elle est échantillonnée.
   const pointDot = chartData.length <= 31 ? { r: 2.5, strokeWidth: 0 } : false;
+
+  // Séries masquées par un clic sur la légende. Utile ici plus qu'ailleurs :
+  // « Inscriptions » reste souvent plat à 0 et disparaît sous « Parties » ; sans
+  // moyen d'isoler une série, la courbe basse est illisible.
+  const [hiddenSeries, setHiddenSeries] = useState([]);
+  const isHidden = (k) => hiddenSeries.includes(k);
+  const toggleSeries = (k) =>
+    setHiddenSeries((prev) => {
+      if (!prev.includes(k)) {
+        // Jamais tout masquer : un graphe vide n'apprend rien et la seule issue
+        // serait de re-cliquer à l'aveugle.
+        return prev.length >= CHART_SERIES.length - 1 ? prev : [...prev, k];
+      }
+      return prev.filter((x) => x !== k);
+    });
 
   // ─── Répartition thèmes (donut) dérivée des parties récentes ───
   const themeDist = useMemo(() => {
@@ -879,23 +900,38 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+        {/* Légende CLIQUABLE : de vrais boutons, donc atteignables au clavier
+            et annonçant leur état par `aria-pressed`. */}
         <div className="dash-chart-legend dash-chart-legend--top">
-          <span className="dash-legend-item"><span className="dash-legend-sw" style={{ background: '#2a8a4f' }} /> {t('dashboard.chart.signups')}</span>
-          <span className="dash-legend-item"><span className="dash-legend-sw" style={{ background: '#d4a017' }} /> {t('dashboard.chart.games')}</span>
+          {CHART_SERIES.map((serie) => (
+            <button
+              key={serie.key}
+              type="button"
+              className={`dash-legend-item ${isHidden(serie.key) ? 'is-off' : ''}`}
+              onClick={() => toggleSeries(serie.key)}
+              aria-pressed={!isHidden(serie.key)}
+              title={t(isHidden(serie.key) ? 'dashboard.chart.showSeries' : 'dashboard.chart.hideSeries')}
+            >
+              <span className="dash-legend-sw" style={{ background: serie.color }} />
+              {t(serie.i18nKey)}
+            </button>
+          ))}
         </div>
         {loadingChart && !analytics ? (
-          <Skeleton w="100%" h={220} r={12} />
+          <Skeleton w="100%" h="clamp(180px, 26vw, 320px)" r={12} />
         ) : hasChartData ? (
-          <div ref={chartRef}>
-            <ResponsiveContainer width="100%" height={220}>
+          // Hauteur pilotée par le CSS (`clamp`) et non par un nombre figé :
+          // 220 px était étriqué sur un grand écran, lourd sur un téléphone.
+          <div ref={chartRef} className="chart-box">
+            <ResponsiveContainer width="100%" height="100%">
               {chartType === 'bar' ? (
                 <BarChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} vertical={false} />
                   <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ fill: 'rgba(42,138,79,0.06)' }} />
-                  <Bar dataKey="inscriptions" fill="#2a8a4f" radius={[4, 4, 0, 0]} maxBarSize={26} />
-                  <Bar dataKey="parties" fill="#d4a017" radius={[4, 4, 0, 0]} maxBarSize={26} />
+                  {!isHidden('inscriptions') && <Bar dataKey="inscriptions" fill="#2a8a4f" radius={[4, 4, 0, 0]} maxBarSize={26} />}
+                  {!isHidden('parties') && <Bar dataKey="parties" fill="#d4a017" radius={[4, 4, 0, 0]} maxBarSize={26} />}
                 </BarChart>
               ) : chartType === 'line' ? (
                 <LineChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
@@ -903,8 +939,8 @@ export default function Dashboard() {
                   <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
-                  <Line type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2.5} dot={pointDot} activeDot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2.5} dot={pointDot} activeDot={{ r: 4 }} />
+                  {!isHidden('inscriptions') && <Line type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2.5} dot={pointDot} activeDot={{ r: 4 }} />}
+                  {!isHidden('parties') && <Line type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2.5} dot={pointDot} activeDot={{ r: 4 }} />}
                 </LineChart>
               ) : (
                 <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
@@ -922,8 +958,8 @@ export default function Dashboard() {
                   <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
-                  <Area type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2} fill="url(#dashGradSignups)" dot={pointDot} activeDot={{ r: 4 }} />
-                  <Area type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2} fill="url(#dashGradGames)" dot={pointDot} activeDot={{ r: 4 }} />
+                  {!isHidden('inscriptions') && <Area type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2} fill="url(#dashGradSignups)" dot={pointDot} activeDot={{ r: 4 }} />}
+                  {!isHidden('parties') && <Area type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2} fill="url(#dashGradGames)" dot={pointDot} activeDot={{ r: 4 }} />}
                 </AreaChart>
               )}
             </ResponsiveContainer>

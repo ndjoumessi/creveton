@@ -243,6 +243,15 @@ button { font-family: inherit; cursor: pointer; }
 input, select, textarea { font-family: inherit; }
 ::selection { background: rgba(212, 160, 23, 0.25); }
 
+/* ── Conteneurs de graphe ──────────────────────────────────────────────────
+   Les hauteurs étaient des nombres figés passés à `ResponsiveContainer` (120 à
+   240 px selon l'écran) : la largeur suivait la fenêtre, la hauteur non. Sur un
+   grand moniteur le tracé s'aplatissait en bandeau, sur un téléphone il mangeait
+   la moitié de la vue. `clamp` donne une hauteur fluide, bornée des deux côtés,
+   sans palier visible au redimensionnement. */
+.chart-box { width: 100%; height: clamp(180px, 26vw, 320px); }
+.chart-box--sm { height: clamp(150px, 18vw, 230px); }
+
 /* Contenu réservé aux lecteurs d'écran : retiré du flux visuel sans être
    masqué à l'arbre d'accessibilité (`display:none` l'en retirerait aussi). */
 .sr-only {

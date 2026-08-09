@@ -106,7 +106,9 @@
       "week": "Semaine",
       "month": "Mois",
       "a11yCaption": "Inscriptions et parties par période — équivalent textuel du graphe",
-      "a11yPeriod": "Période"
+      "a11yPeriod": "Période",
+      "hideSeries": "Masquer cette série",
+      "showSeries": "Afficher cette série"
     },
     "topPlayers": "Top joueurs du jour",
     "themeDistribution": "Répartition par thème",
