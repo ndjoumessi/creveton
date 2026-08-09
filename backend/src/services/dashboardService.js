@@ -3,6 +3,7 @@
 const db = require('../config/database');
 const questionModel = require('../models/question.model');
 const tournamentModel = require('../models/tournament.model');
+const jobsRunner = require('../jobs/runner');
 const { THEMES } = require('../utils/constants');
 
 /**
@@ -38,8 +39,12 @@ async function getOverview() {
         ORDER BY created_at DESC
         LIMIT 10`
     ),
-    // Santé du contenu : la nuit, success_rate n'est calculé QUE pour les
-    // questions effectivement posées → IS NULL = « jamais posée ».
+    // Santé du contenu. `success_rate` n'est écrit QUE par le batch nocturne
+    // `success-rate` : une fois qu'il est passé, IS NULL veut bien dire « jamais
+    // posée ». AVANT son premier passage, il veut dire « jamais calculé » — et
+    // les trois compteurs affirment alors le contraire de la vérité (180
+    // questions « jamais posées » alors que 77 parties les ont servies).
+    // D'où `computed_at` plus bas : le client doit pouvoir distinguer les deux.
     db.query(
       `SELECT
          count(*) FILTER (WHERE success_rate IS NULL)              ::int AS never_asked,
@@ -75,6 +80,15 @@ async function getOverview() {
   const c = counts.rows[0];
   const h = health.rows[0];
 
+  // Trace du batch qui alimente `success_rate`. Lecture Redis hors du Promise.all
+  // ci-dessus à dessein : si elle échoue, la santé du contenu passe simplement en
+  // « non calculée », elle ne fait pas tomber tout le tableau de bord.
+  const lastSuccessRate = await jobsRunner.lastRunOf('success-rate').catch(() => null);
+  const successRateComputedAt =
+    lastSuccessRate?.ok && lastSuccessRate.finishedAt
+      ? new Date(lastSuccessRate.finishedAt).toISOString()
+      : null;
+
   // Pool par thème : toujours les 6 thèmes (0 si absent), ordre canonique.
   const poolMap = Object.fromEntries(THEMES.map((t) => [t, 0]));
   for (const row of pool.rows) {
@@ -95,6 +109,9 @@ async function getOverview() {
     recent_users: recent.rows,
     pending_questions: pending.rows.map((r) => questionModel.toAdminView(r)),
     content_health: {
+      // Instant du dernier passage RÉUSSI du batch, ou null s'il n'a jamais
+      // abouti. Les trois compteurs qui suivent n'ont de sens qu'avec lui.
+      computed_at: successRateComputedAt,
       never_asked: h.never_asked,
       too_hard: h.too_hard,
       too_easy: h.too_easy,

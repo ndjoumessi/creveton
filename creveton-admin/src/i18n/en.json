@@ -49,7 +49,6 @@
       "gamesToday": "Games today",
       "activeQuestions": "Active questions",
       "openTournaments": "Open tournaments",
-      "dauMau": "DAU/MAU ratio",
       "avgScore": "Global average score",
       "successRate": "Success rate",
       "xpDistributed": "XP distributed"
@@ -93,7 +92,11 @@
       "neverPlayed": "Never asked",
       "tooHard": "Too hard (< 30%)",
       "tooEasy": "Too easy (> 80%)",
-      "poolByTheme": "Pool by theme"
+      "poolByTheme": "Pool by theme",
+      "uncomputedTitle": "Not computed yet",
+      "uncomputedSub": "The nightly success-rate recalculation hasn't completed yet — we can't say what has been asked.",
+      "computedAt": "Recomputed {{when}}",
+      "poolEmpty": "No questions"
     },
     "chart": {
       "title": "Activity over the last 7 days",

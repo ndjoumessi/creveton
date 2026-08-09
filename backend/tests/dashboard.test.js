@@ -97,3 +97,45 @@ t('GET /tournaments : soft-deleté exclu + filtre status', async () => {
   const filtered = await request(app).get(`${P}/tournaments`).query({ status: 'running' }).set('Authorization', `Bearer ${H.tokenFor(user)}`);
   expect(filtered.body.data.length).toBe(0);
 });
+
+// ─── Santé du contenu : « jamais posée » ≠ « jamais calculé » ───────────────
+//
+// `success_rate` n'est écrit que par le batch nocturne `success-rate`. Tant
+// qu'il n'a pas abouti, les trois compteurs de la carte affirment le contraire
+// de la vérité — constaté sur staging : 180 questions « jamais posées » alors
+// que 77 parties venaient de les servir. `computed_at` est le seul moyen pour
+// le client de faire la différence.
+
+const SR_KEY = 'jobs:last:success-rate';
+const traceOf = (over = {}) =>
+  JSON.stringify({ startedAt: 1, finishedAt: 2, ok: true, summary: null, error: null, ...over });
+
+t('content_health.computed_at est null tant que le batch n’a pas tourné', async () => {
+  const admin = await H.createUser({ role: 'admin', phone: '+237690000020' });
+  await H.createApprovedQuestion({ status: 'approved' });
+
+  const r = await request(app).get(`${P}/admin/dashboard`).set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+  expect(r.status).toBe(200);
+  expect(r.body.content_health.computed_at).toBeNull();
+  // Les compteurs restent servis : c'est le client qui décide de les taire.
+  expect(typeof r.body.content_health.never_asked).toBe('number');
+});
+
+t('content_health.computed_at porte la fin du dernier passage RÉUSSI', async () => {
+  const admin = await H.createUser({ role: 'admin', phone: '+237690000021' });
+  const finishedAt = Date.UTC(2026, 7, 9, 2, 5, 0);
+  await H.redis.set(SR_KEY, traceOf({ finishedAt }));
+
+  const r = await request(app).get(`${P}/admin/dashboard`).set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+  expect(r.body.content_health.computed_at).toBe(new Date(finishedAt).toISOString());
+});
+
+t('un passage EN ÉCHEC ne valide pas les compteurs', async () => {
+  const admin = await H.createUser({ role: 'admin', phone: '+237690000022' });
+  await H.redis.set(SR_KEY, traceOf({ ok: false, error: 'boom' }));
+
+  const r = await request(app).get(`${P}/admin/dashboard`).set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+  // Un batch qui a planté laisse `success_rate` dans l'état où il était :
+  // prétendre le contraire serait pire que ne rien afficher.
+  expect(r.body.content_health.computed_at).toBeNull();
+});

@@ -36,11 +36,23 @@ async function ensureReady() {
   }
 }
 
-/** Remet la base et Redis à zéro entre les tests (isolation). */
+/**
+ * Remet la base et Redis à zéro entre les tests (isolation).
+ *
+ * ─ Pourquoi PAS `RESTART IDENTITY` ─
+ * Plusieurs chemins de production sont volontairement « fire-and-forget » :
+ * `/auth/forgot-password` n'attend pas l'envoi de l'email (l'attendre créait un
+ * oracle temporel qui annulait l'anti-énumération). Une écriture tardive peut
+ * donc atterrir dans Redis APRÈS ce `resetState`. Avec les séquences remises à
+ * zéro, l'utilisateur du test suivant héritait du MÊME id, et la clé
+ * `pwdreset:<id>` du test précédent devenait la sienne : le test « sans demande
+ * préalable, le code est réputé expiré » trouvait un code et échouait, une fois
+ * sur deux. Sans remise à zéro, la clé retardataire pointe un id mort.
+ */
 async function resetState() {
   await db.query(
     `TRUNCATE TABLE users, questions, game_sessions, tournaments,
-       tournament_participants, transactions RESTART IDENTITY CASCADE`
+       tournament_participants, transactions CASCADE`
   );
   await redis.flushdb();
 }

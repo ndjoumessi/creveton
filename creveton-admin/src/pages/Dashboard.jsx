@@ -7,7 +7,7 @@ import {
   Server, Database, Zap, RefreshCw, Inbox, BarChart3, PieChart as PieIcon,
   Activity, Target, Gauge as GaugeIcon, Sparkles, HeartPulse, CalendarClock,
   Volume2, VolumeX, Download, LineChart as LineIcon, AreaChart as AreaIcon, Play,
-  User, Clock,
+  User, Clock, AlertTriangle, HelpCircle,
 } from 'lucide-react';
 import { Icon } from '../components/Icon';
 import {
@@ -25,7 +25,7 @@ import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
 import { parseISO, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { num, dateFr, pct, tournamentStart } from '../utils/format';
+import { num, dateFr, tournamentStart } from '../utils/format';
 import { chartTheme } from '../utils/chartTheme';
 import useThemeStore from '../store/themeStore';
 import { themeLabels, themeBadgeColors, levelLabels } from '../constants/theme';
@@ -402,6 +402,13 @@ export default function Dashboard() {
   const chartData = useMemo(() => aggregateSeries(daily, granularity), [daily, granularity]);
   const hasChartData = chartData.some((d) => d.inscriptions > 0 || d.parties > 0);
 
+  // Points de mesure visibles sur les courbes. `type="monotone"` lisse entre
+  // les relevés : sans marqueurs, six points quotidiens se lisaient comme une
+  // progression continue, et rien ne disait où étaient les vraies valeurs.
+  // Au-delà d'un mois de relevés, les points deviennent du bruit — on les
+  // retire, la densité de la courbe suffit alors à dire qu'elle est échantillonnée.
+  const pointDot = chartData.length <= 31 ? { r: 2.5, strokeWidth: 0 } : false;
+
   // ─── Répartition thèmes (donut) dérivée des parties récentes ───
   const themeDist = useMemo(() => {
     const counts = {};
@@ -541,9 +548,12 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* ─── Ligne 2 : 4 KPI secondaires compacts ─── */}
+      {/* ─── Ligne 2 : KPI secondaires compacts ───
+          Le ratio DAU/MAU ne figure plus ici : la carte « Stickiness » en bas de
+          page affiche la MÊME valeur, plus son numérateur et son dénominateur
+          (1/1). Deux rendus de la même donnée à huit cents pixels d'écart, dont
+          le moins informatif en premier. */}
       <div className="dash-kpi2-grid dash-gap">
-        <MiniKpi icon={<Activity size={18} />} tone="green" label={t('dashboard.kpi.dauMau')} value={pct(analytics ? analytics.dau_mau_ratio : null, 0)} />
         <MiniKpi icon={<Target size={18} />} tone="gold" label={t('dashboard.kpi.avgScore')} value={num(kpis.avg_score ?? 0)} />
         <MiniKpi icon={<GaugeIcon size={18} />} tone="blue" label={t('dashboard.kpi.successRate')} value={`${kpis.success_rate ?? 0} %`} />
         <MiniKpi icon={<Sparkles size={18} />} tone="violet" label={t('dashboard.kpi.xpDistributed')} value={num(kpis.xp_distributed ?? 0)} />
@@ -728,34 +738,69 @@ export default function Dashboard() {
             <div className="dash-empty"><HeartPulse size={26} color="#9ca3af" /><span className="dash-empty-title">{t('dashboard.empty.contentHealthTitle')}</span></div>
           ) : (
             <>
-              <div className="dash-health-grid">
-                <Link to="/questions?health=never" className="dash-health-cell">
-                  <span className="dash-health-num">{num(contentHealth.never_asked)}</span>
-                  <span className="dash-health-lbl">{t('dashboard.contentHealth.neverPlayed')}</span>
-                </Link>
-                <Link to="/questions?health=hard" className="dash-health-cell">
-                  <span className="dash-health-num dash-health-num--warn">{num(contentHealth.too_hard)}</span>
-                  <span className="dash-health-lbl">{t('dashboard.misc.tooHardLabel')}</span>
-                </Link>
-                <Link to="/questions?health=easy" className="dash-health-cell">
-                  <span className="dash-health-num dash-health-num--easy">{num(contentHealth.too_easy)}</span>
-                  <span className="dash-health-lbl">{t('dashboard.misc.tooEasyLabel')}</span>
-                </Link>
-              </div>
+              {/* Les trois compteurs dérivent tous de `success_rate`, que SEUL
+                  le batch nocturne écrit. Sans passage abouti, ils ne sont pas
+                  approximatifs : ils sont faux — « 180 jamais posées » pendant
+                  que 77 parties les servaient. On les tait dans ce cas, et on
+                  dit pourquoi. */}
+              {!contentHealth.computed_at ? (
+                <div className="dash-health-uncomputed">
+                  <HelpCircle size={18} aria-hidden="true" />
+                  <div>
+                    <span className="dash-health-uncomputed-title">{t('dashboard.contentHealth.uncomputedTitle')}</span>
+                    <span className="dash-health-uncomputed-sub">{t('dashboard.contentHealth.uncomputedSub')}</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="dash-health-grid">
+                    <Link to="/questions?health=never" className="dash-health-cell">
+                      <span className="dash-health-num">{num(contentHealth.never_asked)}</span>
+                      <span className="dash-health-lbl">{t('dashboard.contentHealth.neverPlayed')}</span>
+                    </Link>
+                    <Link to="/questions?health=hard" className="dash-health-cell">
+                      <span className="dash-health-num dash-health-num--warn">{num(contentHealth.too_hard)}</span>
+                      <span className="dash-health-lbl">{t('dashboard.misc.tooHardLabel')}</span>
+                    </Link>
+                    <Link to="/questions?health=easy" className="dash-health-cell">
+                      <span className="dash-health-num dash-health-num--easy">{num(contentHealth.too_easy)}</span>
+                      <span className="dash-health-lbl">{t('dashboard.misc.tooEasyLabel')}</span>
+                    </Link>
+                  </div>
+                  {/* Une donnée recalculée une fois par nuit doit dire quand :
+                      « 12 questions trop faciles » ne vaut pas la même chose
+                      selon qu'on l'a mesuré cette nuit ou il y a six jours. */}
+                  <p className="dash-health-stamp">
+                    {t('dashboard.contentHealth.computedAt', { when: relativeFr(contentHealth.computed_at) })}
+                  </p>
+                </>
+              )}
               <div className="dash-health-pool">
                 <div className="dash-health-pool-title">{t('dashboard.misc.poolApprovedByTheme')}</div>
+                {/* Un thème à 0 n'est pas une statistique basse : c'est le jeu
+                    cassé pour ce thème côté joueur. La barre vide ne disait
+                    rien — elle porte maintenant le motif, et le compteur passe
+                    en rouge. Couleur DOUBLÉE d'un libellé, comme l'exige la
+                    charte : le rouge seul n'informe pas un daltonien. */}
                 {contentHealth.pool_by_theme.map((p) => (
-                  <div className="dash-pool-row" key={p.theme}>
+                  <div className={`dash-pool-row ${p.count === 0 ? 'is-empty' : ''}`} key={p.theme}>
                     <span className="dash-pool-name">
                       <span className="dash-pool-emoji" aria-hidden="true">{(themeBadgeColors[p.theme] && themeBadgeColors[p.theme].icon) || '•'}</span>
                       {themeLabels[p.theme] || p.theme}
                     </span>
-                    <span className="dash-pool-bar">
-                      <span
-                        className="dash-pool-fill"
-                        style={{ width: `${Math.round((p.count / poolMax) * 100)}%`, background: (themeBadgeColors[p.theme] && themeBadgeColors[p.theme].fg) || '#2a8a4f' }}
-                      />
-                    </span>
+                    {p.count === 0 ? (
+                      <Link to={`/questions?theme=${p.theme}`} className="dash-pool-alert">
+                        <AlertTriangle size={13} aria-hidden="true" />
+                        {t('dashboard.contentHealth.poolEmpty')}
+                      </Link>
+                    ) : (
+                      <span className="dash-pool-bar">
+                        <span
+                          className="dash-pool-fill"
+                          style={{ width: `${Math.round((p.count / poolMax) * 100)}%`, background: (themeBadgeColors[p.theme] && themeBadgeColors[p.theme].fg) || '#2a8a4f' }}
+                        />
+                      </span>
+                    )}
                     <span className="dash-pool-count">{p.count}</span>
                   </div>
                 ))}
@@ -863,8 +908,8 @@ export default function Dashboard() {
                   <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
-                  <Line type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2.5} dot={pointDot} activeDot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2.5} dot={pointDot} activeDot={{ r: 4 }} />
                 </LineChart>
               ) : (
                 <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
@@ -882,8 +927,8 @@ export default function Dashboard() {
                   <XAxis dataKey="label" tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={{ stroke: ct.axisLine }} minTickGap={16} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: ct.axisText, fontFamily: ct.fontFamily }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip content={<ActivityTooltip t={t} />} cursor={{ stroke: 'rgba(42,138,79,0.25)', strokeWidth: 1 }} />
-                  <Area type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2} fill="url(#dashGradSignups)" dot={false} activeDot={{ r: 4 }} />
-                  <Area type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2} fill="url(#dashGradGames)" dot={false} activeDot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="inscriptions" stroke="#2a8a4f" strokeWidth={2} fill="url(#dashGradSignups)" dot={pointDot} activeDot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="parties" stroke="#d4a017" strokeWidth={2} fill="url(#dashGradGames)" dot={pointDot} activeDot={{ r: 4 }} />
                 </AreaChart>
               )}
             </ResponsiveContainer>

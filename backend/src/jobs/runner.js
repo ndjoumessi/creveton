@@ -149,4 +149,8 @@ async function status() {
   return rows;
 }
 
-module.exports = { start, stop, tick, runJob, status, byName };
+// `lastRunOf` est exposé pour les consommateurs qui affichent une donnée
+// PRODUITE par une tâche : sans la date du dernier passage, ils ne peuvent pas
+// distinguer « la valeur est zéro » de « la valeur n'a jamais été calculée ».
+// Cf. `dashboardService` et la santé du contenu.
+module.exports = { start, stop, tick, runJob, status, byName, lastRunOf: readLast };

@@ -1,22 +1,37 @@
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import i18n from '../i18n';
 
-/** Montant FCFA (XAF) sans décimales : "4 280 000 FCFA". */
+/**
+ * Étiquette de locale pour la langue ACTIVE de la console.
+ *
+ * Les trois formateurs ci-dessous codaient `'fr-FR'` en dur. La console bascule
+ * pourtant FR/EN : en anglais, « 70 565 » s'affichait avec l'espace fine
+ * française au lieu de « 70,565 », et « 36,7 % » avec une virgule décimale.
+ * Le lecteur anglophone lit alors 36 virgule 7 comme trente-six mille sept.
+ */
+const localeTag = () => ((i18n.language || 'fr').startsWith('en') ? 'en-US' : 'fr-FR');
+
+/** Montant FCFA (XAF) sans décimales : "4 280 000 FCFA" / "4,280,000 FCFA". */
 export function fcfa(n) {
   if (n == null) return '—';
-  return `${Math.round(n).toLocaleString('fr-FR')} FCFA`;
+  return `${Math.round(n).toLocaleString(localeTag())} FCFA`;
 }
 
-/** Nombre formaté FR : 12 480. */
+/** Nombre groupé selon la langue active : 12 480 / 12,480. */
 export function num(n) {
   if (n == null) return '—';
-  return Number(n).toLocaleString('fr-FR');
+  return Number(n).toLocaleString(localeTag());
 }
 
-/** Pourcentage : 0.367 → "36,7 %". */
+/** Pourcentage : 0.367 → "36,7 %" / "36.7 %". */
 export function pct(ratio, digits = 1) {
   if (ratio == null) return '—';
-  return `${(ratio * 100).toFixed(digits).replace('.', ',')} %`;
+  const value = new Intl.NumberFormat(localeTag(), {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(ratio * 100);
+  return `${value} %`;
 }
 
 // Fuseau horaire actif (préférence de l'admin connecté, users.timezone). Quand
