@@ -172,55 +172,34 @@ t('GET /questions/delta : timestamp invalide → 400 INVALID_TIMESTAMP', async (
   expect(r.body.error.code).toBe('INVALID_TIMESTAMP');
 });
 
-// ── POST /questions/solutions (sync cache offline mobile) ──────────────────────
-t('POST /questions/solutions : IDs valides → 200 + solutions (avec correct_index)', async () => {
-  const { token, ids } = await setup(3);
-  const r = await request(app)
-    .post('/api/v1/questions/solutions')
-    .set('Authorization', `Bearer ${token}`)
-    .send({ question_ids: ids });
+// ── POST /questions/solutions : RETIRÉ ─────────────────────────────────────
+//
+// L'endpoint renvoyait `correct_index` pour jusqu'à 500 questions en un appel :
+// n'importe quel jeton de joueur obtenait le corrigé de toute la banque, et le
+// plafond d'un appel par heure n'y changeait rien puisqu'un seul suffit. La
+// révélation passe désormais uniquement par `POST /sessions/answer`, question
+// par question et APRÈS la réponse.
 
-  expect(r.status).toBe(200);
-  expect(Array.isArray(r.body.solutions)).toBe(true);
-  expect(r.body.solutions).toHaveLength(3);
-  const s = r.body.solutions.find((x) => x.id === ids[0]);
-  // Contrairement à la vue joueur, cet endpoint EXPOSE bien la solution.
-  expect(Number.isInteger(s.correct_index)).toBe(true);
-  expect(s).toHaveProperty('explanation');
-  expect(s).toHaveProperty('explanation_en');
-});
-
-t('POST /questions/solutions : sans auth → 401', async () => {
-  const { ids } = await setup(2);
-  const r = await request(app)
-    .post('/api/v1/questions/solutions')
-    .send({ question_ids: ids });
-  expect(r.status).toBe(401);
-});
-
-t('POST /questions/solutions : body invalide (pas un tableau) → 400', async () => {
-  const user = await H.createUser({ role: 'player' });
-  const token = H.tokenFor(user);
-  const r = await request(app)
-    .post('/api/v1/questions/solutions')
-    .set('Authorization', `Bearer ${token}`)
-    .send({ question_ids: 'not-an-array' });
-  expect(r.status).toBe(400);
-  expect(r.body.error.code).toBe('VALIDATION_ERROR');
-});
-
-t('POST /questions/solutions : rate limit 1/h → 2e appel rapide 429', async () => {
+t('POST /questions/solutions n’existe plus (404), même authentifié', async () => {
   const { token, ids } = await setup(2);
-  const first = await request(app)
+  const r = await request(app)
     .post('/api/v1/questions/solutions')
     .set('Authorization', `Bearer ${token}`)
     .send({ question_ids: ids });
-  expect(first.status).toBe(200);
-
-  const second = await request(app)
-    .post('/api/v1/questions/solutions')
-    .set('Authorization', `Bearer ${token}`)
-    .send({ question_ids: ids });
-  expect(second.status).toBe(429);
-  expect(second.body.error.code).toBe('RATE_LIMITED');
+  expect(r.status).toBe(404);
 });
+
+t('aucune route ne sert `correct_index` en masse', async () => {
+  // Garde-fou de non-régression : la vue joueur, elle, n'a jamais exposé la
+  // solution — on le revérifie ici pour que le retrait ci-dessus ne soit pas
+  // silencieusement compensé ailleurs.
+  const { token } = await setup(3);
+  const r = await request(app)
+    .get('/api/v1/questions/all')
+    .set('Authorization', `Bearer ${token}`);
+  expect(r.status).toBe(200);
+  const brut = JSON.stringify(r.body);
+  expect(brut).not.toMatch(/correct_index/);
+  expect(brut).not.toMatch(/is_correct/);
+});
+

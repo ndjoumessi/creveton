@@ -127,23 +127,6 @@ export async function patchQuestionSolution(questionId, { correct_index, explana
   );
 }
 
-// Patch en lot des solutions (POST /questions/solutions) : alimente le cache
-// offline en une transaction. Ignore silencieusement les entrées sans correct_index.
-export async function batchPatchSolutions(solutions) {
-  if (!solutions?.length) return;
-  const db = await getDb();
-  await db.withTransactionAsync(async () => {
-    for (const s of solutions) {
-      if (!s?.id || !Number.isInteger(s.correct_index)) continue;
-      await db.runAsync(
-        `UPDATE questions SET correct_index = ?, explanation = ?, explanation_en = ?
-         WHERE id = ?`,
-        [s.correct_index, s.explanation ?? null, s.explanation_en ?? null, s.id]
-      );
-    }
-  });
-}
-
 // Tirage local pour démarrer une partie en mode hybride.
 export async function getQuestions({ theme, level, count = 10 }) {
   const db = await getDb();
@@ -163,13 +146,6 @@ export async function getQuestions({ theme, level, count = 10 }) {
     [...params, count]
   );
   return rows.map(rowToQuestion);
-}
-
-// IDs de toutes les questions actives en cache — pour la sync des solutions.
-export async function getAllQuestionIds() {
-  const db = await getDb();
-  const rows = await db.getAllAsync('SELECT id FROM questions WHERE deleted = 0');
-  return rows.map((r) => r.id);
 }
 
 export async function countQuestions() {
@@ -227,9 +203,7 @@ export default {
   upsertQuestions,
   softDeleteQuestions,
   patchQuestionSolution,
-  batchPatchSolutions,
   getQuestions,
-  getAllQuestionIds,
   countQuestions,
   countQuestionsByTheme,
   clearQuestions,

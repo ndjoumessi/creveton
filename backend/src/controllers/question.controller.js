@@ -39,10 +39,4 @@ const all = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
-/** POST /questions/solutions → 200 { solutions } — sync cache offline mobile */
-const solutions = asyncHandler(async (req, res) => {
-  const result = await questionService.getSolutionsForCache(req.body.question_ids);
-  return ok(res, result);
-});
-
-module.exports = { list, delta, all, solutions };
+module.exports = { list, delta, all };

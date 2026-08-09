@@ -34,7 +34,7 @@ Pas de simulateur dispo ici : valider via `expo export` (build) + `expo start --
 - `services/`
   - `api.js` — client axios + 3 intercepteurs : injection Bearer, refresh auto sur 401 (single-flight), retry exponentiel sur 503. `parseApiError`, `setOnAuthExpired`.
   - `endpoints.js` — appels groupés par domaine (auth, questions, sessions, leaderboard, tournaments, challenges, users, wallet).
-  - `database.js` — cache SQLite des questions (vue joueur ; bilingue `text`/`text_en` + options `text_en` ; `correct_index`/`explanation`/`explanation_en` présents **en mode normal uniquement**). Migration douce (ALTER TABLE … ADD COLUMN) au démarrage.
+  - `database.js` — cache SQLite des questions (vue joueur ; bilingue `text`/`text_en` + options `text_en` ; `correct_index`/`explanation`/`explanation_en` présents **en mode normal uniquement**, et seulement pour les questions DÉJÀ JOUÉES en ligne — cf. anti-triche ci-dessous). Migration douce (ALTER TABLE … ADD COLUMN) au démarrage.
   - `sync.js` — delta sync CDC §2.8 (snapshot complet au 1er lancement via `/questions/all`, puis `/questions/delta`), non bloquant ; `handleForceSync` (push silencieux).
   - `notifications.js`, `socket.js`.
 - `store/` — `authStore`, `questionsStore`, `gameStore`, `leaderboardStore`, `networkStore` (état réseau), `offlineQueue` (parties jouées hors ligne, persistée AsyncStorage) (zustand).
@@ -141,6 +141,19 @@ marges placées pour garder l'origine du `scale` centrée sur le texte (pixel-id
 - **Logo** : Logo = `assets/logo.png` (cœur drapeau camerounais). Composant : `src/components/Logo.js` → `<Image source={require('../../assets/logo.png')} />`.
 - **Animations** : `Animated` (RN), slide+fade ≤ 300ms (max 500), ease-out, retour haptique < 120ms sur les boutons.
 - **Anti-triche (CDC §2.8)** : `correct_index` n'est **jamais** dans la vue joueur des questions de tournoi/challenge. Le feedback immédiat du quiz passe par **`POST /sessions/answer`** (mode normal seulement) ; `/sessions/submit` reste l'autorité finale du score. Ne jamais fabriquer de bonne réponse côté client.
+  · **`POST /questions/solutions` a été RETIRÉ (2026-08-09)**, avec le `syncSolutions()`
+    qui l'appelait. Il téléchargeait `correct_index` pour TOUTES les questions en cache
+    (jusqu'à 500) une fois par heure : n'importe quel jeton de joueur obtenait le corrigé
+    de la banque entière, et le plafond horaire n'y changeait rien puisqu'un seul appel
+    suffisait. Le cache n'apprend désormais une solution qu'APRÈS que le joueur a répondu
+    en ligne (`patchQuestionSolution`, QuizScreen) : le téléphone ne connaît que ce qui a
+    déjà été joué. Les APK déjà installés reçoivent un 404 avalé sans bruit.
+  · **Ordre des options mélangé** (`utils/shuffle.js`) : `correct_index` étant figé en base,
+    une question rejouée présentait sa bonne réponse à la même lettre. La permutation est
+    DÉTERMINISTE (graine × question) — un tirage aléatoire remélangerait les options au
+    changement de langue et juste après la réponse. Graine partagée en duel (celle du
+    serveur) et en tournoi (l'id du tournoi) ; locale en solo. `selected_index` reste
+    l'index canonique, donc le scoring, le cache et le rejeu hors ligne sont inchangés.
 - **Courbe XP** : paliers `[0, 200, 500, 1200, 3000]` (`levelProgress`/`levelForXp` dans `format.js`). Le niveau effectif est dérivé de `total_xp` (robuste si `user.level` est périmé). Tout est borné ≥ 0.
 - **Formulaires & clavier** : pour les écrans avec inputs (Login/Register), utiliser `AuthField` (label statique, champ non contrôlé via ref) + `KeyboardAvoidingView` (padding iOS / height Android), **sans ScrollView** — évite le reset du formulaire à l'ouverture du clavier.
 - **Listes** : `FlatList` (pas `ScrollView`) pour les listes de données.
