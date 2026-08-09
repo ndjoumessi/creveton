@@ -898,18 +898,28 @@ export default function Utilisateurs() {
           <div className="u-banner-l">{t('users.stats.total')}</div>
           <div className="u-banner-sub">{t('users.misc.subTotal')}</div>
         </div>
+        {/* Les quatre valeurs étaient peintes en dur — vert, or, et `#e74c3c`,
+            le rouge d'ERREUR de la console — au fil des colonnes, sans que la
+            teinte code quoi que ce soit. Pire : « 0 Suspendus » sortait en rouge
+            d'alarme, alors que zéro compte bloqué est une BONNE nouvelle.
+            Désormais la couleur n'apparaît que quand le nombre la mérite : la
+            valeur est neutre, et « Suspendus » vire au rouge seulement s'il y a
+            réellement des comptes bloqués. Une couleur qui ne s'allume jamais
+            pour rien redevient un signal. */}
         <div className="u-banner-item">
-          <div className="u-banner-v" style={{ color: '#5eca84' }}>{statsLoading ? '—' : num(stats.active_7d)}</div>
+          <div className="u-banner-v">{statsLoading ? '—' : num(stats.active_7d)}</div>
           <div className="u-banner-l">{t('users.stats.active7d')}</div>
           <div className="u-banner-sub">{t('users.misc.subActive7d')}</div>
         </div>
         <div className="u-banner-item">
-          <div className="u-banner-v" style={{ color: 'var(--gold)' }}>{statsLoading ? '—' : num(stats.new_today)}</div>
+          <div className="u-banner-v">{statsLoading ? '—' : num(stats.new_today)}</div>
           <div className="u-banner-l">{t('users.stats.newToday')}</div>
           <div className="u-banner-sub">{t('users.misc.subNewToday')}</div>
         </div>
         <div className="u-banner-item">
-          <div className="u-banner-v" style={{ color: '#e74c3c' }}>{statsLoading ? '—' : num(stats.blocked)}</div>
+          <div className={`u-banner-v${!statsLoading && stats.blocked > 0 ? ' is-alert' : ''}`}>
+            {statsLoading ? '—' : num(stats.blocked)}
+          </div>
           <div className="u-banner-l">{t('users.stats.suspended')}</div>
           <div className="u-banner-sub">{t('users.misc.subSuspended')}</div>
         </div>

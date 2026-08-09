@@ -827,8 +827,12 @@ export default function TeamPage() {
       {/* Bandeau de statistiques (sombre) */}
       <div className="dark-banner">
         <div className="item team-stat"><div className="v">{kpis.total}</div><div className="l">{t('team.stats.total', 'Total membres')}</div></div>
-        <div className="item team-stat"><div className="v" style={{ color: '#5eca84' }}>{kpis.active}</div><div className="l">{t('team.stats.active7d', 'Actifs (7 j)')}</div></div>
-        <div className="item team-stat"><div className="v" style={{ color: 'var(--gold)' }}>{kpis.pendingInvites}</div><div className="l">{t('team.stats.pendingInvites', 'Invitations en attente')}</div></div>
+        {/* Vert et or distribués au fil des colonnes sans rien coder — même
+            motif que le bandeau Utilisateurs et que les cartes KPI. L'or
+            s'allume maintenant seulement s'il y a vraiment des invitations en
+            attente : c'est le seul des quatre chiffres qui appelle une action. */}
+        <div className="item team-stat"><div className="v">{kpis.active}</div><div className="l">{t('team.stats.active7d', 'Actifs (7 j)')}</div></div>
+        <div className="item team-stat"><div className={`v${kpis.pendingInvites > 0 ? ' is-pending' : ''}`}>{kpis.pendingInvites}</div><div className="l">{t('team.stats.pendingInvites', 'Invitations en attente')}</div></div>
         <div className="item team-stat"><div className="v">{kpis.neverConnected}</div><div className="l">{t('team.stats.neverConnected')}</div></div>
       </div>
 

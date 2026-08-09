@@ -175,9 +175,16 @@
   font-weight: 600;
   white-space: nowrap;
 }
+/* Niveaux : rampe ORDINALE d'une seule teinte, intensité croissante.
+   C'était un feu tricolore (vert / ambre / ROUGE) — le même que les barres de
+   Parties, mais bien plus visible : une pastille par ligne de tableau, plus le
+   tiroir de détail. « Expert » se peignait dans le rouge d'erreur de la console
+   et chaque page de modération semblait pleine d'incidents. La difficulté est
+   ordonnée, elle n'a pas de mauvais côté. Le libellé reste écrit dans la
+   pastille (Règle du Sens Doublé) et la rampe se lit en niveaux de gris. */
 .q-level-beginner { background: #e3f3ea; color: var(--green700); }
-.q-level-intermediate { background: #fdf0c8; color: var(--pastel-amber-fg); }
-.q-level-expert { background: var(--pastel-red); color: var(--pastel-red-fg-deep); }
+.q-level-intermediate { background: #a9dcc0; color: #124b2a; }
+.q-level-expert { background: var(--green700); color: #e3f3ea; }
 
 /* Statut : point + libellé */
 .q-status-dot {
@@ -1263,14 +1270,16 @@
 [data-theme="dark"] .q-bi-opt.is-correct { background: rgba(42,138,79,0.12); }
 [data-theme="dark"] .q-opt-view-row.is-correct { background: rgba(42,138,79,0.12); }
 /* Gold pills / panels */
-[data-theme="dark"] .q-level-intermediate { background: rgba(212,160,23,0.16); color: var(--gold400); }
+/* Nuit : même rampe, intensité croissante vers le CLAIR — sur fond sombre
+   c'est le ton lumineux qui ressort (cf. chartTheme.ramp, même inversion). */
+[data-theme="dark"] .q-level-intermediate { background: rgba(42,138,79,0.34); color: #b7ecca; }
 [data-theme="dark"] .q-lang-badge--en { background: rgba(212,160,23,0.16); color: var(--gold400); }
 [data-theme="dark"] .q-btn-sync { color: var(--text); }
 [data-theme="dark"] .import-compare-sim { background: rgba(212,160,23,0.16); color: var(--gold400); }
 [data-theme="dark"] .q-ai-panel { background: rgba(212,160,23,0.08); }
 [data-theme="dark"] .q-ai-panel-label { color: var(--gold400); }
 /* Red pills */
-[data-theme="dark"] .q-level-expert { background: rgba(231,76,60,0.18); color: var(--pastel-red-fg-dark); }
+[data-theme="dark"] .q-level-expert { background: rgba(94,202,132,0.85); color: #06240f; }
 [data-theme="dark"] .q-verdict-hard { background: rgba(231,76,60,0.18); color: var(--pastel-red-fg-dark); }
 [data-theme="dark"] .q-kanban-tag-rejected { background: rgba(231,76,60,0.18); color: var(--pastel-red-fg-dark); }
 [data-theme="dark"] .q-compare-hard { background: rgba(231,76,60,0.18); color: var(--pastel-red-fg-dark); }

@@ -25,6 +25,12 @@
   color: #fff;
   font-variant-numeric: tabular-nums;
 }
+/* Rouge CONDITIONNEL : posé par le JSX uniquement quand des comptes sont
+   réellement bloqués. Le bandeau étant vert nuit, on prend un rouge assez clair
+   pour rester lisible dessus — #e74c3c, l'ancienne valeur en dur, tombe sous AA
+   sur ce fond. Le libellé « Suspendus » porte le sens ; la couleur n'est qu'un
+   appel au regard. */
+.u-banner-v.is-alert { color: #ff9a8f; }
 .u-banner-l {
   font-family: var(--font-body);
   font-size: var(--text-sm);

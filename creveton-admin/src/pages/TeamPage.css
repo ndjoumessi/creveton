@@ -5,6 +5,9 @@
 /* ─────────────── Bandeau de stats (sombre, réutilise .dark-banner) ─────────────── */
 .team-stat { text-align: center; }
 .team-stat .v { font-variant-numeric: tabular-nums; }
+/* Or CONDITIONNEL : posé par le JSX seulement quand des invitations attendent
+   vraiment. Une couleur qui ne s'allume jamais pour rien redevient un signal. */
+.team-stat .v.is-pending { color: var(--gold); }
 
 /* ─────────────── Table ─────────────── */
 .team-table-card { overflow: visible; }
