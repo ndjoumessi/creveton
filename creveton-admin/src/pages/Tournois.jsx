@@ -409,11 +409,25 @@ export default function Tournois() {
 
   const counts = useMemo(() => stats || {
     scheduled: tournaments.filter((tour) => tour.status === 'scheduled').length,
+    open: tournaments.filter((tour) => tour.status === 'open').length,
     running: tournaments.filter((tour) => tour.status === 'running').length,
     closed: tournaments.filter((tour) => ['closed', 'paid'].includes(tour.status)).length,
+    cancelled: tournaments.filter((tour) => tour.status === 'cancelled').length,
     registered_players_total: tournaments.reduce((s, tour) => s + (tour.registered_players || 0), 0),
     total: tournaments.length,
   }, [stats, tournaments]);
+
+  // Récapitulatif d'en-tête : uniquement les états RÉELLEMENT présents.
+  //
+  // Il affichait « 0 programmé(s) · 0 en cours · 0 terminé(s) » au-dessus de
+  // quatre cartes — les quatre étaient annulées, et ni `cancelled` ni `open`
+  // n'entraient dans le compte. L'en-tête disait « rien » pendant que l'écran
+  // montrait quatre choses. On énumère donc les états non nuls, et un état
+  // absent ne s'écrit plus : un zéro n'apprend rien, il induit en erreur.
+  const headSegments = ['scheduled', 'open', 'running', 'closed', 'cancelled']
+    .map((k) => ({ k, n: counts[k] || 0 }))
+    .filter((s) => s.n > 0)
+    .map((s) => `${s.n} ${t(`tournaments.statuses.${s.k}`).toLocaleLowerCase()}`);
 
   const openDetail = (tour) => navigate(`/tournaments/${tour.id}`);
 
@@ -521,11 +535,8 @@ export default function Tournois() {
         title={t('tournaments.title')}
         description={(
           <span className="tour-head-stats">
-            {t('tournaments.headStats', {
-              scheduled: counts.scheduled || 0,
-              running: counts.running || 0,
-              closed: counts.closed || 0,
-            })}
+            {t('tournaments.freeCompetitions')}
+            {headSegments.length > 0 && ` · ${headSegments.join(' · ')}`}
           </span>
         )}
         actions={(
@@ -539,8 +550,10 @@ export default function Tournois() {
       {/* Bannière discrète : mode gratuit forcé (flag tournaments.paid.enabled = false). */}
       <div className="tour-banner tour-banner-info">
         <span className="tour-banner-ico"><Lock size={15} /></span>
+        {/* La pastille « CDC §6 » a sauté : une référence au cahier des charges
+            interne n'apprend rien à qui administre la console, et occupait le
+            bout de ligne où l'œil cherche une action ou une échéance. */}
         <span className="tour-banner-title">{t('tournaments.banner.freeMode', 'Mode gratuit — tournois payants désactivés')}</span>
-        <span className="tour-banner-cdc">{t('tournaments.banner.cdc')}</span>
       </div>
 
       {/* Panneau statistiques */}

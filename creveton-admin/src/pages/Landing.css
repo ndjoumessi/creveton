@@ -54,7 +54,7 @@
 .land-page button:focus-visible {
   outline: 2px solid var(--l-gold);
   outline-offset: 3px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 /* ════════════ Décor partagé : lattice de losanges ════════════ */
@@ -121,7 +121,7 @@
   width: 36px;
   height: 36px;
   background: var(--l-cream);
-  border-radius: 9px;
+  border-radius: 8px;
   object-fit: cover;
 }
 .land-nav-name {
@@ -147,7 +147,7 @@
   background: var(--l-gold);
   color: var(--l-ink);
   padding: 9px 20px;
-  border-radius: 9px;
+  border-radius: 8px;
   text-decoration: none;
   transition: background 150ms ease;
 }
@@ -239,7 +239,7 @@
   font-weight: 700;
   font-size: 15px;
   padding: 15px 30px;
-  border-radius: 11px;
+  border-radius: 12px;
   text-decoration: none;
   transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
   box-shadow: 0 10px 28px -10px rgba(212, 160, 23, 0.55);
@@ -259,7 +259,7 @@
   font-weight: 600;
   font-size: 15px;
   padding: 15px 24px;
-  border-radius: 11px;
+  border-radius: 12px;
   border: 1px solid rgba(253, 246, 233, 0.22);
   text-decoration: none;
   transition: border-color 150ms ease, background 150ms ease;
@@ -364,7 +364,7 @@
   font-size: var(--text-2xs);
   font-weight: 600;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 .land-phone-timer {
   font-family: var(--font-display);
@@ -405,7 +405,7 @@
   align-items: center;
   gap: 9px;
   padding: 10px 13px;
-  border-radius: 9px;
+  border-radius: 8px;
   border: 1.5px solid #e5e7e0;
   background: #fff;
   font-size: var(--text-sm);
@@ -424,7 +424,7 @@
   flex-shrink: 0;
   width: 22px;
   height: 22px;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #e8f0e8;
   font-family: var(--font-display);
   font-weight: 700;
@@ -512,7 +512,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--l-ink);
   color: var(--l-gold);
   margin: 20px 0 16px;
@@ -608,7 +608,7 @@
   align-items: center;
   gap: 12px;
   padding: 26px 12px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(253, 246, 233, 0.05);
   border: 1px solid var(--l-hairline);
   transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
@@ -694,7 +694,7 @@
 .land-pill {
   width: 32px;
   height: 32px;
-  border-radius: 9px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -725,7 +725,7 @@
   justify-content: center;
   width: 38px;
   height: 38px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: rgba(253, 246, 233, 0.06);
   color: var(--l-on-dark-2);
   transition: background 150ms ease, color 150ms ease;

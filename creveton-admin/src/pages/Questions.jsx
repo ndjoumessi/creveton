@@ -34,7 +34,12 @@ const STATUSES = ['draft', 'pending_review', 'approved', 'rejected', 'archived']
 const PAGE_SIZE = 20;
 const LETTERS = ['A', 'B', 'C', 'D'];
 const THEME_EMOJI = { geographie: '🌍', culture: '📚', histoire: '🏛️', industrie: '🏭', sport: '🏃', science: '🔬' };
-const LEVEL_EMOJI = { beginner: '🟢', intermediate: '🟡', expert: '🔴' };
+// Marqueurs ORDINAUX (vide → moitié → plein) et non un feu tricolore. Les
+// pastilles 🟢/🟡/🔴 disaient « expert = rouge = problème » alors que la
+// difficulté n'a ni bon ni mauvais côté — même correction que les barres de
+// Parties. Le remplissage croissant se lit comme une progression, et il reste
+// lisible en niveaux de gris (daltonisme).
+const LEVEL_EMOJI = { beginner: '○', intermediate: '◐', expert: '●' };
 const PERIODS = ['today', 'week', 'month'];
 
 /** Vrai si la date ISO tombe dans la période (today|week|month). Date.now hors rendu. */
@@ -50,21 +55,25 @@ function inPeriod(iso, period) {
   return true;
 }
 
-// Pills d'accès rapide : { id, type: all|status|theme|level, value, icon }.
-// `icon` : composant Lucide pour les pills de STATUT (UI fonctionnelle), emoji
-// pour les thèmes/niveaux (identité de contenu — conservés tels quels).
+// Pills d'accès rapide : { id, type: all|status, value, icon Lucide }.
+//
+// Réduites de 11 à 5. Les six retirées — quatre thèmes, deux niveaux — étaient
+// le calque exact des listes « Tous les thèmes » et « Tous les niveaux » posées
+// juste au-dessus : deux commandes pour le même filtre, dans le même bloc. Avant
+// d'atteindre la première ligne de données, l'écran en comptait vingt-six.
+//
+// Ce qui reste est le FLUX DE MODÉRATION, c'est-à-dire le travail quotidien :
+// tout voir, ou sauter à un état du workflow. Un accès rapide sert la tâche
+// fréquente, il ne réplique pas chaque dimension filtrable.
+//
+// (Les pills restent synchronisées aux listes via `pillActive`/`applyPill`, et
+// la barre de filtres actifs sous les pills récapitule l'état courant.)
 const QUICK_PILLS = [
   { id: 'all', type: 'all', icon: Sparkles },
-  { id: 'approved', type: 'status', value: 'approved', icon: Check },
   { id: 'pending_review', type: 'status', value: 'pending_review', icon: Clock },
   { id: 'draft', type: 'status', value: 'draft', icon: FileText },
+  { id: 'approved', type: 'status', value: 'approved', icon: Check },
   { id: 'rejected', type: 'status', value: 'rejected', icon: AlertTriangle },
-  { id: 'geographie', type: 'theme', value: 'geographie', icon: '🌍' },
-  { id: 'culture', type: 'theme', value: 'culture', icon: '📚' },
-  { id: 'histoire', type: 'theme', value: 'histoire', icon: '🏛️' },
-  { id: 'industrie', type: 'theme', value: 'industrie', icon: '🏭' },
-  { id: 'beginner', type: 'level', value: 'beginner', icon: '🟢' },
-  { id: 'expert', type: 'level', value: 'expert', icon: '🔴' },
 ];
 const STATEMENT_MAX = 70;
 
@@ -1812,16 +1821,12 @@ export default function Questions() {
       {/* En-tête sticky : titre + compteurs inline + actions */}
       <div className="q-head">
         <PageHeader
-          title={(
-            <span className="q-title-line">
-              {t('questions.title')}
-              {!loading && (
-                <span className="q-count-inline">
-                  <strong>{total}</strong> {t('questions.loaded')} — {t('questions.misc.ofWhich')} <strong>{approvedCount}</strong> {t('questions.approved')} · <strong>{pendingCount}</strong> {t('questions.pending')}
-                </span>
-              )}
-            </span>
-          )}
+          /* Le compteur en ligne (« 100 chargées — dont 0 approuvées · 0 en
+             attente ») a sauté : la bande de KPI qui suit, à cent pixels de là,
+             affiche EXACTEMENT les trois mêmes nombres, en plus gros et avec la
+             note de portée. Deux rendus de la même donnée dans le même
+             coup d'œil, dont le moins informatif en premier. */
+          title={t('questions.title')}
           description={t('questions.subtitle')}
           actions={(
             <>

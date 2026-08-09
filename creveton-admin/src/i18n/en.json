@@ -804,10 +804,10 @@
     "title": "Games",
     "subtitle": "Browse the history of played games and the detail of each session.",
     "kpi": {
-      "total": "Total games",
       "today": "Today",
       "avgScore": "Average score",
-      "globalSuccess": "Global success rate"
+      "loaded": "Loaded games",
+      "successRate": "Success rate"
     },
     "search": "Search a player...",
     "allThemes": "All themes",
@@ -845,10 +845,6 @@
     "themeDistribution": "Distribution by theme",
     "scoreByLevel": "Average score by level",
     "misc": {
-      "kpiLastGames": "across recent games",
-      "kpiGamesPlayed": "games played",
-      "kpiLoadedGames": "across loaded games",
-      "kpiAllGames": "all games",
       "gamesCount_one": "{{value}} game",
       "gamesCount_other": "{{value}} games",
       "questionSkipped": "Question skipped",
@@ -859,6 +855,10 @@
     "empty": {
       "recapTitle": "Recap unavailable",
       "recapMessage": "No answers recorded for this game."
+    },
+    "scope": {
+      "loaded": "across loaded games",
+      "all": "across the whole bank"
     }
   },
   "tournaments": {
@@ -1082,11 +1082,9 @@
       "themeQuestionsHelp": "This tournament will have ~{{count}} questions available on this theme.",
       "previewHint": "This tournament will have <b>{{available}}</b> questions available and <b>{{perGame}}</b> questions per game ({{seconds}}s each)."
     },
-    "headStats": "Free competitions · {{scheduled}} scheduled · {{running}} running · {{closed}} finished",
     "banner": {
       "title": "Paid tournaments — awaiting license",
       "progress": "License acquisition: in progress",
-      "cdc": "CDC §6",
       "freeMode": "Free mode — paid tournaments disabled"
     },
     "statsPanel": {
@@ -1113,7 +1111,8 @@
       "cancelled": "Tournament cancelled.",
       "created": "Tournament created (scheduled).",
       "resultsValidated": "Results validated"
-    }
+    },
+    "freeCompetitions": "Free competitions"
   },
   "leaderboard": {
     "title": "Leaderboard",
@@ -1259,11 +1258,12 @@
       "sessionsSub": "Sessions open on your devices (JWT / refresh tokens).",
       "revokeOthersShort": "Revoke others",
       "noSessions": "No active session.",
-      "sessionLabel": "Session {{masked}}",
       "sessionCurrent": "current",
       "expiresIn": "Expires in {{days}} d",
       "expiryUnknown": "Unknown expiry",
-      "historyNote": "Detailed login history (IP, device) is not yet logged on the server side."
+      "historyNote": "Detailed login history (IP, device) is not yet logged on the server side.",
+      "deviceUnknown": "Unknown device",
+      "openedOn": "opened {{date}}"
     },
     "flags": {
       "paidTournaments": "Paid tournaments",
@@ -1302,7 +1302,7 @@
       "highLatencyLong": "API latency > 1 s",
       "diskSpaceLong": "Disk space > 80%",
       "dailySummaryRow": "Receive the daily summary (signups, games)",
-      "localNote": "Preferences saved locally. Actual alert delivery will be wired in v2."
+      "localNote": "None of these alerts are sent yet. The preferences below are stored in this browser until delivery is wired up."
     },
     "system": {
       "services": "Service status",

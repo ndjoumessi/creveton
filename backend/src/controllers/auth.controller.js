@@ -17,9 +17,14 @@ const register = asyncHandler(async (req, res) => {
   return created(res, result);
 });
 
+// Contexte de requête transmis aux deux points d'émission de session. Seul le
+// `User-Agent` remonte : il sert à étiqueter la session dans « Sessions actives »
+// (cf. utils/device.js). Rien n'est conservé au-delà du TTL du refresh token.
+const sessionMeta = (req) => ({ userAgent: req.get('user-agent') });
+
 /** POST /auth/verify-otp → 200 { access_token, refresh_token, token_type, expires_in, user } */
 const verifyOtp = asyncHandler(async (req, res) => {
-  const result = await authService.verifyOtp(req.body.phone, req.body.code);
+  const result = await authService.verifyOtp(req.body.phone, req.body.code, sessionMeta(req));
   return ok(res, result);
 });
 
@@ -31,7 +36,7 @@ const resendOtp = asyncHandler(async (req, res) => {
 
 /** POST /auth/login → 200 (identique à verify-otp) */
 const login = asyncHandler(async (req, res) => {
-  const result = await authService.login(req.body.email, req.body.password);
+  const result = await authService.login(req.body.email, req.body.password, sessionMeta(req));
   return ok(res, result);
 });
 

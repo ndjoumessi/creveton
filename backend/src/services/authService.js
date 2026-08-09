@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 
 const { redis } = require('../config/redis');
 const ApiError = require('../utils/ApiError');
+const { deviceLabel } = require('../utils/device');
 const {
   signAccessToken,
   signRefreshToken,
@@ -40,13 +41,22 @@ function tokenTtlSeconds(token) {
  * dans l'allowlist Redis.
  * @returns {Promise<object>} enveloppe tokens + user abrégé (contrat §4).
  */
-async function issueTokens(user) {
+async function issueTokens(user, meta = {}) {
   const sid = randomUUID();
   const accessToken = signAccessToken(user, sid);
   const refreshToken = signRefreshToken(user, sid);
 
   const refreshTtl = tokenTtlSeconds(refreshToken) || 30 * 24 * 3600;
-  await redis.set(refreshKey(user.id, sid), '1', 'EX', refreshTtl);
+  // La valeur était `'1'` : l'allowlist ne savait donc RIEN de la session, et
+  // l'écran « Sessions actives » ne pouvait afficher qu'un sid tronqué. On y
+  // range désormais de quoi la reconnaître — étiquette d'appareil et date
+  // d'ouverture, rien d'autre (cf. utils/device.js sur le choix de ne pas
+  // conserver l'IP). Ça expire avec le token, aucune rétention nouvelle.
+  const entry = JSON.stringify({
+    device: deviceLabel(meta.userAgent) || null,
+    at: new Date().toISOString(),
+  });
+  await redis.set(refreshKey(user.id, sid), entry, 'EX', refreshTtl);
 
   return {
     access_token: accessToken,
@@ -128,7 +138,7 @@ async function register(input) {
 /**
  * POST /auth/verify-otp — valide l'OTP, passe phone_verified=true, émet les tokens.
  */
-async function verifyOtp(phone, code) {
+async function verifyOtp(phone, code, meta = {}) {
   await otpService.verify(phone, code); // lève OTP_INVALID / OTP_EXPIRED / OTP_TOO_MANY_ATTEMPTS
 
   const user = await userModel.findByPhone(phone);
@@ -137,7 +147,7 @@ async function verifyOtp(phone, code) {
   const verified = await userModel.markPhoneVerified(user.id);
   await userModel.touchLastActive(user.id);
 
-  return issueTokens(verified);
+  return issueTokens(verified, meta);
 }
 
 /**
@@ -154,7 +164,7 @@ async function resendOtp(phone) {
 /**
  * POST /auth/login — email + mot de passe → tokens.
  */
-async function login(email, password) {
+async function login(email, password, meta = {}) {
   const user = await userModel.findByEmail(email);
 
   // Message identique que le compte existe ou non (anti énumération).
@@ -174,7 +184,7 @@ async function login(email, password) {
   }
 
   await userModel.touchLastActive(user.id);
-  return issueTokens(user);
+  return issueTokens(user, meta);
 }
 
 /**
@@ -239,12 +249,23 @@ async function listSessions(userId, currentSid) {
       const sid = key.slice(key.lastIndexOf(':') + 1);
       // TTL restant → date d'expiration approximative de la session.
       // eslint-disable-next-line no-await-in-loop
-      const ttl = await redis.ttl(key);
+      const [ttl, raw] = await Promise.all([redis.ttl(key), redis.get(key)]);
+      // Les sessions ouvertes AVANT ce changement portent encore `'1'` :
+      // JSON.parse échoue, on retombe sur un enregistrement vide et l'interface
+      // affiche « Appareil inconnu ». Elles s'éteindront d'elles-mêmes à
+      // l'expiration du refresh — pas de migration à écrire.
+      let entry = {};
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') entry = parsed;
+      } catch { /* ancienne valeur `'1'` — rien à lire */ }
       found.push({
         sid,
         masked: `${sid.slice(0, 8)}…`,
         current: sid === currentSid,
         expires_in_s: ttl > 0 ? ttl : null,
+        device: entry.device || null,
+        created_at: entry.at || null,
       });
     }
   } while (cursor !== '0');

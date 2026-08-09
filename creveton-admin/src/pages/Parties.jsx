@@ -36,11 +36,16 @@ const PERIODS = [
   { value: '', labelKey: 'sessions.periods.all' },
 ];
 
-// Couleurs « douces » des barres par niveau (vert / or / rouge doux) + libellés.
+// Niveaux, dans l'ordre de difficulté. La COULEUR ne vit plus ici : elle vient
+// de `chartTheme(isDark).ramp`, une rampe ordinale à trois crans d'une seule
+// teinte. Avant, ces barres étaient un feu tricolore (vert / or / rouge doux) :
+// « expert » se peignait en #e07a5f, à un cheveu du rouge d'erreur de la console
+// (.btn-danger), et l'écran racontait qu'il y avait un problème chez les experts.
+// La difficulté est une variable ORDONNÉE sans bon ni mauvais côté.
 const LEVEL_BARS = [
-  { key: 'beginner', labelKey: 'questions.levels.beginner', color: '#2a8a4f' },
-  { key: 'intermediate', labelKey: 'questions.levels.intermediate', color: '#d4a017' },
-  { key: 'expert', labelKey: 'questions.levels.expert', color: '#e07a5f' },
+  { key: 'beginner', labelKey: 'questions.levels.beginner' },
+  { key: 'intermediate', labelKey: 'questions.levels.intermediate' },
+  { key: 'expert', labelKey: 'questions.levels.expert' },
 ];
 
 const MS_DAY = 24 * 60 * 60 * 1000;
@@ -210,15 +215,15 @@ export default function Parties() {
       cur.n += 1;
       acc.set(s.level, cur);
     });
-    return LEVEL_BARS.map((b) => {
+    return LEVEL_BARS.map((b, i) => {
       const cur = acc.get(b.key);
       return {
         label: t(b.labelKey),
-        color: b.color,
+        color: ct.ramp[i],
         avg: cur && cur.n ? Math.round(cur.sum / cur.n) : 0,
       };
     });
-  }, [filtered, t]);
+  }, [filtered, t, ct]);
 
   const hasLevelData = useMemo(() => levelData.some((d) => d.avg > 0), [levelData]);
 
@@ -328,28 +333,40 @@ export default function Parties() {
       {/* Bande KPI sombre — chiffres réels (dashboard) + dérivés de la liste, libellés honnêtes. */}
       <div className="ses-kpi-band">
         {[
+          /* PORTÉE explicite et uniforme. Ces quatre cartes se ressemblent
+             trait pour trait mais ne parlent pas de la même population : deux
+             portent sur les lignes chargées ET filtrées, deux sur toute la
+             banque. Elles le disaient déjà — avec quatre formulations
+             différentes (« sur les dernières parties », « parties jouées »,
+             « sur les parties chargées », « toutes parties »), ce qui donnait
+             quatre nuances au lieu de deux groupes. Deux libellés seulement,
+             chacun répété : l'œil apparie au lieu de lire.
+
+             `sessions.kpi.total` s'appelait « Total parties » alors que la
+             valeur est `filtered.length` — ni un total, ni stable (elle bouge
+             avec les filtres). Renommé « Parties chargées ». */
           {
             value: loading ? null : num(kpis.total),
-            label: t('sessions.kpi.total'),
-            sub: t('sessions.misc.kpiLastGames'),
+            label: t('sessions.kpi.loaded'),
+            scope: 'loaded',
             ready: !loading,
           },
           {
             value: dashLoading ? null : (gamesToday != null ? num(gamesToday) : '—'),
             label: t('sessions.kpi.today'),
-            sub: t('sessions.misc.kpiGamesPlayed'),
+            scope: 'all',
             ready: !dashLoading,
           },
           {
             value: loading ? null : num(kpis.avgScore),
             label: t('sessions.kpi.avgScore'),
-            sub: t('sessions.misc.kpiLoadedGames'),
+            scope: 'loaded',
             ready: !loading,
           },
           {
             value: dashLoading ? null : (successRate != null ? `${num(successRate)} %` : '—'),
-            label: t('sessions.kpi.globalSuccess'),
-            sub: t('sessions.misc.kpiAllGames'),
+            label: t('sessions.kpi.successRate'),
+            scope: 'all',
             ready: !dashLoading,
           },
         ].map((k, i) => (
@@ -360,7 +377,7 @@ export default function Parties() {
               <Skeleton w={90} h={34} style={{ background: 'rgba(255,255,255,0.12)' }} />
             )}
             <div className="ses-kpi-l">{k.label}</div>
-            <div className="ses-kpi-sub">{k.sub}</div>
+            <div className={`ses-kpi-scope ses-kpi-scope--${k.scope}`}>{t(`sessions.scope.${k.scope}`)}</div>
           </div>
         ))}
       </div>

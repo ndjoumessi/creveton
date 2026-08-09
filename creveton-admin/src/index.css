@@ -384,21 +384,19 @@ input, select, textarea { font-family: inherit; }
 .card-link { color: var(--green700); font-weight: 600; font-size: var(--text-sm); display: inline-flex; align-items: center; gap: 5px; transition: var(--t-fast); }
 .card-link:hover { color: var(--green500); gap: 7px; }
 
-/* ===================== KPI premium ===================== */
-.kpi { display: flex; flex-direction: column; gap: 6px; padding: 20px 22px; position: relative; border-top: 3px solid var(--border); transition: transform 0.15s ease, box-shadow 0.15s ease; }
-.kpi:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
-.kpi--green { border-top-color: var(--green500); }
-.kpi--gold { border-top-color: var(--gold); }
-.kpi--blue { border-top-color: var(--pastel-blue-fg); }
-.kpi--violet { border-top-color: var(--pastel-violet-fg); }
+/* ===================== KPI =====================
+   Les quatre variantes de teinte (.kpi--green/gold/blue/violet, + les carrés
+   d'icône assortis) ont été SUPPRIMÉES : Dashboard et Finances les assignaient
+   par position, pas par sens. Voir l'en-tête de KpiCard.jsx pour le détail.
+   Ce qui reste est conforme à DESIGN.md : surface plate, bordure 1px, aucun
+   liseré coloré épais — « le seul liseré coloré autorisé est l'or 3px de la nav
+   active ». Le survol non plus n'avait pas lieu d'être : une carte KPI n'est pas
+   cliquable, et son ombre empruntait --shadow-lg, réservée aux overlays. */
+.kpi { display: flex; flex-direction: column; gap: 6px; padding: 20px 22px; position: relative; }
 .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .kpi-label { color: var(--muted); font-family: var(--font-body); font-size: var(--text-sm); font-weight: 500; }
 .kpi-value { font-family: var(--font-display); font-weight: 800; font-size: 44px; color: var(--ink); line-height: 1.05; letter-spacing: -0.6px; font-variant-numeric: tabular-nums; }
-.kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; flex: none; }
-.kpi-icon.green { background: #e3f3ea; color: var(--green500); }
-.kpi-icon.gold { background: #fcf3da; color: var(--gold); }
-.kpi-icon.blue { background: var(--pastel-blue); color: var(--pastel-blue-fg); }
-.kpi-icon.violet { background: var(--pastel-violet); color: var(--pastel-violet-fg); }
+.kpi-icon { width: 48px; height: 48px; border-radius: var(--radius); display: grid; place-items: center; flex: none; background: #e3f3ea; color: var(--green500); }
 .kpi-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
 .kpi-delta { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-sm); font-weight: 600; font-family: var(--font-display); }
 .kpi-delta.up { color: var(--success-text); }
@@ -406,6 +404,9 @@ input, select, textarea { font-family: inherit; }
 /* Zéro : ni vert ni rouge. Une variation nulle peinte en vert se lit comme une
    croissance — sur Finances, trois cartes à 0 FCFA annonçaient toutes « +0 % ↗ ». */
 .kpi-delta.flat { color: var(--muted); }
+/* Petit échantillon : paire brute, sans flèche ni couleur de tendance —
+   l'effectif ne porte pas le jugement (cf. MIN_DELTA_SAMPLE dans KpiCard.jsx). */
+.kpi-delta.raw { color: var(--text); font-variant-numeric: tabular-nums; }
 .kpi-spark { width: 60px; height: 24px; }
 
 /* ===================== Grid ===================== */
@@ -819,10 +820,7 @@ table.data tbody tr:last-child td { border-bottom: none; }
 [data-theme="dark"] .cmdk-ico { background: var(--surface-2); }
 
 /* ── Dark-mode semantic badge tints (hue-preserving: light pill/surface → dark hue tint + light text) ── */
-[data-theme="dark"] .kpi-icon.green { background: rgba(42,138,79,0.18); color: var(--green300); }
-[data-theme="dark"] .kpi-icon.gold { background: rgba(212,160,23,0.16); color: var(--gold400); }
-[data-theme="dark"] .kpi-icon.blue { background: rgba(59,130,246,0.18); color: #93c5fd; }
-[data-theme="dark"] .kpi-icon.violet { background: rgba(139,92,246,0.18); color: #c4b5fd; }
+[data-theme="dark"] .kpi-icon { background: rgba(42,138,79,0.18); color: var(--green300); }
 [data-theme="dark"] .badge-level { background: rgba(42,138,79,0.18); color: var(--green300); }
 [data-theme="dark"] .opt-review.correct { background: rgba(42,138,79,0.12); color: var(--green300); }
 [data-theme="dark"] .opt-review.wrong { background: rgba(231,76,60,0.12); color: var(--pastel-red-fg-dark); }

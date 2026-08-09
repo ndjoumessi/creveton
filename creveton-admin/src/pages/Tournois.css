@@ -255,12 +255,6 @@
   width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
   background: rgba(212, 160, 23, 0.16); color: var(--gold);
 }
-.tour-banner-cdc {
-  margin-left: auto; flex-shrink: 0;
-  font-family: var(--font-body); font-weight: 700; font-size: var(--text-2xs); letter-spacing: 0.4px;
-  padding: 3px 10px; border-radius: var(--radius-pill);
-  background: rgba(212, 160, 23, 0.16); color: #8a6d12;
-}
 
 /* ── Vue liste : cellules enrichies ── */
 .tour-lst-name { display: flex; align-items: center; gap: 10px; }
@@ -336,6 +330,5 @@
 /* ── Dark-mode : bannière mode gratuit + vue liste ── */
 [data-theme="dark"] .tour-banner { color: var(--gold400, #e6b84d); }
 [data-theme="dark"] .tour-banner-ico { background: rgba(212, 160, 23, 0.20); color: var(--gold400, #e6b84d); }
-[data-theme="dark"] .tour-banner-cdc { background: rgba(212, 160, 23, 0.20); color: var(--gold400, #e6b84d); }
 [data-theme="dark"] .tour-lst-bar { background: var(--bg-mute); }
 /* Toggle actif : or sur vert nuit — identique clair/sombre, aucune surcharge nécessaire. */

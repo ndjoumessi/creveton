@@ -343,12 +343,26 @@ function SecuritySection() {
           <p className="muted" style={{ marginTop: 10 }}>{t('settings.security.noSessions')}</p>
         ) : (
           <div className="set-sessions">
+            {/* L'appareil passe en TÊTE, le sid en dessous. La liste affichait
+                « Session 5724ce03… » six fois sous un bouton « Révoquer les
+                autres » : impossible de choisir. Le sid reste (c'est lui qui
+                identifie formellement), mais il ne sert plus de titre. */}
             {sessions.map((s) => (
               <div className="set-session" key={s.sid}>
                 <span className="set-session-ic"><Monitor size={16} /></span>
                 <div className="set-session-main">
-                  <span className="set-session-id">{t('settings.security.sessionLabel', { masked: s.masked })}{s.current && <span className="set-session-cur">{t('settings.security.sessionCurrent')}</span>}</span>
-                  <span className="set-session-exp">{s.expires_in_s != null ? t('settings.security.expiresIn', { days: Math.round(s.expires_in_s / 86400) }) : t('settings.security.expiryUnknown')}</span>
+                  <span className="set-session-id">
+                    {s.device || t('settings.security.deviceUnknown')}
+                    {s.current && <span className="set-session-cur">{t('settings.security.sessionCurrent')}</span>}
+                  </span>
+                  <span className="set-session-exp">
+                    {s.created_at && `${t('settings.security.openedOn', { date: dateShort(s.created_at) })} · `}
+                    {s.expires_in_s != null
+                      ? t('settings.security.expiresIn', { days: Math.round(s.expires_in_s / 86400) })
+                      : t('settings.security.expiryUnknown')}
+                    {' · '}
+                    <span className="set-session-sid">{s.masked}</span>
+                  </span>
                 </div>
               </div>
             ))}
@@ -453,6 +467,14 @@ function NotificationsSection() {
   );
   return (
     <>
+      {/* Avertissement remonté EN TÊTE. Il vivait après les trois cartes : un
+          admin qui active « Taux de crash > 1 % » tout en haut repartait
+          convaincu d'être couvert sans jamais atteindre la note. Neuf bascules
+          bien vivantes, persistées dans `localStorage`, branchées sur rien —
+          l'interrupteur ne coupe pas le courant, il faut le dire AVANT qu'on
+          l'actionne. On garde les bascules manœuvrables : enregistrer une
+          intention reste utile pour le jour où l'envoi sera câblé. */}
+      <div className="set-note set-note--lead"><AlertTriangle size={14} /> {t('settings.notifications.localNote')}</div>
       <div className="card card-pad">
         <h3 className="card-title">{t('settings.notifications.email')}</h3>
         {renderRow('signup', t('settings.notifications.newSignup'))}
@@ -471,7 +493,6 @@ function NotificationsSection() {
         <h3 className="card-title">{t('settings.notifications.dailySummary')}</h3>
         {renderRow('daily', t('settings.notifications.dailySummaryRow'))}
       </div>
-      <div className="set-note"><AlertTriangle size={14} /> {t('settings.notifications.localNote')}</div>
     </>
   );
 }
@@ -507,7 +528,12 @@ function SystemSection() {
   };
 
   if (loading && !sys) return <Skeleton w="100%" h={320} r={14} />;
-  const memPct = sys?.memory?.heap_total ? Math.round((sys.memory.heap_used / sys.memory.heap_total) * 100) : 0;
+  // Pas de pourcentage pour la mémoire. `heap_total` est le tas ACTUELLEMENT
+  // ALLOUÉ par V8, pas un plafond : il grandit à la demande, donc le rapport
+  // used/total reste collé à ~95 %. La barre affichait « 28 Mo / 29 Mo » pleine
+  // en permanence — elle alarmait sans jamais rien mesurer. La valeur absolue,
+  // elle, veut dire quelque chose. Le pool DB garde sa barre : `max` (10) est un
+  // vrai plafond, donc le remplissage y est une information.
   const poolPct = sys?.db?.max ? Math.round((sys.db.pool_total / sys.db.max) * 100) : 0;
 
   return (
@@ -524,10 +550,9 @@ function SystemSection() {
       <div className="card card-pad" style={{ marginTop: 16 }}>
         <h3 className="card-title">{t('settings.system.resources')}</h3>
         <div className="set-res">
-          <div className="set-res-row">
+          <div className="set-res-row set-res-row--plain">
             <span className="set-res-label">{t('settings.system.memoryHeap')}</span>
-            <span className="progress"><span style={{ width: `${memPct}%` }} /></span>
-            <span className="set-res-val">{bytesMb(sys?.memory?.heap_used)} / {bytesMb(sys?.memory?.heap_total)}</span>
+            <span className="set-res-val">{bytesMb(sys?.memory?.heap_used)}</span>
           </div>
           <div className="set-res-row">
             <span className="set-res-label">{t('settings.system.dbConnections')}</span>

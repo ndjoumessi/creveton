@@ -115,20 +115,38 @@ describe('authService.verifyOtp', () => {
     userModel.findByPhone.mockResolvedValue(fakeUser({ phone_verified: false }));
     userModel.markPhoneVerified.mockResolvedValue(fakeUser({ phone_verified: true }));
 
-    const res = await authService.verifyOtp('+237690000000', '482915');
+    const res = await authService.verifyOtp('+237690000000', '482915', {
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+    });
 
     expect(res.token_type).toBe('Bearer');
     expect(res.expires_in).toBe(3600);
     expect(res.user).toMatchObject({ id: 'u-123' });
     // access token signé et lisible
     expect(verifyAccessToken(res.access_token).sub).toBe('u-123');
-    // session enregistrée dans Redis (allowlist refresh)
+    // Session enregistrée dans l'allowlist refresh. La valeur portait `'1'` —
+    // l'allowlist ne savait donc rien de la session et « Sessions actives » ne
+    // pouvait afficher qu'un sid tronqué. Elle porte maintenant de quoi la
+    // reconnaître : étiquette d'appareil + date d'ouverture, rien de plus.
     expect(redis.set).toHaveBeenCalledWith(
       expect.stringMatching(/^refresh:u-123:/),
-      '1',
+      expect.any(String),
       'EX',
       expect.any(Number)
     );
+    const stored = JSON.parse(redis.set.mock.calls[0][1]);
+    expect(stored.device).toBe('Chrome · macOS');
+    expect(Date.parse(stored.at)).not.toBeNaN();
+  });
+
+  test('sans User-Agent → session sans appareil (jamais d\'étiquette inventée)', async () => {
+    otpService.verify.mockResolvedValue(true);
+    userModel.findByPhone.mockResolvedValue(fakeUser({ phone_verified: false }));
+    userModel.markPhoneVerified.mockResolvedValue(fakeUser({ phone_verified: true }));
+
+    await authService.verifyOtp('+237690000000', '482915');
+
+    expect(JSON.parse(redis.set.mock.calls[0][1]).device).toBeNull();
   });
 
   test('OTP invalide → propage l’erreur OTP', async () => {

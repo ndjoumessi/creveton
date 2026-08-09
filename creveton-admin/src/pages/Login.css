@@ -100,7 +100,7 @@
 .lp-brand-logo {
   width: 44px;
   height: 44px;
-  border-radius: 11px;
+  border-radius: 12px;
   object-fit: cover;
   background: var(--lp-cream);
   display: block;
@@ -190,7 +190,7 @@
   flex-shrink: 0;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: rgba(42, 138, 79, 0.22);
   color: var(--lp-green-lt);
 }
@@ -254,7 +254,7 @@
   max-width: 400px;
   background: #fff;
   border: 1px solid #e7e2d5;
-  border-radius: 18px;
+  border-radius: 16px;
   padding: 40px 38px;
   box-shadow: 0 18px 44px -26px rgba(11, 46, 26, 0.3);
 }
@@ -312,7 +312,7 @@
 .lp-forgot:focus-visible {
   outline: 2px solid var(--lp-green);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 /* CTA principal */
@@ -321,7 +321,7 @@
   height: 50px;
   background: var(--lp-ink);
   border: 0;
-  border-radius: 11px;
+  border-radius: 12px;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-xl);

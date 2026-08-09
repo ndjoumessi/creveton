@@ -804,10 +804,10 @@
     "title": "Parties",
     "subtitle": "Consultez l'historique des parties jouées et le détail de chaque session.",
     "kpi": {
-      "total": "Total parties",
       "today": "Aujourd'hui",
       "avgScore": "Score moyen",
-      "globalSuccess": "Taux de réussite global"
+      "loaded": "Parties chargées",
+      "successRate": "Taux de réussite"
     },
     "search": "Rechercher un joueur...",
     "allThemes": "Tous les thèmes",
@@ -845,10 +845,6 @@
     "themeDistribution": "Répartition par thème",
     "scoreByLevel": "Score moyen par niveau",
     "misc": {
-      "kpiLastGames": "sur les dernières parties",
-      "kpiGamesPlayed": "parties jouées",
-      "kpiLoadedGames": "sur les parties chargées",
-      "kpiAllGames": "toutes parties",
       "gamesCount_one": "{{value}} partie",
       "gamesCount_other": "{{value}} parties",
       "questionSkipped": "Question passée",
@@ -859,6 +855,10 @@
     "empty": {
       "recapTitle": "Récapitulatif indisponible",
       "recapMessage": "Aucune réponse enregistrée pour cette partie."
+    },
+    "scope": {
+      "loaded": "sur les parties chargées",
+      "all": "sur toute la banque"
     }
   },
   "tournaments": {
@@ -1082,11 +1082,9 @@
       "themeQuestionsHelp": "Ce tournoi aura ~{{count}} questions disponibles sur ce thème.",
       "previewHint": "Ce tournoi aura <b>{{available}}</b> questions disponibles et <b>{{perGame}}</b> questions par partie ({{seconds}} s chacune)."
     },
-    "headStats": "Compétitions gratuites · {{scheduled}} programmé(s) · {{running}} en cours · {{closed}} terminé(s)",
     "banner": {
       "title": "Tournois payants — en attente de licence",
       "progress": "Obtention licence : en cours",
-      "cdc": "CDC §6",
       "freeMode": "Mode gratuit — tournois payants désactivés"
     },
     "statsPanel": {
@@ -1113,7 +1111,8 @@
       "cancelled": "Tournoi annulé.",
       "created": "Tournoi créé (programmé).",
       "resultsValidated": "Résultats validés"
-    }
+    },
+    "freeCompetitions": "Compétitions gratuites"
   },
   "leaderboard": {
     "title": "Classement",
@@ -1259,11 +1258,12 @@
       "sessionsSub": "Sessions ouvertes via vos appareils (JWT / refresh tokens).",
       "revokeOthersShort": "Révoquer les autres",
       "noSessions": "Aucune session active.",
-      "sessionLabel": "Session {{masked}}",
       "sessionCurrent": "actuelle",
       "expiresIn": "Expire dans {{days}} j",
       "expiryUnknown": "Expiration inconnue",
-      "historyNote": "L’historique détaillé des connexions (IP, appareil) n’est pas encore journalisé côté serveur."
+      "historyNote": "L’historique détaillé des connexions (IP, appareil) n’est pas encore journalisé côté serveur.",
+      "deviceUnknown": "Appareil inconnu",
+      "openedOn": "ouverte le {{date}}"
     },
     "flags": {
       "paidTournaments": "Tournois payants",
@@ -1302,7 +1302,7 @@
       "highLatencyLong": "Latence API > 1 s",
       "diskSpaceLong": "Espace disque > 80 %",
       "dailySummaryRow": "Recevoir le résumé quotidien (inscriptions, parties)",
-      "localNote": "Préférences enregistrées localement. L’envoi effectif des alertes sera branché en v2."
+      "localNote": "Aucune de ces alertes n'est encore envoyée. Les préférences ci-dessous sont enregistrées dans ce navigateur, en attendant que l'envoi soit branché."
     },
     "system": {
       "services": "État des services",

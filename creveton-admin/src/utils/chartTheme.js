@@ -20,6 +20,16 @@ const LIGHT = {
   tooltipBg: '#ffffff',
   tooltipText: '#0b2e1a',
   tooltipBorder: '#e5e7eb',
+  // Rampe ORDINALE (3 crans), pour une variable qui a un ORDRE et pas de
+  // jugement : la difficulté d'une question. Elle remplace le feu tricolore
+  // vert / or / rouge qui codait « débutant = bien, expert = danger » — or le
+  // rouge est la couleur de l'erreur dans cette console (.btn-danger), et une
+  // question experte n'est pas un incident. Une seule teinte, intensité
+  // croissante : l'œil lit une progression, pas un verdict.
+  // Sens de la rampe INVERSÉ entre les thèmes, à dessein : c'est l'intensité
+  // perçue qui doit croître avec la difficulté, et sur fond sombre c'est le
+  // ton CLAIR qui ressort.
+  ramp: ['#a8ddbd', '#2a8a4f', '#124b2a'],
 };
 
 const DARK = {
@@ -30,6 +40,7 @@ const DARK = {
   tooltipBg: '#17341f',
   tooltipText: '#e8f5e9',
   tooltipBorder: '#234a2c',
+  ramp: ['#2c6b45', '#3fa668', '#7fe0a3'],
 };
 
 /**
@@ -44,6 +55,7 @@ export function chartTheme(isDark) {
     axisLine: c.axisLine,
     grid: c.grid,
     inactive: c.inactive,
+    ramp: c.ramp,
     fontFamily: CHART_FONT,
     tooltip: {
       contentStyle: {

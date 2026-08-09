@@ -32,12 +32,29 @@
   font-size: var(--text-sm);
   margin-top: 9px;
 }
-.ses-kpi-sub {
-  color: rgba(255, 255, 255, 0.45);
+/* Marqueur de PORTÉE. Deux valeurs seulement — « chargées » (lignes affichées,
+   filtres compris) et « toute la banque » — pour que quatre cartes identiques
+   cessent de mélanger deux populations sans le dire. Le trait de gauche fait le
+   groupement au coup d'œil ; le libellé porte le sens (jamais la couleur seule).
+   L'ancien `.ses-kpi-sub` à 0,45 d'opacité échouait AA en 12px : 0,70 minimum. */
+.ses-kpi-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.7);
   font-family: var(--font-body);
   font-size: var(--text-xs);
-  margin-top: 2px;
+  margin-top: 4px;
 }
+.ses-kpi-scope::before {
+  content: '';
+  width: 2px;
+  height: 11px;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+.ses-kpi-scope--all { color: rgba(255, 255, 255, 0.86); }
 @media (max-width: 880px) {
   .ses-kpi-band { grid-template-columns: repeat(2, 1fr); row-gap: 22px; }
   .ses-kpi:nth-child(odd) { border-left: 0; padding-left: 0; }

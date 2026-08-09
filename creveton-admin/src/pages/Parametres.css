@@ -28,7 +28,13 @@
 .set-session-id { font-weight: 600; font-size: var(--text-md); color: var(--ink); display: flex; align-items: center; gap: 8px; }
 .set-session-cur { font-size: var(--text-2xs); font-weight: 700; color: var(--green700); background: #e3f3ea; padding: 1px 7px; border-radius: 999px; }
 .set-session-exp { font-size: var(--text-xs); color: var(--muted); }
-.set-note { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: var(--text-sm); color: var(--cream-fg); background: var(--cream); border: 1px solid var(--cream-border); border-radius: 9px; padding: 9px 12px; }
+/* Le sid reste affiché — il identifie formellement la session — mais en fin de
+   ligne méta, monospace, et non plus comme titre de la carte. */
+.set-session-sid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--text-micro); opacity: 0.75; }
+.set-note { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: var(--text-sm); color: var(--cream-fg); background: var(--cream); border: 1px solid var(--cream-border); border-radius: var(--radius-sm); padding: 9px 12px; }
+/* Variante « en tête » : même note, posée AVANT le contenu qu'elle qualifie.
+   Un avertissement qui suit les commandes arrive trop tard. */
+.set-note--lead { margin-top: 0; margin-bottom: 16px; }
 
 /* ── Feature flags ── */
 .set-flags { display: flex; flex-direction: column; gap: 14px; }
@@ -53,7 +59,11 @@
 .set-sys-extra { font-size: var(--text-xs); color: var(--muted); margin-top: 4px; }
 .set-res { display: flex; flex-direction: column; gap: 16px; }
 .set-res-row { display: grid; grid-template-columns: 200px 1fr auto; align-items: center; gap: 12px; }
-@media (max-width: 640px) { .set-res-row { grid-template-columns: 1fr; } }
+/* Ligne sans jauge : la mesure n'a pas de plafond, donc pas de barre à remplir
+   (cf. le commentaire sur `heap_total` dans Parametres.jsx). La valeur glisse à
+   gauche plutôt que de laisser un trou là où était la barre. */
+.set-res-row--plain { grid-template-columns: 200px auto; justify-content: start; }
+@media (max-width: 640px) { .set-res-row, .set-res-row--plain { grid-template-columns: 1fr; } }
 .set-res-label { font-size: var(--text-sm); color: var(--text); }
 .set-res-val { font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm); color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .set-maint { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -126,12 +136,17 @@
 .set-theme-preview .stp-main { flex: 1; display: flex; flex-direction: column; }
 .set-theme-preview .stp-header { height: 34px; background: #0b2e1a; }
 .set-theme-preview .stp-cards { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; }
-.set-theme-preview .stp-cards > span { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; border-top: 3px solid var(--gold); }
+/* Cartes de l'aperçu : plus de liseré supérieur or 3px. Il imitait les cartes
+   KPI telles qu'elles étaient — or ce liseré a été retiré du vrai composant
+   (cf. KpiCard.jsx). Un aperçu de thème qui montre un design disparu ment sur
+   ce qu'on s'apprête à choisir. Au passage, le hook avait raison : un accent
+   épais sur un coin arrondi se bat avec le rayon. */
+.set-theme-preview .stp-cards > span { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; }
 /* Variante sombre de l'aperçu (indépendante du thème courant). */
 .set-theme-preview.is-dark { background: #122b1a; }
 .set-theme-preview.is-dark .stp-sidebar { background: #0e2414; }
 .set-theme-preview.is-dark .stp-header { background: #112518; }
-.set-theme-preview.is-dark .stp-cards > span { background: #17341f; border-color: #234a2c; border-top-color: var(--gold); }
+.set-theme-preview.is-dark .stp-cards > span { background: #17341f; border-color: #234a2c; }
 
 /* ── Dark-mode semantic badge tints (hue-preserving) ── */
 [data-theme="dark"] .set-session-cur { background: rgba(42,138,79,0.18); color: var(--green300); }

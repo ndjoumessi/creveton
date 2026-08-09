@@ -10,17 +10,14 @@
   padding: 18px 0 12px;
   margin: -6px 0 0;
 }
-.q-title-line { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.q-count-inline { color: var(--muted); font-size: var(--text-md); font-weight: 500; }
-.q-count-inline strong { font-family: var(--font-display); font-weight: 700; color: var(--green700); }
 
-/* Bouton « Force sync » : fond crème, bordure + texte or (signal rare) */
-.q-btn-sync {
-  background: #fef9c3;
-  border-color: var(--gold);
-  color: var(--pastel-amber-fg);
-}
-.q-btn-sync:hover { background: #fdf0a8; }
+/* « Force sync » : bouton neutre comme les autres actions secondaires.
+   Il portait l'or (fond crème + bordure + texte dorés) pendant que « + Nouvelle
+   question », le VRAI CTA primaire de la page, restait en vert. L'or de DESIGN.md
+   va au CTA primaire, à la nav active, au logo et aux récompenses : pas à
+   l'opération lourde qu'on ne déclenche qu'exceptionnellement. La classe reste
+   pour son ancre de test et pour marquer l'action comme sensible. */
+.q-btn-sync { color: var(--text); }
 
 /* KPI strip — 3 blocs sans card, traits verticaux, chiffres Outfit 800 36px */
 .q-kpi-strip {
@@ -1231,7 +1228,6 @@
 .q-bilingual-body { margin-top: 12px; }
 
 /* ── Dark-mode hover overrides (light hardcoded → dark surface/tint) ── */
-[data-theme="dark"] .q-btn-sync:hover { background: rgba(212, 160, 23, 0.18); }
 [data-theme="dark"] .q-search-clear:hover { background: var(--surface-2); }
 [data-theme="dark"] .q-exp-btn:hover { background: var(--surface-2); }
 
@@ -1269,7 +1265,7 @@
 /* Gold pills / panels */
 [data-theme="dark"] .q-level-intermediate { background: rgba(212,160,23,0.16); color: var(--gold400); }
 [data-theme="dark"] .q-lang-badge--en { background: rgba(212,160,23,0.16); color: var(--gold400); }
-[data-theme="dark"] .q-btn-sync { background: rgba(212,160,23,0.14); color: var(--gold400); }
+[data-theme="dark"] .q-btn-sync { color: var(--text); }
 [data-theme="dark"] .import-compare-sim { background: rgba(212,160,23,0.16); color: var(--gold400); }
 [data-theme="dark"] .q-ai-panel { background: rgba(212,160,23,0.08); }
 [data-theme="dark"] .q-ai-panel-label { color: var(--gold400); }
@@ -1295,7 +1291,6 @@
 
 /* ── Dark-mode : verts de marque en texte (compteur, onglets actifs, barre de statut,
    EN bilingue) + callout ambre sur cream → tons clairs sur surfaces sombres ── */
-[data-theme="dark"] .q-count-inline strong { color: var(--green300); }
 [data-theme="dark"] .q-filter-status-active, [data-theme="dark"] .q-filter-status-count { color: var(--ink); }
 [data-theme="dark"] .q-tab.active { color: var(--ink); }
 [data-theme="dark"] .import-tab.active { color: var(--ink); }

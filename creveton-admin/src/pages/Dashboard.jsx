@@ -264,9 +264,12 @@ function ActivityTooltip({ active, payload, label, t }) {
 }
 
 /** Carte KPI secondaire compacte (ligne 2). */
-function MiniKpi({ icon, label, value, tone = 'green' }) {
+// `tone` retiré pour la même raison que sur KpiCard : or / bleu / violet
+// distribués par position sous « Score moyen », « Taux de réussite » et
+// « XP distribué », sans qu'aucune des trois teintes ne dise quoi que ce soit.
+function MiniKpi({ icon, label, value }) {
   return (
-    <div className={`dash-kpi2 dash-kpi2--${tone}`}>
+    <div className="dash-kpi2">
       <span className="dash-kpi2-ic">{icon}</span>
       <div className="dash-kpi2-body">
         <span className="dash-kpi2-val">{value}</span>
@@ -334,12 +337,15 @@ export default function Dashboard() {
   const gamesSpark = useMemo(() => daily.map((d) => Number(d.games) || 0), [daily]);
 
   // Variation « vs hier » = 2 derniers points de `daily` (seulement Users/Parties).
+  // Renvoie le pourcentage ET l'effectif de la veille : sous MIN_DELTA_SAMPLE,
+  // KpiCard remplace le pourcentage par la paire brute. « 8 parties hier, 3
+  // aujourd'hui » ne devient pas plus vrai en s'écrivant « −62 % ».
   const deltaPct = (series) => {
     if (!series || series.length < 2) return null;
     const prev = series[series.length - 2];
     const last = series[series.length - 1];
     if (!prev) return null;
-    return Math.round(((last - prev) / prev) * 100);
+    return { pct: Math.round(((last - prev) / prev) * 100), prev };
   };
   const usersDelta = period === '7d' ? deltaPct(usersSpark) : null;
   const gamesDelta = period === '7d' ? deltaPct(gamesSpark) : null;
@@ -545,21 +551,21 @@ export default function Dashboard() {
       {/* ─── Ligne 1 : 4 KPI premium ─── */}
       <div className="grid grid-kpi dash-gap">
         <KpiCard
-          icon={<Users size={22} />} tone="green"
+          icon={<Users size={22} />}
           label={t('dashboard.kpi.users')} value={kpis.total_users ?? 0}
-          spark={usersSpark} delta={usersDelta}
+          spark={usersSpark} delta={usersDelta?.pct} base={usersDelta?.prev}
         />
         <KpiCard
-          icon={<Gamepad2 size={22} />} tone="gold"
+          icon={<Gamepad2 size={22} />}
           label={t('dashboard.kpi.gamesToday')} value={kpis.games_today ?? 0}
-          spark={gamesSpark} delta={gamesDelta}
+          spark={gamesSpark} delta={gamesDelta?.pct} base={gamesDelta?.prev}
         />
         <KpiCard
-          icon={<FileCheck2 size={22} />} tone="blue"
+          icon={<FileCheck2 size={22} />}
           label={t('dashboard.kpi.activeQuestions')} value={kpis.active_questions ?? 0}
         />
         <KpiCard
-          icon={<Trophy size={22} />} tone="violet"
+          icon={<Trophy size={22} />}
           label={t('dashboard.kpi.openTournaments')} value={kpis.open_tournaments ?? 0}
         />
       </div>
@@ -570,9 +576,9 @@ export default function Dashboard() {
           (1/1). Deux rendus de la même donnée à huit cents pixels d'écart, dont
           le moins informatif en premier. */}
       <div className="dash-kpi2-grid dash-gap">
-        <MiniKpi icon={<Target size={18} />} tone="gold" label={t('dashboard.kpi.avgScore')} value={num(kpis.avg_score ?? 0)} />
-        <MiniKpi icon={<GaugeIcon size={18} />} tone="blue" label={t('dashboard.kpi.successRate')} value={`${kpis.success_rate ?? 0} %`} />
-        <MiniKpi icon={<Sparkles size={18} />} tone="violet" label={t('dashboard.kpi.xpDistributed')} value={num(kpis.xp_distributed ?? 0)} />
+        <MiniKpi icon={<Target size={18} />} label={t('dashboard.kpi.avgScore')} value={num(kpis.avg_score ?? 0)} />
+        <MiniKpi icon={<GaugeIcon size={18} />} label={t('dashboard.kpi.successRate')} value={`${kpis.success_rate ?? 0} %`} />
+        <MiniKpi icon={<Sparkles size={18} />} label={t('dashboard.kpi.xpDistributed')} value={num(kpis.xp_distributed ?? 0)} />
       </div>
 
       {/* ─── Ligne 3 : Activité (40%) · À modérer (35%) · Système (25%) ─── */}
