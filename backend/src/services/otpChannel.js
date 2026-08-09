@@ -57,7 +57,12 @@ const CHANNELS = {
       ),
   },
   email: {
-    isConfigured: () => Boolean(env.email.apiKey),
+    // `!env.isTest` : `emailService.send` court-circuite en test et renvoie
+    // `{ sent:false, skipped:true }` pour ne jamais toucher le réseau. Sans
+    // cette garde, le canal se croyait configuré, « échouait », et l'inscription
+    // remontait un 503 dans toute la suite d'intégration — alors que rien
+    // n'était cassé. Un envoi DÉLIBÉRÉMENT non fait n'est pas une panne.
+    isConfigured: () => Boolean(env.email.apiKey) && !env.isTest,
     canReach: (target) => Boolean(target.email),
     send: (target, code) =>
       emailService

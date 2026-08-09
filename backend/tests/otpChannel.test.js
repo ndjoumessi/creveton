@@ -25,12 +25,20 @@ const otpChannel = require('../src/services/otpChannel');
 
 const TARGET = { phone: '+237690000000', email: 'awa@example.cm', name: 'Awa' };
 
-/** Rend un canal « configuré » en posant ce qu'inspecte `isConfigured`. */
+/**
+ * Rend un canal « configuré » en posant ce qu'inspecte `isConfigured`.
+ *
+ * `env.isTest` est forcé à false : le canal email se déclare indisponible en
+ * test, parce que le VRAI `emailService` y court-circuite et ne poste rien. Ici
+ * il est doublé, donc cette protection n'a pas lieu d'être — sans ce réglage on
+ * ne testerait jamais le repli email.
+ */
 function configure({ whatsapp = false, sms = false, email = false }) {
   whatsappService.isConfigured.mockReturnValue(whatsapp);
   env.twilio.accountSid = sms ? 'AC_test' : '';
   env.twilio.authToken = sms ? 'tok' : '';
   env.email.apiKey = email ? 'key' : '';
+  env.isTest = false;
 }
 
 describe('otpChannel.sendCode', () => {
@@ -40,6 +48,7 @@ describe('otpChannel.sendCode', () => {
     key: env.email.apiKey,
     channels: env.otp.channels,
     isProd: env.isProd,
+    isTest: env.isTest,
   };
 
   beforeEach(() => {
@@ -57,6 +66,7 @@ describe('otpChannel.sendCode', () => {
     env.email.apiKey = initial.key;
     env.otp.channels = initial.channels;
     env.isProd = initial.isProd;
+    env.isTest = initial.isTest;
   });
 
   test('WhatsApp configuré → il sert, et lui seul', async () => {

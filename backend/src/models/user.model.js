@@ -315,6 +315,29 @@ async function setVerifiedEmail(id, email) {
   return rows[0] || null;
 }
 
+/**
+ * Activation d'un compte d'équipe depuis une invitation : mot de passe ET
+ * `email_verified` dans la MÊME requête.
+ *
+ * Deux écritures séparées laisseraient une fenêtre où le compte a un mot de
+ * passe mais pas le drapeau — et ce compte-là ne peut plus jamais réinitialiser
+ * son mot de passe, puisque la récupération exige une adresse vérifiée.
+ *
+ * Pourquoi marquer vérifié : le lien d'activation est arrivé SUR cette adresse
+ * et il a fallu l'ouvrir pour choisir ce mot de passe. Le contrôle de la boîte
+ * est donc prouvé — redemander une vérification serait redemander ce que la
+ * personne vient de faire. Même raisonnement que le rattrapage de la migration
+ * 026 ; il manquait simplement au chemin courant (cf. 028).
+ */
+async function activateFromInvite(id, passwordHash) {
+  const { rows } = await db.query(
+    `UPDATE users SET password_hash = $2, email_verified = true
+      WHERE id = $1 AND deleted_at IS NULL RETURNING id`,
+    [id, passwordHash]
+  );
+  return rows[0] || null;
+}
+
 async function setPassword(id, passwordHash) {
   const { rows } = await db.query(
     `UPDATE users SET password_hash = $2 WHERE id = $1 AND deleted_at IS NULL RETURNING id`,
@@ -540,6 +563,7 @@ module.exports = {
   levelForXp,
   XP_LEVELS,
   setPassword,
+  activateFromInvite,
   markEmailVerified,
   setVerifiedEmail,
   setAvatar,

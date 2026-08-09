@@ -217,7 +217,16 @@ async function acceptInvite({ token, password }) {
   }
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
-  const updated = await userModel.setPassword(userId, passwordHash);
+  // `activateFromInvite` et non `setPassword` : l'activation marque AUSSI
+  // l'adresse comme vérifiée, dans la même requête.
+  //
+  // Le lien est arrivé sur cette adresse et il a fallu l'ouvrir pour arriver
+  // ici : la boîte est prouvée. La migration 026 l'avait compris et rattrapé
+  // les invitations déjà acceptées — mais personne n'avait câblé le chemin
+  // COURANT. Résultat : chaque nouveau membre d'équipe se retrouvait
+  // `email_verified = false` à vie, et le bouton « Réinitialiser le mot de
+  // passe » de la console lui répondait « adresse non vérifiée » pour toujours.
+  const updated = await userModel.activateFromInvite(userId, passwordHash);
   if (!updated) throw new ApiError('USER_NOT_FOUND');
   await redis.del(inviteKey(token));
 

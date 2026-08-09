@@ -70,8 +70,19 @@ t('POST /admin/team/accept-invite — active le compte (mot de passe posé, toke
   expect(res.status).toBe(200);
   expect(res.body.message).toBeDefined();
 
-  const { rows } = await H.db.query('SELECT password_hash FROM users WHERE email = $1', ['pending@creveton.cm']);
+  const { rows } = await H.db.query(
+    'SELECT password_hash, email_verified FROM users WHERE email = $1',
+    ['pending@creveton.cm']
+  );
   expect(rows[0].password_hash).toBeTruthy();
+  // L'activation marque AUSSI l'adresse comme vérifiée : le lien est arrivé sur
+  // cette boîte et il a fallu l'ouvrir pour poser ce mot de passe.
+  //
+  // Sans ça, le membre restait `email_verified = false` À VIE, et le bouton
+  // « Réinitialiser le mot de passe » de la console lui répondait pour toujours
+  // « adresse non vérifiée » — un refus juste dans son principe, opposé à
+  // quelqu'un qui venait précisément d'apporter la preuve demandée.
+  expect(rows[0].email_verified).toBe(true);
   // Token consommé.
   expect(await H.redis.get(`invite:${token}`)).toBeNull();
 });
