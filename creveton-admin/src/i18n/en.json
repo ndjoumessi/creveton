@@ -566,7 +566,7 @@
       "dragHint": "Drag to reposition"
     },
     "corrector": {
-      "button": "✨ Improve",
+      "button": "Improve",
       "loading": "Correcting...",
       "suggestion": "Suggestion",
       "accept": "Accept",

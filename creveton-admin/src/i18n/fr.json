@@ -566,7 +566,7 @@
       "dragHint": "Glisser pour recadrer"
     },
     "corrector": {
-      "button": "✨ Améliorer",
+      "button": "Améliorer",
       "loading": "Correction en cours...",
       "suggestion": "Suggestion",
       "accept": "Accepter",

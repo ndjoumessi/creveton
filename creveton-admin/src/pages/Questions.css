@@ -129,6 +129,13 @@
 .q-th-sel { width: 44px; }
 .q-th-num { width: 48px; color: var(--muted); }
 .q-th-actions { width: 168px; text-align: right; }
+/* Répartition des colonnes. Sans consigne, l'algorithme de table distribue au
+   prorata du contenu : les colonnes de badges — courtes mais insécables —
+   gardaient leur aise pendant que l'énoncé, SEULE colonne capable de se
+   replier, se repliait sur quatre lignes. On inverse la logique : l'énoncé
+   prend tout le reste, les badges se réduisent à leur contenu. */
+.q-th-text { width: 100%; min-width: 240px; }
+.q-table th:not(.q-th-text):not(.q-th-sel):not(.q-th-exp):not(.q-th-num) { width: 1%; }
 .q-td-actions .row { justify-content: flex-end; }
 .q-cell-num { font-family: var(--font-display); font-weight: 600; color: var(--muted); font-size: var(--text-sm); }
 .q-row-on { background: #f3fbf5; }

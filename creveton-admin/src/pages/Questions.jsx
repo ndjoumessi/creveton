@@ -1983,7 +1983,7 @@ export default function Questions() {
                   </th>
                   <th className="q-th-exp" aria-hidden="true" />
                   <th className="q-th-num">{t('questions.columns.number')}</th>
-                  <th>{sortHead(t('questions.columns.statement'), 'text_fr')}</th>
+                  <th className="q-th-text">{sortHead(t('questions.columns.statement'), 'text_fr')}</th>
                   <th>{sortHead(t('questions.columns.theme'), 'theme')}</th>
                   <th>{sortHead(t('questions.columns.level'), 'level')}</th>
                   <th>{sortHead(t('questions.columns.status'), 'status')}</th>

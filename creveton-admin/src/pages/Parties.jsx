@@ -392,6 +392,10 @@ export default function Parties() {
                   </Pie>
                   <RTooltip
                     {...ct.tooltip}
+                    // Même correctif que le donut du tableau de bord : sans
+                    // décalage, l'infobulle se pose dans le trou de l'anneau.
+                    offset={24}
+                    allowEscapeViewBox={{ x: true, y: true }}
                     formatter={(value, name) => [t('sessions.misc.gamesCount', { count: value, value: num(value) }), name]}
                   />
                 </PieChart>

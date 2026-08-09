@@ -1076,7 +1076,15 @@ export default function Dashboard() {
                     >
                       {themeDist.slices.map((s) => <Cell key={s.theme} fill={s.color} />)}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [`${num(value)} ${t('dashboard.misc.gamesLabel')}`, name]} {...ct.tooltip} />
+                    <Tooltip
+                      // Décalage large + sortie autorisée du cadre : par défaut
+                      // l'infobulle se pose à 10 px du pointeur, donc DANS le trou
+                      // du donut, où elle recouvrait le total central.
+                      offset={24}
+                      allowEscapeViewBox={{ x: true, y: true }}
+                      formatter={(value, name) => [`${num(value)} ${t('dashboard.misc.gamesLabel')}`, name]}
+                      {...ct.tooltip}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="dash-donut-center">
