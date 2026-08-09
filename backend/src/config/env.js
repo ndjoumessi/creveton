@@ -58,6 +58,10 @@ const env = {
     // WhatsApp progressivement — tant que ses variables sont absentes, le SMS
     // d'aujourd'hui continue de servir.
     channels: process.env.OTP_CHANNELS || 'whatsapp,sms,email',
+    // Interrupteur EXPLICITE : le code est journalisé au lieu d'être envoyé.
+    // Comparaison à la chaîne « true » et non coercition — sinon `OTP_SIMULATE=false`
+    // serait une chaîne non vide, donc vraie, et activerait ce qu'on croit couper.
+    simulate: process.env.OTP_SIMULATE === 'true',
   },
 
   // WhatsApp Cloud API (Meta) — canal OTP privilégié : au Cameroun il coûte un

@@ -201,6 +201,12 @@ régénérer avec `/impeccable document`.
     absentes, le canal est sauté et le SMS d'aujourd'hui continue de servir. Hors
     production et sans aucun canal, l'envoi est simulé (journalisé) pour ne pas bloquer le
     développement — **en production, on lève** plutôt que de feindre un succès.
+  · **`OTP_SIMULATE=true`** court-circuite TOUS les canaux : le code est journalisé,
+    rien ne part. C'est le réglage de **staging**, où il n'y a ni Twilio ni WhatsApp et
+    où l'on ne veut surtout pas écrire à de vraies adresses. Interrupteur explicite et
+    non déduction depuis `NODE_ENV` : staging tourne justement en `NODE_ENV=production`,
+    donc l'heuristique `!isProd` ne pouvait pas l'attraper. Comparé à la chaîne `'true'`
+    — `OTP_SIMULATE=false` activerait la simulation avec une simple coercition.
   · `SMS_PROVIDER_UNAVAILABLE` a été remplacé par **`OTP_DELIVERY_FAILED`** : il désignait
     un coupable au hasard dès que le canal en échec n'était pas le SMS.
     Tests : `backend/tests/otpChannel.test.js` (ordre, saut, repli, prod vs dev).

@@ -49,12 +49,14 @@ describe('otpChannel.sendCode', () => {
     channels: env.otp.channels,
     isProd: env.isProd,
     isTest: env.isTest,
+    simulate: env.otp.simulate,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     env.otp.channels = 'whatsapp,sms,email';
     env.isProd = false;
+    env.otp.simulate = false;
     whatsappService.sendAuthCode.mockResolvedValue({ id: 'wamid.1' });
     smsService.sendSms.mockResolvedValue({ sid: 'SM1' });
     emailService.sendOtpCode.mockResolvedValue({ sent: true });
@@ -67,6 +69,7 @@ describe('otpChannel.sendCode', () => {
     env.otp.channels = initial.channels;
     env.isProd = initial.isProd;
     env.isTest = initial.isTest;
+    env.otp.simulate = initial.simulate;
   });
 
   test('WhatsApp configuré → il sert, et lui seul', async () => {
@@ -144,6 +147,30 @@ describe('otpChannel.sendCode', () => {
     const res = await otpChannel.sendCode(TARGET, '123456');
 
     expect(res).toEqual({ channel: 'simulated', simulated: true });
+  });
+
+  test('OTP_SIMULATE court-circuite TOUT, même des canaux configurés et sains', async () => {
+    configure({ whatsapp: true, sms: true, email: true });
+    env.otp.simulate = true;
+
+    const res = await otpChannel.sendCode(TARGET, '123456');
+
+    expect(res).toEqual({ channel: 'simulated', simulated: true });
+    // Le point n'est pas « que ça marche » mais que RIEN ne parte : pas d'email
+    // réel à une adresse réelle depuis staging, pas de SMS facturé.
+    expect(whatsappService.sendAuthCode).not.toHaveBeenCalled();
+    expect(smsService.sendSms).not.toHaveBeenCalled();
+    expect(emailService.sendOtpCode).not.toHaveBeenCalled();
+  });
+
+  test('OTP_SIMULATE gagne même en PRODUCTION (staging tourne en NODE_ENV=production)', async () => {
+    configure({ whatsapp: false, sms: false, email: false });
+    env.isProd = true;
+    env.otp.simulate = true;
+
+    await expect(otpChannel.sendCode(TARGET, '123456')).resolves.toMatchObject({
+      simulated: true,
+    });
   });
 
   test('OTP_CHANNELS impose l\'ordre, et un nom inconnu est ignoré', async () => {

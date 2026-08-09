@@ -100,6 +100,25 @@ function orderedNames() {
  * @throws {Error} si aucun canal n'a pu délivrer.
  */
 async function sendCode(target, code) {
+  // Simulation EXPLICITE, avant toute tentative.
+  //
+  // Elle court-circuite les canaux au lieu de servir de repli : sur un
+  // environnement de test, on ne veut pas seulement « que ça marche », on veut
+  // surtout ne RIEN envoyer — pas d'email réel à une adresse réelle depuis
+  // staging, pas de SMS facturé.
+  //
+  // Un drapeau et non une déduction depuis NODE_ENV : staging tourne justement
+  // avec `NODE_ENV=production`, et l'heuristique `!isProd` ne pouvait donc pas
+  // l'attraper. Faire semblant est un choix d'EXPLOITATION, il se déclare.
+  if (env.otp.simulate) {
+    // Le code est journalisé : c'est ainsi qu'on récupère un OTP sur staging.
+    logger.warn('OTP simulé (OTP_SIMULATE=true) — aucun envoi réel', {
+      code,
+      phone: target.phone,
+    });
+    return { channel: 'simulated', simulated: true };
+  }
+
   const names = orderedNames();
   const skipped = [];
   const failures = [];
@@ -121,9 +140,11 @@ async function sendCode(target, code) {
     }
   }
 
-  // Aucun canal configuré du tout : en développement on ne veut pas bloquer
-  // l'inscription. `smsService` journalisait déjà le code dans ce cas ; on
-  // conserve ce comportement, explicitement, hors production.
+  // Confort de DÉVELOPPEMENT LOCAL uniquement : aucun canal configuré et rien
+  // qui ait échoué → on journalise plutôt que de bloquer une inscription sur un
+  // poste qui n'a ni Twilio ni Resend. Pour tout environnement déployé, c'est
+  // `OTP_SIMULATE` ci-dessus qui décide — cette branche-ci ne rattrape pas un
+  // canal configuré QUI ÉCHOUE, et c'est voulu : une panne d'envoi doit se voir.
   if (!failures.length && !env.isProd) {
     logger.warn('Aucun canal OTP configuré — code simulé', { code, skipped });
     return { channel: 'simulated', simulated: true };
