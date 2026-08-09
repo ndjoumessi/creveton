@@ -717,7 +717,13 @@ export default function Dashboard() {
         </div>
 
         {/* Col 3 — Système (carte sombre) */}
-        <div className="card card-pad card-dark dash-system">
+        {/* `card-dark` retiré : cette carte était la seule surface sombre du
+            tableau de bord. En thème NUIT elle se fondait dans le reste, mais en
+            thème CLAIR c'était un bloc vert nuit entre deux cartes blanches —
+            l'accent visuel le plus fort de la page, posé sur le panneau le moins
+            actionnable (des voyants qui sont verts 99 % du temps). Elle suit
+            maintenant le thème comme ses voisines. */}
+        <div className="card card-pad dash-system">
           <h3 className="card-title">{t('dashboard.misc.systemTitle')}</h3>
           <p className="card-sub" style={{ marginBottom: 6 }}>{t('dashboard.misc.systemSub')}</p>
           <div className="dash-sys-lines">
@@ -727,7 +733,7 @@ export default function Dashboard() {
           </div>
           <div className="dash-sys-foot">
             <div className="dash-sys-frow">
-              <RefreshCw size={14} color="rgba(255,255,255,0.5)" />
+              <RefreshCw size={14} className="dash-sys-fic" />
               <span className="dash-sys-flabel">{t('dashboard.system.lastSync')}</span>
               <span className="dash-sys-fval">{relativeFr(system.last_sync)}</span>
             </div>
@@ -737,7 +743,7 @@ export default function Dashboard() {
               <span className={`dash-sys-fval dash-sys-fval--num dash-online-pill ${(kpis.online_now ?? 0) > 0 ? 'is-live' : ''}`}>{num(kpis.online_now ?? 0)}</span>
             </div>
             <div className="dash-sys-frow">
-              <Server size={14} color="rgba(255,255,255,0.5)" />
+              <Server size={14} className="dash-sys-fic" />
               <span className="dash-sys-flabel">{t('dashboard.misc.uptime')}</span>
               <span className="dash-sys-fval">{uptimeFr(health && health.system && health.system.uptime_s)}</span>
             </div>

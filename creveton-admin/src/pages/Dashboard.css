@@ -111,7 +111,11 @@
 .dash-q-actions .btn { flex: 1; justify-content: center; }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   COL 3 — SYSTÈME (carte sombre)
+   COL 3 — SYSTÈME
+   Carte alignée sur ses voisines (`card-dark` retiré, cf. Dashboard.jsx). Les
+   couleurs qui suivent étaient toutes des `rgba(255,255,255,…)` en dur, valides
+   uniquement sur fond vert nuit : sur une carte blanche, elles auraient été
+   invisibles. Elles passent aux tokens, donc au thème.
    ───────────────────────────────────────────────────────────────────────── */
 .dash-system { display: flex; flex-direction: column; }
 /* La carte s'étire sur la hauteur de sa voisine (« Activité récente »), mais
@@ -123,39 +127,47 @@
 .dash-sys-lines { margin-top: 6px; flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
 .dash-sys-line {
   display: flex; align-items: center; gap: 9px;
-  padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  padding: 12px 0; border-bottom: 1px solid var(--border);
 }
 .dash-sys-line:last-child { border-bottom: none; }
-.dash-sys-ic { display: inline-flex; color: rgba(255, 255, 255, 0.6); }
-.dash-sys-name { color: #fff; font-weight: 500; font-size: var(--text-md); }
+.dash-sys-ic { display: inline-flex; color: var(--muted); }
+.dash-sys-name { color: var(--ink); font-weight: 500; font-size: var(--text-md); }
 .dash-sys-state {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
   font-size: var(--text-xs); font-weight: 600;
-  border-radius: 999px; padding: 3px 10px;
+  border-radius: var(--radius-pill); padding: 3px 10px;
 }
-.dash-sys-state.is-up { background: rgba(94, 202, 132, 0.16); color: var(--green300); }
-.dash-sys-state.is-down { background: rgba(231, 76, 60, 0.18); color: #f2a49b; }
+/* Mêmes couples pastel bg/fg que les badges de statut du système : le vert
+   « approuvé / actif » et le rouge d'erreur, tous deux définis par thème. */
+.dash-sys-state.is-up { background: var(--pastel-green); color: var(--pastel-green-fg); }
+.dash-sys-state.is-down { background: var(--pastel-red); color: var(--danger-text); }
 .dash-sys-dot { width: 7px; height: 7px; border-radius: 50%; }
-.dash-sys-state.is-up .dash-sys-dot { background: var(--green300); }
-.dash-sys-state.is-down .dash-sys-dot { background: var(--red); }
+.dash-sys-state.is-up .dash-sys-dot { background: var(--pastel-green-fg); }
+.dash-sys-state.is-down .dash-sys-dot { background: var(--danger-text); }
 .dash-sys-ms {
   flex: none; margin-left: 8px; font-family: var(--font-display); font-weight: 600; font-size: var(--text-2xs);
-  color: rgba(255, 255, 255, 0.7); font-variant-numeric: tabular-nums;
-  background: rgba(255, 255, 255, 0.08); border-radius: 999px; padding: 2px 8px;
+  color: var(--muted); font-variant-numeric: tabular-nums;
+  background: var(--surface-2); border-radius: var(--radius-pill); padding: 2px 8px;
 }
 
-.dash-sys-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.10); display: flex; flex-direction: column; gap: 10px; }
+.dash-sys-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
 .dash-sys-frow { display: flex; align-items: center; gap: 9px; }
-.dash-sys-flabel { color: rgba(255, 255, 255, 0.6); font-size: var(--text-sm); }
-.dash-sys-fval { margin-left: auto; color: rgba(255, 255, 255, 0.9); font-size: var(--text-sm); }
+.dash-sys-flabel { color: var(--muted); font-size: var(--text-sm); }
+.dash-sys-fval { margin-left: auto; color: var(--text); font-size: var(--text-sm); }
 .dash-sys-fval--num { font-family: var(--font-display); font-weight: 700; font-size: var(--text-md); font-variant-numeric: tabular-nums; }
 .dash-online-dot {
   width: 9px; height: 9px; border-radius: 50%; background: var(--green500);
   box-shadow: 0 0 0 0 rgba(42, 138, 79, 0.5); animation: dash-pulse 1.7s infinite; flex: none;
 }
-/* « Joueurs en ligne » : pastille bleutée quand > 0, neutre sinon. */
-.dash-online-pill { border-radius: 999px; padding: 1px 9px; }
-.dash-online-pill.is-live { background: rgba(59, 130, 246, 0.22); color: #93c5fd; }
+/* « Joueurs en ligne » : pastille bleutée quand > 0, neutre sinon. Le couple
+   pastel bleu suit le thème — l'ancien `#93c5fd` sur `rgba(59,130,246,.22)`
+   était calibré pour le fond vert nuit de la carte et devenait illisible une
+   fois celle-ci passée en surface claire. */
+.dash-online-pill { border-radius: var(--radius-pill); padding: 1px 9px; }
+.dash-online-pill.is-live { background: var(--pastel-blue); color: var(--pastel-blue-fg); }
+/* Icônes du pied de carte (dernière sync, uptime) : la couleur venait d'un
+   attribut `color="rgba(255,255,255,.5)"` posé dans le JSX. */
+.dash-sys-fic { color: var(--muted); flex: none; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    LIGNE 3 — GRAPHIQUE D'ACTIVITÉ

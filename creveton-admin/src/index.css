@@ -392,9 +392,9 @@ input, select, textarea { font-family: inherit; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
 .card-pad { padding: 20px 22px; }
 .card-cream { background: var(--surface-2); }
-.card-dark { background: var(--green900); border-color: var(--green700); color: #fff; }
-.card-dark .card-title { color: #fff; }
-.card-dark .card-sub { color: rgba(255, 255, 255, 0.5); }
+/* `.card-dark` supprimée : son unique porteur était la carte « Système » du
+   tableau de bord, désormais alignée sur ses voisines. Une utilité générique à
+   zéro usage invite à en refaire une surface sombre au hasard d'une page. */
 .card-title { font-family: var(--font-display); font-weight: 600; font-size: var(--text-xl); color: var(--ink); margin: 0; }
 .card-sub { color: var(--muted); font-size: var(--text-sm); margin-top: 3px; }
 .card-link { color: var(--green700); font-weight: 600; font-size: var(--text-sm); display: inline-flex; align-items: center; gap: 5px; transition: var(--t-fast); }
