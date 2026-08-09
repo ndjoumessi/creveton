@@ -859,6 +859,10 @@
     "scope": {
       "loaded": "across loaded games",
       "all": "across the whole bank"
+    },
+    "legend": {
+      "games_one": "game",
+      "games_other": "games"
     }
   },
   "tournaments": {

@@ -434,7 +434,19 @@ export default function Parties() {
                   <li key={d.theme}>
                     <span className="ses-legend-dot" style={{ background: d.color }} />
                     <span className="ses-legend-name">{d.name}</span>
-                    <span className="ses-legend-val">{num(d.value)} · {pct(d.share, 0)}</span>
+                    {/* La part d'abord, en valeur forte : c'est le sujet d'une
+                        répartition. Le compte suit, en gris et suivi de son
+                        unité. Les deux étaient auparavant rendus « 48 · 48 % » —
+                        et comme sur 100 parties le compte ÉGALE le pourcentage,
+                        ça se lisait comme un décimal cassé (« 48,48 % »). Deux
+                        nombres voisins ont besoin d'être séparés par la
+                        typographie, pas seulement par un point médian. */}
+                    <span className="ses-legend-val">
+                      {pct(d.share, 0)}
+                      <span className="ses-legend-count">
+                        {num(d.value)} {t('sessions.legend.games', { count: d.value })}
+                      </span>
+                    </span>
                   </li>
                 ))}
               </ul>

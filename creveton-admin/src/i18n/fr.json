@@ -859,6 +859,10 @@
     "scope": {
       "loaded": "sur les parties chargées",
       "all": "sur toute la banque"
+    },
+    "legend": {
+      "games_one": "partie",
+      "games_other": "parties"
     }
   },
   "tournaments": {
