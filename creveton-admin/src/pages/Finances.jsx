@@ -107,6 +107,14 @@ export default function Finances() {
     [dailyData],
   );
 
+  // Une courbe plate à zéro sur 30 jours n'apprend rien, et son axe encore
+  // moins : Recharts graduait un domaine vide et l'axe empilait cinq fois la
+  // même étiquette. Tant qu'aucun mouvement n'existe, on le dit.
+  const hasMovement = useMemo(
+    () => chartData.some((p) => Number(p.deposits) > 0 || Number(p.withdrawals) > 0),
+    [chartData],
+  );
+
   const refetchAll = () => { refetchTx(); refetchKyc(); refetchSummary(); };
 
   const runConfirm = async () => {
@@ -325,6 +333,9 @@ export default function Finances() {
       {/* Graphique volume journalier (30 j) */}
       <div className="card card-pad fin-section">
         <div className="card-title" style={{ marginBottom: 12 }}>{t('finances.chart.title')}</div>
+        {!hasMovement ? (
+          <EmptyState icon={Wallet} title={t('finances.chart.emptyTitle')} message={t('finances.chart.emptySub')} />
+        ) : (
         <ResponsiveContainer width="100%" height={240}>
           <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
             <defs>
@@ -339,7 +350,19 @@ export default function Finances() {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#eef0f2" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} minTickGap={28} />
-            <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={56} tickFormatter={(v) => `${Math.round(v / 1000)}k F`} />
+            {/* `Math.round(v / 1000)` écrasait toute valeur sous 500 F à « 0k F ».
+                Sans transaction, Recharts gradue [0 … 1] et l'axe affichait CINQ
+                fois « 0k F » l'un au-dessus de l'autre. Les milliers ne sont
+                abrégés qu'à partir de 1 000, et les graduations dupliquées sont
+                filtrées. */}
+            <YAxis
+              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              axisLine={false}
+              tickLine={false}
+              width={56}
+              allowDecimals={false}
+              tickFormatter={(v) => (Math.abs(v) >= 1000 ? `${Math.round(v / 1000)}k F` : `${Math.round(v)} F`)}
+            />
             <Tooltip
               contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 12 }}
               formatter={(v, name) => [fcfa(v), name]}
@@ -349,6 +372,7 @@ export default function Finances() {
             <Area name={t('finances.kpi.withdrawals')} type="monotone" dataKey="withdrawals" stroke="#d4a017" strokeWidth={2.5} fill="url(#finWd)" />
           </AreaChart>
         </ResponsiveContainer>
+        )}
       </div>
 
       {/* Filtres */}

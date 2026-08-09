@@ -501,7 +501,9 @@
       "statementRaw": "Statement (raw)",
       "fullExplanation": "Full explanation",
       "source": "Source",
-      "statsNote": "Only the global success rate is reported by the API. The detail (number of games, most-chosen distractor, weekly evolution) is not yet available."
+      "statsNote": "Only the global success rate is reported by the API. The detail (number of games, most-chosen distractor, weekly evolution) is not yet available.",
+      "ofWhich": "of which",
+      "countsScope": "Counts cover the {{n}} loaded questions — see “Global stats” for the whole bank."
     },
     "emptyState": {
       "acceptedTitle": "No accepted rows",
@@ -845,7 +847,8 @@
       "gamesCount_other": "{{value}} games",
       "questionSkipped": "Question skipped",
       "yourAnswer": "Answer:",
-      "correctAnswer": "Correct:"
+      "correctAnswer": "Correct:",
+      "noTheme": "Tournament (no theme)"
     },
     "empty": {
       "recapTitle": "Recap unavailable",
@@ -1639,7 +1642,8 @@
       "admins": "Admins",
       "moderators": "Moderators",
       "active7d": "Active (7d)",
-      "pendingInvites": "Pending invitations"
+      "pendingInvites": "Pending invitations",
+      "neverConnected": "Never signed in"
     },
     "columns": {
       "member": "Member",
@@ -1944,7 +1948,9 @@
     },
     "chart": {
       "title": "Transaction volume (30 days)",
-      "volume": "Volume"
+      "volume": "Volume",
+      "emptyTitle": "No movement over 30 days",
+      "emptySub": "The chart appears with the first transaction."
     },
     "filters": {
       "allStatuses": "All statuses",

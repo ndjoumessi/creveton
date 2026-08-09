@@ -501,7 +501,9 @@
       "statementRaw": "Énoncé (brut)",
       "fullExplanation": "Explication complète",
       "source": "Source",
-      "statsNote": "Seul le taux de réussite global est remonté par l’API. Le détail (nombre de parties, distracteur le plus choisi, évolution hebdomadaire) n’est pas encore disponible."
+      "statsNote": "Seul le taux de réussite global est remonté par l’API. Le détail (nombre de parties, distracteur le plus choisi, évolution hebdomadaire) n’est pas encore disponible.",
+      "ofWhich": "dont",
+      "countsScope": "Compteurs portant sur les {{n}} questions chargées — voir « Stats globales » pour toute la banque."
     },
     "emptyState": {
       "acceptedTitle": "Aucune ligne acceptée",
@@ -845,7 +847,8 @@
       "gamesCount_other": "{{value}} parties",
       "questionSkipped": "Question passée",
       "yourAnswer": "Réponse :",
-      "correctAnswer": "Bonne :"
+      "correctAnswer": "Bonne :",
+      "noTheme": "Tournoi (sans thème)"
     },
     "empty": {
       "recapTitle": "Récapitulatif indisponible",
@@ -1639,7 +1642,8 @@
       "admins": "Admins",
       "moderators": "Modérateurs",
       "active7d": "Actifs (7 j)",
-      "pendingInvites": "Invitations en attente"
+      "pendingInvites": "Invitations en attente",
+      "neverConnected": "Jamais connectés"
     },
     "columns": {
       "member": "Membre",
@@ -1944,7 +1948,9 @@
     },
     "chart": {
       "title": "Volume des transactions (30 j)",
-      "volume": "Volume"
+      "volume": "Volume",
+      "emptyTitle": "Aucun mouvement sur 30 jours",
+      "emptySub": "Le graphe apparaîtra dès la première transaction."
     },
     "filters": {
       "allStatuses": "Tous les statuts",

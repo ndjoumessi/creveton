@@ -47,18 +47,30 @@ function inviteExpiry(createdAt) {
   return { expired: false, urgent: ms < 2 * 3600000, label: h >= 1 ? `${h}h ${m}min` : `${m}min` };
 }
 
-// KPIs d'équipe : un membre jamais connecté (last_active_at nul) est considéré
-// comme une invitation en attente.
-function teamKpis(members) {
+/**
+ * KPIs d'équipe.
+ *
+ * Le troisième compteur s'intitulait « Invitations en attente » mais comptait
+ * les membres jamais connectés (`last_active_at` nul) — deux quantités
+ * différentes sous le même nom. La page affichait donc « 1 invitation en
+ * attente » en tête pendant que la section du même nom, juste en dessous et
+ * alimentée par la VRAIE liste d'invitations, annonçait « Aucune invitation en
+ * attente ». Deux affirmations contradictoires sur un seul écran.
+ *
+ * Les invitations réellement en attente viennent désormais de `invitations` ;
+ * le compteur des comptes jamais connectés reste utile, sous son propre nom.
+ */
+function teamKpis(members, invitations = []) {
   const now = Date.now();
   const week = 7 * 86400000;
   let active = 0;
-  let pending = 0;
+  let neverConnected = 0;
   for (const m of members) {
     if (m.last_active_at && now - new Date(m.last_active_at).getTime() <= week) active += 1;
-    if (!m.last_active_at) pending += 1;
+    if (!m.last_active_at) neverConnected += 1;
   }
-  return { total: members.length, active, pending };
+  const pendingInvites = invitations.filter((i) => i.status === 'pending').length;
+  return { total: members.length, active, neverConnected, pendingInvites };
 }
 
 /* ─────────────── Badges ─────────────── */
@@ -689,7 +701,7 @@ export default function TeamPage() {
   );
   const members = useMemo(() => data?.data || [], [data]);
   const invitations = useMemo(() => invData?.data || [], [invData]);
-  const kpis = useMemo(() => teamKpis(members), [members]);
+  const kpis = useMemo(() => teamKpis(members, invitations), [members, invitations]);
 
   const refreshAll = () => { refetch(); refetchStats(); refetchInvites(); };
 
@@ -821,7 +833,8 @@ export default function TeamPage() {
       <div className="dark-banner">
         <div className="item team-stat"><div className="v">{kpis.total}</div><div className="l">{t('team.stats.total', 'Total membres')}</div></div>
         <div className="item team-stat"><div className="v" style={{ color: '#5eca84' }}>{kpis.active}</div><div className="l">{t('team.stats.active7d', 'Actifs (7 j)')}</div></div>
-        <div className="item team-stat"><div className="v" style={{ color: 'var(--gold)' }}>{kpis.pending}</div><div className="l">{t('team.stats.pendingInvites', 'Invitations en attente')}</div></div>
+        <div className="item team-stat"><div className="v" style={{ color: 'var(--gold)' }}>{kpis.pendingInvites}</div><div className="l">{t('team.stats.pendingInvites', 'Invitations en attente')}</div></div>
+        <div className="item team-stat"><div className="v">{kpis.neverConnected}</div><div className="l">{t('team.stats.neverConnected')}</div></div>
       </div>
 
       {/* Table des membres */}

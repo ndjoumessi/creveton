@@ -30,6 +30,10 @@
   margin-top: 12px;
   min-height: 52px;
 }
+/* Portée des trois compteurs, écrite sous eux : ils décrivent les lignes
+   chargées, pas la banque entière. Sans cette ligne, « 0 approuvées » se lit
+   comme un état de la base — alors qu'elle en compte 180. */
+.q-kpi-scope { font-family: var(--font-body); font-size: 11.5px; color: var(--muted); margin: 2px 0 0; }
 .q-kpi {
   display: flex;
   flex-direction: column;

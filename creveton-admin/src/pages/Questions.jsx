@@ -1801,7 +1801,7 @@ export default function Questions() {
               {t('questions.title')}
               {!loading && (
                 <span className="q-count-inline">
-                  <strong>{total}</strong> {t('questions.loaded')} · <strong>{approvedCount}</strong> {t('questions.approved')} · <strong>{pendingCount}</strong> {t('questions.pending')}
+                  <strong>{total}</strong> {t('questions.loaded')} — {t('questions.misc.ofWhich')} <strong>{approvedCount}</strong> {t('questions.approved')} · <strong>{pendingCount}</strong> {t('questions.pending')}
                 </span>
               )}
             </span>
@@ -1826,10 +1826,20 @@ export default function Questions() {
         {loading ? (
           <div className="q-kpi-strip"><span className="muted">{t('common.loading')}</span></div>
         ) : (
-          <div className="q-kpi-strip">
-            <div className="q-kpi"><span className="n">{total}</span><span className="l">{t('questions.loaded')}</span></div>
-            <div className="q-kpi"><span className="n">{approvedCount}</span><span className="l">{t('questions.approved')}</span></div>
-            <div className="q-kpi"><span className="n">{pendingCount}</span><span className="l">{t('questions.pending')}</span></div>
+          /* Les trois compteurs portent sur les lignes CHARGÉES, pas sur la
+             banque. Sur staging, cette bande annonçait « 100 · 0 approuvées ·
+             0 en attente » alors que la base compte 180 questions approuvées :
+             les 100 premières chargées sont des brouillons IA, les plus
+             récents. Lu comme un total, ça décrit une banque vide. La portée
+             est donc désormais écrite sous les chiffres, et « Stats globales »
+             (déjà dans la barre d'actions) reste la vue qui, elle, couvre tout. */
+          <div className="q-kpi-block">
+            <div className="q-kpi-strip">
+              <div className="q-kpi"><span className="n">{total}</span><span className="l">{t('questions.loaded')}</span></div>
+              <div className="q-kpi"><span className="n">{approvedCount}</span><span className="l">{t('questions.approved')}</span></div>
+              <div className="q-kpi"><span className="n">{pendingCount}</span><span className="l">{t('questions.pending')}</span></div>
+            </div>
+            <p className="q-kpi-scope">{t('questions.misc.countsScope', { n: total })}</p>
           </div>
         )}
 

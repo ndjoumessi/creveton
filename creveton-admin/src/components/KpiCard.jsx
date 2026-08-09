@@ -1,4 +1,4 @@
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 import Sparkline from './Sparkline';
 import { useCountUp } from '../hooks/useCountUp';
 import { num } from '../utils/format';
@@ -8,10 +8,15 @@ import { num } from '../utils/format';
  * mount) + label + variation vs hier + sparkline inline 100×36. Liseré-top 3px
  * teinté + hover (scale + ombre) gérés en CSS via `.kpi--<tone>`.
  * @param tone  green | gold | blue | violet — teinte du carré d'icône & du liseré.
- * @param delta nombre (% vs hier) — vert si ≥ 0, rouge sinon. null = masqué.
+ * @param delta nombre (% vs hier) — vert si > 0, rouge si < 0, NEUTRE à 0. null = masqué.
  */
 export default function KpiCard({ icon, label, value, tone = 'green', delta = null, deltaLabel = 'vs hier', spark = [] }) {
-  const up = delta != null && delta >= 0;
+  // Zéro n'est ni une hausse ni une baisse. La condition était `>= 0`, donc
+  // « +0 % » s'affichait en vert avec une flèche montante : sur la page
+  // Finances, trois cartes à zéro annonçaient toutes une croissance. Trois
+  // états, pas deux.
+  const trend = delta == null ? null : delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+  const up = trend === 'up';
   const numeric = typeof value === 'number';
   const [counted, ref] = useCountUp(numeric ? value : 0, { duration: 800 });
   return (
@@ -22,13 +27,21 @@ export default function KpiCard({ icon, label, value, tone = 'green', delta = nu
       </div>
       <div className="kpi-value">{numeric ? num(counted) : value}</div>
       <div className="kpi-foot">
-        {delta != null ? (
-          <span className={`kpi-delta ${up ? 'up' : 'down'}`}>
-            {up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+        {trend ? (
+          <span className={`kpi-delta ${trend}`}>
+            {trend === 'up' ? <ArrowUpRight size={14} /> : trend === 'down' ? <ArrowDownRight size={14} /> : <Minus size={14} />}
             {up ? '+' : ''}{delta}% <span className="muted" style={{ fontWeight: 400 }}>{deltaLabel}</span>
           </span>
         ) : <span />}
-        {spark.length > 1 && <Sparkline values={spark} width={100} height={36} color={up ? '#2a8a4f' : '#e74c3c'} fill />}
+        {spark.length > 1 && (
+          <Sparkline
+            values={spark}
+            width={100}
+            height={36}
+            color={trend === 'down' ? '#e74c3c' : trend === 'up' ? '#2a8a4f' : '#9ca3af'}
+            fill
+          />
+        )}
       </div>
     </div>
   );

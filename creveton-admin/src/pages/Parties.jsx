@@ -157,15 +157,19 @@ export default function Parties() {
     filtered.forEach((s) => counts.set(s.theme, (counts.get(s.theme) || 0) + 1));
     const total = filtered.length || 1;
     return [...counts.entries()]
+      // `theme` est NUL pour les parties de tournoi (le set est imposé, il n'a
+      // pas de thème). Sans repli, `name` valait `null` : la deuxième plus
+      // grosse tranche du donut — 23 % des parties — s'affichait avec une
+      // pastille de couleur et AUCUN libellé, comme un défaut de rendu.
       .map(([theme, value]) => ({
         theme,
-        name: themeBadgeColors[theme]?.label || themeLabels[theme] || theme,
+        name: themeBadgeColors[theme]?.label || themeLabels[theme] || theme || t('sessions.misc.noTheme'),
         value,
         share: value / total,
         color: themeBadgeColors[theme]?.fg || 'var(--muted)',
       }))
       .sort((a, b) => b.value - a.value);
-  }, [filtered]);
+  }, [filtered, t]);
 
   // Score moyen par niveau (barres), dérivé de la liste.
   const levelData = useMemo(() => {
