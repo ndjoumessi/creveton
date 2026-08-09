@@ -33,8 +33,8 @@ import {
   DEFAULT_COUNTRY,
 } from '../utils/validation';
 import { COUNTRIES, countryName, countryByIso, matchesQuery } from '../constants/countries';
+import { CITIES, OTHER_CITY, matchesCity } from '../constants/cities';
 import { normalizeLang } from '../utils/i18n';
-import { searchNormalize } from '../utils/format';
 import { SEXES, LANGS } from '../constants/config';
 import { fonts, fontSizes, radius, spacing, shadow } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
@@ -43,20 +43,6 @@ const STEPS = [
   { titleKey: 'auth.register.step1', n: '1/3' },
   { titleKey: 'auth.register.step2', n: '2/3' },
   { titleKey: 'auth.register.step3', n: '3/3' },
-];
-
-// Sentinelle « autre ville » — stockée telle quelle en base (le backend accepte
-// `ville` libre) mais AFFICHÉE traduite.
-const OTHER_CITY = 'Autre';
-
-const CITIES = [
-  'Yaoundé', 'Douala', 'Bafoussam', 'Bamenda', 'Garoua', 'Maroua',
-  'Ngaoundéré', 'Bertoua', 'Ebolowa', 'Buea', 'Kribi', 'Limbe',
-  'Edéa', 'Kumba', 'Dschang', 'Foumban',
-  // `OTHER_CITY` sort de la liste : les autres entrées sont des noms propres
-  // (invariants d'une langue à l'autre), celui-ci est un MOT — il affichait
-  // « Autre » dans une interface anglaise.
-  OTHER_CITY,
 ];
 
 export default function RegisterScreen({ navigation }) {
@@ -114,12 +100,10 @@ export default function RegisterScreen({ navigation }) {
     [countryQuery]
   );
 
-  // Villes : même recherche insensible aux accents. « ngaoundere » trouve
-  // « Ngaoundéré » — personne ne compose les accents au clavier d'un téléphone.
-  const filteredCities = useMemo(
-    () => CITIES.filter((c) => searchNormalize(c).includes(searchNormalize(cityQuery))),
-    [cityQuery]
-  );
+  // Villes : recherche insensible aux accents ET aux traits d'union (cf.
+  // `matchesCity`). « ngaoundere » trouve « Ngaoundéré », « abong mbang »
+  // trouve « Abong-Mbang » — personne ne compose ça au clavier d'un téléphone.
+  const filteredCities = useMemo(() => CITIES.filter((c) => matchesCity(c, cityQuery)), [cityQuery]);
 
   // Saisie LIBRE quand rien ne correspond. La liste est camerounaise et le
   // sélecteur de pays est international depuis 08-2026 : un joueur tchadien
@@ -128,10 +112,10 @@ export default function RegisterScreen({ navigation }) {
   // (Joi `string().max(100)`) ET côté profil, où l'édition est un simple champ
   // texte : on n'ouvre donc rien de nouveau, on rattrape l'inscription.
   //
-  // Première lettre capitalisée : le filtre admin compare `ville = $1` À
-  // L'IDENTIQUE ; « douala » saisi en minuscules ne remonterait pas avec
-  // « Douala ». Ça ne règle pas les fautes de frappe, mais ça règle le cas
-  // dominant.
+  // Première lettre capitalisée : la casse n'est plus un problème de FILTRAGE
+  // (l'admin compare en `lower()` depuis 67ab283), mais elle en reste un
+  // d'AFFICHAGE — « douala » apparaîtrait tel quel dans la liste des villes de
+  // la console, à côté de « Douala », et se lirait comme deux entrées.
   const customCity = useMemo(() => {
     const v = cityQuery.trim();
     if (!v || filteredCities.length) return null;
