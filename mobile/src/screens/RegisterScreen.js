@@ -90,6 +90,7 @@ export default function RegisterScreen({ navigation }) {
   const uiLang = normalizeLang(i18n.language);
   const [countryQuery, setCountryQuery] = useState('');
   const [cityQuery, setCityQuery] = useState('');
+  const ageRef = useRef(null);
   const [cityOpen, setCityOpen] = useState(false);
   // Pays de l'indicatif. Défaut Cameroun (marché principal) ; la diaspora en
   // change au premier écran. Ne concerne QUE le téléphone du compte — le
@@ -275,7 +276,8 @@ export default function RegisterScreen({ navigation }) {
                     key={country} /* remonte le champ quand le pays change (longueur/format différents) */
                     defaultValue={values.current.phoneNational}
                     placeholder={t('auth.register.placeholder.phone')}
-                    onChangeText={(v) => (values.current.phoneNational = v.replace(/[^\d]/g, '').slice(0, 15))}
+                    // Déjà nettoyé par PhoneInput — on ne fait que stocker.
+                    onChangeText={(v) => (values.current.phoneNational = v)}
                   />
                 </View>
               </View>
@@ -345,9 +347,26 @@ export default function RegisterScreen({ navigation }) {
                   ne savait ni qu'il est facultatif, ni quelle plage est admise
                   (le backend rejette hors 6–99). */}
               <AuthField
+                ref={ageRef}
                 label={t('auth.register.age')}
                 defaultValue={values.current.age}
-                onChangeText={(t) => (values.current.age = t.replace(/\D/g, '').slice(0, 2))}
+                // `AuthField` est NON CONTRÔLÉ (defaultValue, par conception :
+                // la frappe ne doit pas re-rendre le formulaire). Nettoyer la
+                // valeur dans `onChangeText` ne corrigeait donc QUE le ref :
+                // l'écran continuait d'afficher « 223366 » pendant que l'app
+                // enregistrait « 22 ». Un champ qui ment sur ce qu'il va
+                // sauvegarder est pire qu'un champ permissif.
+                //
+                // `maxLength` fait le gros du travail au niveau du système ;
+                // `setNativeProps` rattrape ce qu'il ne couvre pas (collage,
+                // séparateur décimal proposé par certains claviers numériques)
+                // sans repasser en contrôlé.
+                maxLength={2}
+                onChangeText={(raw) => {
+                  const clean = raw.replace(/\D/g, '').slice(0, 2);
+                  values.current.age = clean;
+                  if (clean !== raw) ageRef.current?.setNativeProps({ text: clean });
+                }}
                 keyboardType="number-pad"
                 placeholder={t('auth.register.placeholder.age')}
                 style={styles.ageField}
@@ -417,6 +436,7 @@ export default function RegisterScreen({ navigation }) {
               returnKeyType="search"
               accessibilityLabel={t('auth.register.misc.citySearch')}
             />
+            <View style={styles.searchDivider} />
             <FlatList
               data={filteredCities}
               keyExtractor={(c) => c}
@@ -483,6 +503,7 @@ export default function RegisterScreen({ navigation }) {
               returnKeyType="search"
               accessibilityLabel={t('auth.register.misc.countrySearch')}
             />
+            <View style={styles.searchDivider} />
             <FlatList
               data={filteredCountries}
               keyExtractor={(c) => c.iso}
@@ -524,12 +545,29 @@ export default function RegisterScreen({ navigation }) {
 function PhoneInput({ defaultValue, onChangeText, placeholder }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const ref = useRef(null);
+
+  // Le nettoyage vit ICI et non dans le formulaire : c'est une propriété du
+  // champ, pas de l'écran. Et il doit corriger l'AFFICHAGE, pas seulement la
+  // valeur remontée — le champ est non contrôlé (cf. AuthField), donc un
+  // `replace` dans `onChangeText` laissait l'écran montrer autre chose que ce
+  // qui serait envoyé. Un clavier `phone-pad` propose « + », espaces et
+  // parenthèses : saisir « +237690000001 » dans le champ NATIONAL affichait ce
+  // texte et transmettait « 237690000001 », qui, préfixé de l'indicatif,
+  // donnait un numéro faux.
+  const handleChange = (raw) => {
+    const clean = raw.replace(/[^\d]/g, '').slice(0, 15);
+    if (clean !== raw) ref.current?.setNativeProps({ text: clean });
+    onChangeText(clean);
+  };
+
   return (
     <AuthField
+      ref={ref}
       style={styles.phoneInner}
       label={null}
       defaultValue={defaultValue}
-      onChangeText={onChangeText}
+      onChangeText={handleChange}
       keyboardType="phone-pad"
       placeholder={placeholder}
       maxLength={15}
@@ -601,7 +639,7 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingBottom: spacing.xl,
     maxHeight: '75%',
   },
-  // Champ de recherche du sélecteur de pays.
+  // Champ de recherche des sélecteurs (pays, ville).
   searchInput: {
     minHeight: 46,
     borderRadius: radius.md,
@@ -609,10 +647,20 @@ const makeStyles = (colors) => StyleSheet.create({
     borderColor: colors.borderInput,
     backgroundColor: colors.surfaceElevated,
     paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm,
     fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.base,
     color: colors.textDark,
+  },
+  // Séparateur sous la recherche. La liste défile juste en dessous : sans
+  // frontière visible, la ligne à demi coupée en haut du défilement se lit comme
+  // un défaut de rendu, alors qu'elle dit simplement « il y a du contenu
+  // au-dessus ». Le trait rend cette limite explicite.
+  searchDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+    marginHorizontal: -spacing.lg, // pleine largeur de la feuille (qui est paddée)
   },
   pickerEmpty: { textAlign: 'center', paddingVertical: spacing.xl },
   modalTitle: { marginBottom: spacing.md },
