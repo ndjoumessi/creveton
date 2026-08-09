@@ -243,6 +243,13 @@ button { font-family: inherit; cursor: pointer; }
 input, select, textarea { font-family: inherit; }
 ::selection { background: rgba(212, 160, 23, 0.25); }
 
+/* Contenu réservé aux lecteurs d'écran : retiré du flux visuel sans être
+   masqué à l'arbre d'accessibilité (`display:none` l'en retirerait aussi). */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
 /* Focus visible AA — partout, anneau émeraude */
 :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; box-shadow: 0 0 0 4px var(--focus-ring-halo); border-radius: 6px; }
 .btn:focus-visible, .icon-btn:focus-visible, .icon-action:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; box-shadow: 0 0 0 4px var(--focus-ring-halo); }

@@ -104,7 +104,9 @@
       "games": "Parties",
       "day": "Jour",
       "week": "Semaine",
-      "month": "Mois"
+      "month": "Mois",
+      "a11yCaption": "Inscriptions et parties par période — équivalent textuel du graphe",
+      "a11yPeriod": "Période"
     },
     "topPlayers": "Top joueurs du jour",
     "themeDistribution": "Répartition par thème",
@@ -138,7 +140,8 @@
       "inactive": "Inactifs · 30 j",
       "usersLabel": "utilisateurs",
       "emptyTitle": "Pas encore de données",
-      "emptySub": "Les utilisateurs actifs apparaîtront ici."
+      "emptySub": "Les utilisateurs actifs apparaîtront ici.",
+      "barA11y": "{{pct}} % d’actifs sur 24 h — {{dau}} sur {{mau}}"
     },
     "a11y": {
       "soundOff": "Couper le son",

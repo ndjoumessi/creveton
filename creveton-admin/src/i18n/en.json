@@ -104,7 +104,9 @@
       "games": "Games",
       "day": "Day",
       "week": "Week",
-      "month": "Month"
+      "month": "Month",
+      "a11yCaption": "Sign-ups and games per period — text equivalent of the chart",
+      "a11yPeriod": "Period"
     },
     "topPlayers": "Top players of the day",
     "themeDistribution": "Distribution by theme",
@@ -138,7 +140,8 @@
       "inactive": "Inactive · 30d",
       "usersLabel": "users",
       "emptyTitle": "No data yet",
-      "emptySub": "Active users will show up here."
+      "emptySub": "Active users will show up here.",
+      "barA11y": "{{pct}}% active in 24h — {{dau}} of {{mau}}"
     },
     "a11y": {
       "soundOff": "Mute sound",

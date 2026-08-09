@@ -445,12 +445,8 @@ export default function Dashboard() {
       mau,
       inactive,
       ratioPct,
-      slices: [
-        { key: 'active', label: t('dashboard.daumau.active'), value: dau, color: '#2a8a4f' },
-        { key: 'inactive', label: t('dashboard.daumau.inactive'), value: inactive, color: '#9ca3af' },
-      ],
     };
-  }, [analytics, t]);
+  }, [analytics]);
 
   // ─── Santé du contenu : pool par thème (max pour échelle des barres) ───
   const poolMax = useMemo(() => {
@@ -931,6 +927,31 @@ export default function Dashboard() {
                 </AreaChart>
               )}
             </ResponsiveContainer>
+            {/* Alternative TEXTUELLE au graphe. Les infobulles Recharts se
+                déclenchent au survol et au toucher, jamais au clavier : sans
+                cette table, les valeurs n'existent tout simplement pas pour un
+                lecteur d'écran. Elle n'est pas un pis-aller — c'est le motif
+                standard d'un graphique accessible, et la seule chose que
+                Recharts ne peut pas fournir lui-même. */}
+            <table className="sr-only">
+              <caption>{t('dashboard.chart.a11yCaption')}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{t('dashboard.chart.a11yPeriod')}</th>
+                  <th scope="col">{t('dashboard.chart.signups')}</th>
+                  <th scope="col">{t('dashboard.chart.games')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chartData.map((d) => (
+                  <tr key={d.label}>
+                    <th scope="row">{d.label}</th>
+                    <td>{num(d.inscriptions)}</td>
+                    <td>{num(d.parties)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="dash-empty" style={{ padding: '40px 12px' }}>
@@ -1041,7 +1062,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Stickiness DAU/MAU — actifs 24 h vs reste des actifs 30 j (donut) */}
+        {/* Stickiness DAU/MAU — carte de statistique (cf. dash-daumau) */}
         <div className="card card-pad">
           <div className="dash-card-head">
             <div>
@@ -1057,31 +1078,24 @@ export default function Dashboard() {
               <span>{t('dashboard.daumau.emptySub')}</span>
             </div>
           ) : (
-            <div className="dash-donut-wrap">
-              <div className="dash-donut">
-                <ResponsiveContainer width={160} height={160}>
-                  <PieChart>
-                    <Pie
-                      data={daumau.slices}
-                      dataKey="value"
-                      nameKey="label"
-                      innerRadius={48}
-                      outerRadius={72}
-                      paddingAngle={2}
-                      stroke="none"
-                      startAngle={90}
-                      endAngle={-270}
-                    >
-                      {daumau.slices.map((s) => <Cell key={s.key} fill={s.color} />)}
-                    </Pie>
-                    <Tooltip formatter={(value, name) => [`${num(value)} ${t('dashboard.daumau.usersLabel')}`, name]} {...ct.tooltip} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="dash-donut-center">
-                  <span className="dash-donut-num">{daumau.ratioPct} %</span>
-                  <span className="dash-donut-lbl">{num(daumau.dau)} / {num(daumau.mau)}</span>
-                </div>
+            <div className="dash-daumau">
+              {/* Métrique UNIQUE, pas une composition. Un donut à deux tranches
+                  dont l'une tombe souvent à zéro se rend en anneau plein —
+                  visuellement identique à n'importe quel autre 100 %, et il
+                  suggère une répartition là où il n'y a qu'un ratio. Un chiffre
+                  et une barre de proportion disent la même chose sans le
+                  laisser croire. */}
+              <div className="dash-daumau-head">
+                <span className="dash-daumau-num">{daumau.ratioPct} %</span>
+                <span className="dash-daumau-frac">{num(daumau.dau)} / {num(daumau.mau)}</span>
               </div>
+              <span
+                className="progress"
+                role="img"
+                aria-label={t('dashboard.daumau.barA11y', { pct: daumau.ratioPct, dau: daumau.dau, mau: daumau.mau })}
+              >
+                <span style={{ width: `${daumau.ratioPct}%` }} />
+              </span>
               <ul className="dash-donut-legend">
                 <li>
                   <span className="dash-legend-sw" style={{ background: '#2a8a4f' }} />

@@ -414,3 +414,15 @@
 /* Liens verts/or de carte : --green700 (#1a5230) et --gold (#d4a017) → invisibles sur surface sombre → tons clairs. */
 [data-theme="dark"] .card-link { color: var(--green300); }
 [data-theme="dark"] .dash-gold-link { color: var(--green300); }
+
+/* ── Stickiness DAU/MAU — carte de statistique, plus un donut ──
+   Deux tranches dont l'une tombe souvent à zéro se rendaient en anneau plein :
+   indiscernable de n'importe quel autre 100 %, et une composition suggérée là
+   où il n'y a qu'un ratio. */
+.dash-daumau { display: flex; flex-direction: column; gap: 12px; padding-top: 4px; }
+.dash-daumau-head { display: flex; align-items: baseline; gap: 10px; }
+.dash-daumau-num {
+  font-family: var(--font-display); font-weight: 800; font-size: 32px;
+  line-height: 1; color: var(--accent-fg); font-variant-numeric: tabular-nums;
+}
+.dash-daumau-frac { font-size: var(--text-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
