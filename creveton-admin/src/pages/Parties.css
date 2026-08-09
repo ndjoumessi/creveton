@@ -29,13 +29,13 @@
   color: rgba(255, 255, 255, 0.82);
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--text-sm);
   margin-top: 9px;
 }
 .ses-kpi-sub {
   color: rgba(255, 255, 255, 0.45);
   font-family: var(--font-body);
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   margin-top: 2px;
 }
 @media (max-width: 880px) {
@@ -66,13 +66,13 @@
 .ses-chart-title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--text-md);
   color: var(--ink);
   margin-bottom: 12px;
 }
 .ses-chart-empty {
   color: var(--muted);
-  font-size: 13.5px;
+  font-size: var(--text-md);
   text-align: center;
   padding: 64px 14px;
 }
@@ -99,7 +99,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 .ses-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
 .ses-legend-name { color: var(--ink); font-weight: 500; }
@@ -108,7 +108,7 @@
   color: var(--muted);
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 12.5px;
+  font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -129,7 +129,7 @@
   color: var(--muted);
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--text-sm);
   transition: all var(--t-fast, 150ms);
 }
 .ses-pill:hover { border-color: var(--border-green); color: var(--ink); }
@@ -143,25 +143,25 @@
 .ses-idx {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 .ses-ville {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 .ses-score {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--text-lg);
   font-variant-numeric: tabular-nums;
 }
 .ses-fraction {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: var(--text-md);
   color: var(--ink);
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -197,7 +197,7 @@
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
-.ses-date { color: var(--muted); font-size: 13px; }
+.ses-date { color: var(--muted); font-size: var(--text-sm); }
 
 /* ── Drawer : détail ──────────────────────────────────────────────── */
 .ses-detail { display: flex; flex-direction: column; gap: 16px; }
@@ -230,7 +230,7 @@
   color: var(--gold);
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 12.5px;
+  font-size: var(--text-sm);
   cursor: pointer;
   transition: gap var(--t-fast, 150ms);
 }
@@ -238,7 +238,7 @@
 .ses-ddate {
   color: rgba(255, 255, 255, 0.55);
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 /* Bannière de triche. */
@@ -253,7 +253,7 @@
   color: var(--pastel-red-fg-deep);
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: var(--text-md);
 }
 .ses-cheat svg { flex: none; }
 
@@ -277,7 +277,7 @@
 .ses-score-unit {
   color: var(--muted);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: var(--text-md);
   margin-top: 4px;
 }
 .ses-score-stats {
@@ -308,14 +308,14 @@
 .ses-sstat-l {
   color: var(--muted);
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   margin-top: 5px;
 }
 
 /* Récapitulatif Q par Q. */
 .ses-recap-title {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -347,7 +347,7 @@
   background: rgba(0, 0, 0, 0.06);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--ink);
 }
 .ses-ans-badge {
@@ -360,7 +360,7 @@
   border-radius: var(--radius-sm);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 .ses-ans-badge--ok { background: rgba(42, 138, 79, 0.12); color: var(--green500); }
 .ses-ans-badge--ko { background: rgba(231, 76, 60, 0.12); color: var(--red); }
@@ -370,7 +370,7 @@
   min-width: 0;
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: 14px;
+  font-size: var(--text-md);
   line-height: 1.35;
   color: var(--ink);
   display: -webkit-box;
@@ -384,7 +384,7 @@
   text-align: right;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -401,7 +401,7 @@
   align-items: center;
   gap: 5px;
   font-family: var(--font-body);
-  font-size: 12.5px;
+  font-size: var(--text-sm);
 }
 .ses-ans-line svg { flex: none; }
 .ses-ans-line--ok { color: var(--green500); }
@@ -419,7 +419,7 @@
   color: var(--gold);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 .ses-ans-bonus svg { flex: none; }
 
@@ -434,7 +434,7 @@
   color: var(--gold);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--text-md);
   cursor: pointer;
   transition: gap var(--t-fast, 150ms);
 }

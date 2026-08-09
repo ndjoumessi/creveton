@@ -68,7 +68,7 @@
   color: #fdf6e9;
 }
 .lp-brand-tag {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: rgba(253, 246, 233, 0.4);
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -85,7 +85,7 @@
   padding: 40px 0 32px;
 }
 .lp-eyebrow {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: #d4a017;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -107,7 +107,7 @@
   font-style: normal;
 }
 .lp-headline-sub {
-  font-size: 15px;
+  font-size: var(--text-lg);
   color: rgba(253, 246, 233, 0.5);
   line-height: 1.65;
   max-width: 360px;
@@ -135,7 +135,7 @@
 }
 .lp-stat-num span { color: #d4a017; }
 .lp-stat-label {
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   color: rgba(253, 246, 233, 0.38);
 }
 .lp-stat-div {
@@ -166,14 +166,14 @@
   justify-content: center;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 .lp-pill-a { background: rgba(212, 160, 23, 0.16); color: #d4a017; }
 .lp-pill-b { background: rgba(42, 138, 79, 0.22); color: #5eca84; }
 .lp-pill-c { background: rgba(253, 246, 233, 0.1); color: rgba(253, 246, 233, 0.7); }
 .lp-pill-d { background: rgba(253, 246, 233, 0.06); color: rgba(253, 246, 233, 0.45); }
 .lp-footer-copy {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: rgba(253, 246, 233, 0.25);
 }
 
@@ -196,7 +196,7 @@
   margin: 0 0 6px;
 }
 .lp-form-sub {
-  font-size: 14px;
+  font-size: var(--text-md);
   color: #6b7280;
   margin: 0 0 36px;
 }
@@ -214,7 +214,7 @@
   gap: 8px;
   cursor: pointer;
   user-select: none;
-  font-size: 13.5px;
+  font-size: var(--text-md);
   color: #6b7280;
 }
 .lp-remember input {
@@ -228,7 +228,7 @@
    est déjà en space-between). Vert de marque et non or : l'or est réservé au
    CTA de la page, qui doit rester le seul point doré du formulaire. */
 .lp-forgot {
-  font-size: 13.5px;
+  font-size: var(--text-md);
   font-weight: 600;
   color: #2a8a4f;
   text-decoration: none;
@@ -249,7 +249,7 @@
   border-radius: 10px;
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--text-lg);
   color: #fdf6e9;
   display: flex;
   align-items: center;
@@ -268,7 +268,7 @@
 .lp-error {
   margin: 14px 0 0;
   color: #e74c3c;
-  font-size: 13.5px;
+  font-size: var(--text-md);
   font-weight: 500;
 }
 
@@ -282,13 +282,13 @@
   justify-content: space-between;
 }
 .lp-back {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: #6b7280;
   text-decoration: none;
 }
 .lp-back:hover { color: #0b2e1a; }
 .lp-version {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: #2a8a4f;
   background: rgba(42, 138, 79, 0.08);
   padding: 3px 8px;
@@ -296,7 +296,7 @@
 }
 .lp-demo {
   margin: 16px 0 0;
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-align: center;
   color: #9ca3af;
 }

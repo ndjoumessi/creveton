@@ -27,13 +27,13 @@
 }
 .u-banner-l {
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.85);
   margin-top: 8px;
 }
 .u-banner-sub {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.5);
   margin-top: 3px;
 }
@@ -48,7 +48,7 @@
   border: 1px solid var(--border);
   background: var(--bg-mute);
   color: var(--text);
-  font-size: 12.5px;
+  font-size: var(--text-sm);
   font-weight: 600;
   padding: 6px 13px;
   border-radius: 999px;
@@ -62,13 +62,13 @@
 .u-cell-player { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .u-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .u-id .u-id-line { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.u-id .u-id-name { line-height: 1.25; font-size: 15px; }
-.u-id .u-id-mail { line-height: 1.3; font-size: 13px; color: var(--muted); }
+.u-id .u-id-name { line-height: 1.25; font-size: var(--text-lg); }
+.u-id .u-id-mail { line-height: 1.3; font-size: var(--text-sm); color: var(--muted); }
 
-.u-contact { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.u-contact { display: flex; flex-direction: column; gap: 3px; font-size: var(--text-sm); }
 .u-contact-city { color: var(--muted); }
 .u-phone { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.u-flag { font-size: 13px; line-height: 1; }
+.u-flag { font-size: var(--text-sm); line-height: 1; }
 
 .u-levelcell { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
 .u-level-pill {
@@ -77,20 +77,20 @@
   border-radius: 999px;
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 12px;
+  font-size: var(--text-xs);
   white-space: nowrap;
 }
 .u-xp-mini { display: block; width: 60px; height: 4px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
 .u-xp-mini > span { display: block; height: 100%; border-radius: 999px; }
-.u-xp-mini-label { font-family: var(--font-body); font-size: 11px; color: var(--fg-faint); font-variant-numeric: tabular-nums; }
+.u-xp-mini-label { font-family: var(--font-body); font-size: var(--text-2xs); color: var(--fg-faint); font-variant-numeric: tabular-nums; }
 
 .u-activity { display: flex; flex-direction: column; gap: 1px; }
-.u-act-main { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--ink); }
-.u-act-sub { font-size: 13px; color: var(--muted); }
-.u-act-last { font-size: 12px; color: var(--fg-faint); }
+.u-act-main { font-family: var(--font-display); font-weight: 700; font-size: var(--text-xl); color: var(--ink); }
+.u-act-sub { font-size: var(--text-sm); color: var(--muted); }
+.u-act-last { font-size: var(--text-xs); color: var(--fg-faint); }
 
 /* Statut avec point */
-.u-status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.u-status { display: inline-flex; align-items: center; gap: 7px; font-size: var(--text-sm); font-weight: 600; white-space: nowrap; }
 .u-status-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
 .u-st-active { color: var(--pastel-green-fg); }
 .u-st-active .u-status-dot { background: #22c55e; animation: u-pulse 1.8s ease-in-out infinite; }
@@ -103,7 +103,7 @@
 @keyframes u-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); } 50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); } }
 
 /* Badge rôle */
-.u-role-badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.u-role-badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: var(--text-xs); font-weight: 600; white-space: nowrap; }
 .u-role-super { background: #fdf6e3; color: #b8860b; }
 .u-role-admin { background: var(--pastel-green); color: var(--pastel-green-fg); }
 .u-role-mod { background: var(--pastel-blue); color: var(--pastel-blue-fg-strong); }
@@ -135,7 +135,7 @@
   border: 0;
   background: none;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text);
   cursor: pointer;
   text-align: left;
@@ -165,7 +165,7 @@
    lisibles dans les deux thèmes (le hero est vert dans light ET dark). */
 .u-dh-badges .u-status { color: rgba(255, 255, 255, 0.9); }
 .u-dh-badges .u-role-badge { background: rgba(255, 255, 255, 0.14); color: #fff; }
-.u-dh-contact { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--font-body); font-size: 13px; color: rgba(255, 255, 255, 0.7); }
+.u-dh-contact { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--font-body); font-size: var(--text-sm); color: rgba(255, 255, 255, 0.7); }
 
 /* Bandeau métriques : panneau légèrement différencié sur le hero + dividers
    plus visibles. (surface-2 est clair et jurerait sur le hero toujours vert :
@@ -182,7 +182,7 @@
 .u-dh-metrics > div { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 3px; border-right: 1px solid rgba(255, 255, 255, 0.22); }
 .u-dh-metrics > div:last-child { border-right: none; }
 .u-dh-mv { font-family: var(--font-display); font-weight: 700; font-size: 22px; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
-.u-dh-ml { font-family: var(--font-body); font-size: 11px; color: rgba(255, 255, 255, 0.6); }
+.u-dh-ml { font-family: var(--font-body); font-size: var(--text-2xs); color: rgba(255, 255, 255, 0.6); }
 .u-dh-quick { display: flex; flex-wrap: wrap; gap: 8px; }
 .u-dh-quick .btn-ghost-soft { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.2); border-radius: var(--radius-sm, 8px); min-height: 36px; display: inline-flex; align-items: center; }
 .u-dh-quick .btn-ghost-soft:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
@@ -193,7 +193,7 @@
   border: 0; background: none; cursor: pointer;
   padding: 12px 16px;
   font-family: var(--font-body);
-  font-size: 14px; font-weight: 600; color: var(--muted);
+  font-size: var(--text-md); font-weight: 600; color: var(--muted);
   border-bottom: 2px solid transparent; margin-bottom: -1px;
   transition: color var(--t-fast), border-color var(--t-fast);
 }
@@ -201,30 +201,30 @@
 .u-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
 .u-tab-body { padding-bottom: 4px; }
 
-.u-section-title { font-family: var(--font-display); font-weight: 600; font-size: 13.5px; color: var(--ink); margin-bottom: 10px; }
-.u-empty-note { font-size: 13px; }
+.u-section-title { font-family: var(--font-display); font-weight: 600; font-size: var(--text-md); color: var(--ink); margin-bottom: 10px; }
+.u-empty-note { font-size: var(--text-sm); }
 
 /* Onglet Profil */
 .u-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; margin: 0; }
 .u-kv > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.u-kv dt { font-family: var(--font-body); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
-.u-kv dd { margin: 0; font-family: var(--font-body); font-weight: 500; font-size: 15px; color: var(--ink); word-break: break-word; }
+.u-kv dt { font-family: var(--font-body); font-weight: 600; font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.u-kv dd { margin: 0; font-family: var(--font-body); font-weight: 500; font-size: var(--text-lg); color: var(--ink); word-break: break-word; }
 
 .u-account { display: flex; flex-direction: column; gap: 10px; }
-.u-account-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+.u-account-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--text-md); }
 .u-account-k { color: var(--muted); }
 .u-copy-pill {
   display: inline-flex; align-items: center; gap: 6px;
   border: 1px solid var(--border); background: var(--surface-2);
   border-radius: 999px; padding: 4px 11px;
-  font-family: var(--font-body); font-weight: 600; font-size: 12.5px; color: var(--accent-fg);
+  font-family: var(--font-body); font-weight: 600; font-size: var(--text-sm); color: var(--accent-fg);
   cursor: pointer;
 }
 .u-copy-pill:hover { background: #f0f7f0; }
 [data-theme="dark"] .u-copy-pill:hover { background: var(--surface-2); }
 .u-verified { color: var(--pastel-green-fg); font-weight: 600; }
 .u-unverified { color: var(--pastel-amber-fg-deep); font-weight: 600; }
-.u-suspension { font-size: 13px; color: var(--pastel-amber-fg-deep); background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 9px 12px; }
+.u-suspension { font-size: var(--text-sm); color: var(--pastel-amber-fg-deep); background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 9px 12px; }
 
 /* Onglet Progression */
 .u-level-hero { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
@@ -245,29 +245,29 @@
 
 .u-xp-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
 .u-xp-current { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--gold); font-variant-numeric: tabular-nums; }
-.u-xp-max { font-family: var(--font-body); font-size: 13px; color: var(--fg-faint); }
+.u-xp-max { font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-faint); }
 .u-xp-bar { height: 12px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
 /* Même arbitrage que `.progress > span` (index.css) : le remplissage porte un
    dégradé à 90°, que `scaleX` comprimerait au lieu de le révéler. On retire
    l'animation plutôt que d'animer une propriété de mise en page. */
 .u-xp-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2a8a4f, #d4a017); }
-.u-xp-hint { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.u-xp-hint { margin-top: 8px; font-size: var(--text-sm); color: var(--muted); }
 /* Bordure complète 1px plutôt qu'un liseré gauche or : ce bloc est une carte
    « prochaine récompense », pas une citation — le motif signalé s'applique. */
-.u-next-reward { background: var(--cream); border: 1px solid var(--cream-border); border-radius: 10px; padding: 11px 14px; font-size: 13.5px; color: var(--muted); }
+.u-next-reward { background: var(--cream); border: 1px solid var(--cream-border); border-radius: 10px; padding: 11px 14px; font-size: var(--text-md); color: var(--muted); }
 
 .u-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .u-stat { background: var(--surface-2, #f8faf8); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
-.u-stat-k { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--muted); }
+.u-stat-k { font-family: var(--font-body); font-size: var(--text-xs); font-weight: 600; color: var(--muted); }
 .u-stat-v { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--ink); margin-top: 3px; font-variant-numeric: tabular-nums; }
 
 .u-chart { background: #fbfdfb; border: 1px solid var(--border); border-radius: 12px; padding: 10px 6px; }
 .u-theme-perf { display: flex; flex-direction: column; gap: 10px; }
 .u-theme-row { display: grid; grid-template-columns: 130px 1fr 42px; align-items: center; gap: 10px; }
-.u-theme-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.u-theme-name { font-size: var(--text-sm); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .u-theme-track { height: 4px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
 .u-theme-fill { display: block; height: 100%; width: 100%; border-radius: 999px; transform-origin: left; transition: transform var(--t-modal); }
-.u-theme-pct { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #0b2e1a; text-align: right; }
+.u-theme-pct { font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm); color: #0b2e1a; text-align: right; }
 
 /* Onglet Historique */
 .u-hist-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
@@ -293,13 +293,13 @@
 .u-hist-card--science    { border-left-color: var(--pastel-cyan-fg); }
 .u-hist-card--unknown    { border-left-color: var(--pastel-neutral-fg); }
 .u-hist-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
-.u-hist-theme { font-weight: 600; font-size: 13.5px; color: var(--ink); }
-.u-hist-mark { font-family: var(--font-display); font-weight: 700; font-size: 13px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.u-hist-theme { font-weight: 600; font-size: var(--text-md); color: var(--ink); }
+.u-hist-mark { font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
 .u-mark-good { background: var(--pastel-green); color: var(--pastel-green-fg); }
 .u-mark-bad { background: var(--pastel-red); color: var(--pastel-red-fg); }
 .u-mark-mid { background: var(--pastel-orange); color: var(--pastel-amber-fg-deep); }
-.u-hist-mid { font-size: 13px; color: var(--muted); }
-.u-hist-bot { font-size: 12px; color: var(--fg-faint); margin-top: 3px; }
+.u-hist-mid { font-size: var(--text-sm); color: var(--muted); }
+.u-hist-bot { font-size: var(--text-xs); color: var(--fg-faint); margin-top: 3px; }
 
 /* Onglet Activité — heatmap */
 .u-heatmap { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; max-width: 360px; }
@@ -308,11 +308,11 @@
 .u-heat-1 { background: #a7e3c0; }
 .u-heat-2 { background: #2a8a4f; }
 .u-heat-3 { background: #0b2e1a; }
-.u-heat-legend { display: flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 11px; color: var(--fg-faint); }
+.u-heat-legend { display: flex; align-items: center; gap: 5px; margin-top: 10px; font-size: var(--text-2xs); color: var(--fg-faint); }
 .u-heat-legend .u-heat-cell { width: 12px; aspect-ratio: 1; }
 
 .u-sessions-list { display: flex; flex-direction: column; }
-.u-session-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center; padding: 9px 4px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.u-session-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center; padding: 9px 4px; border-bottom: 1px solid var(--border); font-size: var(--text-sm); }
 .u-session-row:last-child { border-bottom: none; }
 .u-session-when { color: var(--muted); }
 .u-session-theme { color: var(--text); }
@@ -322,7 +322,7 @@
 .u-foot { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 .u-foot-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .u-foot-danger { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: #fff5f5; border: 1px solid var(--pastel-red); border-radius: 12px; padding: 10px 12px; }
-.u-foot-role { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.u-foot-role { display: flex; align-items: center; gap: 8px; font-size: var(--text-sm); color: var(--muted); }
 .u-foot-role .select { min-width: 150px; }
 
 /* Modales : pills durée */
@@ -384,6 +384,6 @@
   border-radius: var(--radius-pill);
   background: var(--pastel-amber);
   color: var(--pastel-amber-fg-deep);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
 }

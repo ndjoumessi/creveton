@@ -86,7 +86,7 @@
 }
 .land-nav-links { display: flex; gap: 24px; }
 .land-nav-link {
-  font-size: 13.5px;
+  font-size: var(--text-md);
   color: rgba(253, 246, 233, 0.6);
   text-decoration: none;
   transition: color 150ms ease;
@@ -97,7 +97,7 @@
   color: #0b2e1a;
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--text-sm);
   padding: 9px 20px;
   border-radius: 8px;
   text-decoration: none;
@@ -117,7 +117,7 @@
   cursor: pointer;
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: rgba(253, 246, 233, 0.4);
   padding: 4px 6px;
   border-radius: 6px;
@@ -148,12 +148,12 @@
   border: 1px solid rgba(212, 160, 23, 0.25);
   border-radius: 20px;
   padding: 5px 14px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: #d4a017;
 }
 .land-hero-eyebrow {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: #d4a017;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -171,7 +171,7 @@
 }
 .land-headline em { color: #d4a017; font-style: normal; }
 .land-hero-sub {
-  font-size: 16px;
+  font-size: var(--text-xl);
   line-height: 1.65;
   color: rgba(253, 246, 233, 0.55);
   max-width: 420px;
@@ -191,7 +191,7 @@
   color: #0b2e1a;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 14.5px;
+  font-size: var(--text-lg);
   padding: 13px 26px;
   border-radius: 10px;
   text-decoration: none;
@@ -210,7 +210,7 @@
   background: transparent;
   color: rgba(253, 246, 233, 0.7);
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: var(--text-md);
   padding: 13px 20px;
   border-radius: 10px;
   border: 1.5px solid rgba(253, 246, 233, 0.18);
@@ -241,7 +241,7 @@
   color: #fdf6e9;
 }
 .land-stat-num span { color: #d4a017; }
-.land-stat-label { font-size: 11px; color: rgba(253, 246, 233, 0.4); }
+.land-stat-label { font-size: var(--text-2xs); color: rgba(253, 246, 233, 0.4); }
 .land-stat-div { width: 1px; height: 32px; background: rgba(253, 246, 233, 0.1); }
 
 /* Pills (footer héro) */
@@ -262,7 +262,7 @@
   justify-content: center;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 .land-pill-a { background: rgba(212, 160, 23, 0.16); color: #d4a017; }
 .land-pill-b { background: rgba(42, 138, 79, 0.24); color: #5eca84; }
@@ -285,7 +285,7 @@
   justify-content: space-between;
   padding: 12px 18px 8px;
   background: #0f1f13;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: rgba(253, 246, 233, 0.85);
 }
@@ -314,7 +314,7 @@
 .land-phone-badge {
   background: rgba(42, 138, 79, 0.2);
   color: #5ac27a;
-  font-size: 9px;
+  font-size: var(--text-micro);
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 5px;
@@ -322,14 +322,14 @@
 .land-phone-timer {
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: #d4a017;
 }
 .land-phone-progress { height: 3px; background: rgba(253, 246, 233, 0.1); }
 .land-phone-fill { display: block; width: 45%; height: 100%; background: #d4a017; }
 .land-phone-question { padding: 14px 16px 10px; background: #fdf6e9; }
 .land-phone-qlabel {
-  font-size: 9px;
+  font-size: var(--text-micro);
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -338,7 +338,7 @@
 .land-phone-qtext {
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: #0b2e1a;
   line-height: 1.45;
   margin: 0;
@@ -358,7 +358,7 @@
   border-radius: 8px;
   border: 1.5px solid #e5e7e0;
   background: #fff;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: #374151;
 }
 .land-phone-option.correct {
@@ -377,7 +377,7 @@
   background: #e8f0e8;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 9px;
+  font-size: var(--text-micro);
   color: #2a8a4f;
 }
 .land-phone-option.correct .land-phone-letter { background: #2a8a4f; color: #fff; }
@@ -389,7 +389,7 @@
   background: #0b2e1a;
 }
 .land-phone-score span {
-  font-size: 9px;
+  font-size: var(--text-micro);
   text-transform: uppercase;
   letter-spacing: 1px;
   color: rgba(253, 246, 233, 0.45);
@@ -397,7 +397,7 @@
 .land-phone-score strong {
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--text-lg);
   color: #d4a017;
 }
 
@@ -408,7 +408,7 @@
 .land-section-head { text-align: center; margin-bottom: 48px; }
 .land-eyebrow {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: #2a8a4f;
   text-transform: uppercase;
@@ -426,7 +426,7 @@
   text-wrap: balance;
 }
 .land-sub {
-  font-size: 15px;
+  font-size: var(--text-lg);
   color: #6b7280;
   max-width: 520px;
   margin: 12px auto 0;
@@ -481,7 +481,7 @@
   color: #0b2e1a;
   margin: 0 0 6px;
 }
-.land-step-desc { font-size: 14px; line-height: 1.55; color: #6b7280; margin: 0; }
+.land-step-desc { font-size: var(--text-md); line-height: 1.55; color: #6b7280; margin: 0; }
 
 /* Features */
 .land-features-grid {
@@ -518,7 +518,7 @@
   color: #0b2e1a;
   margin: 0 0 8px;
 }
-.land-feature-desc { font-size: 14.5px; line-height: 1.55; color: #6b7280; margin: 0; }
+.land-feature-desc { font-size: var(--text-lg); line-height: 1.55; color: #6b7280; margin: 0; }
 
 /* Themes */
 .land-themes-grid {
@@ -543,11 +543,11 @@
 .land-theme-name {
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 16px;
+  font-size: var(--text-xl);
   color: #0b2e1a;
   margin: 0 0 4px;
 }
-.land-theme-count { font-size: 13px; color: #6b7280; margin: 0; }
+.land-theme-count { font-size: var(--text-sm); color: #6b7280; margin: 0; }
 
 /* Testimonials */
 .land-testimonials-grid {
@@ -564,7 +564,7 @@
 }
 .land-testimonial-stars { display: flex; gap: 3px; color: #d4a017; margin-bottom: 14px; }
 .land-testimonial-quote {
-  font-size: 15px;
+  font-size: var(--text-lg);
   line-height: 1.6;
   color: #374151;
   margin: 0 0 20px;
@@ -581,11 +581,11 @@
   color: #d4a017;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--text-md);
 }
 .land-testimonial-meta { display: flex; flex-direction: column; gap: 1px; }
-.land-testimonial-name { font-weight: 600; font-size: 14.5px; color: #0b2e1a; }
-.land-testimonial-city { font-size: 13px; color: #6b7280; }
+.land-testimonial-name { font-weight: 600; font-size: var(--text-lg); color: #0b2e1a; }
+.land-testimonial-city { font-size: var(--text-sm); color: #6b7280; }
 
 /* ════════════ CTA final (vert nuit + losanges) ════════════ */
 .land-cta {
@@ -613,7 +613,7 @@
   text-wrap: balance;
 }
 .land-cta-sub {
-  font-size: 16px;
+  font-size: var(--text-xl);
   line-height: 1.6;
   color: rgba(253, 246, 233, 0.55);
   max-width: 460px;
@@ -630,7 +630,7 @@
   flex-wrap: wrap;
 }
 .land-footer-brand { display: flex; align-items: center; gap: 14px; }
-.land-footer-copy { font-size: 13px; color: rgba(253, 246, 233, 0.4); margin: 0; }
+.land-footer-copy { font-size: var(--text-sm); color: rgba(253, 246, 233, 0.4); margin: 0; }
 .land-footer-social { display: flex; gap: 10px; }
 .land-footer-social-link {
   display: inline-flex;
@@ -646,7 +646,7 @@
 .land-footer-social-link:hover { background: rgba(212, 160, 23, 0.16); color: #d4a017; }
 .land-footer-links { display: flex; gap: 20px; }
 .land-footer-links a {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: rgba(253, 246, 233, 0.5);
   text-decoration: none;
   transition: color 150ms ease;

@@ -39,22 +39,22 @@
   display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
 }
 .roles-badge-system {
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  font-size: var(--text-2xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
   color: var(--muted); background: var(--surface); border: 1px solid var(--border);
   padding: 1px 8px; border-radius: 999px;
 }
 .roles-card-members {
   display: inline-flex; align-items: center; gap: 5px;
-  font-size: 12.5px; color: var(--muted); margin-top: 3px;
+  font-size: var(--text-sm); color: var(--muted); margin-top: 3px;
 }
 
 /* ── Corps ── */
 .roles-card-body { padding: 16px 18px; flex: 1; }
-.roles-card-desc { font-size: 13.5px; color: var(--text); margin: 0 0 12px; line-height: 1.5; }
+.roles-card-desc { font-size: var(--text-md); color: var(--text); margin: 0 0 12px; line-height: 1.5; }
 
 .roles-pills { display: flex; flex-wrap: wrap; gap: 7px; }
 .roles-pill {
-  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  font-size: var(--text-xs); font-weight: 600; padding: 3px 10px; border-radius: 999px;
   border: 1px solid transparent; line-height: 1.6; white-space: nowrap;
 }
 .roles-pill-on { color: var(--green700); background: #e3f3ea; border-color: var(--border-green); }
@@ -63,7 +63,7 @@
 .roles-super { display: flex; flex-direction: column; gap: 10px; }
 .roles-super-risk {
   display: inline-flex; align-items: center; gap: 7px;
-  font-size: 12.5px; color: var(--cream-fg); background: var(--cream);
+  font-size: var(--text-sm); color: var(--cream-fg); background: var(--cream);
   border: 1px solid var(--cream-border); border-radius: 9px; padding: 8px 11px; margin: 0;
 }
 
@@ -74,7 +74,7 @@
 }
 .roles-locked {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: default;
+  font-size: var(--text-sm); font-weight: 600; color: var(--muted); cursor: default;
 }
 
 /* ── Modale matrice ──
@@ -92,14 +92,14 @@
 
 /* En-têtes d'action : 11px MAJUSCULES, muet, centrés. */
 .roles-matrix thead th {
-  font-family: var(--font-body); font-size: 11px; font-weight: 600;
+  font-family: var(--font-body); font-size: var(--text-2xs); font-weight: 600;
   letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted);
 }
 .roles-matrix tbody tr:last-child th, .roles-matrix tbody tr:last-child td { border-bottom: none; }
 
 /* Colonne module : 14px encre, poids 500, à gauche. */
 .roles-matrix-modcol {
-  text-align: left !important; font-weight: 500; font-size: 14px;
+  text-align: left !important; font-weight: 500; font-size: var(--text-md);
   color: var(--ink); white-space: nowrap;
 }
 .roles-matrix thead .roles-matrix-modcol { color: var(--muted); }
@@ -142,21 +142,21 @@
   padding: 16px;
 }
 .roles-summary h4 {
-  font-family: var(--font-display); font-weight: 700; font-size: 12px;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--text-xs);
   letter-spacing: 0.6px; text-transform: uppercase; color: var(--gold);
   opacity: 0.85; margin: 0 0 10px;
 }
 .roles-summary ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
 .roles-summary li {
   position: relative; padding-left: 16px;
-  font-size: 12.5px; color: var(--green700); line-height: 1.45;
+  font-size: var(--text-sm); color: var(--green700); line-height: 1.45;
 }
 .roles-summary li::before {
   content: '\2022'; position: absolute; left: 0; top: 0;
   color: var(--green500); font-weight: 700;
 }
 .roles-summary-empty {
-  font-size: 12.5px; color: var(--muted); margin: 0; text-align: center; padding: 8px 0;
+  font-size: var(--text-sm); color: var(--muted); margin: 0; text-align: center; padding: 8px 0;
 }
 
 /* ── Dark-mode base surface override (neutral gray → dark surface) ── */
