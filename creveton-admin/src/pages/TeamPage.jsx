@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
   UserPlus, Eye, ShieldCheck, KeyRound, UserX, UserCheck, Trash2,
-  MoreVertical, Users, Check, Clock, Mail, MailCheck, MailX, RefreshCw,
+  MoreVertical, Users, Check, Mail, MailCheck, MailX, RefreshCw,
 } from 'lucide-react';
 import teamService from '../services/team.service';
 import usersService from '../services/users.service';
@@ -34,18 +34,6 @@ function isActive(status) {
   return status === 'active';
 }
 
-const INVITE_TTL_MS = 72 * 3600 * 1000; // 72 h (cf. backend teamService).
-
-// Échéance d'une invitation (created_at + 72 h). Fonctions pures module → l'horloge
-// est lue hors du rendu React (react-hooks/purity).
-function inviteExpiry(createdAt) {
-  if (!createdAt) return null;
-  const ms = new Date(createdAt).getTime() + INVITE_TTL_MS - Date.now();
-  if (ms <= 0) return { expired: true };
-  const h = Math.floor(ms / 3600000);
-  const m = Math.floor((ms % 3600000) / 60000);
-  return { expired: false, urgent: ms < 2 * 3600000, label: h >= 1 ? `${h}h ${m}min` : `${m}min` };
-}
 
 /**
  * KPIs d'équipe.
@@ -783,13 +771,20 @@ export default function TeamPage() {
     },
     {
       id: 'lastActivity', header: t('team.columns.lastActivity'), enableSorting: false,
+      // Faute de `last_active_at`, cette cellule affichait « Invitation
+      // expirée » — un verdict DÉDUIT de `created_at + 72 h`, jamais lu. Le
+      // membre de la capture avait rejoint 46 jours plus tôt : il portait donc
+      // cette mention à vie, en rouge, dans une colonne de DATES, pendant que
+      // la section « Invitations en attente » juste en dessous — alimentée par
+      // la vraie table — annonçait qu'il n'y en avait aucune. La colonne dit
+      // maintenant ce qu'elle sait : une date, ou jamais.
       cell: ({ row }) => {
-        const m = row.original;
-        if (m.last_active_at) return <span className="team-muted-cell">{dateTimeShort(m.last_active_at)}</span>;
-        const exp = inviteExpiry(m.created_at);
-        if (!exp) return <span className="team-muted-cell">—</span>;
-        if (exp.expired) return <span className="team-invite-exp expired"><Clock size={12} /> {t('team.invite.expired', 'Invitation expirée')}</span>;
-        return <span className={`team-invite-exp ${exp.urgent ? 'urgent' : ''}`}><Clock size={12} /> {t('team.invite.expiresIn', { time: exp.label, defaultValue: 'Expire dans {{time}}' })}</span>;
+        const at = row.original.last_active_at;
+        return (
+          <span className="team-muted-cell">
+            {at ? dateTimeShort(at) : t('team.neverConnectedShort')}
+          </span>
+        );
       },
     },
     {

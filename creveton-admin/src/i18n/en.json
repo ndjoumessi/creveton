@@ -1632,11 +1632,6 @@
   "team": {
     "title": "Administration team",
     "subtitle": "Manage your team's access and roles",
-    "invite": {
-      "button": "Invite a member",
-      "expired": "Invitation expired",
-      "expiresIn": "Expires in {{time}}"
-    },
     "stats": {
       "total": "Total members",
       "superAdmins": "Super Admins",
@@ -1781,6 +1776,10 @@
       "status_pending": "Pending",
       "status_accepted": "Accepted",
       "status_expired": "Expired"
+    },
+    "neverConnectedShort": "Never",
+    "invite": {
+      "button": "Invite a member"
     }
   },
   "roles": {
