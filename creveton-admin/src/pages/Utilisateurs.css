@@ -248,9 +248,14 @@
 .u-xp-current { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--gold); font-variant-numeric: tabular-nums; }
 .u-xp-max { font-family: var(--font-body); font-size: 13px; color: var(--fg-faint); }
 .u-xp-bar { height: 12px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
-.u-xp-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2a8a4f, #d4a017); transition: width 600ms ease; }
+/* Même arbitrage que `.progress > span` (index.css) : le remplissage porte un
+   dégradé à 90°, que `scaleX` comprimerait au lieu de le révéler. On retire
+   l'animation plutôt que d'animer une propriété de mise en page. */
+.u-xp-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2a8a4f, #d4a017); }
 .u-xp-hint { margin-top: 8px; font-size: 13px; color: var(--muted); }
-.u-next-reward { background: var(--cream); border-left: 3px solid var(--gold); border-radius: 10px; padding: 11px 14px; font-size: 13.5px; color: var(--muted); }
+/* Bordure complète 1px plutôt qu'un liseré gauche or : ce bloc est une carte
+   « prochaine récompense », pas une citation — le motif signalé s'applique. */
+.u-next-reward { background: var(--cream); border: 1px solid var(--cream-border); border-radius: 10px; padding: 11px 14px; font-size: 13.5px; color: var(--muted); }
 
 .u-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .u-stat { background: var(--surface-2, #f8faf8); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
@@ -262,12 +267,16 @@
 .u-theme-row { display: grid; grid-template-columns: 130px 1fr 42px; align-items: center; gap: 10px; }
 .u-theme-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .u-theme-track { height: 4px; border-radius: 999px; background: var(--bg-mute); overflow: hidden; }
-.u-theme-fill { display: block; height: 100%; border-radius: 999px; transition: width 800ms ease; }
+.u-theme-fill { display: block; height: 100%; width: 100%; border-radius: 999px; transform-origin: left; transition: transform 800ms ease; }
 .u-theme-pct { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #0b2e1a; text-align: right; }
 
 /* Onglet Historique */
 .u-hist-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
-.u-hist-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid #ccc; border-radius: 12px; padding: 12px 14px; }
+/* Liseré gauche par thème retiré : la carte NOMME déjà son thème en toutes
+   lettres, icône comprise (« 📚 Culture · Débutant »). La barre colorée ne
+   doublait donc rien — elle encodait une seconde fois une information déjà
+   écrite, avec un #ccc hors charte en défaut. */
+.u-hist-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
 /* Fill thème progression (bg = fg thème, largeur = inline %). */
 .u-theme-fill--culture    { background: var(--pastel-violet-fg); }
 .u-theme-fill--geographie { background: var(--pastel-blue-fg); }

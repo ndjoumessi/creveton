@@ -178,7 +178,10 @@
   display: block;
   height: 100%;
   border-radius: 999px;
-  transition: width var(--t-modal, 220ms);
+  width: 100%;
+  transform-origin: left;
+  /* `scaleX` : remplissage à couleur unie (ratioColor), rien à déformer. */
+  transition: transform var(--t-modal, 220ms);
 }
 .ses-xp {
   display: inline-flex;

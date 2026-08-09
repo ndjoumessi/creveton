@@ -797,7 +797,7 @@ export default function Dashboard() {
                       <span className="dash-pool-bar">
                         <span
                           className="dash-pool-fill"
-                          style={{ width: `${Math.round((p.count / poolMax) * 100)}%`, background: (themeBadgeColors[p.theme] && themeBadgeColors[p.theme].fg) || '#2a8a4f' }}
+                          style={{ transform: `scaleX(${Math.min(1, p.count / poolMax)})`, background: (themeBadgeColors[p.theme] && themeBadgeColors[p.theme].fg) || '#2a8a4f' }}
                         />
                       </span>
                     )}

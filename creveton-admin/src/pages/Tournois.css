@@ -115,7 +115,8 @@
 .tour-players-pct { margin-left: auto; font-size: 12px; color: var(--green700); }
 /* Piste toujours visible (même à 0 %) : bordure interne + fond plus contrasté. */
 .tour-players-bar { height: 8px; background: rgba(42, 138, 79, 0.10); border: 1px solid var(--border-green, #d6e6db); border-radius: var(--radius-pill); overflow: hidden; margin-top: 6px; }
-.tour-players-bar > span { display: block; height: 100%; min-width: 0; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; transition: width var(--t-modal); }
+/* Pas de transition : dégradé à 90° (cf. `.progress > span`, index.css). */
+.tour-players-bar > span { display: block; height: 100%; min-width: 0; background: linear-gradient(90deg, var(--green500), var(--green300)); border-radius: 999px; }
 
 .tour-card-rewards { font-size: 13.5px; font-weight: 600; color: var(--green700); }
 .tour-card-date { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }

@@ -132,7 +132,7 @@ function SuccessBar({ rate }) {
   return (
     <span className="q-rate">
       <span className="q-rate-track">
-        <span className={`q-rate-fill ${tone}`} style={{ width: `${Math.round(v * 100)}%` }} />
+        <span className={`q-rate-fill ${tone}`} style={{ transform: `scaleX(${Math.max(0, Math.min(1, v))})` }} />
       </span>
       <span className="q-rate-val">{pct(rate, 0)}</span>
     </span>
@@ -1102,7 +1102,7 @@ function StatsPane({ question }) {
           <div className="q-dist-row" key={d.index}>
             <span className="q-dist-letter">{LETTERS[d.index]}</span>
             <span className="q-dist-bar-wrap">
-              <span className={`q-dist-bar ${d.is_correct ? 'correct' : d.index === data.main_distractor_index ? 'distractor' : ''}`} style={{ width: `${Math.max(2, d.pct)}%` }} />
+              <span className={`q-dist-bar ${d.is_correct ? 'correct' : d.index === data.main_distractor_index ? 'distractor' : ''}`} style={{ transform: `scaleX(${Math.max(2, d.pct) / 100})` }} />
             </span>
             <span className="q-dist-pct">{d.pct}%</span>
             {d.is_correct && <span className="q-dist-tag ok">{t('questions.misc.correctAnswerTag')}</span>}

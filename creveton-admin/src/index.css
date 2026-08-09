@@ -499,7 +499,13 @@ table.data tbody tr:last-child td { border-bottom: none; }
 
 /* Barre de progression / XP */
 .progress { height: 8px; border-radius: var(--radius-pill); background: #e8efe9; overflow: hidden; }
-.progress > span { display: block; height: 100%; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--green500), var(--green300)); transition: width var(--t-modal); }
+/* Pas de transition ici, et c'est un arbitrage : le remplissage porte un
+   DÉGRADÉ à 90°. Le remède habituel — `transform: scaleX` — le comprimerait au
+   lieu de le révéler, si bien que la teinte à un taux donné changerait avec le
+   taux. Restait à animer `width` (propriété de mise en page) ou à ne pas
+   animer. La croissance n'était que décorative sur une jauge de données
+   statiques : on la retire. */
+.progress > span { display: block; height: 100%; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--green500), var(--green300)); }
 .progress.xp > span { background: linear-gradient(90deg, var(--green500), var(--gold)); }
 .progress-mini { height: 5px; width: 40px; }
 
@@ -520,7 +526,11 @@ table.data tbody tr:last-child td { border-bottom: none; }
 /* Explication (cream + bordure or) */
 /* Couleur clair volontairement littérale (pas --cream-fg) : le mode nuit est
    déjà pris en charge par [data-theme="dark"] .explain (Questions.css). */
-.explain { background: var(--cream); border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; padding: 12px 14px; font-size: 13.5px; color: #6b5b2a; }
+/* Liseré gauche 3px remplacé par une bordure complète 1px : le fond crème
+   suffit à détacher l'encart, et un tel liseré est le motif que le hook design
+   signale à juste titre. Le rayon redevient uniforme — il était coupé à gauche
+   (0 8px 8px 0) uniquement pour loger la barre. */
+.explain { background: var(--cream); border: 1px solid var(--cream-border); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; color: #6b5b2a; }
 
 /* Danger zone (footer fiche) */
 .danger-zone { background: #fff5f5; border: 1px solid #f7c9c4; border-radius: var(--radius); padding: 14px 16px; }
@@ -630,6 +640,22 @@ table.data tbody tr:last-child td { border-bottom: none; }
 /* Jauge semi-circulaire */
 .gauge { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .gauge-label { color: var(--muted); font-size: 12.5px; text-align: center; }
+/* Jauge — les trois couches étaient littérales et pensées pour le clair seul.
+   Ratios mesurés sur --surface-2 (le panneau « Stats globales ») ; l'arc de
+   valeur est un objet graphique, seuil 3:1. */
+.gauge-track { stroke: #e8efe9; }                                /* clair 1,12:1 — rail discret, voulu */
+.gauge-value { font-family: var(--font-display); font-weight: 800; fill: var(--ink); }
+.gauge-arc { transition: stroke-dashoffset 600ms ease, stroke 300ms; }
+.gauge-arc.low  { stroke: var(--red); }                          /* clair 3,64:1 */
+/* Ambre foncé, pas #f59e0b : celui-ci ne faisait que 2,05:1 en clair — sous le
+   seuil DEPUIS TOUJOURS, indépendamment du thème sombre. Celui-ci tient des
+   deux côtés (3,40 clair · 3,20 sombre), d'où l'absence de variante nuit. */
+.gauge-arc.mid  { stroke: #c2760a; }
+.gauge-arc.high { stroke: var(--green500); }                     /* clair 4,13:1 */
+
+[data-theme="dark"] .gauge-track { stroke: var(--border); }      /* 1,82:1 — rail, pas bandeau (était 9,76:1, l'élément le plus criard de la jauge) */
+[data-theme="dark"] .gauge-arc.low  { stroke: #ef6a5c; }         /* 3,74:1 (était 2,99, sous le seuil) */
+[data-theme="dark"] .gauge-arc.high { stroke: var(--green300); } /* 5,58:1 (était 2,64, sous le seuil) */
 
 /* Bouton retour en haut */
 .scroll-top { position: fixed; right: 22px; bottom: 22px; z-index: 40; width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--green900); color: var(--gold); display: grid; place-items: center; box-shadow: var(--shadow-lg); transition: transform var(--t-fast), background var(--t-fast); animation: bulkUp var(--t-modal); }

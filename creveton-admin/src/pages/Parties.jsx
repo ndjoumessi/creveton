@@ -252,7 +252,7 @@ export default function Parties() {
           <div className="stack" style={{ gap: 5 }}>
             <span className="ses-fraction">{num(correct)}/{num(tot)}</span>
             <span className="ses-bar" aria-hidden="true">
-              <span style={{ width: `${r * 100}%`, background: ratioColor(r) }} />
+              <span style={{ transform: `scaleX(${Math.max(0, Math.min(1, r))})`, background: ratioColor(r) }} />
             </span>
           </div>
         );

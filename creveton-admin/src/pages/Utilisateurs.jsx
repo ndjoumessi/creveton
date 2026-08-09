@@ -338,7 +338,10 @@ function ProgressionTab({ user, sessions, loading }) {
               return (
                 <div className="u-theme-row" key={tp.key}>
                   <span className="u-theme-name">{cfg.icon} {cfg.label}</span>
-                  <span className="u-theme-track"><span className={`u-theme-fill u-theme-fill--${tp.key}`} style={{ width: `${tp.rate}%` }} /></span>
+                  {/* `scaleX` plutôt que `width` : remplissage à couleur unie,
+                      donc la mise à l'échelle ne déforme rien, et l'animation
+                      sort du calcul de mise en page. */}
+                  <span className="u-theme-track"><span className={`u-theme-fill u-theme-fill--${tp.key}`} style={{ transform: `scaleX(${Math.max(0, Math.min(100, tp.rate)) / 100})` }} /></span>
                   <span className="u-theme-pct">{tp.rate}%</span>
                 </div>
               );

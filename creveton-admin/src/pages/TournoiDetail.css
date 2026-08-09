@@ -233,7 +233,8 @@
   height: 100%;
   background: linear-gradient(90deg, var(--green500), var(--green300));
   border-radius: var(--radius-pill);
-  transition: width var(--t-modal);
+  /* Pas de transition : dégradé à 90°, que `scaleX` comprimerait au lieu de le
+     révéler (cf. `.progress > span`, index.css). */
 }
 
 .td-cap-text {
