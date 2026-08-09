@@ -94,7 +94,11 @@ export default function ForgotPasswordScreen({ navigation, route }) {
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
+          // `emailAddress` et non `username` : on cherche une ADRESSE, pas à
+          // ouvrir une session. Annoncer un identifiant ferait proposer par le
+          // gestionnaire d'« enregistrer » un couple qui n'existe pas ici.
           textContentType="emailAddress"
+          autoComplete="email"
           returnKeyType="send"
           onSubmitEditing={onSubmit}
         />

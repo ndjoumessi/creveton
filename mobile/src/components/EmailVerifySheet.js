@@ -162,6 +162,7 @@ export default function EmailVerifySheet({ visible, onClose, email, onVerified }
               autoCorrect={false}
               keyboardType="email-address"
               textContentType="emailAddress"
+              autoComplete="email"
               returnKeyType="send"
               onSubmitEditing={sendCode}
             />

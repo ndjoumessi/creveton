@@ -94,6 +94,19 @@ export default function LoginScreen({ navigation }) {
           <Title size="authTitle" style={styles.title}>{t('auth.welcome')}</Title>
           <Body size="md" muted style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Body>
 
+          {/* `autoComplete` ET `textContentType` : ce ne sont pas des synonymes.
+              `textContentType` est ignoré sur Android, `autoComplete` est ignoré
+              sur iOS (RN ne s'en sert là que pour DÉDUIRE un `textContentType`
+              absent — cf. TextInput.js). N'en poser qu'un seul, comme ici
+              jusqu'à présent, laisse donc une plateforme entière sans indice :
+              le gestionnaire de mots de passe Android ne voyait aucun formulaire
+              de connexion et n'a jamais proposé d'enregistrer quoi que ce soit.
+
+              Le couple identifiant/mot de passe est annoncé en `username` +
+              `current-password` plutôt qu'en `emailAddress` : côté Apple,
+              `.emailAddress` est un champ de CARNET D'ADRESSES, seul `.username`
+              associé à un champ mot de passe déclenche l'invite « Enregistrer le
+              mot de passe ». Le clavier reste en `email-address`. */}
           <AuthField
             ref={emailRef}
             label={t('auth.email')}
@@ -102,7 +115,8 @@ export default function LoginScreen({ navigation }) {
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
-            textContentType="emailAddress"
+            textContentType="username"
+            autoComplete="username"
             returnKeyType="next"
             onSubmitEditing={() => passwordRef.current?.focus()}
             blurOnSubmit={false}
@@ -114,7 +128,9 @@ export default function LoginScreen({ navigation }) {
             onChangeText={(t) => (values.current.password = t)}
             secureTextEntry={!showPassword}
             autoCapitalize="none"
+            autoCorrect={false}
             textContentType="password"
+            autoComplete="current-password"
             returnKeyType="done"
             onSubmitEditing={onSubmit}
             rightToggle={{ active: showPassword, onToggle: () => setShowPassword((v) => !v) }}

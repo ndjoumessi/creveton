@@ -139,6 +139,7 @@ export default function ChangePasswordScreen({ navigation }) {
             autoCorrect={false}
             keyboardType="default"
             textContentType="password"
+            autoComplete="current-password"
             returnKeyType="next"
             onSubmitEditing={() => nextRef.current?.focus()}
             blurOnSubmit={false}
@@ -156,6 +157,7 @@ export default function ChangePasswordScreen({ navigation }) {
             autoCorrect={false}
             keyboardType="default"
             textContentType="newPassword"
+            autoComplete="new-password"
             returnKeyType="next"
             onSubmitEditing={() => confirmRef.current?.focus()}
             blurOnSubmit={false}
@@ -173,6 +175,7 @@ export default function ChangePasswordScreen({ navigation }) {
             autoCorrect={false}
             keyboardType="default"
             textContentType="newPassword"
+            autoComplete="new-password"
             returnKeyType="done"
             onSubmitEditing={onSubmit}
             accessibilityLabel={t('changePassword.confirm')}

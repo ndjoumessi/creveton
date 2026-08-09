@@ -50,6 +50,12 @@ export default function ResetPasswordScreen({ navigation, route }) {
   const [errors, setErrors] = useState({ code: null, password: null, confirm: null });
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
+  // Cet écran était le SEUL des quatre à saisie de mot de passe sans œil
+  // afficher/masquer (Login, Register et ChangePassword l'avaient déjà). C'est
+  // pourtant celui où il manque le plus : on y tape un mot de passe qu'on vient
+  // d'inventer, deux fois, sans jamais pouvoir vérifier ce qu'on a frappé.
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const onSubmit = async () => {
     const password = values.current.password;
@@ -165,23 +171,27 @@ export default function ResetPasswordScreen({ navigation, route }) {
             defaultValue=""
             onChangeText={(v) => (values.current.password = v)}
             error={errors.password}
-            secureTextEntry
+            secureTextEntry={!showPassword}
             autoCapitalize="none"
             autoCorrect={false}
             textContentType="newPassword"
+            autoComplete="new-password"
             returnKeyType="next"
+            rightToggle={{ active: showPassword, onToggle: () => setShowPassword((v) => !v) }}
           />
           <AuthField
             label={t('auth.reset.confirmPassword')}
             defaultValue=""
             onChangeText={(v) => (values.current.confirm = v)}
             error={errors.confirm}
-            secureTextEntry
+            secureTextEntry={!showConfirm}
             autoCapitalize="none"
             autoCorrect={false}
             textContentType="newPassword"
+            autoComplete="new-password"
             returnKeyType="done"
             onSubmitEditing={onSubmit}
+            rightToggle={{ active: showConfirm, onToggle: () => setShowConfirm((v) => !v) }}
           />
         </View>
 

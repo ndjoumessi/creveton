@@ -240,6 +240,7 @@ export default function RegisterScreen({ navigation }) {
                 error={errors.name}
                 autoCapitalize="words"
                 textContentType="name"
+                autoComplete="name"
               />
               <Label color={colors.textBody} style={styles.fieldLabel}>{t('auth.register.phone')}</Label>
               <View style={styles.phoneRow}>
@@ -279,8 +280,14 @@ export default function RegisterScreen({ navigation }) {
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
-                textContentType="emailAddress"
+                textContentType="username"
+                autoComplete="username"
               />
+              {/* `new-password` (et non `password`) sur les deux champs : c'est
+                  lui qui déclenche la proposition de mot de passe fort et, sur
+                  Android, l'enregistrement du couple à la création du compte —
+                  l'écran de connexion ne peut proposer de RETENIR que ce qui a
+                  été enregistré ICI. */}
               <AuthField
                 label={t('auth.register.password')}
                 defaultValue={values.current.password}
@@ -288,6 +295,9 @@ export default function RegisterScreen({ navigation }) {
                 error={errors.password}
                 secureTextEntry={!showPwd}
                 autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="newPassword"
+                autoComplete="new-password"
                 rightToggle={{ active: showPwd, onToggle: () => setShowPwd((v) => !v) }}
               />
               <AuthField
@@ -297,6 +307,9 @@ export default function RegisterScreen({ navigation }) {
                 error={errors.confirm}
                 secureTextEntry={!showConfirm}
                 autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="newPassword"
+                autoComplete="new-password"
                 rightToggle={{ active: showConfirm, onToggle: () => setShowConfirm((v) => !v) }}
               />
             </>
