@@ -24,8 +24,7 @@ import leaderboardService from '../services/leaderboard.service';
 import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
 import { parseISO, format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { num, dateFr, tournamentStart } from '../utils/format';
+import { num, dateShort, dateTimeShort, dateFnsLocale, tournamentStart } from '../utils/format';
 import { chartTheme } from '../utils/chartTheme';
 import useThemeStore from '../store/themeStore';
 import { themeLabels, themeBadgeColors, levelLabels } from '../constants/theme';
@@ -56,7 +55,7 @@ function relativeFr(iso) {
   if (h < 24) return i18n.t('common.agoHours', { n: h });
   const d = Math.floor(h / 24);
   if (d < 7) return i18n.t('common.agoDays', { n: d });
-  return dateFr(iso);
+  return dateShort(iso);
 }
 
 /** Durée lisible à partir d'un nombre de secondes : « 2 j 14 h », « 3 h 12 min ». */
@@ -75,7 +74,7 @@ function uptimeFr(seconds) {
 /** Date ISO (AAAA-MM-JJ) → libellé court « 21 juin » pour l'axe / tooltip. */
 function dayLabel(iso) {
   if (!iso) return '';
-  return dateFr(iso, 'dd MMM');
+  return dateShort(iso, 'dd MMM');
 }
 
 /** Mesure RÉELLE de la latence du fetch /health (Date.now hors rendu). */
@@ -103,14 +102,14 @@ function aggregateSeries(daily, granularity) {
     let key; let label;
     if (granularity === 'month') {
       key = `${date.getFullYear()}-${date.getMonth()}`;
-      label = format(date, 'MMM yyyy', { locale: fr });
+      label = format(date, 'MMM yyyy', { locale: dateFnsLocale() });
     } else {
       // Semaine : ancre sur le lundi du bucket.
       const day = (date.getDay() + 6) % 7;
       const monday = new Date(date);
       monday.setDate(date.getDate() - day);
       key = format(monday, 'yyyy-MM-dd');
-      label = format(monday, 'dd MMM', { locale: fr });
+      label = format(monday, 'dd MMM', { locale: dateFnsLocale() });
     }
     const cur = buckets.get(key) || { label, inscriptions: 0, parties: 0 };
     cur.inscriptions += Number(d.signups) || 0;
@@ -839,7 +838,7 @@ export default function Dashboard() {
                     <div className="dash-tour-main">
                       <button type="button" className="dash-tour-name" onClick={() => navigate(`/tournaments/${tour.id}`)}>{tour.name}</button>
                       <div className="dash-tour-meta">
-                        {cdLabel ? <span className={`dash-tour-cd dash-cd--${si.tone}`}><Icon icon={Clock} size={16} /> {cdLabel}</span> : <span>{dateFr(tour.starts_at, "dd MMM 'à' HH'h'mm")}</span>}
+                        {cdLabel ? <span className={`dash-tour-cd dash-cd--${si.tone}`}><Icon icon={Clock} size={16} /> {cdLabel}</span> : <span>{dateTimeShort(tour.starts_at)}</span>}
                         <span className="dash-tour-players">{num(tour.registered_players)}{tour.max_players ? ` / ${num(tour.max_players)}` : ''} {t('dashboard.misc.players')}</span>
                       </div>
                     </div>

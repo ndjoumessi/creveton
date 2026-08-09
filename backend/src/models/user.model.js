@@ -193,6 +193,24 @@ async function clearAvatar(id) {
  * Regroupé sur `lower(ville)` pour que « Douala » et « douala » ne fassent
  * qu'une entrée ; on renvoie la graphie la plus fréquente comme libellé.
  */
+/**
+ * Clé de regroupement d'une ville : minuscules, bords rognés, ET SANS ACCENTS.
+ *
+ * `lower()` seul ne réglait que la casse. Or « Yaounde » et « Yaoundé » sont la
+ * même ville, et le clavier d'un téléphone n'invite pas à composer les accents :
+ * la console les affichait comme deux entrées distinctes dans sa liste
+ * déroulante, chacune avec son effectif partiel.
+ *
+ * `translate()` plutôt qu'un rapprochement approximatif (trigrammes, distance
+ * d'édition) : le repli d'accent est DÉTERMINISTE et réversible à la lecture.
+ * Une similarité floue finirait par fusionner deux villes réellement distinctes
+ * — et une fusion silencieuse est plus difficile à repérer qu'un doublon.
+ * « Doula » restera donc une entrée à part : c'est une faute de frappe, pas une
+ * variante orthographique, et la corriger relève de l'humain.
+ */
+const CITY_KEY = (expr) =>
+  `translate(lower(btrim(${expr})), 'àáâãäçèéêëìíîïñòóôõöùúûüýÿ', 'aaaaaceeeeiiiinooooouuuuyy')`;
+
 async function distinctCities() {
   const { rows } = await db.query(
     `SELECT (array_agg(ville ORDER BY n DESC, ville ASC))[1] AS ville,
@@ -203,7 +221,7 @@ async function distinctCities() {
           WHERE ville IS NOT NULL AND btrim(ville) <> '' AND deleted_at IS NULL
           GROUP BY ville
        ) t
-      GROUP BY lower(btrim(ville))
+      GROUP BY ${CITY_KEY('ville')}
       ORDER BY sum(n) DESC, 1 ASC`
   );
   return rows;
@@ -214,12 +232,14 @@ async function listAdmin({ ville = null, level = null, role = null, status = nul
   const params = [];
   const clauses = ['deleted_at IS NULL'];
   if (ville) {
-    // `lower(...)` des deux côtés : la ville est du texte LIBRE (saisie à
-    // l'inscription hors liste, et éditable au profil). Une comparaison stricte
-    // faisait manquer « douala » à un filtre sur « Douala » — l'utilisateur
-    // existait, il n'apparaissait simplement jamais.
+    // Même clé des deux côtés que `distinctCities` : la ville est du texte
+    // LIBRE (saisie hors liste à l'inscription, éditable au profil). Une
+    // comparaison stricte faisait manquer « douala » à un filtre sur
+    // « Douala » — l'utilisateur existait, il n'apparaissait jamais. Et sans le
+    // repli d'accent, la liste déroulante proposait « Yaoundé » alors que le
+    // compte était enregistré « Yaounde ».
     params.push(ville);
-    clauses.push(`lower(ville) = lower($${params.length})`);
+    clauses.push(`${CITY_KEY('ville')} = ${CITY_KEY(`$${params.length}`)}`);
   }
   if (level) {
     params.push(level);

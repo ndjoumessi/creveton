@@ -13,7 +13,7 @@ import {
   MODULES, ACTIONS, isApplicable, ROLE_META,
   DEFAULT_ROLE_PERMISSIONS, accessibleModules,
 } from '../constants/permissions';
-import { dateFr, dateTimeFr } from '../utils/format';
+import { dateShort, dateTimeShort } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import Drawer from '../components/Drawer';
 import Modal from '../components/Modal';
@@ -228,7 +228,7 @@ function ProfilTab({ member }) {
         <dd><RoleBadge role={member.role} />{roleDesc && <span className="team-role-desc">{roleDesc}</span>}</dd>
       </div>
       <div><dt>{t('team.drawer.invitedBy')}</dt><dd>{member.invited_by || '—'}</dd></div>
-      <div><dt>{t('team.columns.joinedAt')}</dt><dd>{dateFr(member.created_at)}</dd></div>
+      <div><dt>{t('team.columns.joinedAt')}</dt><dd>{dateShort(member.created_at)}</dd></div>
     </dl>
   );
 }
@@ -256,7 +256,7 @@ function ActiviteTab({ memberId }) {
                 <strong>{t(`team.events.${e.event}`, e.event)}</strong>
                 {e.question_text && <span className="team-timeline-q"> « {e.question_text} »</span>}
               </div>
-              <div className="team-timeline-when">{dateTimeFr(e.created_at)}</div>
+              <div className="team-timeline-when">{dateTimeShort(e.created_at)}</div>
             </div>
             {e.reason && <div className="team-timeline-reason">{e.reason}</div>}
           </div>
@@ -637,7 +637,7 @@ function PendingInvitations({ invitations, loading, canManage, onResend, resendi
     },
     {
       accessorKey: 'expires_at', header: t('team.invitations.expires'), enableSorting: false,
-      cell: (c) => <span className="team-muted-cell">{dateTimeFr(c.getValue())}</span>,
+      cell: (c) => <span className="team-muted-cell">{dateTimeShort(c.getValue())}</span>,
     },
     {
       id: 'actions', header: t('team.columns.actions'), enableSorting: false,
@@ -785,7 +785,7 @@ export default function TeamPage() {
       id: 'lastActivity', header: t('team.columns.lastActivity'), enableSorting: false,
       cell: ({ row }) => {
         const m = row.original;
-        if (m.last_active_at) return <span className="team-muted-cell">{dateTimeFr(m.last_active_at)}</span>;
+        if (m.last_active_at) return <span className="team-muted-cell">{dateTimeShort(m.last_active_at)}</span>;
         const exp = inviteExpiry(m.created_at);
         if (!exp) return <span className="team-muted-cell">—</span>;
         if (exp.expired) return <span className="team-invite-exp expired"><Clock size={12} /> {t('team.invite.expired', 'Invitation expirée')}</span>;
@@ -794,7 +794,7 @@ export default function TeamPage() {
     },
     {
       accessorKey: 'created_at', header: t('team.columns.joinedAt'), enableSorting: false,
-      cell: (c) => <span className="team-muted-cell">{dateFr(c.getValue())}</span>,
+      cell: (c) => <span className="team-muted-cell">{dateShort(c.getValue())}</span>,
     },
     {
       id: 'actions', header: t('team.columns.actions'), enableSorting: false,

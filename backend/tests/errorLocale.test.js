@@ -176,3 +176,37 @@ t('une route authentifiée est traduite comme les autres', async () => {
   expect(res.status).toBe(403);
   expect(res.body.error.message).toBe('Insufficient role.');
 });
+
+// ── details[] : de la donnée, pas une phrase à moitié traduite ─────────────
+
+t('details[] porte la contrainte, sans langue ni valeur soumise', async () => {
+  const res = await request(app)
+    .post('/api/v1/auth/register')
+    .set('Accept-Language', 'en')
+    .send({ name: 'A', email: 'x@y.cm', password: 'court' });
+
+  expect(res.status).toBe(400);
+  const details = res.body.error.details;
+  expect(Array.isArray(details)).toBe(true);
+  expect(details.length).toBeGreaterThan(0);
+
+  for (const d of details) {
+    expect(typeof d.field).toBe('string');
+    expect(typeof d.issue).toBe('string'); // ex. 'string.min', 'any.required'
+    // Plus de phrase : elle était anglaise pour les règles natives de Joi et
+    // française pour celles que nos validateurs surchargent. L'humain lit
+    // `error.message`, qui est traduit.
+    expect(d.expected).toBeUndefined();
+  }
+
+  // La contrainte est exploitable par une machine : une BORNE, pas un texte.
+  const tropCourt = details.find((d) => d.field === 'password' && d.issue === 'string.min');
+  expect(tropCourt.constraint.limit).toBe(8);
+
+  // ⚠️ Et l'entrée refusée ne fuit nulle part. Écarter `context.value` ne
+  // suffisait pas : `invalids` la renvoyait aussi — sur un champ `password`,
+  // elle serait partie dans la réponse HTTP puis dans les journaux.
+  const brut = JSON.stringify(details);
+  expect(brut).not.toContain('court');
+  expect(brut).not.toContain('x@y.cm');
+});

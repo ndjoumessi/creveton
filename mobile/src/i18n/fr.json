@@ -477,15 +477,23 @@
     },
     "badges": {
       "title": "Mes badges",
-      "locked": "Joue {{n}} parties pour débloquer",
       "first": "Première partie",
-      "regular": "Habitué",
-      "expert": "Cerveau",
+      "regular": "En série",
+      "expert": "Précision",
       "champion": "Champion",
-      "lockedByLevel": "Atteins le niveau {{min}} pour débloquer",
-      "levelProgress": "Niveau {{current}}/{{req}}",
-      "condition": "Atteins le niveau {{min}} pour débloquer.",
-      "unlocked": "Badge débloqué : {{name}} !"
+      "condition": {
+        "games": "Jouer au moins {{req}} partie.",
+        "streak": "Enchaîner {{req}} bonnes réponses dans une même partie.",
+        "rate": "Atteindre {{req}} % de réussite (sur au moins 5 parties).",
+        "level": "Atteindre le niveau {{req}}."
+      },
+      "unlocked": "Badge débloqué : {{name}} !",
+      "progress": {
+        "games": "{{current}}/{{req}} partie",
+        "streak": "{{current}}/{{req}} d’affilée",
+        "rate": "{{current}} %/{{req}} %",
+        "level": "Niveau {{current}}/{{req}}"
+      }
     },
     "sections": {
       "account": "MON COMPTE",

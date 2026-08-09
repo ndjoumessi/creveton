@@ -12,7 +12,7 @@ import tournamentsService from '../services/tournaments.service';
 import { useApiData } from '../hooks/useApiData';
 import { THEME_KEYS } from '../constants/enums';
 import { themeBadgeColors, themeLabels, tournamentStatusColors } from '../constants/theme';
-import { num, fcfa, dateFr, tournamentStart } from '../utils/format';
+import { num, fcfa, dateShort, dateTimeShort, tournamentStart } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
 import DataTable from '../components/DataTable';
@@ -150,7 +150,7 @@ function TournamentCard({ t: tour, onOpen, onStart, onCancel, preview }) {
         </div>
 
         <div className="tour-card-date">
-          <Calendar size={14} /> {tour.starts_at ? dateFr(tour.starts_at, "dd MMM yyyy 'à' HH'h'mm") : t('tournaments.card.dateTbd')}
+          <Calendar size={14} /> {tour.starts_at ? dateTimeShort(tour.starts_at) : t('tournaments.card.dateTbd')}
           {overdue
             ? <span className="tour-card-cd tour-cd--red"><Clock size={13} /> {t('tournaments.card.overdue')}</span>
             : cd && <span className={`tour-card-cd tour-cd--${cd.tone}`}><Clock size={13} /> {cd.label}</span>}
@@ -345,7 +345,7 @@ function CreateModal({ open, onClose, onCreate, submitting }) {
               <div className="tcm-sum-row"><span className="tcm-sum-ico"><Palette size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.theme')}</span><span className="tcm-sum-v">{(themeBadgeColors[d.theme] && themeBadgeColors[d.theme].icon) || ''} {t(`questions.themes.${d.theme}`, themeLabels[d.theme])}</span></div>
               <div className="tcm-sum-row"><span className="tcm-sum-ico"><Users size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.maxPlayersShort')}</span><span className="tcm-sum-v">{d.max_players}</span></div>
               <div className="tcm-sum-row"><span className="tcm-sum-ico"><Hash size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.formatLabel')}</span><span className="tcm-sum-v">{t('tournaments.modal.formatValue', { q: d.questions, s: d.time_per_q_s })}</span></div>
-              <div className="tcm-sum-row"><span className="tcm-sum-ico"><Calendar size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.startLabel')}</span><span className="tcm-sum-v">{startsAt ? dateFr(startsAt, "dd MMM yyyy 'à' HH'h'mm") : '—'}</span></div>
+              <div className="tcm-sum-row"><span className="tcm-sum-ico"><Calendar size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.startLabel')}</span><span className="tcm-sum-v">{startsAt ? dateTimeShort(startsAt) : '—'}</span></div>
               {isPaid && <div className="tcm-sum-row"><span className="tcm-sum-ico"><Wallet size={14} /></span><span className="tcm-sum-k">{t('tournaments.modal.entryFee')}</span><span className="tcm-sum-v">{fcfa(d.entry_fee)}</span></div>}
               <div className="banner banner-locked" style={{ marginTop: 16, marginBottom: 0 }}><Lock size={15} /> {t('tournaments.modal.lockedBannerPre')} <strong>{t('tournaments.modal.lockedBannerFree')}</strong> {t('tournaments.modal.lockedBannerPost')}</div>
               {!canCreate && <div className="field-error" style={{ marginTop: 10 }}>{t('tournaments.modal.completeRequired')}</div>}
@@ -486,7 +486,7 @@ export default function Tournois() {
     },
     {
       accessorKey: 'starts_at', header: t('tournaments.table.date'), enableSorting: false,
-      cell: (c) => <span className="muted">{c.getValue() ? dateFr(c.getValue()) : '—'}</span>,
+      cell: (c) => <span className="muted">{c.getValue() ? dateShort(c.getValue()) : '—'}</span>,
     },
     {
       id: 'actions', header: t('tournaments.table.actions'), enableSorting: false,

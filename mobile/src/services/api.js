@@ -129,11 +129,10 @@ export function parseApiError(error) {
     return {
       status,
       code: err.code || 'UNKNOWN',
-      // Repli quand le serveur ne fournit pas de message. NB : les messages
-      // que le serveur FOURNIT, eux, sont en français quelle que soit la langue
-      // du client — le catalogue `backend/src/utils/errorCodes.js` est
-      // monolingue. Chantier serveur distinct (l'API devrait lire
-      // Accept-Language) ; ici on ne peut que localiser ce qui nous appartient.
+      // Repli quand le serveur ne fournit pas de message. Ceux qu'il FOURNIT
+      // sont désormais localisés : le catalogue `backend/src/utils/errorCodes.js`
+      // est bilingue et le serveur résout la langue depuis l'`Accept-Language`
+      // que ce client envoie (cf. intercepteur plus haut).
       message: err.message || i18n.t('common.error'),
       details: err.details || [],
       requestId: err.request_id,

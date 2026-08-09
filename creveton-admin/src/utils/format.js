@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr, enUS } from 'date-fns/locale';
 import i18n from '../i18n';
 
 /**
@@ -10,7 +10,18 @@ import i18n from '../i18n';
  * française au lieu de « 70,565 », et « 36,7 % » avec une virgule décimale.
  * Le lecteur anglophone lit alors 36 virgule 7 comme trente-six mille sept.
  */
-const localeTag = () => ((i18n.language || 'fr').startsWith('en') ? 'en-US' : 'fr-FR');
+const isEn = () => (i18n.language || 'fr').startsWith('en');
+const localeTag = () => (isEn() ? 'en-US' : 'fr-FR');
+
+/**
+ * Locale date-fns de la langue active.
+ *
+ * Exportée parce que certains écrans formatent des libellés d'axe directement
+ * avec `format()` (agrégation par semaine / mois du graphe d'activité) : sans
+ * elle, ils recodaient `{ locale: fr }` et rendaient « août 2026 » dans une
+ * console anglaise.
+ */
+export const dateFnsLocale = () => (isEn() ? enUS : fr);
 
 /** Montant FCFA (XAF) sans décimales : "4 280 000 FCFA" / "4,280,000 FCFA". */
 export function fcfa(n) {
@@ -57,19 +68,36 @@ function toZoned(date, tz) {
   }
 }
 
-/** Date courte FR : "21 juin 2026" — dans le fuseau de l'admin si défini. */
-export function dateFr(iso, pattern = 'dd MMM yyyy') {
+/**
+ * Date courte dans la langue active : « 21 juin 2026 » / « 21 Jun 2026 ».
+ * Respecte le fuseau de l'admin s'il est défini.
+ *
+ * S'appelait `dateFr` et figeait `{ locale: fr }`. La console bascule pourtant
+ * FR/EN : en anglais, toutes les dates de toutes les pages rendaient des mois
+ * français. Le nom disait la langue ; il dit désormais la FORME — c'est ce qui
+ * empêche de re-figer une locale dedans.
+ */
+export function dateShort(iso, pattern = 'dd MMM yyyy') {
   if (!iso) return '—';
   try {
     let d = typeof iso === 'string' ? parseISO(iso) : iso;
     if (activeTimeZone) d = toZoned(d, activeTimeZone);
-    return format(d, pattern, { locale: fr });
+    return format(d, pattern, { locale: dateFnsLocale() });
   } catch {
     return '—';
   }
 }
 
-export const dateTimeFr = (iso) => dateFr(iso, "dd MMM yyyy 'à' HH'h'mm");
+/**
+ * Date + heure. Le GABARIT lui-même change de langue : « 21 juin 2026 à 14h05 »
+ * contre « 21 Jun 2026 at 14:05 ». Traduire les mois sans traduire le « à » ni
+ * le séparateur horaire n'aurait fait qu'une phrase à moitié française.
+ */
+export const dateTimeShort = (iso) =>
+  dateShort(iso, isEn() ? "dd MMM yyyy 'at' HH:mm" : "dd MMM yyyy 'à' HH'h'mm");
+
+/** Heure seule, même raison : « 14h05 » / « 14:05 ». */
+export const timeShort = (iso) => dateShort(iso, isEn() ? 'HH:mm' : "HH'h'mm");
 
 /**
  * Date longue LOCALISÉE selon la langue active ('fr'|'en') :
@@ -105,7 +133,7 @@ export function tournamentStart(iso) {
   let tone = 'green';
   if (dayDiff === 0) tone = 'red';
   else if (dayDiff <= 7) tone = 'gold';
-  return { past: false, dayDiff, time: dateFr(iso, "HH'h'mm"), tone };
+  return { past: false, dayDiff, time: timeShort(iso), tone };
 }
 
 /** Date courante ramenée au fuseau de l'admin (champs locaux = heure murale du fuseau). */
@@ -116,7 +144,9 @@ function zonedNow() {
 
 /** Clé calendaire 'yyyy-MM-dd' d'un instant, dans le fuseau de l'admin. null si vide. */
 export function dayKey(iso) {
-  return iso ? dateFr(iso, 'yyyy-MM-dd') : null;
+  // Clé calendaire : gabarit NUMÉRIQUE, donc volontairement insensible à la
+  // langue — c'est un identifiant d'agrégation, pas un libellé.
+  return iso ? dateShort(iso, 'yyyy-MM-dd') : null;
 }
 
 /**
@@ -129,7 +159,7 @@ export function lastDays(n) {
   const out = [];
   for (let i = n - 1; i >= 0; i -= 1) {
     const d = new Date(t.getFullYear(), t.getMonth(), t.getDate() - i);
-    out.push({ key: format(d, 'yyyy-MM-dd'), label: format(d, 'd MMMM', { locale: fr }) });
+    out.push({ key: format(d, 'yyyy-MM-dd'), label: format(d, 'd MMMM', { locale: dateFnsLocale() }) });
   }
   return out;
 }

@@ -11,7 +11,7 @@ import tournamentsService from '../services/tournaments.service';
 import { list as searchUsers } from '../services/users.service';
 import { useApiData } from '../hooks/useApiData';
 import { themeBadgeColors, themeLabels, tournamentStatusColors } from '../constants/theme';
-import { num, fcfa, dateFr, pct } from '../utils/format';
+import { num, fcfa, dateShort, dateTimeShort, pct } from '../utils/format';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
@@ -204,8 +204,8 @@ export default function TournoiDetail() {
             {tour.starts_at && (
               <p className="td-hero-sub">
                 <Calendar size={13} />
-                {dateFr(tour.starts_at, "dd MMM yyyy 'à' HH'h'mm")}
-                {tour.ends_at && ` · fin ${dateFr(tour.ends_at, 'dd MMM yyyy')}`}
+                {dateTimeShort(tour.starts_at)}
+                {tour.ends_at && ` · fin ${dateShort(tour.ends_at, 'dd MMM yyyy')}`}
               </p>
             )}
           </div>
@@ -308,7 +308,7 @@ export default function TournoiDetail() {
               <span className="td-field-label">{t('tournaments.modal.startLabel')}</span>
               <span className="td-field-value">
                 <Calendar size={13} />
-                {' '}{tour.starts_at ? dateFr(tour.starts_at, "dd MMM yyyy 'à' HH'h'mm") : '—'}
+                {' '}{tour.starts_at ? dateTimeShort(tour.starts_at) : '—'}
               </span>
             </div>
 
@@ -319,7 +319,7 @@ export default function TournoiDetail() {
             <div className="td-field">
               <span className="td-field-label">{t('tournaments.detail.end')}</span>
               <span className="td-field-value">
-                {tour.ends_at ? dateFr(tour.ends_at, "dd MMM yyyy 'à' HH'h'mm") : '—'}
+                {tour.ends_at ? dateTimeShort(tour.ends_at) : '—'}
               </span>
             </div>
 

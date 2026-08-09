@@ -1838,10 +1838,6 @@
   "support": {
     "title": "Player support",
     "subtitle": "Manage reports and assistance requests",
-    "console": {
-      "title": "Quick access",
-      "open": "Open the Console →"
-    },
     "export": "Export",
     "markAllRead": "Mark all as read",
     "kpi": {
@@ -1921,7 +1917,11 @@
     },
     "empty": {
       "title": "No tickets",
-      "message": "No tickets in this category."
+      "message": "No tickets in this category.",
+      "noDaily": "No tickets over the period.",
+      "noTypes": "Nothing to break down yet.",
+      "noReportsTitle": "No reports",
+      "noReports": "No question reported by players."
     },
     "notify": {
       "replied": "Reply sent.",

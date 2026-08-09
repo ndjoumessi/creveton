@@ -16,7 +16,7 @@ import { chartTheme } from '../utils/chartTheme';
 import useThemeStore from '../store/themeStore';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
 import { themeLabels, levelLabels, themeBadgeColors } from '../constants/theme';
-import { num, pct, dateFr, dateTimeFr } from '../utils/format';
+import { num, pct, dateShort, dateTimeShort } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import ThemeBadge from '../components/ThemeBadge';
@@ -70,7 +70,7 @@ function relativeFr(iso) {
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return '—';
   const diff = todayBounds().now - t;
-  if (diff < 0) return dateFr(iso);
+  if (diff < 0) return dateShort(iso);
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return i18n.t('common.justNow');
   if (mins < 60) return i18n.t('common.agoMinutes', { n: mins });
@@ -78,7 +78,7 @@ function relativeFr(iso) {
   if (hours < 24) return i18n.t('common.agoHours', { n: hours });
   const days = Math.floor(hours / 24);
   if (days < 30) return i18n.t('common.agoDays', { n: days });
-  return dateFr(iso);
+  return dateShort(iso);
 }
 
 /** Durée « m:ss » ; « — » si null/NaN (duration_s peut manquer en données réelles). */
@@ -270,7 +270,7 @@ export default function Parties() {
     },
     {
       accessorKey: 'played_at', header: t('sessions.columns.date'),
-      cell: (c) => <span className="ses-date" title={dateTimeFr(c.getValue())}>{relativeFr(c.getValue())}</span>,
+      cell: (c) => <span className="ses-date" title={dateTimeShort(c.getValue())}>{relativeFr(c.getValue())}</span>,
     },
     {
       id: 'actions', header: '', enableSorting: false,
@@ -490,8 +490,8 @@ export default function Parties() {
                     <ThemeBadge theme={selected.theme} />
                     <span className="badge badge-level">{levelLabels[selected.level] || selected.level}</span>
                   </div>
-                  <div className="ses-ddate" title={dateTimeFr(selected.played_at)}>
-                    {dateFr(selected.played_at)}
+                  <div className="ses-ddate" title={dateTimeShort(selected.played_at)}>
+                    {dateShort(selected.played_at)}
                   </div>
                 </div>
               </div>

@@ -14,7 +14,7 @@ import { useApiData } from '../hooks/useApiData';
 import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
 import useThemeStore from '../store/themeStore';
-import { num, dateFr, dateTimeFr } from '../utils/format';
+import { num, dateShort, dateTimeShort } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
 import AvatarUpload from '../components/AvatarUpload';
@@ -188,11 +188,11 @@ function AccountSection({ user, lang, setLang }) {
           </div>
           <div className="set-kv">
             <dt>{t('settings.account.memberSince')}</dt>
-            <dd>{createdAt ? dateFr(createdAt) : '—'}</dd>
+            <dd>{createdAt ? dateShort(createdAt) : '—'}</dd>
           </div>
           <div className="set-kv">
             <dt>{t('settings.account.lastLogin')}</dt>
-            <dd>{lastActive ? dateTimeFr(lastActive) : '—'}</dd>
+            <dd>{lastActive ? dateTimeShort(lastActive) : '—'}</dd>
           </div>
         </dl>
       </div>

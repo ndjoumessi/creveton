@@ -114,7 +114,13 @@
    COL 3 — SYSTÈME (carte sombre)
    ───────────────────────────────────────────────────────────────────────── */
 .dash-system { display: flex; flex-direction: column; }
-.dash-sys-lines { margin-top: 6px; }
+/* La carte s'étire sur la hauteur de sa voisine (« Activité récente »), mais
+   son contenu ne remplissait pas : trois lignes collées en haut, un pied
+   épinglé en bas par `margin-top: auto`, et une centaine de pixels de vide
+   entre les deux. Les lignes se répartissent maintenant dans l'espace
+   disponible — pas de trou, pas de rangée en dents de scie, et rien
+   d'inventé pour meubler. */
+.dash-sys-lines { margin-top: 6px; flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
 .dash-sys-line {
   display: flex; align-items: center; gap: 9px;
   padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.10);

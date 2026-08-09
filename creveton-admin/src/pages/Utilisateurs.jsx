@@ -18,7 +18,7 @@ import { useAuthStore } from '../store/authStore';
 import { USER_STATUS_KEYS } from '../constants/enums';
 import { pastels, themeBadgeColors, levelLabels } from '../constants/theme';
 import {
-  num, dateFr, dateTimeFr, dateLocale, isToday, dayKey, lastDays,
+  num, dateShort, dateTimeShort, dateLocale, isToday, dayKey, lastDays,
 } from '../utils/format';
 import i18nInstance from '../i18n';
 import PageHeader from '../components/PageHeader';
@@ -90,7 +90,7 @@ function relativeFr(iso) {
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return '—';
   const diff = Date.now() - t;
-  if (diff < 0) return dateFr(iso);
+  if (diff < 0) return dateShort(iso);
   const min = Math.round(diff / 60000);
   if (min < 1) return i18n.t('common.justNow');
   if (min < 60) return i18n.t('common.agoMinutes', { n: min });
@@ -213,7 +213,7 @@ function ProfilTab({ user, detail, copyCode, copied }) {
           <div><dt>{t('users.fields.gender')}</dt><dd>{d.sexe ?? '—'}</dd></div>
           <div><dt>{t('users.fields.language')}</dt><dd>{(d.lang || 'fr').toUpperCase()}</dd></div>
           <div><dt>{t('users.columns.createdAt')}</dt><dd>{dateLocale(d.created_at, i18nInstance.language)}</dd></div>
-          <div><dt>{t('users.fields.lastActivity')}</dt><dd title={d.last_active_at ? dateTimeFr(d.last_active_at) : undefined}>{relativeFr(d.last_active_at)}</dd></div>
+          <div><dt>{t('users.fields.lastActivity')}</dt><dd title={d.last_active_at ? dateTimeShort(d.last_active_at) : undefined}>{relativeFr(d.last_active_at)}</dd></div>
         </dl>
       </section>
 
@@ -255,7 +255,7 @@ function ProfilTab({ user, detail, copyCode, copied }) {
           </div>
           <div className="u-account-row">
             <span className="u-account-k">{t('users.drawer.lastLogin')}</span>
-            <span>{d.last_active_at ? dateTimeFr(d.last_active_at) : '—'}</span>
+            <span>{d.last_active_at ? dateTimeShort(d.last_active_at) : '—'}</span>
           </div>
         </div>
       </section>
@@ -449,7 +449,7 @@ function ActiviteTab({ sessions, loading }) {
               const cfg = themeCfgByKey(s.theme);
               return (
                 <div className="u-session-row" key={s.id}>
-                  <span className="u-session-when" title={dateTimeFr(s.played_at)}>{dateFr(s.played_at)}</span>
+                  <span className="u-session-when" title={dateTimeShort(s.played_at)}>{dateShort(s.played_at)}</span>
                   <span className="u-session-theme">{cfg.icon} {cfg.label}</span>
                   <span className="u-session-score">{num(s.score)} {t('common.pts')}</span>
                 </div>
@@ -762,7 +762,7 @@ export default function Utilisateurs() {
       [t('users.csv.xp')]: u.total_xp,
       [t('users.csv.games')]: u.sessions_played ?? 0,
       [t('users.csv.avgScore')]: u.avg_score ?? 0,
-      [t('users.csv.createdAt')]: dateFr(u.created_at),
+      [t('users.csv.createdAt')]: dateShort(u.created_at),
     })));
     // BOM (\uFEFF) en tête pour qu'Excel ouvre l'UTF-8 correctement.
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });

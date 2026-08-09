@@ -109,6 +109,14 @@ export const getBadgesSeenLevel = () => getItem(STORAGE_KEYS.badgesSeenLevel);
 export const setBadgesSeenLevel = (level) =>
   setItem(STORAGE_KEYS.badgesSeenLevel, String(level));
 
+// Records atteints (parties, meilleure série, taux). Persistés parce que le
+// taux et la série sont calculés sur la FENÊTRE d'historique chargée : sans
+// mémoire, une vieille série de 12 sortant de la fenêtre reverrouillerait le
+// badge. Un badge qui se retire est pire qu'un badge redondant — un exploit
+// passé reste un fait.
+export const getBadgesBest = () => getJSON(STORAGE_KEYS.badgesBest);
+export const setBadgesBest = (best) => setJSON(STORAGE_KEYS.badgesBest, best);
+
 export default {
   getItem,
   setItem,
@@ -133,4 +141,6 @@ export default {
   setCacheApiUrl,
   getBadgesSeenLevel,
   setBadgesSeenLevel,
+  getBadgesBest,
+  setBadgesBest,
 };

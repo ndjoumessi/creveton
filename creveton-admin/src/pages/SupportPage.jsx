@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send, ExternalLink,
+  Reply, UserPlus, X, Check, Eye, Wrench, EyeOff, Settings2, Send,
 } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis,
@@ -12,7 +12,7 @@ import supportService from '../services/support.service';
 import * as teamService from '../services/team.service';
 import { useApiData } from '../hooks/useApiData';
 import i18n from '../i18n';
-import { num, dateFr, dateTimeFr } from '../utils/format';
+import { num, dateShort, dateTimeShort } from '../utils/format';
 import { chartTheme } from '../utils/chartTheme';
 import useThemeStore from '../store/themeStore';
 import PageHeader from '../components/PageHeader';
@@ -44,7 +44,7 @@ const QUICK_REPLY_KEYS = ['thanks', 'resolved', 'investigating'];
 function relativeFr(iso) {
   if (!iso) return '—';
   const diff = Date.now() - new Date(iso).getTime();
-  if (Number.isNaN(diff) || diff < 0) return dateFr(iso);
+  if (Number.isNaN(diff) || diff < 0) return dateShort(iso);
   const min = Math.floor(diff / 60000);
   if (min < 1) return i18n.t('common.justNow');
   if (min < 60) return i18n.t('common.agoMinutes', { n: min });
@@ -52,13 +52,13 @@ function relativeFr(iso) {
   if (h < 24) return i18n.t('common.agoHours', { n: h });
   const d = Math.floor(h / 24);
   if (d < 30) return i18n.t('common.agoDays', { n: d });
-  return dateFr(iso);
+  return dateShort(iso);
 }
 
 /** Date ISO → libellé court « 21 juin » pour l'axe / tooltip. */
 function dayLabel(iso) {
   if (!iso) return '';
-  return dateFr(iso, 'dd MMM');
+  return dateShort(iso, 'dd MMM');
 }
 
 /** Tooltip custom du graphe « Tickets par jour » (fond vert sombre, comme le Dashboard). */
@@ -285,7 +285,7 @@ export default function SupportPage() {
     },
     {
       accessorKey: 'created_at', header: t('support.reports.columns.date'),
-      cell: (c) => <span title={dateTimeFr(c.getValue())}>{relativeFr(c.getValue())}</span>,
+      cell: (c) => <span title={dateTimeShort(c.getValue())}>{relativeFr(c.getValue())}</span>,
     },
     {
       id: 'actions', header: t('support.reports.columns.actions'), enableSorting: false,
@@ -314,7 +314,6 @@ export default function SupportPage() {
 
   // Console = même origine que la page courante (évite d'exposer/coder en dur
   // une URL d'environnement : staging pointait vers staging, prod vers prod).
-  const consoleUrl = `${window.location.origin}/dashboard`;
 
   return (
     <>
@@ -332,20 +331,6 @@ export default function SupportPage() {
           </>
         )}
       />
-
-      {/* Accès rapide — lien Console, visible pour TOUS les rôles (aucune garde). */}
-      <div className="sup-quickaccess">
-        <span className="sup-quickaccess-label">{t('support.console.title')}</span>
-        <a
-          className="sup-console-link"
-          href={consoleUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <ExternalLink size={16} />
-          {t('support.console.open')}
-        </a>
-      </div>
 
       {/* Bande KPI sombre. */}
       <div className="dark-banner">
@@ -384,13 +369,13 @@ export default function SupportPage() {
       {/* Contenu de l'onglet. */}
       {tab === 'reports' ? (
         reportsLoading ? (
-          <DataTable columns={reportColumns} data={[]} loading emptyMessage={t('support.empty.message')} />
+          <DataTable columns={reportColumns} data={[]} loading emptyMessage={t('support.empty.noReports')} />
         ) : reports.length === 0 ? (
           <div className="card card-pad">
-            <EmptyState title={t('support.reports.title')} message={t('support.empty.message')} />
+            <EmptyState title={t('support.empty.noReportsTitle')} message={t('support.empty.noReports')} />
           </div>
         ) : (
-          <DataTable columns={reportColumns} data={reports} emptyMessage={t('support.empty.message')} />
+          <DataTable columns={reportColumns} data={reports} emptyMessage={t('support.empty.noReports')} />
         )
       ) : ticketsLoading ? (
         <div className="sup-cards">
@@ -425,7 +410,7 @@ export default function SupportPage() {
               <div className="sup-subject">{tk.subject}</div>
               <p className="sup-excerpt">{tk.excerpt}</p>
               <div className="sup-card-foot">
-                <span className="sup-card-date" style={{ marginRight: 'auto' }} title={dateTimeFr(tk.created_at)}>
+                <span className="sup-card-date" style={{ marginRight: 'auto' }} title={dateTimeShort(tk.created_at)}>
                   {relativeFr(tk.created_at)}
                 </span>
                 <span className="btn btn-gold btn-sm"><Reply size={13} /> {t('support.actions.reply')}</span>
@@ -444,7 +429,7 @@ export default function SupportPage() {
           {statsLoading ? (
             <Skeleton w="100%" h={200} r={12} />
           ) : !hasDaily ? (
-            <div className="sup-chart-empty">{t('support.empty.message')}</div>
+            <div className="sup-chart-empty">{t('support.empty.noDaily')}</div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={daily} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
@@ -469,7 +454,7 @@ export default function SupportPage() {
           {statsLoading ? (
             <Skeleton w="100%" h={200} r={12} />
           ) : !hasByType ? (
-            <div className="sup-chart-empty">{t('support.empty.message')}</div>
+            <div className="sup-chart-empty">{t('support.empty.noTypes')}</div>
           ) : (
             <div className="sup-pie-wrap">
               <ResponsiveContainer width="100%" height={200}>
@@ -576,7 +561,7 @@ export default function SupportPage() {
                         {m.from === 'admin' && m.author && <span className="sup-bubble-author">{m.author}</span>}
                         {m.body}
                       </div>
-                      <span className="sup-msg-time" title={dateTimeFr(m.at)}>{relativeFr(m.at)}</span>
+                      <span className="sup-msg-time" title={dateTimeShort(m.at)}>{relativeFr(m.at)}</span>
                     </div>
                   );
                 })}

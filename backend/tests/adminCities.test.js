@@ -134,3 +134,64 @@ t('un modérateur peut lire les villes, un joueur non', async () => {
     .set('Authorization', `Bearer ${H.tokenFor(player)}`)
     .expect(403);
 });
+
+// ─── Accents ───────────────────────────────────────────────────────────────
+//
+// `lower()` seul ne réglait que la casse. Le clavier d'un téléphone n'invite
+// pas à composer les accents : « Yaounde » et « Yaoundé » arrivaient tous deux
+// en base et la console les affichait comme deux villes, chacune avec son
+// effectif partiel.
+
+t('le filtre ignore les accents', async () => {
+  const admin = await makeAdmin();
+  await withCity('Yaoundé');
+  await withCity('Yaounde');
+  await withCity('YAOUNDE');
+  await withCity('Douala');
+
+  const res = await request(app)
+    .get('/api/v1/admin/users?ville=yaounde')
+    .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+
+  expect(res.status).toBe(200);
+  expect(res.body.data).toHaveLength(3);
+
+  // Et dans l'autre sens : filtrer AVEC l'accent retrouve les saisies sans.
+  const accentue = await request(app)
+    .get('/api/v1/admin/users?ville=Yaound%C3%A9')
+    .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+  expect(accentue.body.data).toHaveLength(3);
+});
+
+t('les variantes accentuées ne font qu’une entrée, graphie majoritaire en tête', async () => {
+  const admin = await makeAdmin();
+  await withCity('Yaoundé');
+  await withCity('Yaoundé');
+  await withCity('Yaounde');
+
+  const res = await request(app)
+    .get('/api/v1/admin/users/cities')
+    .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+
+  const yde = res.body.data.filter((r) => /yaound/i.test(r.ville));
+  expect(yde).toHaveLength(1);
+  expect(yde[0].ville).toBe('Yaoundé'); // la plus fréquente
+  expect(yde[0].count).toBe(3);
+});
+
+t('une FAUTE de frappe reste une entrée distincte', async () => {
+  // Repli d'accent ≠ rapprochement approximatif. « Doula » n'est pas une
+  // variante orthographique de « Douala », c'est une erreur — la fusionner
+  // silencieusement finirait par confondre deux villes réellement distinctes.
+  const admin = await makeAdmin();
+  await withCity('Douala');
+  await withCity('Doula');
+
+  const res = await request(app)
+    .get('/api/v1/admin/users/cities')
+    .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+
+  const villes = res.body.data.map((r) => r.ville);
+  expect(villes).toContain('Douala');
+  expect(villes).toContain('Doula');
+});

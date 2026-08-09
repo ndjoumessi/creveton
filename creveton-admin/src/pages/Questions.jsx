@@ -17,7 +17,7 @@ import GenerateModal from '../components/GenerateModal';
 import DraftsReview from '../components/DraftsReview';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
 import { themeLabels, levelLabels, questionStatusColors } from '../constants/theme';
-import { pct, dateFr } from '../utils/format';
+import { pct, dateShort, dateTimeShort } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import ThemeBadge from '../components/ThemeBadge';
 import Gauge from '../components/Gauge';
@@ -1158,7 +1158,7 @@ function HistoryPane({ question }) {
                 <span className={`q-tl-dot ${meta.dot}`} />
                 <div>
                   <div className="q-tl-title">{meta.labelKey ? t(`questions.events.${meta.labelKey}`) : e.event}{e.actor_name ? <span className="q-tl-actor"> · {e.actor_name}</span> : ''}</div>
-                  <div className="q-tl-meta">{dateFr(e.created_at, "dd MMM yyyy 'à' HH'h'mm")}{e.meta?.version ? ` · ${t('questions.misc.versionN', { n: e.meta.version })}` : ''}</div>
+                  <div className="q-tl-meta">{dateTimeShort(e.created_at)}{e.meta?.version ? ` · ${t('questions.misc.versionN', { n: e.meta.version })}` : ''}</div>
                   {e.reason && <div className="q-tl-reason">« {e.reason} »</div>}
                   {e.event === 'updated' && changed.length > 0 && (
                     <div className="q-tl-diff">
@@ -1239,7 +1239,7 @@ function KanbanBoard({ rows, onOpen, onMove }) {
                     <LevelPill level={q.level} />
                     {q.status === 'rejected' && <span className="q-kanban-tag-rejected"><XCircle size={11} /> {t('questions.statuses.rejected')}</span>}
                   </div>
-                  <div className="q-kanban-card-foot">{t('questions.misc.createdOn', { date: dateFr(q.created_at) })}</div>
+                  <div className="q-kanban-card-foot">{t('questions.misc.createdOn', { date: dateShort(q.created_at) })}</div>
                 </div>
               ))}
               {items.length === 0 && <div className="q-kanban-empty">—</div>}
@@ -1758,7 +1758,7 @@ export default function Questions() {
     return (
       <div className="q-archived-note">
         <Lock size={15} />
-        <span>{q.updated_at ? t('questions.misc.archivedNoteDated', { date: dateFr(q.updated_at) }) : t('questions.misc.archivedNote')}</span>
+        <span>{q.updated_at ? t('questions.misc.archivedNoteDated', { date: dateShort(q.updated_at) }) : t('questions.misc.archivedNote')}</span>
       </div>
     );
   };
@@ -2024,7 +2024,7 @@ export default function Questions() {
                         </td>
                         <td><StatusDot status={q.status} /></td>
                         <td className="q-col-secondary"><SuccessBar rate={q.success_rate} /></td>
-                        <td className="muted q-col-secondary">{dateFr(q.created_at)}</td>
+                        <td className="muted q-col-secondary">{dateShort(q.created_at)}</td>
                         <td className="q-td-actions" onClick={(e) => e.stopPropagation()}>
                           <div className="row nowrap" style={{ gap: 2 }}>
                             <button className="icon-action" title={t('questions.actions.view')} onClick={() => openDetail(q)}><Eye size={17} /></button>

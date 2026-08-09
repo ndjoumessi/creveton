@@ -1838,10 +1838,6 @@
   "support": {
     "title": "Support joueurs",
     "subtitle": "Gestion des signalements et demandes d'assistance",
-    "console": {
-      "title": "Accès rapide",
-      "open": "Ouvrir la Console →"
-    },
     "export": "Exporter",
     "markAllRead": "Marquer tout comme lu",
     "kpi": {
@@ -1921,7 +1917,11 @@
     },
     "empty": {
       "title": "Aucun ticket",
-      "message": "Aucun ticket dans cette catégorie."
+      "message": "Aucun ticket dans cette catégorie.",
+      "noDaily": "Aucun ticket sur la période.",
+      "noTypes": "Rien à répartir pour l’instant.",
+      "noReportsTitle": "Aucun signalement",
+      "noReports": "Aucune question signalée par les joueurs."
     },
     "notify": {
       "replied": "Réponse envoyée.",

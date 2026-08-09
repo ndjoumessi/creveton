@@ -46,7 +46,7 @@ import { Screen, Avatar, AppButton, BottomSheet, EmailVerifySheet, XpBar, useCon
 import FillBar from '../components/FillBar';
 import Icon from '../components/Icon';
 import { useReduceMotion } from '../hooks/useReduceMotion';
-import { getBadgesSeenLevel, setBadgesSeenLevel } from '../services/storage';
+import { getBadgesBest, setBadgesBest } from '../services/storage';
 import { useAuthStore } from '../store/authStore';
 import { useStatsStore } from '../store/statsStore';
 import { wallet, users } from '../services/endpoints';
@@ -69,28 +69,36 @@ const LANG_PILLS = [
   { key: 'en', flag: '🇬🇧', label: 'English' },
 ];
 
-// Badges dérivés honnêtement du niveau atteint.
+// Badges — quatre AXES distincts, plus quatre lectures du même chiffre.
 //
-// L'échelle était 1 / 3 / 5 / 10 — écrite pour une progression qui n'existe
-// pas : `MAX_LEVEL` vaut 5 (XP_LEVELS a 5 paliers). Le badge « Champion »
-// exigeait donc le niveau 10 et ne pouvait JAMAIS être débloqué. Sur le profil
-// d'un joueur au maximum, l'en-tête affichait « Niveau 5 — Champion · Niveau
-// max » pendant que le badge juste en dessous affichait « Champion 🔒 Niveau
-// 5/10 ». Les deux se contredisaient.
+// Historique : l'échelle était 1 / 3 / 5 / 10, écrite pour une progression qui
+// n'existe pas (`MAX_LEVEL` vaut 5), si bien que « Champion » ne pouvait jamais
+// tomber. Ré-étalée sur 1–5, le défaut suivant est apparu : les quatre badges
+// mesuraient TOUS le niveau. Ils ne disaient donc rien de plus que la barre d'XP
+// juste au-dessus, et un joueur passant du niveau 1 au niveau 3 en une session
+// en débloquait trois d'un coup — une pluie de récompenses pour un seul fait.
 //
-// Ré-étalée sur la plage réelle (1–5), un palier par cran significatif. Le
-// dernier badge coïncide maintenant avec le niveau max, donc avec le titre
-// « Champion » de l'en-tête au lieu de le contredire.
-function deriveBadges(level, t) {
+// Chacun mesure maintenant une dimension différente du jeu : jouer, être
+// régulier dans la même partie, être précis, progresser. Les quatre valeurs
+// sont RÉELLES et déjà affichées sur cet écran (rangée de stats + en-tête) —
+// rien d'inventé.
+//
+// `best` est un record persisté, pas la valeur courante : le taux et la série
+// se calculent sur la fenêtre d'historique chargée, et un badge qui se
+// reverrouille parce qu'une vieille partie est sortie de la fenêtre serait pire
+// qu'un badge redondant.
+function deriveBadges({ level, best }, t) {
+  const b = best || {};
   return [
-    { key: 'first', emoji: '🎯', label: t('profile.badges.first'), min: 1 },
-    { key: 'regular', emoji: '🔥', label: t('profile.badges.regular'), min: 2 },
-    { key: 'expert', emoji: '🧠', label: t('profile.badges.expert'), min: 3 },
-    { key: 'champion', emoji: '👑', label: t('profile.badges.champion'), min: MAX_LEVEL },
-  ].map((b) => ({
-    ...b,
-    unlocked: level >= b.min,
-  }));
+    { key: 'first', emoji: '🎯', label: t('profile.badges.first'),
+      value: b.games ?? 0, target: 1, unit: 'games' },
+    { key: 'regular', emoji: '🔥', label: t('profile.badges.regular'),
+      value: b.streak ?? 0, target: 10, unit: 'streak' },
+    { key: 'expert', emoji: '🧠', label: t('profile.badges.expert'),
+      value: b.rate ?? 0, target: 70, unit: 'rate' },
+    { key: 'champion', emoji: '👑', label: t('profile.badges.champion'),
+      value: level, target: MAX_LEVEL, unit: 'level' },
+  ].map((x) => ({ ...x, unlocked: x.value >= x.target }));
 }
 
 /** Stat compacte de la rangée du header. `valueColor` met en valeur (rang/taux). */
@@ -413,60 +421,97 @@ export default function ProfileScreen() {
   const totalXp = user?.total_xp ?? 0;
   const progress = levelProgress(totalXp);
   const level = progress.level;
-  const badges = deriveBadges(level, t);
+
+  // Records atteints, relevés à chaque chargement puis conservés (cf.
+  // `deriveBadges` : la fenêtre d'historique ne doit pas pouvoir reverrouiller
+  // un badge). `null` tant que la lecture du stockage n'a pas abouti — les
+  // badges s'affichent alors verrouillés plutôt que faussement débloqués.
+  const [best, setBest] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const stored = (await getBadgesBest()) || {};
+      const merged = {
+        games: Math.max(Number(stored.games) || 0, Number(stats.totalGames) || 0),
+        streak: Math.max(Number(stored.streak) || 0, Number(stats.maxStreak) || 0),
+        // Le taux n'a de sens qu'une fois quelques parties jouées : sous ce
+        // seuil, une seule partie parfaite donnerait 100 % et le badge
+        // « précision » tomberait au premier coup de chance.
+        rate: Math.max(
+          Number(stored.rate) || 0,
+          (Number(stats.totalGames) || 0) >= 5 ? Number(stats.successRate) || 0 : 0,
+        ),
+      };
+      if (cancelled) return;
+      setBest(merged);
+      await setBadgesBest(merged);
+    })();
+    return () => { cancelled = true; };
+  }, [stats.totalGames, stats.maxStreak, stats.successRate]);
+
+  const badges = deriveBadges({ level, best }, t);
 
   // ── « Badge tout juste débloqué » ─────────────────────────────────────────
-  // On compare le niveau courant au dernier niveau « vu » (persisté). Tout badge
-  // dont le seuil `min` a été franchi depuis (min > vu ET min ≤ actuel) est
-  // fraîchement débloqué → pop d'échelle (~500 ms) + halo doré (~2 s) + toast.
-  // Au tout premier passage (aucun niveau stocké) on n'anime PAS : on ne peut
-  // pas affirmer honnêtement que le franchissement vient d'avoir lieu ; on se
-  // contente d'enregistrer le niveau de référence.
+  // On compare l'ensemble des badges DÉBLOQUÉS à celui mémorisé à la dernière
+  // visite ; la différence est fraîche → pop d'échelle (~500 ms) + halo doré
+  // (~2 s) + toast.
+  //
+  // Comparait auparavant le NIVEAU vu au niveau courant. Ça ne marchait que
+  // parce que les quatre badges dépendaient du niveau ; maintenant qu'ils
+  // mesurent quatre axes, franchir 70 % de précision sans changer de niveau
+  // n'aurait rien déclenché.
+  //
+  // Au tout premier passage (rien de mémorisé) on n'anime PAS : impossible
+  // d'affirmer que le franchissement vient d'avoir lieu. On pose la référence.
   const [justUnlockedKeys, setJustUnlockedKeys] = useState([]);
   const [badgeGlow, setBadgeGlow] = useState(false);
   const badgePop = useRef(new Animated.Value(1)).current;
   const badgesCheckedRef = useRef(false);
   const glowTimerRef = useRef(null);
 
+  const unlockedKeys = useMemo(
+    () => badges.filter((b) => b.unlocked).map((b) => b.key).join(','),
+    [badges],
+  );
+
   useEffect(() => {
-    if (badgesCheckedRef.current) return;
+    // `best` non chargé → aucune conclusion possible, on attend.
+    if (best == null || badgesCheckedRef.current) return;
     badgesCheckedRef.current = true;
     let cancelled = false;
     (async () => {
-      const raw = await getBadgesSeenLevel();
-      const seen = raw != null ? Number(raw) : null;
-      // Baseline manquante → on enregistre sans animer.
-      if (seen == null || Number.isNaN(seen)) {
-        await setBadgesSeenLevel(level);
-        return;
-      }
+      const unlocked = unlockedKeys ? unlockedKeys.split(',') : [];
+      const stored = (await getBadgesBest()) || {};
+      const seen = Array.isArray(stored.seen) ? stored.seen : null;
+      const persist = () => setBadgesBest({ ...stored, seen: unlocked });
+
+      if (seen == null) { await persist(); return; }   // première visite
       if (cancelled) return;
-      if (level > seen) {
-        const fresh = deriveBadges(level, t).filter((b) => b.min > seen && b.min <= level);
-        if (fresh.length > 0) {
-          setJustUnlockedKeys(fresh.map((b) => b.key));
-          // Toast récap (le dernier badge franchi = le plus prestigieux).
-          const top = fresh[fresh.length - 1];
-          toast.show({ type: 'success', message: t('profile.badges.unlocked', { name: top.label }) });
-          if (!reduceMotion) {
-            badgePop.setValue(0);
-            Animated.sequence([
-              Animated.timing(badgePop, { toValue: 1, duration: 300, useNativeDriver: true }),
-              Animated.timing(badgePop, { toValue: 2, duration: 200, useNativeDriver: true }),
-            ]).start();
-            setBadgeGlow(true);
-            glowTimerRef.current = setTimeout(() => setBadgeGlow(false), 2000);
-          }
+
+      const fresh = badges.filter((b) => b.unlocked && !seen.includes(b.key));
+      if (fresh.length > 0) {
+        setJustUnlockedKeys(fresh.map((b) => b.key));
+        const top = fresh[fresh.length - 1];
+        toast.show({ type: 'success', message: t('profile.badges.unlocked', { name: top.label }) });
+        if (!reduceMotion) {
+          badgePop.setValue(0);
+          Animated.sequence([
+            Animated.timing(badgePop, { toValue: 1, duration: 300, useNativeDriver: true }),
+            Animated.timing(badgePop, { toValue: 2, duration: 200, useNativeDriver: true }),
+          ]).start();
+          setBadgeGlow(true);
+          glowTimerRef.current = setTimeout(() => setBadgeGlow(false), 2000);
         }
       }
-      await setBadgesSeenLevel(level);
+      await persist();
     })();
     return () => {
       cancelled = true;
     };
-    // Effet « une fois par montage » (garde badgesCheckedRef) — deps volontairement figées.
+    // Se déclenche au premier rendu où `best` est chargé (garde
+    // `badgesCheckedRef` : une seule fois par montage).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [best, unlockedKeys]);
 
   useEffect(() => () => clearTimeout(glowTimerRef.current), []);
 
@@ -707,13 +752,18 @@ export default function ProfileScreen() {
           />
         </Section>
 
-        {/* D. Badges — dérivés du niveau. Un badge verrouillé montre sa progression
-            (niveau courant / seuil requis) ; un tap en explique la condition. */}
+        {/* D. Badges — un axe différent par badge (cf. `deriveBadges`). Un badge
+            verrouillé montre sa progression sur SA mesure ; un tap en explique
+            la condition. */}
         <Title size="sm" color={colors.textMuted} style={styles.sectionLabel}>{t('profile.badges.title')}</Title>
         <View style={styles.badgeGrid}>
           {badges.map((b) => {
             const isFresh = justUnlockedKeys.includes(b.key);
-            const pct = b.min > 0 ? Math.min(1, level / b.min) * 100 : 100;
+            const pct = b.target > 0 ? Math.min(1, b.value / b.target) * 100 : 100;
+            // Un libellé par unité : « 7/10 bonnes d'affilée » ne se dit pas
+            // comme « niveau 3/5 ». Le gabarit générique disait « niveau » pour
+            // les quatre.
+            const progressText = t(`profile.badges.progress.${b.unit}`, { current: b.value, req: b.target });
             return (
               <AnimatedPressable
                 key={b.key}
@@ -721,10 +771,7 @@ export default function ProfileScreen() {
                 onPress={() =>
                   Alert.alert(
                     b.label,
-                    `${t('profile.badges.condition', { min: b.min })}\n\n${t(
-                      'profile.badges.levelProgress',
-                      { current: level, req: b.min },
-                    )}`,
+                    `${t(`profile.badges.condition.${b.unit}`, { req: b.target })}\n\n${progressText}`,
                   )
                 }
                 accessibilityRole="button"
@@ -756,9 +803,7 @@ export default function ProfileScreen() {
                 {!b.unlocked ? (
                   <View style={styles.badgeProgress}>
                     <FillBar pct={pct} color={colors.gold500} height={4} />
-                    <Label size="xs">
-                      {t('profile.badges.levelProgress', { current: level, req: b.min })}
-                    </Label>
+                    <Label size="xs">{progressText}</Label>
                   </View>
                 ) : null}
               </AnimatedPressable>

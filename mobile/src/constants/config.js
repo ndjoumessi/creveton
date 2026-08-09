@@ -26,6 +26,7 @@ export const STORAGE_KEYS = {
   // Dernier niveau « vu » sur l'écran Profil — sert à détecter un badge tout juste
   // débloqué (niveau franchi depuis la dernière visite) pour l'animer une seule fois.
   badgesSeenLevel: 'crv.badges_seen_level',
+  badgesBest: 'crv.badges_best',
 };
 
 // Délai au-delà duquel un retour au premier plan déclenche un delta sync (CDC §2.8)

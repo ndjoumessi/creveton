@@ -14,7 +14,7 @@ import { useAuthStore } from '../store/authStore';
 import {
   PROVIDER_KEYS, TRANSACTION_TYPE_KEYS, TRANSACTION_STATUS_KEYS,
 } from '../constants/enums';
-import { fcfa, dateFr, dateTimeFr } from '../utils/format';
+import { fcfa, dateShort, dateTimeShort } from '../utils/format';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
@@ -103,7 +103,7 @@ export default function Finances() {
   );
 
   const chartData = useMemo(
-    () => (dailyData?.points || []).map((p) => ({ label: dateFr(p.date, 'd MMM'), deposits: p.deposits, withdrawals: p.withdrawals })),
+    () => (dailyData?.points || []).map((p) => ({ label: dateShort(p.date, 'd MMM'), deposits: p.deposits, withdrawals: p.withdrawals })),
     [dailyData],
   );
 
@@ -173,7 +173,7 @@ export default function Finances() {
     {
       accessorKey: 'created_at',
       header: t('finances.columns.date'),
-      cell: (c) => <span title={dateTimeFr(c.getValue())}>{dateFr(c.getValue())}</span>,
+      cell: (c) => <span title={dateTimeShort(c.getValue())}>{dateShort(c.getValue())}</span>,
     },
     {
       id: 'user',
@@ -273,7 +273,7 @@ export default function Finances() {
                     <span className="fin-amount out">{fcfa(tx.amount)}</span>
                     <span className="muted">· {t(`finances.providers.${tx.provider}`)}</span>
                   </div>
-                  <div className="list-sub">{t('finances.kyc.requestedAt', { date: dateTimeFr(tx.created_at) })}</div>
+                  <div className="list-sub">{t('finances.kyc.requestedAt', { date: dateTimeShort(tx.created_at) })}</div>
                 </div>
                 <div className="fin-kyc-actions">
                   <button className="btn btn-sm btn-danger" onClick={() => setConfirmAction({ tx, kind: 'reject' })}>
@@ -437,7 +437,7 @@ export default function Finances() {
             <div><dt>{t('finances.detail.type')}</dt><dd>{t(`finances.types.${selectedTx.type}`)}</dd></div>
             <div><dt>{t('finances.detail.provider')}</dt><dd>{t(`finances.providers.${selectedTx.provider}`)}</dd></div>
             <div><dt>{t('finances.detail.status')}</dt><dd><StatusBadge kind="transaction" status={selectedTx.status} /></dd></div>
-            <div><dt>{t('finances.detail.date')}</dt><dd>{dateTimeFr(selectedTx.created_at)}</dd></div>
+            <div><dt>{t('finances.detail.date')}</dt><dd>{dateTimeShort(selectedTx.created_at)}</dd></div>
           </dl>
         )}
       </Modal>

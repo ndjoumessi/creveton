@@ -477,15 +477,23 @@
     },
     "badges": {
       "title": "My badges",
-      "locked": "Play {{n}} games to unlock",
       "first": "First game",
-      "regular": "Regular",
-      "expert": "Brain",
+      "regular": "On a roll",
+      "expert": "Accuracy",
       "champion": "Champion",
-      "lockedByLevel": "Reach level {{min}} to unlock",
-      "levelProgress": "Level {{current}}/{{req}}",
-      "condition": "Reach level {{min}} to unlock.",
-      "unlocked": "Badge unlocked: {{name}}!"
+      "condition": {
+        "games": "Play at least {{req}} game.",
+        "streak": "Get {{req}} correct answers in a row in one game.",
+        "rate": "Reach a {{req}}% success rate (over at least 5 games).",
+        "level": "Reach level {{req}}."
+      },
+      "unlocked": "Badge unlocked: {{name}}!",
+      "progress": {
+        "games": "{{current}}/{{req}} game",
+        "streak": "{{current}}/{{req}} in a row",
+        "rate": "{{current}}%/{{req}}%",
+        "level": "Level {{current}}/{{req}}"
+      }
     },
     "sections": {
       "account": "MY ACCOUNT",
