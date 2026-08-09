@@ -709,7 +709,6 @@ table.data tbody tr:last-child td { border-bottom: none; }
 .char-count.over { color: var(--red); font-weight: 600; }
 
 /* Badge Admin doré */
-.badge-admin { background: linear-gradient(135deg, var(--gold), var(--gold400)); color: var(--green900); }
 
 /* Aperçu question mobile (modal) */
 .mobile-preview { background: var(--green900); border-radius: 22px; padding: 20px 16px; color: #fff; box-shadow: var(--shadow-lg); }
