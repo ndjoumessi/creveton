@@ -644,10 +644,20 @@ export default function Utilisateurs() {
 
   const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
 
+  // Villes issues de la BASE, pas des lignes affichées. L'ancienne version les
+  // dérivait de `rows`, c'est-à-dire de la page courante (20 résultats) : une
+  // ville n'apparaissant qu'en page 3 était infiltrable, et surtout, une fois un
+  // filtre posé la liste se réduisait à cette seule ville — impossible d'en
+  // changer sans tout réinitialiser. Chargée une fois, indépendante des filtres.
+  const { data: cityData } = useApiData(() => usersService.cities(), []);
   const villes = useMemo(() => {
-    const found = [...new Set(rows.map((u) => u.ville).filter(Boolean))].sort();
-    return found.length ? found : FALLBACK_VILLES;
-  }, [rows]);
+    const found = (cityData?.data || []).map((c) => c.ville).filter(Boolean);
+    if (found.length) return found;
+    // Repli sur les lignes affichées, puis sur la liste en dur : mieux vaut un
+    // filtre partiel qu'un menu vide si l'endpoint échoue.
+    const fromRows = [...new Set(rows.map((u) => u.ville).filter(Boolean))].sort();
+    return fromRows.length ? fromRows : FALLBACK_VILLES;
+  }, [cityData, rows]);
 
   const openSelected = (u) => { setSelected(u); setTab('profil'); };
 

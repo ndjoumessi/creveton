@@ -48,6 +48,12 @@ const usersStats = asyncHandler(async (req, res) => {
   return ok(res, data);
 });
 
+/** GET /admin/users/cities — villes réellement présentes + effectifs. */
+const cities = asyncHandler(async (req, res) => {
+  const data = await userModel.distinctCities();
+  return ok(res, { data });
+});
+
 /** GET /admin/users/:id — fiche (profil + stats). */
 const get = asyncHandler(async (req, res) => {
   const user = await userModel.findById(req.params.id);
@@ -157,4 +163,4 @@ const referral = asyncHandler(async (req, res) => {
   return ok(res, { code: req.params.code, signups: count });
 });
 
-module.exports = { list, usersStats, get, suspend, ban, resetPassword, remove, changeRole, invite, referral, message };
+module.exports = { list, usersStats, cities, get, suspend, ban, resetPassword, remove, changeRole, invite, referral, message };

@@ -115,6 +115,18 @@ régénérer avec `/impeccable document`.
   ILIKE, exclut soi-même + comptes non `active`/supprimés, projection réduite
   (`id,name,avatar_url,level,total_xp` — jamais `phone`/`email`), `q` ≥ 2 caractères (sinon 400),
   limit défaut 10 / max 20. Sert à cibler un ami pour un défi côté mobile.
+- **Ville : texte LIBRE, et ce que ça implique** — `ville` n'a jamais été contraint
+  (`Joi.string().max(100)`), le profil l'édite en champ texte, et depuis 08-2026
+  l'inscription accepte une ville hors liste (le sélecteur de pays est international,
+  la liste des villes est camerounaise). Conséquences côté admin :
+  · `userModel.listAdmin` compare `lower(ville) = lower($1)` — une comparaison stricte
+    faisait manquer « douala » à un filtre sur « Douala » ;
+  · `GET /admin/users/cities` (perm `users:read`) renvoie les villes RÉELLEMENT en base
+    + effectifs, regroupées sur `lower(btrim(ville))` avec la graphie majoritaire comme
+    libellé. La console peuplait sa liste déroulante depuis la page affichée (20 lignes) :
+    une ville de la page 3 était infiltrable, et un filtre posé réduisait la liste à cette
+    seule ville — impossible d'en changer sans réinitialiser.
+    Tests : `backend/tests/adminCities.test.js`.
 - **Support admin (tickets + signalements)** : sous-système **admin-only**, monté sur
   `/admin/support/*` (`routes/admin/support.admin.routes.js`, schémas Joi inline →
   `support.admin.controller` → `supportService` → `support.model`). Permissions dédiées

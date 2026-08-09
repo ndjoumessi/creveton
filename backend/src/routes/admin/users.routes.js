@@ -10,6 +10,8 @@ const router = express.Router();
 
 router.get('/', requirePermission('users:read'), validate(schemas.adminList, 'query'), ctrl.list);
 router.get('/stats', requirePermission('users:read'), ctrl.usersStats);
+// AVANT `/:id` : sinon Express capterait « cities » comme un identifiant.
+router.get('/cities', requirePermission('users:read'), ctrl.cities);
 router.post('/invite', requirePermission('users:invite'), validate(schemas.adminInvite), ctrl.invite);
 router.get('/:id', requirePermission('users:read'), ctrl.get);
 router.patch('/:id/role', requirePermission('users:role'), validate(schemas.adminRole), ctrl.changeRole);

@@ -182,13 +182,44 @@ async function clearAvatar(id) {
 // Opérations ADMIN (spec §12).
 // ---------------------------------------------------------------------------
 
+/**
+ * Villes RÉELLEMENT présentes en base, avec leur effectif.
+ *
+ * La console alimentait sa liste déroulante depuis la page de résultats
+ * courante (20 lignes) : une ville n'apparaissant qu'en page 3 était
+ * infiltrable, et surtout, une fois un filtre posé, la liste se réduisait à
+ * cette seule ville — impossible d'en changer sans tout réinitialiser.
+ *
+ * Regroupé sur `lower(ville)` pour que « Douala » et « douala » ne fassent
+ * qu'une entrée ; on renvoie la graphie la plus fréquente comme libellé.
+ */
+async function distinctCities() {
+  const { rows } = await db.query(
+    `SELECT (array_agg(ville ORDER BY n DESC, ville ASC))[1] AS ville,
+            sum(n)::int AS count
+       FROM (
+         SELECT ville, count(*) AS n
+           FROM users
+          WHERE ville IS NOT NULL AND btrim(ville) <> '' AND deleted_at IS NULL
+          GROUP BY ville
+       ) t
+      GROUP BY lower(btrim(ville))
+      ORDER BY sum(n) DESC, 1 ASC`
+  );
+  return rows;
+}
+
 /** Liste admin paginée (offset) + filtres ville/level/role/status/q. */
 async function listAdmin({ ville = null, level = null, role = null, status = null, q = null, limit = 20, offset = 0 }) {
   const params = [];
   const clauses = ['deleted_at IS NULL'];
   if (ville) {
+    // `lower(...)` des deux côtés : la ville est du texte LIBRE (saisie à
+    // l'inscription hors liste, et éditable au profil). Une comparaison stricte
+    // faisait manquer « douala » à un filtre sur « Douala » — l'utilisateur
+    // existait, il n'apparaissait simplement jamais.
     params.push(ville);
-    clauses.push(`ville = $${params.length}`);
+    clauses.push(`lower(ville) = lower($${params.length})`);
   }
   if (level) {
     params.push(level);
@@ -497,6 +528,7 @@ module.exports = {
   generateUniqueReferralCode,
   // admin
   listAdmin,
+  distinctCities,
   setStatus,
   setRole,
   createInvited,

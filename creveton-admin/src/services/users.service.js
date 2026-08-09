@@ -23,6 +23,14 @@ export function list(params = {}) {
 }
 
 /** GET /admin/users/stats — KPI globaux du parc (total, actifs 7j, nouveaux, bloqués). */
+/** GET /admin/users/cities — villes réellement présentes en base + effectifs. */
+export function cities() {
+  return withMock(
+    () => api.get('/admin/users/cities').then((r) => r.data),
+    () => ({ data: [{ ville: 'Douala', count: 12 }, { ville: 'Yaoundé', count: 9 }] })
+  );
+}
+
 export function stats() {
   return withMock(
     () => api.get('/admin/users/stats').then((r) => r.data),
@@ -81,4 +89,4 @@ export function message(id, payload) {
   return withMock(() => api.post(`/admin/users/${id}/message`, payload).then((r) => r.data), () => ({ sent: true }));
 }
 
-export default { list, stats, get, suspend, ban, resetPassword, remove, invite, changeRole, message };
+export default { list, stats, cities, get, suspend, ban, resetPassword, remove, invite, changeRole, message };
