@@ -10,6 +10,8 @@
     "password": "Mot de passe",
     "login": "Se connecter",
     "loginLoading": "Connexion...",
+    "rememberPassword": "Enregistrer mon mot de passe",
+    "rememberPasswordHint": "Ton mot de passe sera conservé chiffré sur cet appareil et pré-rempli à la prochaine connexion. À éviter sur un téléphone partagé.",
     "noAccount": "Pas encore de compte ?",
     "signup": "S'inscrire",
     "register": {

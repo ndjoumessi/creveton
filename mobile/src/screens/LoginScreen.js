@@ -16,12 +16,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Logo, AppButton, AuthField, Title, Body, Label } from '../components';
+import { Logo, AppButton, AuthField, Checkbox, Title, Body, Label } from '../components';
 import Icon from '../components/Icon';
 import { useAuthStore } from '../store/authStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { isValidEmail } from '../utils/validation';
-import { getLastEmail } from '../services/storage';
+import {
+  getLastEmail,
+  getSavedPassword,
+  setSavedPassword,
+  clearSavedPassword,
+} from '../services/storage';
 import { radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 
@@ -40,22 +45,43 @@ export default function LoginScreen({ navigation }) {
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
+  // Opt-in : par défaut décoché. Enregistrer le mot de passe maître doit rester
+  // un geste délibéré — un téléphone se prête, au Cameroun comme ailleurs.
+  const [remember, setRemember] = useState(false);
 
-  // Pré-remplit l'email avec le dernier connecté. Le champ est non contrôlé
-  // (defaultValue posé une fois au montage, avant la lecture async) → on pousse
-  // la valeur impérativement via setNativeProps + on alimente le ref des valeurs
-  // (onChangeText ne se déclenche que sur saisie utilisateur).
+  // Pré-remplit l'email avec le dernier connecté, et le mot de passe s'il a été
+  // enregistré. Les champs sont non contrôlés (defaultValue posé une fois au
+  // montage, avant la lecture async) → on pousse la valeur impérativement via
+  // setNativeProps + on alimente le ref des valeurs (onChangeText ne se
+  // déclenche que sur saisie utilisateur).
   useEffect(() => {
     let active = true;
-    getLastEmail().then((email) => {
-      if (!active || !email || values.current.email) return;
-      values.current.email = email;
-      emailRef.current?.setNativeProps({ text: email });
+    Promise.all([getLastEmail(), getSavedPassword()]).then(([email, password]) => {
+      if (!active) return;
+      if (email && !values.current.email) {
+        values.current.email = email;
+        emailRef.current?.setNativeProps({ text: email });
+      }
+      // La seule présence du secret vaut « case cochée » : aucun booléen
+      // séparé à resynchroniser, donc pas de case cochée sans mot de passe.
+      if (password && !values.current.password) {
+        values.current.password = password;
+        passwordRef.current?.setNativeProps({ text: password });
+        setRemember(true);
+      }
     });
     return () => {
       active = false;
     };
   }, []);
+
+  // Décocher efface immédiatement : attendre la prochaine connexion réussie
+  // laisserait le secret sur l'appareil alors que l'utilisateur vient de dire
+  // le contraire — et il peut très bien fermer l'app juste après.
+  const onToggleRemember = (next) => {
+    setRemember(next);
+    if (!next) clearSavedPassword();
+  };
 
   const onSubmit = async () => {
     setError(null);
@@ -75,8 +101,20 @@ export default function LoginScreen({ navigation }) {
         navigation.navigate('OTP', { phone: res.error?.phone });
         return;
       }
+      // Identifiants refusés alors qu'on venait de pré-remplir : le secret
+      // stocké est périmé (mot de passe changé depuis la console admin, ou
+      // réinitialisé sur un autre appareil). Le garder condamnerait l'écran à
+      // rejouer le même échec à chaque ouverture, sans que rien ne l'explique.
+      if (res.error?.code === 'AUTH_INVALID_CREDENTIALS') {
+        await clearSavedPassword();
+        setRemember(false);
+      }
       setError(res.error?.message || t('auth.notify.loginFailed'));
+      return;
     }
+    // Écrit APRÈS succès seulement : un mot de passe faux n'a rien à faire
+    // dans le trousseau.
+    if (remember) await setSavedPassword(password);
   };
 
   return (
@@ -134,6 +172,14 @@ export default function LoginScreen({ navigation }) {
             returnKeyType="done"
             onSubmitEditing={onSubmit}
             rightToggle={{ active: showPassword, onToggle: () => setShowPassword((v) => !v) }}
+          />
+
+          <Checkbox
+            checked={remember}
+            onChange={onToggleRemember}
+            label={t('auth.rememberPassword')}
+            hint={t('auth.rememberPasswordHint')}
+            style={styles.remember}
           />
 
           {/* Emporte l'email déjà tapé : l'utilisateur vient d'échouer à se
@@ -222,6 +268,9 @@ const makeStyles = (colors) => StyleSheet.create({
     textAlign: 'center',
   },
   submit: { marginTop: spacing.sm },
+  // `AuthField` porte déjà un `marginBottom: lg` : la case remonte dessus pour
+  // rester collée au champ qu'elle qualifie, sinon elle flotte entre les deux.
+  remember: { marginTop: -spacing.sm },
   // Aligné à droite sous le champ mot de passe — position attendue, et
   // n'entre pas en concurrence visuelle avec le CTA de connexion.
   forgotRow: { alignSelf: 'flex-end', marginTop: spacing.xs },

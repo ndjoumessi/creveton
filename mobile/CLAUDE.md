@@ -69,7 +69,9 @@ le pattern `const { colors } = useTheme(); const styles = useMemo(() => makeStyl
 - `SegmentedTabs({ tabs:[{key,label,icon?,count?}], activeKey, onChange, variant:'underline'|'pills' })` — onglets. `MIN_TOUCH` + `role=tab` intégrés. → Challenges, Tournament, Stats.
 - `ChoiceChips({ options:[{key,label,emoji?}], value, onChange, multiple?, layout:'row'|'grid', haptic? })` — pilules de sélection (actif = vert nuit + bordure or). → GameStart (niveaux), Register (sexe/langue), Challenges (thème/niveau du sheet). *Cartes thème riches de GameStart = locales (gradient/compteur offline).* 
 - `AppInput({ label, value, onChangeText, error, success?, helperText, rightIcon? })` — input flottant. *Aucun call-site aujourd'hui* ; pour Login/Register préférer `AuthField` (cf. règle formulaires).
+- `Checkbox({ checked, onChange, label, hint?, disabled? })` — case à cocher ; la cible tactile est le Pressable ENTIER (case + libellé, `MIN_TOUCH`), la case seule ne fait que 22 px. → Login (« Enregistrer mon mot de passe »).
 - `AuthField` — champ non contrôlé (ref) anti-reset clavier, pour les formulaires. `AppButton`, `AppCard`.
+  · **Autofill** : poser TOUJOURS `autoComplete` **et** `textContentType`. Ce ne sont pas des synonymes — `textContentType` est ignoré sur Android, `autoComplete` sur iOS (RN ne s'en sert là que pour déduire un `textContentType` absent). N'en poser qu'un laisse une plateforme sans indice, et le gestionnaire de mots de passe ne propose alors jamais d'enregistrer. Identifiant de connexion = `username` (et non `emailAddress` : côté Apple c'est un champ de carnet d'adresses, seul `.username` déclenche l'invite d'enregistrement).
 
 **Jeu**
 - `AnswerOption({ letter, text, state:'idle'|'selected'|'correct'|'incorrect'|'neutral'|'dimmed', selected, disabled, showGoodLabel?, showCheck?, onPress })` — option de réponse, tous états quiz + `role=radio`. → Quiz, TournamentLive.

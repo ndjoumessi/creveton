@@ -91,6 +91,29 @@ export const clearStoredUser = () => removeItem(STORAGE_KEYS.user);
 export const getLastEmail = () => getItem(STORAGE_KEYS.lastEmail);
 export const setLastEmail = (email) => setItem(STORAGE_KEYS.lastEmail, email);
 
+// Mot de passe enregistré (case à cocher du Login) — SecureStore OBLIGATOIRE.
+// C'est le secret le plus sensible que l'app détient : contrairement au jeton
+// de rafraîchissement, il survit à une révocation de toutes les sessions et
+// ouvre aussi la console admin s'il y est réutilisé. AsyncStorage l'écrirait en
+// clair dans une base SQLite lisible sur un appareil rooté.
+//
+// La PRÉSENCE de la clé porte à elle seule l'état de la case : pas de booléen
+// séparé à garder synchronisé, donc pas de dérive possible entre « la case est
+// cochée » et « un mot de passe est réellement stocké ».
+export const getSavedPassword = () => getSecure(STORAGE_KEYS.savedPassword);
+export const setSavedPassword = (password) =>
+  setSecure(STORAGE_KEYS.savedPassword, password);
+export const clearSavedPassword = () => removeSecure(STORAGE_KEYS.savedPassword);
+
+// Remplace le mot de passe enregistré s'il en existe un, sans jamais en créer.
+// Utilisé après un changement / une réinitialisation : le consentement donné
+// sur l'écran de connexion suit le mot de passe, mais rien n'est écrit pour
+// quelqu'un qui n'avait pas coché la case.
+export async function updateSavedPasswordIfAny(password) {
+  const existing = await getSavedPassword();
+  if (existing) await setSavedPassword(password);
+}
+
 // Sync --------------------------------------------------------------------
 export const getLastSyncAt = () => getItem(STORAGE_KEYS.lastSyncAt);
 export const setLastSyncAt = (iso) => setItem(STORAGE_KEYS.lastSyncAt, iso);
@@ -128,6 +151,10 @@ export default {
   clearStoredUser,
   getLastEmail,
   setLastEmail,
+  getSavedPassword,
+  setSavedPassword,
+  clearSavedPassword,
+  updateSavedPasswordIfAny,
   getLastSyncAt,
   setLastSyncAt,
   clearLastSyncAt,

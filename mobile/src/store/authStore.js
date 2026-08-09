@@ -13,6 +13,7 @@ import {
   getAccessToken,
   getRefreshToken,
   setLastEmail,
+  updateSavedPasswordIfAny,
 } from '../services/storage';
 
 export const useAuthStore = create((set, get) => ({
@@ -100,6 +101,11 @@ export const useAuthStore = create((set, get) => ({
       });
       await get()._applySession(data);
       await setLastEmail(email);
+      // Le mot de passe enregistré sur l'écran de connexion vient de devenir
+      // faux. Sans cette ligne, le prochain lancement pré-remplirait l'ancien
+      // et échouerait — un « mot de passe oublié » réussi rendrait l'app
+      // inutilisable jusqu'à ce qu'on pense à vider le champ à la main.
+      await updateSavedPasswordIfAny(newPassword);
       set({ loading: false });
       return { ok: true };
     } catch (e) {
@@ -126,6 +132,12 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // Déconnexion : révoque côté serveur + purge locale.
+  //
+  // Le mot de passe enregistré (case du Login) N'EST PAS effacé ici, et c'est
+  // délibéré : c'est exactement le cas d'usage de la case. L'effacer à la
+  // déconnexion la viderait de son sens — il ne resterait que l'expiration de
+  // session, où l'utilisateur ne passe justement pas par ce bouton. Pour
+  // retirer le secret, on décoche (effacement immédiat).
   logout: async () => {
     try {
       await authApi.logout();

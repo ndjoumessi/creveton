@@ -16,6 +16,8 @@ export const STORAGE_KEYS = {
   refreshToken: 'crv.refresh_token',
   user: 'crv.user',
   lastEmail: 'crv.last_email', // dernier email connecté (pré-remplissage Login) — non sensible
+  // Mot de passe enregistré via la case du Login — SecureStore uniquement.
+  savedPassword: 'crv.saved_password',
   lastSyncAt: 'crv.last_sync_at',
   // URL de l'API utilisée lors du dernier sync — sert à invalider le cache de
   // questions si l'on change d'environnement (ex. local → staging).

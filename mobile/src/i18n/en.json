@@ -10,6 +10,8 @@
     "password": "Password",
     "login": "Sign in",
     "loginLoading": "Signing in...",
+    "rememberPassword": "Save my password",
+    "rememberPasswordHint": "Your password will be kept encrypted on this device and pre-filled next time you sign in. Avoid this on a shared phone.",
     "noAccount": "No account yet?",
     "signup": "Sign up",
     "register": {

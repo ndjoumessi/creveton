@@ -26,6 +26,7 @@ import { AppButton, AuthField, Title, Body, useToast } from '../components';
 import Icon from '../components/Icon';
 import { auth } from '../services/endpoints';
 import { parseApiError } from '../services/api';
+import { updateSavedPasswordIfAny } from '../services/storage';
 import { passwordIssues } from '../utils/validation';
 import { radius, spacing, shadow, MIN_TOUCH } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
@@ -87,6 +88,10 @@ export default function ChangePasswordScreen({ navigation }) {
     setLoading(true);
     try {
       await auth.changePassword({ current_password: current, new_password: next });
+      // Le mot de passe éventuellement enregistré sur l'écran de connexion
+      // pointe désormais sur l'ancien : il suit, sinon la prochaine session
+      // expirée buterait sur un pré-remplissage périmé.
+      await updateSavedPasswordIfAny(next);
       toast.show({ type: 'success', message: t('changePassword.success') });
       navigation.goBack();
     } catch (e) {

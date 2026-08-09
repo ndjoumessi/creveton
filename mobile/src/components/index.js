@@ -17,6 +17,7 @@ export { default as CodeInput } from './CodeInput';
 export { default as EmailVerifySheet } from './EmailVerifySheet';
 export { default as EmailNudge } from './EmailNudge';
 export { default as ChoiceChips } from './ChoiceChips';
+export { default as Checkbox } from './Checkbox';
 export { default as FAB } from './FAB';
 
 // Identité / badges
