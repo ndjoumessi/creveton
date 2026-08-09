@@ -92,7 +92,8 @@
 .team-dh-avatar--admin { box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(42, 138, 79, 0.28); }
 .team-dh-avatar--moderator { box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(59, 130, 246, 0.28); }
 .team-dh-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
-.team-dh-name { font-family: var(--font-body); font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; letter-spacing: -0.2px; }
+/* Nom de membre → Outfit (DESIGN.md : « titres de carte, noms »). */
+.team-dh-name { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; letter-spacing: -0.2px; }
 .team-dh-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .team-dh-badges .team-status { color: rgba(255, 255, 255, 0.88); }
 .team-dh-contact { display: flex; flex-wrap: wrap; gap: 6px; font-family: var(--font-body); font-size: var(--text-sm); color: rgba(255, 255, 255, 0.62); word-break: break-word; }

@@ -299,7 +299,9 @@ input, select, textarea { font-family: inherit; }
 /* Logo = vrai PNG (public/logo.png), pas le monogramme or. */
 .sidebar-logo-img { width: 32px; height: 32px; border-radius: var(--radius-sm); object-fit: cover; flex: none; }
 
-.sidebar-brand-name { font-family: var(--font-body); font-weight: 700; color: #fff; font-size: 18px; letter-spacing: -0.2px; line-height: 1.1; }
+/* Outfit : c'est la MARQUE. DESIGN.md § Typography réserve la fonte de corps à
+   la prose et donne les titres et les noms à Outfit. */
+.sidebar-brand-name { font-family: var(--font-display); font-weight: 700; color: #fff; font-size: 18px; letter-spacing: -0.2px; line-height: 1.1; }
 /* Filet de sécurité : même sur toute la largeur, un rendu de police plus large
    que prévu ne doit pas pouvoir baver hors de la barre. */
 .sidebar-brand-sub { font-family: var(--font-body); font-weight: 600; font-size: var(--text-micro); letter-spacing: 2px; text-transform: uppercase; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

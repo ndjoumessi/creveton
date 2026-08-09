@@ -94,8 +94,16 @@ const CONTENT = {
   },
 };
 
-const SG = "var(--font-body)";
-const OUTFIT = "var(--font-display)";
+// Troisième page publique porteuse de l'inversion typographique corrigée sur la
+// Landing et le Login : les titres partaient en `--font-body` (Inter) et le
+// corps en `--font-display` (Outfit), soit l'exact inverse de DESIGN.md.
+//
+// Les NOMS entretenaient la confusion. `SG` = Space Grotesk, la fonte de corps
+// d'origine ; elle a été remplacée par Inter en 08-2026 et la constante a été
+// repointée sur `--font-body` sans que ses usages — tous des titres — soient
+// revus. Renommées d'après leur RÔLE : un nom de fonte se périme, un rôle non.
+const DISPLAY = 'var(--font-display)'; // Outfit — titres, marque, libellés forts
+const BODY = 'var(--font-body)'; // Inter — prose
 
 export default function Privacy() {
   const lang = useUiStore((s) => s.lang) === 'en' ? 'en' : 'fr';
@@ -110,7 +118,7 @@ export default function Privacy() {
         background: 'none',
         border: 0,
         cursor: 'pointer',
-        fontFamily: SG,
+        fontFamily: DISPLAY,
         fontWeight: 600,
         fontSize: 13,
         padding: '4px 6px',
@@ -122,21 +130,21 @@ export default function Privacy() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fdf6e9', fontFamily: OUTFIT, color: '#374151' }}>
+    <div style={{ minHeight: '100vh', background: '#fdf6e9', fontFamily: BODY, color: '#374151', colorScheme: 'light' }}>
       {/* Header vert nuit */}
       <header style={{ background: '#0b2e1a', padding: '24px 0 36px' }}>
         <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
               <img src="/logo.png" alt="Creveton" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover' }} />
-              <span style={{ fontFamily: SG, fontWeight: 600, fontSize: 20, color: '#fdf6e9' }}>Creveton</span>
+              <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 20, color: '#fdf6e9' }}>Creveton</span>
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {langBtn('fr', 'FR')}
               {langBtn('en', 'EN')}
             </div>
           </div>
-          <h1 style={{ fontFamily: SG, fontWeight: 700, fontSize: 'clamp(28px, 4vw, 40px)', letterSpacing: '-0.8px', color: '#fdf6e9', margin: '32px 0 8px' }}>
+          <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'clamp(28px, 4vw, 40px)', letterSpacing: '-0.8px', color: '#fdf6e9', margin: '32px 0 8px' }}>
             {c.title}
           </h1>
           <p style={{ margin: 0, fontSize: 14, color: 'rgba(253,246,233,0.55)' }}>{c.updated}</p>
@@ -147,7 +155,7 @@ export default function Privacy() {
       <main style={{ maxWidth: 820, margin: '0 auto', padding: '40px 24px 64px' }}>
         {c.sections.map((s) => (
           <section key={s.h} style={{ marginBottom: 32 }}>
-            <h2 style={{ fontFamily: SG, fontWeight: 700, fontSize: 20, letterSpacing: '-0.3px', color: '#0b2e1a', margin: '0 0 12px' }}>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 20, letterSpacing: '-0.3px', color: '#0b2e1a', margin: '0 0 12px' }}>
               {s.h}
             </h2>
             {s.p.map((para) => (
@@ -163,7 +171,7 @@ export default function Privacy() {
           </section>
         ))}
 
-        <Link to="/" style={{ display: 'inline-block', marginTop: 8, fontFamily: SG, fontWeight: 600, fontSize: 14, color: '#2a8a4f', textDecoration: 'none' }}>
+        <Link to="/" style={{ display: 'inline-block', marginTop: 8, fontFamily: DISPLAY, fontWeight: 600, fontSize: 14, color: '#2a8a4f', textDecoration: 'none' }}>
           {c.back}
         </Link>
       </main>

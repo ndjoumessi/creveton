@@ -186,6 +186,36 @@ diluer, c'est tuer le signal. Sa rareté est le sujet.
 statut, un thème, une réussite portent toujours un libellé ou une icône en plus de la
 teinte (contrainte WCAG AA, daltonisme).
 
+**La Règle de la Couleur Qui Dit Quelque Chose.** *(08-2026)* Une teinte qui ne code rien
+coûte plus qu'elle ne rapporte : le lecteur cherche le code et n'en trouve pas. Trois
+interdits, tous constatés dans la console avant correction :
+
+- **Pas de teinte distribuée par position.** `KpiCard` prenait une prop `tone`
+  (green | gold | blue | violet) que le tableau de bord et les Finances assignaient dans
+  l'ordre des cartes — la première verte parce que première. Prop supprimée. De même,
+  les bandeaux de statistiques (Utilisateurs, Équipe) coloraient leurs valeurs au fil des
+  colonnes.
+- **Pas de feu tricolore sur une variable ORDONNÉE.** La difficulté d'une question
+  (débutant → expert) était peinte vert / or / rouge, à trois endroits : barres de
+  Parties, pastilles de niveau, emoji du sélecteur. Or le rouge est la couleur de
+  l'erreur dans cette console, et une question experte n'est pas un incident. Une
+  variable ordonnée sans bon ni mauvais côté prend une **rampe d'une seule teinte, à
+  intensité croissante** (`chartTheme().ramp`, `.q-level-*`). Le sens de la rampe
+  s'inverse entre thèmes : sur fond sombre, c'est le ton clair qui ressort.
+  Une variable qui a un bon côté (taux de réussite) peut, elle, garder un axe coloré.
+- **L'accent ne s'allume que quand le nombre le mérite.** « 0 Suspendus » sortait dans le
+  rouge d'erreur, alors que zéro compte bloqué est une bonne nouvelle. La valeur est
+  neutre par défaut ; la teinte n'apparaît que si le chiffre appelle vraiment une action
+  (`.is-alert`, `.is-pending`). Une couleur qui ne s'allume jamais pour rien redevient un
+  signal.
+
+**La Règle du Chiffre Honnête.** *(08-2026)* Un pourcentage de variation calculé sur un
+effectif minuscule est du bruit habillé en tendance : « 3 parties, −62 % vs hier » était
+8 → 3. Sous `MIN_DELTA_SAMPLE` (20 observations sur la période précédente), on affiche la
+**paire brute** sans flèche ni couleur. Et deux compteurs de portées différentes ne se
+ressemblent jamais sans le dire : un marqueur explicite, avec les **mêmes mots** pour la
+même portée, sépare « sur les lignes chargées » de « sur toute la banque ».
+
 ## 3. Typography
 
 **Display Font:** Outfit (avec `system-ui, sans-serif`)
@@ -217,6 +247,21 @@ un titre ou un en-tête, c'est de l'Outfit.
 **La Règle Outfit-pour-les-Chiffres.** Tout nombre qui compte (KPI, score, compteur,
 rang) est en Outfit, poids ≥ 700. Les chiffres sont les héros d'un cockpit ; ils ne
 s'affichent jamais dans la fonte de corps.
+
+**Les noms propres sont des titres.** Un nom de joueur, de membre d'équipe, de tournoi ou
+la marque elle-même prennent Outfit, pas la fonte de corps.
+
+> **⚠ Inversion récurrente — vérifier à chaque nouvelle surface.** *(08-2026)* Quatre
+> surfaces titraient en `--font-body` et posaient `--font-display` en fonte de corps,
+> soit l'exact inverse de cette section : Landing, Login, Privacy, plus les noms propres
+> des tiroirs Utilisateurs / Équipe / Paramètres et de la marque en barre latérale. Le
+> héros de la Landing s'affichait donc en Inter Bold.
+>
+> L'origine est nominale : la constante historique `SG` (Space Grotesk, la fonte de CORPS
+> d'origine) a été repointée sur `--font-body` lors du passage à Inter, sans que ses
+> usages — tous des titres — soient revus. D'où la convention : **nommer les constantes
+> de police d'après leur RÔLE** (`DISPLAY` / `BODY`), jamais d'après la fonte. Un nom de
+> fonte se périme, un rôle non.
 
 ## 4. Elevation
 
@@ -267,6 +312,21 @@ réservée à ce qui se superpose réellement (overlay), jamais à ce qui est da
 - **Shadow Strategy:** ombre Repos uniquement (cf. Elevation). Plat par défaut.
 - **Border:** 1px `#e5e7eb`, systématique.
 - **Internal Padding:** `20px 22px` (`.card-pad`).
+- **Pas de carte sombre.** *(08-2026)* `.card-dark` a été supprimée. Son unique porteur,
+  la carte « Système » du tableau de bord, se fondait en thème nuit mais devenait en
+  thème CLAIR l'accent le plus fort de la page — un bloc vert nuit entre deux cartes
+  blanches, posé sur le panneau le moins actionnable. Toutes les cartes suivent le thème.
+  Corollaire : à l'intérieur d'une carte, **jamais de `rgba(255,255,255,…)` en dur** —
+  c'est ce qui rendait cette carte-là impossible à basculer.
+
+### KPI Card
+- **Plate et neutre.** Pas de liseré supérieur coloré (il contredisait « le seul liseré
+  coloré autorisé est l'or 3px de la nav active »), un seul carré d'icône teinté pour
+  toutes les cartes, pas de survol — une carte KPI n'est pas cliquable, et son ombre
+  empruntait `--shadow-lg`, réservée aux overlays.
+- **Variation** : flèche + couleur + libellé, ou paire brute sous `MIN_DELTA_SAMPLE`
+  (cf. La Règle du Chiffre Honnête). Zéro n'est ni une hausse ni une baisse.
+- **Sparkline** : teinte neutre. La direction est déjà portée deux fois à sa gauche.
 
 ### Inputs / Fields
 - **Style:** trait 1px `#e5e7eb`, fond blanc, rayon 8px, padding `10px 12px`.
@@ -331,7 +391,16 @@ standalone (installée).
 - **Don't** poser une ombre lourde sur une carte ou une table ; l'ombre `0 10px 30px` est
   réservée aux overlays (modale, drawer).
 - **Don't** coder une information par la seule couleur (badge sans libellé interdit).
+- **Don't** distribuer une teinte **par position** (première carte verte, deuxième or…) :
+  une couleur qui ne code rien fait chercher un code inexistant.
+- **Don't** peindre une variable ORDONNÉE en feu tricolore (difficulté, ancienneté,
+  taille) — rampe d'une seule teinte, intensité croissante.
+- **Don't** allumer un accent d'alerte sur un zéro : « 0 suspendus » est une bonne nouvelle.
+- **Don't** afficher un pourcentage de variation sur un effectif minuscule — paire brute.
+- **Don't** aligner des compteurs de portées différentes sans marqueur explicite.
 - **Don't** afficher un **mur de chiffres** : table brute sans regroupement ni état vide.
 - **Don't** dépasser 1px sur une bordure, ni utiliser un liseré coloré épais comme
   décor — le seul liseré coloré autorisé est l'or 3px de la nav active.
 - **Don't** supprimer l'`outline` de focus sans le remplacer par le halo émeraude.
+- **Don't** écrire une couleur en dur dans le JSX (`style={{ color: '#e74c3c' }}`) ni un
+  `rgba(255,255,255,…)` dans un CSS de page : les deux échappent au thème.

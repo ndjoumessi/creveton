@@ -165,7 +165,8 @@
 /* Anneau or 2px autour de l'avatar (suit le rayon circulaire du composant). */
 .u-dh-top .avatar-c { box-shadow: 0 0 0 2px var(--gold); flex: none; }
 .u-dh-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.u-dh-name { font-family: var(--font-body); font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; }
+/* Nom de joueur → Outfit (DESIGN.md : « titres de carte, noms »). */
+.u-dh-name { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: #fff; line-height: 1.15; }
 .u-dh-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 /* Sur le hero vert profond, badges et statut passent en blanc translucide —
    lisibles dans les deux thèmes (le hero est vert dans light ET dark). */

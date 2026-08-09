@@ -94,7 +94,8 @@
 @media (max-width: 760px) { .set-acc-top { flex-direction: column; gap: 20px; align-items: stretch; } }
 
 .set-acc-avatar { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: none; width: 148px; text-align: center; }
-.set-acc-name { font-family: var(--font-body); font-weight: 700; font-size: 22px; line-height: 1.15; color: var(--ink); margin-top: 6px; }
+/* Nom du titulaire du compte → Outfit (DESIGN.md : « titres de carte, noms »). */
+.set-acc-name { font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.15; color: var(--ink); margin-top: 6px; }
 .set-acc-formats { font-size: var(--text-xs); line-height: 1.45; color: var(--muted); }
 .badge-gold-soft { display: inline-flex; align-items: center; gap: 5px; padding: 3px 11px; border-radius: 999px; font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.2px; background: rgba(212, 160, 23, 0.15); color: #8a6a12; }
 
