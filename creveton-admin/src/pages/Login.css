@@ -1,22 +1,63 @@
-/* Login — « Cockpit Émeraude » split-screen (58/42).
-   Gauche : green900 + grille de losanges pulsante. Droite : cream + formulaire.
-   Fonts : --font-body (headlines/CTA/stats) + --font-display (body/inputs). */
+/* Login — « Cockpit Émeraude », split-screen 56/44.
+ *
+ * Typographie REMISE À L'ENDROIT (08-2026), même correction que la Landing :
+ * la page titrait en `--font-body` (Inter) et posait `--font-display` (Outfit)
+ * en fonte de corps, à rebours de DESIGN.md § Typography. Ici : Outfit = titres,
+ * chiffres, CTA ; Inter = prose et champs.
+ *
+ * Gauche : green900 + lattice pulsante + ce que fait la CONSOLE (les stats du
+ * jeu — 180+/15/3 — recopiées de la Landing en sont parties : elles vendaient
+ * l'app à quelqu'un qui vient administrer). Droite : cream + formulaire posé
+ * sur une vraie surface blanche, au lieu de flotter dans le vide.
+ */
 
 .lp-shell {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  /* Le Login est une surface à palette FIXE : elle ne suit pas le thème
+     clair/sombre de la console. `color-scheme` doit le dire au navigateur, pas
+     seulement à nos règles CSS — sinon les widgets NATIFS (case à cocher, menus
+     déroulants, barres de défilement) continuent de se peindre en sombre parce
+     que `<html data-theme="dark">` porte `color-scheme: dark`. C'est ce qui
+     affichait la case « Se souvenir de moi » en carré noir sur le formulaire
+     crème : la surcharge `.lp-right .input` en tête de ce fichier ne pouvait
+     rien pour elle, une case à cocher n'est pas un `.input`. */
+  color-scheme: light;
+  /* Palette locale fixe : le Login ne suit pas le thème de la console. */
+  --lp-ink: #0b2e1a;
+  --lp-cream: #fdf6e9;
+  --lp-gold: #d4a017;
+  --lp-green: #2a8a4f;
+  --lp-green-lt: #5eca84;
+  /* Crèmes sur fond sombre, calibrés AA sur #0b2e1a. */
+  --lp-on-dark: rgba(253, 246, 233, 0.92);
+  --lp-on-dark-2: rgba(253, 246, 233, 0.72);
+  --lp-on-dark-3: rgba(253, 246, 233, 0.55);
+  --lp-hairline: rgba(253, 246, 233, 0.14);
 }
 
 /* ════════════ Panneau gauche (marque) ════════════ */
 .lp-left {
-  flex: 0 0 58%;
-  background: #0b2e1a;
+  flex: 0 0 56%;
+  background: var(--lp-ink);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 48px 52px;
+  padding: 44px 56px;
+}
+/* Lueur ambrée diffuse : donne une source de lumière au panneau sombre. */
+.lp-left::after {
+  content: '';
+  position: absolute;
+  bottom: -18%;
+  left: -12%;
+  width: 560px;
+  height: 560px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 160, 23, 0.14), transparent 68%);
+  pointer-events: none;
 }
 
 /* Grille de losanges (décor) */
@@ -28,7 +69,7 @@
   pointer-events: none;
 }
 .lp-diamond {
-  fill: #fdf6e9;
+  fill: var(--lp-cream);
   opacity: 0.05;
   animation: lp-pulse 4s ease-in-out infinite;
 }
@@ -44,34 +85,43 @@
   .lp-diamond { animation: none; opacity: 0.05; }
 }
 
-/* Brand header */
+/* Brand header — cliquable, ramène à l'accueil public. */
 .lp-brand {
   position: relative;
   z-index: 2;
   flex-shrink: 0;
-  display: flex;
+  display: inline-flex;
+  align-self: flex-start;
   align-items: center;
   gap: 14px;
+  text-decoration: none;
+  border-radius: 12px;
 }
 .lp-brand-logo {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: 11px;
   object-fit: cover;
-  background: #fdf6e9;
+  background: var(--lp-cream);
   display: block;
 }
+.lp-brand-text { display: flex; flex-direction: column; gap: 3px; }
 .lp-brand-name {
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 20px;
-  color: #fdf6e9;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.3px;
+  line-height: 1;
+  color: var(--lp-cream);
 }
 .lp-brand-tag {
-  font-size: var(--text-2xs);
-  color: rgba(253, 246, 233, 0.4);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-micro);
+  line-height: 1;
+  color: var(--lp-gold);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1.6px;
 }
 
 /* Body (centré verticalement) */
@@ -82,66 +132,80 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 40px 0 32px;
+  padding: 44px 0 36px;
 }
 .lp-eyebrow {
+  font-family: var(--font-display);
   font-size: var(--text-2xs);
-  color: #d4a017;
+  font-weight: 700;
+  color: var(--lp-gold);
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-weight: 500;
   margin-bottom: 20px;
 }
 .lp-headline {
-  font-family: var(--font-body);
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(34px, 3.8vw, 52px);
-  color: #fdf6e9;
-  letter-spacing: -1.5px;
-  line-height: 1.06;
-  margin: 0 0 24px;
+  font-size: clamp(38px, 4.4vw, 62px);
+  color: var(--lp-cream);
+  letter-spacing: -2px;
+  line-height: 1.03;
+  margin: 0 0 20px;
   text-wrap: balance;
 }
 .lp-headline em {
-  color: #d4a017;
+  color: var(--lp-gold);
   font-style: normal;
 }
 .lp-headline-sub {
-  font-size: var(--text-lg);
-  color: rgba(253, 246, 233, 0.5);
-  line-height: 1.65;
-  max-width: 360px;
+  font-size: 17px;
+  color: var(--lp-on-dark-2);
+  line-height: 1.6;
+  max-width: 42ch;
   margin: 0 0 44px;
 }
 
-/* Stats */
-.lp-stats {
-  display: flex;
-  gap: 32px;
-  align-items: center;
-}
-.lp-stat {
+/* Capacités de la console (remplace les stats du jeu recopiées de la Landing) */
+.lp-caps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  max-width: 460px;
 }
-.lp-stat-num {
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 26px;
-  color: #fdf6e9;
-  letter-spacing: -0.8px;
-  line-height: 1;
+.lp-cap {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--lp-hairline);
 }
-.lp-stat-num span { color: #d4a017; }
-.lp-stat-label {
-  font-size: var(--text-xs);
-  color: rgba(253, 246, 233, 0.38);
+.lp-cap:first-child { border-top: 0; padding-top: 0; }
+.lp-cap-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(42, 138, 79, 0.22);
+  color: var(--lp-green-lt);
 }
-.lp-stat-div {
-  width: 1px;
-  height: 36px;
-  background: rgba(253, 246, 233, 0.1);
+.lp-cap-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lp-cap-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-lg);
+  color: var(--lp-on-dark);
+  line-height: 1.3;
+}
+.lp-cap-desc {
+  font-size: var(--text-md);
+  color: var(--lp-on-dark-3);
+  line-height: 1.5;
 }
 
 /* Footer (pills + copyright) */
@@ -153,52 +217,61 @@
   align-items: center;
   justify-content: space-between;
 }
-.lp-pills {
-  display: flex;
-  gap: 8px;
-}
+.lp-pills { display: flex; gap: 8px; }
 .lp-pill {
   width: 30px;
   height: 30px;
-  border-radius: 7px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-body);
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-xs);
 }
-.lp-pill-a { background: rgba(212, 160, 23, 0.16); color: #d4a017; }
-.lp-pill-b { background: rgba(42, 138, 79, 0.22); color: #5eca84; }
-.lp-pill-c { background: rgba(253, 246, 233, 0.1); color: rgba(253, 246, 233, 0.7); }
-.lp-pill-d { background: rgba(253, 246, 233, 0.06); color: rgba(253, 246, 233, 0.45); }
+.lp-pill-a { background: rgba(212, 160, 23, 0.16); color: var(--lp-gold); }
+.lp-pill-b { background: rgba(42, 138, 79, 0.24); color: var(--lp-green-lt); }
+.lp-pill-c { background: rgba(253, 246, 233, 0.1); color: var(--lp-on-dark-2); }
+.lp-pill-d { background: rgba(253, 246, 233, 0.06); color: var(--lp-on-dark-3); }
 .lp-footer-copy {
   font-size: var(--text-xs);
-  color: rgba(253, 246, 233, 0.25);
+  color: var(--lp-on-dark-3);
 }
 
 /* ════════════ Panneau droit (formulaire) ════════════ */
 .lp-right {
   flex: 1;
-  background: #fdf6e9;
+  background: var(--lp-cream);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 52px;
+  padding: 48px 44px;
 }
-.lp-form { width: 100%; max-width: 360px; }
+/* Le formulaire est posé sur une SURFACE, pas suspendu dans le crème : c'est
+   ce qui le faisait flotter au milieu de beaucoup de rien sur grand écran. */
+.lp-form {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border: 1px solid #e7e2d5;
+  border-radius: 18px;
+  padding: 40px 38px;
+  box-shadow: 0 18px 44px -26px rgba(11, 46, 26, 0.3);
+}
 .lp-form-title {
-  font-family: var(--font-body);
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 26px;
-  color: #0b2e1a;
-  letter-spacing: -0.6px;
-  margin: 0 0 6px;
+  font-size: 29px;
+  color: var(--lp-ink);
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin: 0 0 7px;
 }
 .lp-form-sub {
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
+  line-height: 1.5;
   color: #6b7280;
-  margin: 0 0 36px;
+  margin: 0 0 30px;
 }
 
 /* Ligne « se souvenir de moi » */
@@ -206,21 +279,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 4px 0 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 6px 0 22px;
 }
 .lp-remember {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   cursor: pointer;
   user-select: none;
   font-size: var(--text-md);
-  color: #6b7280;
+  color: #4b5563;
 }
 .lp-remember input {
   width: 16px;
   height: 16px;
-  accent-color: #2a8a4f;
+  accent-color: var(--lp-green);
   cursor: pointer;
 }
 
@@ -230,12 +305,12 @@
 .lp-forgot {
   font-size: var(--text-md);
   font-weight: 600;
-  color: #2a8a4f;
+  color: var(--lp-green);
   text-decoration: none;
 }
 .lp-forgot:hover { text-decoration: underline; }
 .lp-forgot:focus-visible {
-  outline: 2px solid #2a8a4f;
+  outline: 2px solid var(--lp-green);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -243,57 +318,54 @@
 /* CTA principal */
 .lp-submit {
   width: 100%;
-  height: 48px;
-  background: #0b2e1a;
+  height: 50px;
+  background: var(--lp-ink);
   border: 0;
-  border-radius: 10px;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: var(--text-lg);
-  color: #fdf6e9;
+  border-radius: 11px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-xl);
+  color: var(--lp-gold);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 9px;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
-.lp-submit:hover { background: #163d25; }
+.lp-submit:hover { background: #143d23; }
 .lp-submit:active { transform: scale(0.985); }
-.lp-submit:disabled { opacity: 0.7; cursor: default; }
+.lp-submit:disabled { opacity: 0.65; cursor: default; }
 .lp-arrow { transition: transform 0.15s ease; }
 .lp-submit:hover .lp-arrow { transform: translateX(3px); }
 
 /* Erreur inline */
 .lp-error {
   margin: 14px 0 0;
-  color: #e74c3c;
+  color: #b91c1c;
   font-size: var(--text-md);
   font-weight: 500;
+  line-height: 1.5;
 }
 
-/* Footer du formulaire (retour accueil + version) */
+/* Footer du formulaire (retour accueil). Le badge « v1.0 » qui vivait ici a
+   sauté : un numéro de version décoratif sur un écran de connexion n'informe
+   personne et concurrençait le seul lien utile de la zone. */
 .lp-form-footer {
-  margin-top: 28px;
+  margin-top: 26px;
   padding-top: 18px;
-  border-top: 1px solid #e9ede9;
+  border-top: 1px solid #eceee9;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 }
 .lp-back {
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   color: #6b7280;
   text-decoration: none;
+  transition: color 150ms ease;
 }
-.lp-back:hover { color: #0b2e1a; }
-.lp-version {
-  font-size: var(--text-2xs);
-  color: #2a8a4f;
-  background: rgba(42, 138, 79, 0.08);
-  padding: 3px 8px;
-  border-radius: 5px;
-}
+.lp-back:hover { color: var(--lp-ink); }
 .lp-demo {
   margin: 16px 0 0;
   font-size: var(--text-xs);
@@ -304,27 +376,44 @@
 /* Le panneau crème est une surface à palette fixe : on force les champs
    design-system (.field/.input/.pwd-eye) en clair, indépendamment du thème
    global de la console — sinon inputs sombres + labels délavés sur le crème. */
-.lp-right .field label { color: #0b2e1a; }
+.lp-right .field { margin-bottom: 16px; }
+.lp-right .field label { color: var(--lp-ink); font-weight: 600; }
 .lp-right .input {
   background: #fff;
-  border-color: #d1d9d1;
-  color: #0b2e1a;
+  border-color: #d7dcd7;
+  color: var(--lp-ink);
+  height: 46px;
 }
 .lp-right .input::placeholder { color: #9ca3af; }
 .lp-right .input:focus {
-  border-color: #2a8a4f;
+  border-color: var(--lp-green);
   box-shadow: 0 0 0 3px rgba(42, 138, 79, 0.12);
+}
+.lp-right .input[aria-invalid='true'] {
+  border-color: #b91c1c;
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.1);
 }
 .lp-right .pwd-eye { color: #6b7280; }
 
-/* ════════════ Responsive (≤ 768px) ════════════ */
-@media (max-width: 768px) {
+/* ════════════ Responsive ════════════ */
+@media (max-width: 1100px) {
+  .lp-left { flex-basis: 50%; padding: 36px 40px; }
+  .lp-right { padding: 40px 32px; }
+  .lp-form { padding: 34px 30px; }
+}
+@media (max-width: 860px) {
   .lp-shell { flex-direction: column; }
   .lp-left {
     flex: 0 0 auto;
-    padding: 32px 28px;
+    padding: 30px 26px 34px;
   }
-  .lp-left-body { padding: 28px 0; }
-  .lp-headline { font-size: 30px; }
-  .lp-right { padding: 40px 28px; }
+  .lp-left-body { padding: 28px 0 26px; }
+  .lp-headline { font-size: 34px; letter-spacing: -1.2px; }
+  .lp-headline-sub { margin-bottom: 28px; }
+  /* Sous 860px l'argumentaire passe après le formulaire dans l'ordre de lecture
+     utile : on garde la première capacité, les deux autres seraient du remplissage
+     avant le champ email. */
+  .lp-cap:nth-child(n + 2) { display: none; }
+  .lp-right { padding: 32px 26px 48px; }
+  .lp-form { padding: 30px 26px; max-width: 460px; }
 }

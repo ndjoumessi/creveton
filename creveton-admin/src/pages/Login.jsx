@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, ShieldCheck, Trophy, Users } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { notify } from '../components/Toast';
 import PasswordInput from '../components/PasswordInput';
@@ -26,6 +26,17 @@ const DIAMONDS = (() => {
   }
   return out;
 })();
+
+// Ce que fait la CONSOLE — et non les chiffres du jeu. Le panneau gauche
+// recopiait mot pour mot les stats de la Landing (180+ / 15 / 3) : le même
+// argumentaire grand public servi à un modérateur qui vient travailler, alors
+// que les trois permissions ci-dessous (`admin.middleware.js`) décrivent son
+// poste. Icônes structurelles, libellés traduits.
+const capabilities = [
+  { icon: ShieldCheck, key: 'moderate' },
+  { icon: Trophy, key: 'orchestrate' },
+  { icon: Users, key: 'steer' },
+];
 
 export default function Login() {
   const { t } = useTranslation();
@@ -90,37 +101,34 @@ export default function Login() {
           ))}
         </svg>
 
-        <div className="lp-brand">
-          <img className="lp-brand-logo" src="/logo.png" alt="Creveton" />
-          <div>
-            <div className="lp-brand-name">{t('login.title')}</div>
-            <div className="lp-brand-tag">{t('login.brandTag')}</div>
-          </div>
-        </div>
+        <Link className="lp-brand" to="/">
+          <img className="lp-brand-logo" src="/logo.png" alt="" />
+          <span className="lp-brand-text">
+            <span className="lp-brand-name">{t('login.title')}</span>
+            <span className="lp-brand-tag">{t('login.brandTag')}</span>
+          </span>
+        </Link>
 
         <div className="lp-left-body">
           <div className="lp-eyebrow">{t('login.eyebrow')}</div>
           <h1 className="lp-headline">
-            {t('login.headlineA')} <em>{t('login.headlineEm')}</em> {t('login.headlineB')}
+            {t('login.headlineA')} <em>{t('login.headlineEm')}</em>
           </h1>
           <p className="lp-headline-sub">{t('login.heroSub')}</p>
 
-          <div className="lp-stats" aria-hidden="true">
-            <div className="lp-stat">
-              <div className="lp-stat-num">180<span>+</span></div>
-              <div className="lp-stat-label">{t('login.stats.questions')}</div>
-            </div>
-            <div className="lp-stat-div" />
-            <div className="lp-stat">
-              <div className="lp-stat-num">15</div>
-              <div className="lp-stat-label">{t('login.stats.themes')}</div>
-            </div>
-            <div className="lp-stat-div" />
-            <div className="lp-stat">
-              <div className="lp-stat-num">3</div>
-              <div className="lp-stat-label">{t('login.stats.levels')}</div>
-            </div>
-          </div>
+          <ul className="lp-caps">
+            {capabilities.map(({ icon: Icon, key }) => (
+              <li className="lp-cap" key={key}>
+                <span className="lp-cap-icon" aria-hidden="true">
+                  <Icon size={17} strokeWidth={2.2} />
+                </span>
+                <span className="lp-cap-text">
+                  <span className="lp-cap-title">{t(`login.caps.${key}`)}</span>
+                  <span className="lp-cap-desc">{t(`login.caps.${key}Desc`)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="lp-left-footer">
@@ -141,19 +149,27 @@ export default function Login() {
           <p className="lp-form-sub">{t('login.subtitle')}</p>
 
           <div className="field">
-            <label>{t('login.email')}</label>
+            <label htmlFor="lp-email">{t('login.email')}</label>
             <input
+              id="lp-email"
               className="input"
               type="email"
+              autoComplete="email"
               placeholder="admin@creveton.cm"
+              aria-invalid={errors.email ? 'true' : undefined}
               {...register('email', { required: t('login.validation.emailRequired') })}
             />
             {errors.email && <span className="field-error">{errors.email.message}</span>}
           </div>
 
           <div className="field">
-            <label>{t('login.password')}</label>
-            <PasswordInput {...register('password', { required: t('login.validation.passwordRequired') })} />
+            <label htmlFor="lp-password">{t('login.password')}</label>
+            <PasswordInput
+              id="lp-password"
+              autoComplete="current-password"
+              aria-invalid={errors.password ? 'true' : undefined}
+              {...register('password', { required: t('login.validation.passwordRequired') })}
+            />
             {errors.password && <span className="field-error">{errors.password.message}</span>}
           </div>
 
@@ -189,7 +205,6 @@ export default function Login() {
 
           <div className="lp-form-footer">
             <Link to="/" className="lp-back">{t('login.backHome')}</Link>
-            <span className="lp-version">v1.0</span>
           </div>
 
           {USE_MOCKS && <p className="lp-demo">{t('login.misc.demoBanner')}</p>}

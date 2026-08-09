@@ -1,24 +1,30 @@
 import { Link } from 'react-router-dom';
 import {
   Target,
+  Swords,
   Trophy,
   BarChart3,
+  Flame,
   UserPlus,
   LayoutGrid,
   Gamepad2,
-  Star,
+  WifiOff,
+  Languages,
+  Smartphone,
   MessageCircle,
   AtSign,
   Send,
+  ArrowRight,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
 import { useCountUp } from '../hooks/useCountUp';
+import { PRODUCT_FACTS, PUBLIC_THEMES } from '../constants/product';
 import './Landing.css';
 
-// Lattice de losanges (décor des bandes vert nuit : héro + CTA). Coordonnées
-// pré-calculées une fois ; la pulsation vit dans Landing.css (.land-diamond), miroir du Login.
+// Lattice de losanges (décor des bandes vert nuit : héro + thèmes + CTA).
+// Coordonnées pré-calculées une fois ; la pulsation vit dans Landing.css.
 const DIAMONDS = (() => {
   const out = [];
   const SP = 88;
@@ -35,7 +41,7 @@ const DIAMONDS = (() => {
 
 function DiamondGrid() {
   return (
-    <svg className="land-hero-grid" viewBox="0 0 1232 792" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <svg className="land-grid" viewBox="0 0 1232 792" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       {DIAMONDS.map((d, i) => (
         <path
           key={i}
@@ -47,31 +53,32 @@ function DiamondGrid() {
   );
 }
 
-// Données structurelles (icônes, emojis, valeurs non traduisibles). Le texte
-// visible est résolu via t() à partir des clés ci-dessous.
-const features = [
-  { icon: Target, titreKey: 'landing.features.quiz', descKey: 'landing.features.quizDesc' },
-  { icon: Trophy, titreKey: 'landing.features.tournaments', descKey: 'landing.features.tournamentsDesc' },
-  { icon: BarChart3, titreKey: 'landing.features.leaderboard', descKey: 'landing.features.leaderboardDesc' },
-];
+// Données structurelles (icônes, valeurs non traduisibles). Le texte visible
+// est résolu via t() à partir des clés ci-dessous.
 
-const themes = [
-  { emoji: '🌍', nameKey: 'landing.themes.geography', count: 18 },
-  { emoji: '📚', nameKey: 'landing.themes.culture', count: 15 },
-  { emoji: '🏛️', nameKey: 'landing.themes.history', count: 16 },
-  { emoji: '🏭', nameKey: 'landing.themes.industry', count: 12 },
+// Capacités RÉELLES du produit (backend : sessions chronométrées, challengeService
+// 1v1, tournois temps réel socket.io, leaderboard, creditSessionXp/niveaux 1–5).
+const features = [
+  { icon: Target, key: 'quiz' },
+  { icon: Swords, key: 'duel' },
+  { icon: Trophy, key: 'tournaments' },
+  { icon: BarChart3, key: 'leaderboard' },
+  { icon: Flame, key: 'xp' },
 ];
 
 const etapes = [
-  { icon: UserPlus, titreKey: 'landing.howItWorks.step1', descKey: 'landing.howItWorks.step1Desc' },
-  { icon: LayoutGrid, titreKey: 'landing.howItWorks.step2', descKey: 'landing.howItWorks.step2Desc' },
-  { icon: Gamepad2, titreKey: 'landing.howItWorks.step3', descKey: 'landing.howItWorks.step3Desc' },
+  { icon: UserPlus, key: 'step1' },
+  { icon: LayoutGrid, key: 'step2' },
+  { icon: Gamepad2, key: 'step3' },
 ];
 
-const temoignages = [
-  { initiales: 'CF', nom: 'Cédric F.', ville: 'Garoua', quoteKey: 'landing.testimonials.quote1' },
-  { initiales: 'AM', nom: 'Awa M.', ville: 'Douala', quoteKey: 'landing.testimonials.quote2' },
-  { initiales: 'JK', nom: 'Junior K.', ville: 'Yaoundé', quoteKey: 'landing.testimonials.quote3' },
+// Ce qui distingue vraiment l'app sur son marché — chaque point est adossé à
+// du code existant : offlineQueue (AsyncStorage + rejeu /sessions/submit),
+// colonnes text_fr/text_en + getQuestionText, cache expo-sqlite du delta sync.
+const conception = [
+  { icon: WifiOff, key: 'offline' },
+  { icon: Languages, key: 'bilingual' },
+  { icon: Smartphone, key: 'light' },
 ];
 
 const reseaux = [
@@ -95,9 +102,46 @@ function StatCountUp({ end, suffix, label }) {
     <div className="land-stat">
       <span className="land-stat-num" ref={ref}>
         {value}
-        <span>{suffix}</span>
+        {suffix && <span>{suffix}</span>}
       </span>
       <span className="land-stat-label">{label}</span>
+    </div>
+  );
+}
+
+/* Mockup téléphone du héro — extrait pour garder le héro lisible. */
+function PhoneMockup({ t }) {
+  return (
+    <div className="land-phone" aria-hidden="true">
+      <div className="land-phone-status">
+        <span>9:41</span>
+        <span className="land-phone-sig">
+          <i /><i /><i /><i />
+        </span>
+      </div>
+      <div className="land-phone-header">
+        <span className="land-phone-badge">🌍 {t('questions.themes.geographie')}</span>
+        <span className="land-phone-timer">00:12</span>
+      </div>
+      <div className="land-phone-progress">
+        <span className="land-phone-fill" />
+      </div>
+      <div className="land-phone-question">
+        <div className="land-phone-qlabel">{t('landing.mockup.qNum')}</div>
+        <p className="land-phone-qtext">{t('landing.mockup.question')}</p>
+      </div>
+      <div className="land-phone-options">
+        {mockOptions.map(({ letter, city, correct }) => (
+          <div key={letter} className={`land-phone-option${correct ? ' correct' : ''}`}>
+            <span className="land-phone-letter">{letter}</span>
+            {city}
+          </div>
+        ))}
+      </div>
+      <div className="land-phone-score">
+        <span>{t('landing.mockup.score')}</span>
+        <strong>1 240 pts</strong>
+      </div>
     </div>
   );
 }
@@ -131,180 +175,157 @@ export default function Landing() {
             <a className="land-nav-link" href="#about">{t('landing.nav.about')}</a>
           </div>
           {/* Switcher autonome — hors .land-nav-links pour rester visible < 768px. */}
-          <div className="land-lang-switch">
-            <button
-              type="button"
-              className={`land-lang-btn${lang === 'fr' ? ' active' : ''}`}
-              onClick={() => setLang('fr')}
-            >
-              FR
-            </button>
-            <button
-              type="button"
-              className={`land-lang-btn${lang === 'en' ? ' active' : ''}`}
-              onClick={() => setLang('en')}
-            >
-              EN
-            </button>
+          <div className="land-nav-end">
+            <div className="land-lang-switch" role="group" aria-label={t('landing.a11y.language')}>
+              <button
+                type="button"
+                className={`land-lang-btn${lang === 'fr' ? ' active' : ''}`}
+                aria-pressed={lang === 'fr'}
+                onClick={() => setLang('fr')}
+              >
+                FR
+              </button>
+              <button
+                type="button"
+                className={`land-lang-btn${lang === 'en' ? ' active' : ''}`}
+                aria-pressed={lang === 'en'}
+                onClick={() => setLang('en')}
+              >
+                EN
+              </button>
+            </div>
+            <a className="land-nav-cta" href="#download">{t('landing.nav.download')}</a>
           </div>
-          <a className="land-nav-cta" href="#">{t('landing.nav.download')}</a>
         </nav>
 
         <div className="land-hero-inner">
           <div className="land-hero-left">
-            <span className="land-hero-badge">🇨🇲 {t('landing.hero.available')}</span>
-            <div className="land-hero-eyebrow">{t('landing.hero.eyebrow')}</div>
+            {/* Le drapeau vit dans son propre span : en enfant direct d'un flex,
+                le texte « 🇨🇲 » forme un item anonyme dont l'espace final est
+                écrasé — l'emoji se collait au libellé malgré le `gap`. */}
+            <span className="land-hero-badge">
+              <span aria-hidden="true">🇨🇲</span>
+              {t('landing.hero.available')}
+            </span>
             <h1 className="land-headline">
-              {t('landing.hero.headlineA')} <em>{t('landing.hero.headlineEm')}</em> {t('landing.hero.headlineB')}
+              {t('landing.hero.headlineA')} <em>{t('landing.hero.headlineEm')}</em>
             </h1>
             <p className="land-hero-sub">{t('landing.hero.subtitle')}</p>
 
             <div className="land-hero-actions">
-              <a className="land-btn-dl" href="#">{t('landing.hero.download')}</a>
-              <Link className="land-btn-console" to={consoleTarget}>{t('landing.hero.adminAccess')}</Link>
+              <a className="land-btn-dl" id="download" href="#download">
+                {t('landing.hero.download')}
+              </a>
+              <Link className="land-btn-console" to={consoleTarget}>
+                {t('landing.hero.adminAccess')}
+                <ArrowRight size={16} strokeWidth={2.4} aria-hidden="true" />
+              </Link>
             </div>
 
             <div className="land-hero-stats">
-              <StatCountUp end={180} suffix="+" label={t('landing.stats.questions')} />
+              <StatCountUp end={PRODUCT_FACTS.questions} suffix="+" label={t('landing.stats.questions')} />
               <span className="land-stat-div" aria-hidden="true" />
-              <StatCountUp end={15} suffix="" label={t('landing.stats.themes')} />
+              <StatCountUp end={PRODUCT_FACTS.themes} label={t('landing.stats.themes')} />
               <span className="land-stat-div" aria-hidden="true" />
-              <StatCountUp end={3} suffix="" label={t('landing.stats.levels')} />
+              <StatCountUp end={PRODUCT_FACTS.levels} label={t('landing.stats.levels')} />
             </div>
           </div>
 
-          {/* Mockup téléphone */}
           <div className="land-hero-right">
-            <div className="land-phone" aria-hidden="true">
-              <div className="land-phone-status">
-                <span>9:41</span>
-                <span className="land-phone-sig">
-                  <i /><i /><i /><i />
-                </span>
-              </div>
-              <div className="land-phone-header">
-                <span className="land-phone-badge">🌍 {t('landing.themes.geography')}</span>
-                <span className="land-phone-timer">00:12</span>
-              </div>
-              <div className="land-phone-progress">
-                <span className="land-phone-fill" />
-              </div>
-              <div className="land-phone-question">
-                <div className="land-phone-qlabel">{t('landing.mockup.qNum')}</div>
-                <p className="land-phone-qtext">{t('landing.mockup.question')}</p>
-              </div>
-              <div className="land-phone-options">
-                {mockOptions.map(({ letter, city, correct }) => (
-                  <div key={letter} className={`land-phone-option${correct ? ' correct' : ''}`}>
-                    <span className="land-phone-letter">{letter}</span>
-                    {city}
-                  </div>
-                ))}
-              </div>
-              <div className="land-phone-score">
-                <span>{t('landing.mockup.score')}</span>
-                <strong>1 240 pts</strong>
-              </div>
-            </div>
+            <span className="land-phone-halo" aria-hidden="true" />
+            <PhoneMockup t={t} />
           </div>
-        </div>
-
-        <div className="land-pills" aria-hidden="true">
-          <span className="land-pill land-pill-a">A</span>
-          <span className="land-pill land-pill-b">B</span>
-          <span className="land-pill land-pill-c">C</span>
-          <span className="land-pill land-pill-d">D</span>
         </div>
       </section>
 
-      {/* ═══════════ COMMENT ÇA MARCHE (crème) ═══════════ */}
+      {/* ═══════════ ÉTAPES — rail numéroté, sans cartes (crème) ═══════════ */}
       <section className="land-section cream">
         <div className="land-container">
           <div className="land-section-head">
             <div className="land-eyebrow">{t('landing.howItWorks.eyebrow')}</div>
             <h2 className="land-title">{t('landing.howItWorks.title')}</h2>
           </div>
-          <ol className="land-steps-grid">
-            {etapes.map(({ icon: Icon, titreKey, descKey }, i) => (
-              <li className="land-step" key={titreKey}>
-                <span className="land-step-num" aria-hidden="true">{i + 1}</span>
-                <span className="land-step-icon" aria-hidden="true">
-                  <Icon size={24} strokeWidth={2.2} />
+          <ol className="land-rail">
+            {etapes.map(({ icon: Icon, key }, i) => (
+              <li className="land-rail-step" key={key}>
+                <span className="land-rail-num" aria-hidden="true">{`0${i + 1}`}</span>
+                <span className="land-rail-icon" aria-hidden="true">
+                  <Icon size={20} strokeWidth={2.2} />
                 </span>
-                <h3 className="land-step-title">{t(titreKey)}</h3>
-                <p className="land-step-desc">{t(descKey)}</p>
+                <h3 className="land-rail-title">{t(`landing.howItWorks.${key}`)}</h3>
+                <p className="land-rail-desc">{t(`landing.howItWorks.${key}Desc`)}</p>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      {/* ═══════════ FONCTIONNALITÉS (blanc) ═══════════ */}
+      {/* ═══════════ FONCTIONNALITÉS — asymétrique (blanc) ═══════════ */}
       <section className="land-section white" id="features">
-        <div className="land-container">
-          <div className="land-section-head">
+        <div className="land-container land-split">
+          <div className="land-split-aside">
             <div className="land-eyebrow gold">{t('landing.features.eyebrow')}</div>
-            <h2 className="land-title">{t('landing.features.title')}</h2>
+            <h2 className="land-title left">{t('landing.features.title')}</h2>
+            <p className="land-split-sub">{t('landing.features.sub')}</p>
           </div>
-          <div className="land-features-grid">
-            {features.map(({ icon: Icon, titreKey, descKey }) => (
-              <article className="land-feature" key={titreKey}>
-                <span className="land-feature-icon" aria-hidden="true">
-                  <Icon size={26} strokeWidth={2.2} />
+          <ul className="land-flist">
+            {features.map(({ icon: Icon, key }) => (
+              <li className="land-frow" key={key}>
+                <span className="land-frow-icon" aria-hidden="true">
+                  <Icon size={20} strokeWidth={2.2} />
                 </span>
-                <h3 className="land-feature-title">{t(titreKey)}</h3>
-                <p className="land-feature-desc">{t(descKey)}</p>
-              </article>
+                <div className="land-frow-body">
+                  <h3 className="land-frow-title">{t(`landing.features.${key}`)}</h3>
+                  <p className="land-frow-desc">{t(`landing.features.${key}Desc`)}</p>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
-      {/* ═══════════ THÈMES (crème) ═══════════ */}
-      <section className="land-section cream" id="themes">
-        <div className="land-container">
-          <div className="land-section-head">
-            <div className="land-eyebrow">{t('landing.themes.eyebrow')}</div>
-            <h2 className="land-title">{t('landing.themes.title')}</h2>
+      {/* ═══════════ THÈMES — bande vert nuit (ancre sombre en milieu de page) ═══ */}
+      <section className="land-band" id="themes">
+        <DiamondGrid />
+        <div className="land-container land-band-inner">
+          <div className="land-section-head on-dark">
+            <div className="land-eyebrow gold">{t('landing.themes.eyebrow')}</div>
+            <h2 className="land-title on-dark">
+              {t('landing.themes.title', {
+                themes: PRODUCT_FACTS.themes,
+                questions: `${PRODUCT_FACTS.questions}+`,
+              })}
+            </h2>
           </div>
-          <div className="land-themes-grid">
-            {themes.map(({ emoji, nameKey, count }) => (
-              <article className="land-theme-card" key={nameKey}>
+          <ul className="land-themes">
+            {PUBLIC_THEMES.map(({ key, emoji }) => (
+              <li className="land-theme" key={key}>
                 <span className="land-theme-emoji" aria-hidden="true">{emoji}</span>
-                <h3 className="land-theme-name">{t(nameKey)}</h3>
-                <p className="land-theme-count">{count} {t('landing.themes.questions')}</p>
-              </article>
+                <span className="land-theme-name">{t(`questions.themes.${key}`)}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
-      {/* ═══════════ TÉMOIGNAGES (blanc) ═══════════ */}
+      {/* ═══════════ CONÇU ICI — remplace les faux témoignages (blanc) ═══════════ */}
       <section className="land-section white" id="about">
         <div className="land-container">
           <div className="land-section-head">
-            <div className="land-eyebrow gold">{t('landing.testimonials.eyebrow')}</div>
-            <h2 className="land-title">{t('landing.testimonials.title')}</h2>
+            <div className="land-eyebrow">{t('landing.built.eyebrow')}</div>
+            <h2 className="land-title">{t('landing.built.title')}</h2>
           </div>
-          <div className="land-testimonials-grid">
-            {temoignages.map(({ initiales, nom, ville, quoteKey }) => (
-              <figure className="land-testimonial" key={nom}>
-                <div className="land-testimonial-stars" aria-label={t('landing.a11y.rating')}>
-                  {['s1', 's2', 's3', 's4', 's5'].map((s) => (
-                    <Star key={s} size={18} strokeWidth={0} fill="currentColor" aria-hidden="true" />
-                  ))}
-                </div>
-                <blockquote className="land-testimonial-quote">« {t(quoteKey)} »</blockquote>
-                <figcaption className="land-testimonial-author">
-                  <span className="land-testimonial-avatar" aria-hidden="true">{initiales}</span>
-                  <span className="land-testimonial-meta">
-                    <span className="land-testimonial-name">{nom}</span>
-                    <span className="land-testimonial-city">{ville}</span>
-                  </span>
-                </figcaption>
-              </figure>
+          <ul className="land-built">
+            {conception.map(({ icon: Icon, key }) => (
+              <li className="land-built-item" key={key}>
+                <span className="land-built-icon" aria-hidden="true">
+                  <Icon size={22} strokeWidth={2.1} />
+                </span>
+                <h3 className="land-built-title">{t(`landing.built.${key}`)}</h3>
+                <p className="land-built-desc">{t(`landing.built.${key}Desc`)}</p>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
@@ -315,7 +336,13 @@ export default function Landing() {
           <div className="land-eyebrow gold">{t('landing.cta.eyebrow')}</div>
           <h2 className="land-cta-title">{t('landing.cta.title')}</h2>
           <p className="land-cta-sub">{t('landing.cta.sub')}</p>
-          <a className="land-btn-dl" href="#">{t('landing.cta.button')}</a>
+          <a className="land-btn-dl" href="#download">{t('landing.cta.button')}</a>
+          <div className="land-pills" aria-hidden="true">
+            <span className="land-pill land-pill-a">A</span>
+            <span className="land-pill land-pill-b">B</span>
+            <span className="land-pill land-pill-c">C</span>
+            <span className="land-pill land-pill-d">D</span>
+          </div>
         </div>
       </section>
 
@@ -333,7 +360,7 @@ export default function Landing() {
           <nav className="land-footer-social" aria-label={t('landing.a11y.socialNetworks')}>
             {reseaux.map(({ icon: Icon, label }) => (
               <a className="land-footer-social-link" href="#" key={label} aria-label={label}>
-                <Icon size={20} strokeWidth={2} aria-hidden="true" />
+                <Icon size={18} strokeWidth={2} aria-hidden="true" />
               </a>
             ))}
           </nav>

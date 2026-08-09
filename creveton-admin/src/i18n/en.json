@@ -1433,21 +1433,15 @@
     "eyebrow": "Admin console",
     "headlineA": "The game,",
     "headlineEm": "precision",
-    "headlineB": "",
     "heroSub": "The console that orchestrates questions, tournaments and players across Cameroon.",
     "formTitle": "Sign in",
     "cta": "Enter the cockpit",
-    "welcome": "Welcome to the Emerald Cockpit",
-    "leftTagline": "The quiz platform",
-    "leftQuote": "Engage your community.",
     "email": "Email address",
     "password": "Password",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "rememberMe": "Remember me",
-    "submit": "Sign in",
     "loading": "Signing in...",
-    "error": "Incorrect email or password",
     "validation": {
       "emailRequired": "Email required",
       "passwordRequired": "Password required"
@@ -1462,10 +1456,13 @@
       "demoBanner": "Demo mode active — any input opens a mock admin session."
     },
     "backHome": "← Back to home",
-    "stats": {
-      "questions": "Questions",
-      "themes": "Active themes",
-      "levels": "Levels"
+    "caps": {
+      "moderate": "Moderate the content",
+      "moderateDesc": "Review, correct and approve questions before they reach players.",
+      "orchestrate": "Orchestrate tournaments",
+      "orchestrateDesc": "Schedule, open and follow tournaments live.",
+      "steer": "Steer the players",
+      "steerDesc": "Accounts, roles, reports and anti-cheat in one place."
     }
   },
   "landing": {
@@ -1476,66 +1473,66 @@
       "download": "Download"
     },
     "hero": {
-      "tagline": "Quiz. Competition. Cameroon. 🇨🇲",
-      "eyebrow": "Quiz · Competition · Cameroon",
-      "headlineA": "The quiz that thrills",
+      "available": "Available on Android",
+      "headlineA": "The quiz that moves",
       "headlineEm": "Cameroon",
-      "headlineB": "",
-      "subtitle": "Cameroon's competitive quiz",
+      "subtitle": "Answer fast, challenge your friends, climb the national leaderboard. Questions written here, in French and in English.",
       "download": "Download the app",
-      "adminAccess": "Access the admin console →",
-      "available": "Available on Android"
+      "adminAccess": "Admin console"
     },
     "stats": {
       "questions": "Questions",
       "themes": "Themes",
-      "levels": "Levels"
+      "levels": "Difficulty levels"
     },
     "mockup": {
-      "question": "What is Cameroon's political capital?",
+      "question": "What is the political capital of Cameroon?",
       "qNum": "Question 3/10",
       "score": "Score"
-    },
-    "features": {
-      "eyebrow": "Built for you",
-      "title": "Why Creveton?",
-      "quiz": "Timed quiz",
-      "quizDesc": "Questions about Cameroonian culture",
-      "tournaments": "Competitive tournaments",
-      "tournamentsDesc": "Take on the best players",
-      "leaderboard": "Leaderboards",
-      "leaderboardDesc": "Climb the national ranking"
     },
     "howItWorks": {
       "eyebrow": "Simple and fast",
       "title": "How it works",
       "step1": "Sign up",
-      "step1Desc": "Create your account in 30 seconds",
-      "step2": "Choose your theme",
-      "step2Desc": "Culture, Geography, History, Industry",
+      "step1Desc": "Your phone number is enough. Thirty seconds and you're playing.",
+      "step2": "Pick your theme",
+      "step2Desc": "Six worlds, three difficulty levels.",
       "step3": "Play and win",
-      "step3Desc": "XP, badges and tournaments await you"
+      "step3Desc": "XP on every round, plus challenges and tournaments."
+    },
+    "features": {
+      "eyebrow": "What you can do",
+      "title": "Five ways to play",
+      "sub": "From a timed solo quiz to a live tournament — the competition goes as far as you want to take it.",
+      "quiz": "Timed quiz",
+      "quizDesc": "Ten questions, a running clock, and a speed bonus if you answer in under five seconds.",
+      "duel": "1-on-1 challenges",
+      "duelDesc": "Challenge a friend: the same set of questions for both of you, and 25% extra XP for the winner.",
+      "tournaments": "Live tournaments",
+      "tournamentsDesc": "Join a tournament and watch the standings shift with every answer.",
+      "leaderboard": "National leaderboard",
+      "leaderboardDesc": "Measure up against the whole country — or just your city.",
+      "xp": "XP and levels",
+      "xpDesc": "Every round counts. Five player levels to climb, from beginner to the top."
     },
     "themes": {
       "eyebrow": "Explore",
-      "title": "4 themes, hundreds of questions",
-      "questions": "questions",
-      "geography": "Geography",
-      "culture": "Culture",
-      "history": "History",
-      "industry": "Industry"
+      "title": "{{themes}} themes, {{questions}} questions"
     },
-    "testimonials": {
-      "eyebrow": "They love it",
-      "title": "What they think",
-      "quote1": "I play every evening! The questions are well crafted and the competition is addictive.",
-      "quote2": "Finally a 100% Cameroonian quiz. I learn so much about my country while having fun.",
-      "quote3": "The tournament mode is brilliant. Facing my friends live has become a weekend ritual."
+    "built": {
+      "eyebrow": "Built here",
+      "title": "Made for playing in Cameroon",
+      "offline": "Works without a signal",
+      "offlineDesc": "Play offline: your rounds are queued, then synced the moment the network comes back.",
+      "bilingual": "French and English",
+      "bilingualDesc": "Every question, every option and every explanation exists in both languages.",
+      "light": "Easy on your data",
+      "lightDesc": "Questions are cached on the device — only what changed is downloaded again."
     },
     "cta": {
       "eyebrow": "Join the game",
       "title": "Ready to play?",
-      "sub": "Download Creveton and climb the national ranking.",
+      "sub": "Download Creveton and start climbing the national leaderboard.",
       "button": "Download for free"
     },
     "footer": {
@@ -1546,7 +1543,7 @@
       "rights": "All rights reserved"
     },
     "a11y": {
-      "rating": "Rated 5 out of 5",
+      "language": "Language",
       "socialNetworks": "Social networks",
       "legalLinks": "Legal links"
     }

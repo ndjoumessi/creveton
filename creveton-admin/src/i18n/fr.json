@@ -1433,21 +1433,15 @@
     "eyebrow": "Console d'administration",
     "headlineA": "Le jeu,",
     "headlineEm": "précision",
-    "headlineB": "",
     "heroSub": "La console qui orchestre questions, tournois et joueurs à travers le Cameroun.",
     "formTitle": "Connexion",
     "cta": "Accéder au cockpit",
-    "welcome": "Bienvenue sur Cockpit Émeraude",
-    "leftTagline": "La plateforme quiz",
-    "leftQuote": "Engagez votre communauté.",
     "email": "Adresse email",
     "password": "Mot de passe",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
     "rememberMe": "Se souvenir de moi",
-    "submit": "Se connecter",
     "loading": "Connexion...",
-    "error": "Email ou mot de passe incorrect",
     "validation": {
       "emailRequired": "Email requis",
       "passwordRequired": "Mot de passe requis"
@@ -1462,10 +1456,13 @@
       "demoBanner": "Mode démo actif — toute saisie ouvre une session admin fictive."
     },
     "backHome": "← Retour à l’accueil",
-    "stats": {
-      "questions": "Questions",
-      "themes": "Thèmes actifs",
-      "levels": "Niveaux"
+    "caps": {
+      "moderate": "Modérer le contenu",
+      "moderateDesc": "Relire, corriger et approuver les questions avant qu'elles atteignent les joueurs.",
+      "orchestrate": "Orchestrer les tournois",
+      "orchestrateDesc": "Programmer, ouvrir et suivre les tournois en direct.",
+      "steer": "Piloter les joueurs",
+      "steerDesc": "Comptes, rôles, signalements et anti-triche au même endroit."
     }
   },
   "landing": {
@@ -1476,66 +1473,66 @@
       "download": "Télécharger"
     },
     "hero": {
-      "tagline": "Quiz. Compétition. Cameroun. 🇨🇲",
-      "eyebrow": "Quiz · Compétition · Cameroun",
+      "available": "Disponible sur Android",
       "headlineA": "Le quiz qui fait vibrer le",
       "headlineEm": "Cameroun",
-      "headlineB": "",
-      "subtitle": "Le quiz compétitif du Cameroun",
+      "subtitle": "Réponds vite, défie tes amis, grimpe dans le classement national. Des questions écrites ici, en français comme en anglais.",
       "download": "Télécharger l'app",
-      "adminAccess": "Accéder à la console admin →",
-      "available": "Disponible sur Android"
+      "adminAccess": "Console admin"
     },
     "stats": {
       "questions": "Questions",
       "themes": "Thèmes",
-      "levels": "Niveaux"
+      "levels": "Niveaux de difficulté"
     },
     "mockup": {
       "question": "Quelle est la capitale politique du Cameroun ?",
       "qNum": "Question 3/10",
       "score": "Score"
     },
-    "features": {
-      "eyebrow": "Pensé pour vous",
-      "title": "Pourquoi Creveton ?",
-      "quiz": "Quiz chronométré",
-      "quizDesc": "Questions sur la culture camerounaise",
-      "tournaments": "Tournois compétitifs",
-      "tournamentsDesc": "Affrontez les meilleurs joueurs",
-      "leaderboard": "Classements",
-      "leaderboardDesc": "Grimpez dans le classement national"
-    },
     "howItWorks": {
       "eyebrow": "Simple et rapide",
       "title": "Comment ça marche",
       "step1": "Inscris-toi",
-      "step1Desc": "Crée ton compte en 30 secondes",
+      "step1Desc": "Ton numéro suffit. Trente secondes, et tu joues.",
       "step2": "Choisis ton thème",
-      "step2Desc": "Culture, Géo, Histoire, Industrie",
+      "step2Desc": "Six univers, trois niveaux de difficulté.",
       "step3": "Joue et gagne",
-      "step3Desc": "XP, badges et tournois t'attendent"
+      "step3Desc": "De l'XP à chaque partie, des défis, des tournois."
+    },
+    "features": {
+      "eyebrow": "Ce que tu peux faire",
+      "title": "Cinq façons de jouer",
+      "sub": "Du quiz solo chronométré au tournoi en direct — la compétition va aussi loin que tu veux l'emmener.",
+      "quiz": "Quiz chronométré",
+      "quizDesc": "Dix questions, un chrono qui tourne, et un bonus de vitesse si tu réponds en moins de cinq secondes.",
+      "duel": "Défis 1 contre 1",
+      "duelDesc": "Lance un défi à un ami : la même série de questions pour vous deux, et 25 % d'XP en plus pour le vainqueur.",
+      "tournaments": "Tournois en direct",
+      "tournamentsDesc": "Rejoins un tournoi et regarde le classement se recomposer à chaque réponse.",
+      "leaderboard": "Classement national",
+      "leaderboardDesc": "Mesure-toi au pays entier — ou seulement à ta ville.",
+      "xp": "XP et niveaux",
+      "xpDesc": "Chaque partie compte. Cinq niveaux de joueur à gravir, du débutant au sommet."
     },
     "themes": {
       "eyebrow": "Explore",
-      "title": "4 thèmes, des centaines de questions",
-      "questions": "questions",
-      "geography": "Géographie",
-      "culture": "Culture",
-      "history": "Histoire",
-      "industry": "Industrie"
+      "title": "{{themes}} thèmes, {{questions}} questions"
     },
-    "testimonials": {
-      "eyebrow": "Ils adorent",
-      "title": "Ce qu'ils en pensent",
-      "quote1": "Je joue chaque soir ! Les questions sont bien pensées et la compétition est addictive.",
-      "quote2": "Enfin un quiz 100 % camerounais. J'apprends plein de choses sur mon pays en m'amusant.",
-      "quote3": "Le mode tournoi est génial. Affronter mes amis en direct, c'est devenu un rituel du week-end."
+    "built": {
+      "eyebrow": "Conçu ici",
+      "title": "Pensé pour jouer au Cameroun",
+      "offline": "Marche sans réseau",
+      "offlineDesc": "Joue hors connexion : tes parties sont mises en file, puis synchronisées dès que le réseau revient.",
+      "bilingual": "Français et anglais",
+      "bilingualDesc": "Chaque question, chaque option et chaque explication existe dans les deux langues.",
+      "light": "Léger sur ton forfait",
+      "lightDesc": "Les questions vivent en cache sur l'appareil : on ne retélécharge que ce qui a changé."
     },
     "cta": {
       "eyebrow": "Rejoins la partie",
       "title": "Prêt à jouer ?",
-      "sub": "Télécharge Creveton et grimpe dans le classement national.",
+      "sub": "Télécharge Creveton et commence à grimper dans le classement national.",
       "button": "Télécharger gratuitement"
     },
     "footer": {
@@ -1546,7 +1543,7 @@
       "rights": "Tous droits réservés"
     },
     "a11y": {
-      "rating": "Note 5 sur 5",
+      "language": "Langue",
       "socialNetworks": "Réseaux sociaux",
       "legalLinks": "Liens légaux"
     }
