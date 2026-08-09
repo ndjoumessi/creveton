@@ -18,6 +18,7 @@ import DraftsReview from '../components/DraftsReview';
 import { THEME_KEYS, LEVEL_KEYS } from '../constants/enums';
 import { themeLabel, levelLabel, questionStatusColors } from '../constants/theme';
 import { pct, dateShort, dateTimeShort } from '../utils/format';
+import { shuffleOptions, newGameSeed } from '../utils/shuffle';
 import PageHeader from '../components/PageHeader';
 import ThemeBadge from '../components/ThemeBadge';
 import Gauge from '../components/Gauge';
@@ -1447,6 +1448,9 @@ export default function Questions() {
   // Aperçu drawer : mode nuit + simulation de réponse.
   const [previewNight, setPreviewNight] = useState(false);
   const [testPick, setTestPick] = useState(null);
+  // Regénérée à chaque essai — sinon re-tester la même question redonnerait la
+  // même disposition, et le relecteur ne verrait jamais qu'elle varie.
+  const [testSeed, setTestSeed] = useState('');
   // Traduction IA d'une question existante (drawer) : 'en' | 'fr' en cours, ou null.
   const [translatingDetail, setTranslatingDetail] = useState(null);
   // Section « Gestion bilingue » du drawer : repliée par défaut (réinit à l'ouverture).
@@ -2143,6 +2147,14 @@ export default function Questions() {
           const correctIdx = detail.correct_index != null
             ? detail.correct_index
             : opts.findIndex((o) => o.is_correct);
+          // Ordre d'affichage. CANONIQUE en relecture — l'aperçu sert à
+          // proofreader la question à côté du formulaire, un ordre qui bouge
+          // d'une ouverture à l'autre gênerait la comparaison. MÉLANGÉ pendant
+          // « Tester la question », qui est un essai jouable : un modérateur
+          // doit éprouver la question dans les conditions du joueur, sinon il
+          // valide une disposition que personne ne verra.
+          const indexed = opts.map((o, i) => ({ ...o, index: o.index ?? i }));
+          const shownOpts = testPick != null ? shuffleOptions(indexed, testSeed, detail.id) : indexed;
           // Aperçu dans la langue active de la console (repli FR si EN absent).
           // Recalculé à CHAQUE rendu (l'IIFE re-tourne quand Questions() se
           // re-rend sur 'languageChanged') → bascule FR↔EN immédiate, drawer ouvert.
@@ -2197,7 +2209,7 @@ export default function Questions() {
                     {testPick != null ? (
                       <button type="button" className="q-prev-tool" onClick={() => setTestPick(null)}><RotateCcw size={14} /> {t('questions.reset')}</button>
                     ) : (
-                      <button type="button" className="q-prev-tool q-prev-tool-go" onClick={() => setTestPick(-1)}><Play size={14} /> {t('questions.drawer.testQuestion')}</button>
+                      <button type="button" className="q-prev-tool q-prev-tool-go" onClick={() => { setTestSeed(newGameSeed()); setTestPick(-1); }}><Play size={14} /> {t('questions.drawer.testQuestion')}</button>
                     )}
                   </div>
 
@@ -2210,20 +2222,23 @@ export default function Questions() {
                     {detail.media_url && <img src={detail.media_url} alt="" className="q-phone-img" />}
                     <div className="q-phone-q">{displayText || t('questions.drawer.noStatement')}</div>
                     <div className="q-phone-opts">
-                      {opts.map((o, i) => {
+                      {shownOpts.map((o, i) => {
                         const testing = testPick != null;
                         const answered = testPick != null && testPick >= 0;
                         if (!testing) {
-                          return <PreviewOption key={`${detail.id}-mp-${i}`} letter={LETTERS[i]} text={displayOption(o)} correct={i === correctIdx} />;
+                          return <PreviewOption key={`${detail.id}-mp-${i}`} letter={LETTERS[i]} text={displayOption(o)} correct={o.index === correctIdx} />;
                         }
-                        const showCorrect = answered && i === correctIdx;
-                        const showWrong = answered && i === testPick && i !== correctIdx;
+                        // Comparaisons par IDENTITÉ (`o.index`) et non par rang :
+                        // en essai, le rang d'affichage ne correspond plus à
+                        // l'index canonique que porte `correct_index`.
+                        const showCorrect = answered && o.index === correctIdx;
+                        const showWrong = answered && o.index === testPick && o.index !== correctIdx;
                         return (
                           <button
                             type="button"
                             key={`${detail.id}-mp-${i}`}
                             className={`q-mp-opt q-mp-opt--btn ${showCorrect ? 'correct' : ''} ${showWrong ? 'wrong' : ''}`}
-                            onClick={() => { if (testPick === -1) setTestPick(i); }}
+                            onClick={() => { if (testPick === -1) setTestPick(o.index); }}
                             disabled={answered}
                           >
                             <span className="q-mp-letter">{LETTERS[i]}</span>
@@ -2236,7 +2251,7 @@ export default function Questions() {
                     </div>
                     {testPick === -1 && <div className="q-phone-hint">{t('questions.preview.selectAnswer')}</div>}
                     {(testPick == null || testPick >= 0) && correctIdx >= 0 && (
-                      <div className="q-phone-answer">{t('questions.preview.correctAnswer', { letter: LETTERS[correctIdx], text: opts[correctIdx] ? displayOption(opts[correctIdx]) : '' })}</div>
+                      <div className="q-phone-answer">{t('questions.preview.correctAnswer', { letter: LETTERS[shownOpts.findIndex((o) => o.index === correctIdx)] || '?', text: opts[correctIdx] ? displayOption(opts[correctIdx]) : '' })}</div>
                     )}
                     {displayExplanation && (testPick == null || testPick >= 0) && (
                       <div className="q-phone-explain"><Icon icon={Lightbulb} size={16} /><span>{displayExplanation}</span></div>

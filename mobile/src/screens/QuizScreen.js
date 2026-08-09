@@ -32,6 +32,7 @@ import { useReduceMotion } from '../hooks/useReduceMotion';
 import { useTheme } from '../hooks/useTheme';
 import { fontSizes, radius, spacing, shadow, motion } from '../constants/theme';
 import { MODE_DURATION_S, TIMED_MODES } from '../constants/config';
+import { shuffleOptions } from '../utils/shuffle';
 import { getQuestionText, getOptionText, normalizeLang } from '../utils/i18n';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
@@ -88,6 +89,7 @@ export default function QuizScreen({ navigation }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const questions = useGameStore((s) => s.questions);
+  const seed = useGameStore((s) => s.seed);
   const currentIndex = useGameStore((s) => s.currentIndex);
   const answerCurrent = useGameStore((s) => s.answerCurrent);
   const next = useGameStore((s) => s.next);
@@ -526,14 +528,17 @@ export default function QuizScreen({ navigation }) {
   // Localisation FR/EN — recalculée si la question change OU si la langue change
   // pendant la partie (toggle FR↔EN dans Profil) : le quiz en cours se met à jour.
   const displayText = useMemo(() => getQuestionText(question, lang), [question, lang]);
-  const displayOptions = useMemo(
-    () => (question?.options || []).map((opt, i) => ({
+  // Ordre d'affichage MÉLANGÉ (cf. utils/shuffle.js). `index` est posé AVANT le
+  // mélange : c'est l'identité de l'option, celle qui part au serveur. Seule la
+  // lettre — dérivée du rang de rendu — change de place.
+  const displayOptions = useMemo(() => {
+    const opts = (question?.options || []).map((opt, i) => ({
       ...opt,
       index: opt.index ?? i,
       label: getOptionText(opt, lang),
-    })),
-    [question, lang]
-  );
+    }));
+    return shuffleOptions(opts, seed, question?.id);
+  }, [question, lang, seed]);
 
   if (submitting) return <LoadingScreen message={t('quiz.misc.submitting')} />;
   if (!question) return <LoadingScreen message={t('common.loading')} />;

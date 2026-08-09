@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Lightbulb, Check, WifiOff, X } from 'lucide-react-native';
 import Icon from '../components/Icon';
 import { AnswerOption, CircularTimer, Title, Heading, Body, Label } from '../components';
+import { shuffleOptions } from '../utils/shuffle';
 import { useTournamentSocket } from '../hooks/useTournamentSocket';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useAuthStore } from '../store/authStore';
@@ -201,7 +202,15 @@ export default function TournamentLiveScreen({ navigation, route }) {
               au reveal, correct/incorrect (le serveur tranche) ; avant, sélection
               simple + autres options grisées dès que la réponse est envoyée. */}
           <View style={styles.options}>
-            {(question.options || []).map((opt, i) => {
+            {/* Ordre mélangé, amorcé par l'ID DU TOURNOI : tous les
+                participants voient donc la même disposition, et un joueur qui
+                a déjà croisé la question ne retrouve pas sa lettre. `idx`
+                (l'identité) reste ce qui part au serveur.
+                Amorcé sur le NUMÉRO DE MANCHE et non sur l'id de question : le
+                fil temps réel ne transporte pas d'id (cf. `mapQuestion`), et
+                sans second terme les dix manches partageraient une seule et
+                même permutation. */}
+            {shuffleOptions(question.options || [], tournamentId, question.index).map((opt, i) => {
               const idx = opt.index ?? i;
               const revealing = phase === 'reveal';
               const isPicked = picked === idx;

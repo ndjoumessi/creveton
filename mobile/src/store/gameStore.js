@@ -8,6 +8,7 @@ import i18n from '../i18n';
 import { parseApiError } from '../services/api';
 import { useNetworkStore } from './networkStore';
 import { useOfflineQueue } from './offlineQueue';
+import { newGameSeed } from '../utils/shuffle';
 
 // Enrichit la réponse de score (sessions OU challenges) avec le TEXTE des
 // questions/options jouées (le serveur ne renvoie que des index) et le temps
@@ -110,6 +111,7 @@ const initial = {
   error: null,
   isQuizActive: false,
   localResult: null, // récap hors-ligne (score/justesse calculés localement)
+  seed: null, // amorce du mélange d'options — cf. startGame
 };
 
 export const useGameStore = create((set, get) => ({
@@ -117,7 +119,11 @@ export const useGameStore = create((set, get) => ({
 
   // Démarre une nouvelle partie avec un set de questions déjà tiré.
   // `challengeId` (mode challenge) → la soumission ira vers /challenges/:id/submit.
-  startGame: ({ mode = 'normal', challengeId = null, theme, level, questions }) => {
+  // `seed` : amorce du mélange des options (cf. utils/shuffle.js). En DUEL, le
+  // serveur en fournit une, partagée par les deux joueurs — même set figé, même
+  // ordre d'options, conditions strictement identiques si l'un conteste. En
+  // solo, on en tire une localement : elle ne sort jamais du téléphone.
+  startGame: ({ mode = 'normal', challengeId = null, theme, level, questions, seed = null }) => {
     set({
       ...initial,
       mode,
@@ -125,6 +131,7 @@ export const useGameStore = create((set, get) => ({
       theme,
       level,
       questions: questions || [],
+      seed: seed || newGameSeed(),
       startedAt: new Date().toISOString(),
     });
   },

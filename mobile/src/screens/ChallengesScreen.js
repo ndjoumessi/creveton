@@ -231,6 +231,10 @@ export default function ChallengesScreen({ navigation, route }) {
         theme: item.theme,
         level: item.level,
         questions: res.questions || [],
+        // Graine du défi : les deux joueurs voient le même set figé DANS LE
+        // MÊME ORDRE d'options. Le serveur la renvoie déjà
+        // (`challengeService`), le mobile ne la lisait pas.
+        seed: res.seed || null,
       });
       // Le défi quitte l'onglet « Reçus » une fois accepté.
       setData((d) => ({
@@ -248,7 +252,7 @@ export default function ChallengesScreen({ navigation, route }) {
     try {
       const opponentId = opponent === 'friend' ? selectedFriend?.id ?? null : null;
       const res = await challenges.create({ opponent_id: opponentId, theme, level, stake: 0 });
-      startGame({ mode: 'challenge', challengeId: res.challenge_id, theme, level, questions: res.questions || [] });
+      startGame({ mode: 'challenge', challengeId: res.challenge_id, theme, level, questions: res.questions || [], seed: res.seed || null });
       setLaunching(false);
       resetSheet();
       navigation.navigate('Quiz');
