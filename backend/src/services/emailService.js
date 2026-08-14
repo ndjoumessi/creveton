@@ -144,11 +144,13 @@ function layout({ preheader, bodyHtml, ctaLabel, ctaUrl, footerHtml }) {
  * Envoi bas-niveau : renvoie toujours un résultat, ne jette jamais.
  *
  * `logSubject` remplace `subject` dans les JOURNAUX. Nécessaire dès que le sujet
- * contient un secret : celui du code de réinitialisation le porte en clair (pour
- * qu'il se lise dans l'aperçu de notification), et il atterrissait donc en clair
- * dans les logs applicatifs — Railway, agrégateur, n'importe qui y ayant accès
- * pouvait prendre un compte dans les 15 minutes. Le sujet réel part bien à
- * Resend ; seule la trace est caviardée.
+ * contient un secret : ceux des emails à code le portent en clair (pour qu'il se
+ * lise dans l'aperçu de notification), et il atterrissait donc en clair dans les
+ * logs applicatifs — Railway, agrégateur, n'importe qui y ayant accès pouvait
+ * prendre un compte avant expiration. Le sujet réel part bien à Resend ; seule
+ * la trace est caviardée. Deux appelants aujourd'hui : vérification d'adresse et
+ * OTP d'inscription (le code de réinitialisation, qui a motivé ce garde-fou, est
+ * passé sur le téléphone depuis).
  */
 async function send({ to, subject, html, logSubject }) {
   const logged = logSubject || subject;
@@ -258,71 +260,22 @@ async function sendPlayerReferral({ to, referrerName, referralCode, lang = 'fr' 
   return send({ to, subject, html });
 }
 
-/**
- * Code de réinitialisation de mot de passe. PAS de lien : le code se recopie
- * dans l'app (mobile) ou la console (admin). Un lien aurait exigé une page
- * d'atterrissage et des liens universels iOS/Android non configurés — et un
- * code se lit aussi bien depuis un autre appareil.
+/*
+ * `sendPasswordResetCode` a été RETIRÉ (08-2026). Le code de réinitialisation
+ * ne part plus par email mais sur le téléphone, via `otpChannel`
+ * (`passwordResetService`) : la fonction n'avait plus aucun appelant.
  *
- * Le corps dit explicitement quoi faire si la demande ne vient pas de
- * l'utilisateur : ne rien faire suffit, aucun mot de passe n'a encore changé.
- *
- * @param {{ to, name?, code, expiresMinutes, lang }} p
+ * Il reste ici DEUX emails porteurs de code — vérification d'adresse et OTP
+ * d'inscription — qui gardent la même forme : code recopié dans l'app, pas de
+ * lien, sujet caviardé dans les journaux.
  */
-async function sendPasswordResetCode({ to, name, code, expiresMinutes, lang = 'fr' }) {
-  const isFr = lang !== 'en';
-  const nameEsc = esc(name || '');
-  const codeEsc = esc(code);
-  const hello = name
-    ? `${isFr ? 'Bonjour' : 'Hi'} ${nameEsc},`
-    : `${isFr ? 'Bonjour,' : 'Hello,'}`;
-
-  const subject = isFr
-    ? `Ton code de réinitialisation Creveton : ${code}`
-    : `Your Creveton reset code: ${code}`;
-
-  // Le code est en gros, espacé, sur fond crème : il doit se lire d'un coup
-  // d'œil dans l'aperçu de notification comme dans le corps du message.
-  const codeBlock = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
-      <tr><td style="background-color:${COLORS.cream};border:1px solid ${COLORS.border};border-radius:10px;padding:18px 28px;text-align:center;">
-        <span style="font-family:${FONT_DISPLAY};font-size:32px;font-weight:700;letter-spacing:8px;color:${COLORS.green900};">${codeEsc}</span>
-      </td></tr>
-    </table>`;
-
-  const bodyHtml = isFr
-    ? `<p style="margin:0 0 12px;">${hello}</p>
-       <p style="margin:0 0 12px;">Voici ton code pour définir un nouveau mot de passe :</p>
-       ${codeBlock}
-       <p style="margin:0 0 12px;">Il est valable <strong>${expiresMinutes} minutes</strong> et ne sert qu'une fois.</p>
-       <p style="margin:0;color:${COLORS.muted};font-size:13px;">Tu n'as rien demandé ? Ignore cet email : ton mot de passe reste inchangé.</p>`
-    : `<p style="margin:0 0 12px;">${hello}</p>
-       <p style="margin:0 0 12px;">Here is your code to set a new password:</p>
-       ${codeBlock}
-       <p style="margin:0 0 12px;">It is valid for <strong>${expiresMinutes} minutes</strong> and can only be used once.</p>
-       <p style="margin:0;color:${COLORS.muted};font-size:13px;">Didn't request this? Ignore this email — your password stays unchanged.</p>`;
-
-  const html = layout({
-    preheader: isFr
-      ? `Code ${code} — valable ${expiresMinutes} min`
-      : `Code ${code} — valid for ${expiresMinutes} min`,
-    bodyHtml,
-    // Pas de CTA : le layout omet le bouton quand `ctaUrl` est absent.
-    footerHtml: isFr
-      ? 'Creveton · Ne partage jamais ce code.'
-      : 'Creveton · Never share this code.',
-  });
-
-  // Le sujet porte le code : caviardé dans les journaux (cf. send).
-  return send({ to, subject, html, logSubject: 'Code de réinitialisation Creveton' });
-}
 
 /**
  * Code de vérification d'adresse email (inscription ou changement d'adresse).
  *
- * Même forme que le code de réinitialisation — code recopié dans l'app, pas de
- * lien — mais un texte distinct : ici rien n'est en danger, on confirme
- * simplement une adresse. Le confondre avec un email de sécurité banaliserait
- * l'autre.
+ * Code recopié dans l'app, pas de lien. Le texte se garde d'emprunter le ton
+ * d'un email de sécurité : ici rien n'est en danger, on confirme simplement une
+ * adresse. Les confondre banaliserait les vrais.
  *
  * @param {{ to, name?, code, expiresMinutes, isChange?, lang }} p
  */
@@ -437,7 +390,6 @@ async function sendOtpCode({ to, name, code, expiresMinutes, lang = 'fr' }) {
 module.exports = {
   sendTeamInvitation,
   sendPlayerReferral,
-  sendPasswordResetCode,
   sendEmailVerificationCode,
   sendOtpCode,
 };
