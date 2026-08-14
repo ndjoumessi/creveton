@@ -233,16 +233,16 @@ régénérer avec `/impeccable document`.
     `EMAIL_ALREADY_VERIFIED`. Front : mobile `components/EmailVerifySheet.js` (ligne Email
     du Profil, pastille « Non vérifié ») ; admin : pastille dans le tiroir Utilisateurs.
     Tests : `backend/tests/emailVerification.test.js`.
-  · **Relance** : `components/EmailNudge.js`, bandeau en tête du corps de l'Accueil.
-    Canal choisi faute d'ordonnanceur serveur (le push en exigerait un) et parce qu'une
-    relance PAR EMAIL irait à l'adresse justement non prouvée. Fermable, mais revient
-    après **7 jours** (`crv.email_nudge_dismissed_at`). Disparaît seul quand
-    `email_verified` passe à vrai.
-    ⚠️ **Sa raison d'être est à réexaminer.** Le bandeau disait « sans adresse confirmée,
-    impossible de récupérer ton compte » — c'était SA justification, et elle est devenue
-    fausse. Le texte a été corrigé (joignabilité + correction d'une faute de frappe), mais
-    la question « ce rappel mérite-t-il encore d'exister ? » est une décision produit, non
-    tranchée ici.
+  · **Relance : le bandeau d'accueil a été SUPPRIMÉ** (`components/EmailNudge.js`, et avec
+    lui la `EmailVerifySheet` montée dans `HomeScreen` — plus aucun déclencheur ne
+    l'ouvrait). Il disait « sans adresse confirmée, impossible de récupérer ton compte » :
+    c'était SA justification entière, et elle est morte le jour où le code de
+    réinitialisation est passé sur le téléphone. Un rappel dont l'argument est faux ne se
+    reformule pas, il se retire. La vérification d'adresse reste accessible depuis la
+    **ligne Email du Profil** (pastille « Non vérifié »), qui garde sa propre feuille.
+    ⚠️ La tâche serveur **`email-verify-nudge` tourne toujours** et pousse la même relance
+    (texte corrigé, il affirmait littéralement l'inverse). Son existence est à trancher :
+    voir l'en-tête de `jobs/tasks/emailVerifyNudge.js`.
 - **Mot de passe oublié** (`src/services/passwordResetService.js`) : code à **6 chiffres
   sur le TÉLÉPHONE**, via `otpChannel` (WhatsApp → SMS), Redis `pwdreset:<user_id>`, TTL
   15 min, 3 tentatives, 5 demandes/h par compte. `POST /auth/forgot-password` répond **204

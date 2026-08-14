@@ -169,12 +169,6 @@
       "badgeTop": "TOP",
       "badgeGood": "GOOD",
       "viewAll": "View full history"
-    },
-    "emailNudge": {
-      "title": "Confirm your email address",
-      "body": "A confirmed address lets us reach you about your account — and it is your chance to fix a typo.",
-      "cta": "Confirm now →",
-      "dismiss": "Hide this reminder"
     }
   },
   "gameStart": {

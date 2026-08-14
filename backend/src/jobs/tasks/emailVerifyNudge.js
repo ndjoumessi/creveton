@@ -8,10 +8,18 @@ const { CAMEROON_UTC_OFFSET_HOURS } = require('../schedule');
 /**
  * Relance push « confirme ton adresse email ».
  *
- * Complète le bandeau d'accueil (`mobile/src/components/EmailNudge.js`), qui ne
- * touche que les joueurs qui ouvrent l'app. Celle-ci va chercher ceux qui ne
- * l'ouvrent plus — ce sont précisément ceux qui découvriront le problème le jour
- * où ils auront perdu leur mot de passe.
+ * ⚠️ SA JUSTIFICATION D'ORIGINE EST MORTE, et son existence reste à trancher.
+ * Cette tâche complétait le bandeau d'accueil (`EmailNudge`), désormais SUPPRIMÉ,
+ * en allant chercher les joueurs qui n'ouvrent plus l'app — « ceux qui
+ * découvriront le problème le jour où ils auront perdu leur mot de passe ». Or
+ * le code de réinitialisation part maintenant sur le TÉLÉPHONE
+ * (`passwordResetService`) : une adresse non confirmée n'empêche plus rien.
+ *
+ * Le texte poussé a donc été corrigé — il affirmait littéralement l'inverse, à
+ * de vrais joueurs, jusqu'à trois fois. Mais relancer trois fois pour un geste
+ * devenu facultatif reste discutable : si personne ne tranche, désactiver cette
+ * tâche (la retirer de `JOBS` dans `jobs/index.js`) est le choix par défaut
+ * raisonnable.
  *
  * ─ Retenue ─
  * · 3 jours de grâce après l'inscription : le bandeau suffit au début, et
@@ -97,11 +105,11 @@ module.exports = {
     const COPY = {
       fr: {
         title: 'Confirme ton adresse email',
-        body: 'Sans elle, impossible de récupérer ton compte si tu oublies ton mot de passe.',
+        body: "C'est par elle qu'on te joint au sujet de ton compte. Ça prend dix secondes.",
       },
       en: {
         title: 'Confirm your email address',
-        body: "Without it, we can't get you back into your account if you forget your password.",
+        body: 'It is how we reach you about your account. Takes ten seconds.',
       },
     };
 

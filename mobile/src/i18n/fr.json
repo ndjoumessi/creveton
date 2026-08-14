@@ -169,12 +169,6 @@
       "badgeTop": "TOP",
       "badgeGood": "BIEN",
       "viewAll": "Voir tout l'historique"
-    },
-    "emailNudge": {
-      "title": "Confirme ton adresse email",
-      "body": "Une adresse confirmée nous permet de te joindre au sujet de ton compte — et c’est l’occasion de corriger une faute de frappe.",
-      "cta": "Confirmer maintenant →",
-      "dismiss": "Masquer ce rappel"
     }
   },
   "gameStart": {
