@@ -229,7 +229,12 @@ t('tournament-lifecycle expire les tournois morts, et EUX SEULS', async () => {
   expect(again.expired).toBe(0);
 });
 
-// ── email-verify-nudge ─────────────────────────────────────────────────────
+// ── email-verify-nudge (tâche DÉSACTIVÉE) ──────────────────────────────────
+//
+// Ces tests appellent `run()` directement et restent donc valides, mais la tâche
+// n'est plus dans le registre : rien ne l'exécute en production. Ils gardent la
+// logique d'idempotence et la garde horaire au cas où la relance reviendrait un
+// jour sur un argument valable — voir l'en-tête de `jobs/index.js`.
 
 /** Compte non vérifié, avec jeton push, créé il y a `ageDays`. */
 async function nudgeable(over = {}) {
@@ -328,8 +333,12 @@ t('GET /admin/jobs liste les tâches et leur dernière exécution', async () => 
   expect(res.status).toBe(200);
   const names = res.body.data.map((j) => j.name);
   expect(names).toEqual(
-    expect.arrayContaining(['success-rate', 'expire-challenges', 'tournament-lifecycle', 'email-verify-nudge'])
+    expect.arrayContaining(['success-rate', 'expire-challenges', 'tournament-lifecycle'])
   );
+  // `email-verify-nudge` a été DÉSACTIVÉE (retirée du registre, cf. jobs/index.js).
+  // Assertion en négatif à dessein : sans elle, la remettre dans `JOBS` ne
+  // casserait rien et les relances repartiraient sans que personne le décide.
+  expect(names).not.toContain('email-verify-nudge');
 
   const ec = res.body.data.find((j) => j.name === 'expire-challenges');
   expect(ec.schedule).toMatch(/60 min/);

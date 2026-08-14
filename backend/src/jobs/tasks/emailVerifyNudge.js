@@ -8,18 +8,20 @@ const { CAMEROON_UTC_OFFSET_HOURS } = require('../schedule');
 /**
  * Relance push « confirme ton adresse email ».
  *
- * ⚠️ SA JUSTIFICATION D'ORIGINE EST MORTE, et son existence reste à trancher.
- * Cette tâche complétait le bandeau d'accueil (`EmailNudge`), désormais SUPPRIMÉ,
- * en allant chercher les joueurs qui n'ouvrent plus l'app — « ceux qui
- * découvriront le problème le jour où ils auront perdu leur mot de passe ». Or
- * le code de réinitialisation part maintenant sur le TÉLÉPHONE
- * (`passwordResetService`) : une adresse non confirmée n'empêche plus rien.
+ * ⚠️ TÂCHE DÉSACTIVÉE — retirée du registre `JOBS` (`jobs/index.js`). Rien ne
+ * l'exécute : ni l'ordonnanceur, ni `POST /admin/jobs/:name/run`, ni la CLI.
  *
- * Le texte poussé a donc été corrigé — il affirmait littéralement l'inverse, à
- * de vrais joueurs, jusqu'à trois fois. Mais relancer trois fois pour un geste
- * devenu facultatif reste discutable : si personne ne tranche, désactiver cette
- * tâche (la retirer de `JOBS` dans `jobs/index.js`) est le choix par défaut
- * raisonnable.
+ * Sa justification était morte. Elle complétait le bandeau d'accueil
+ * (`EmailNudge`, supprimé) en allant chercher les joueurs qui n'ouvrent plus
+ * l'app — « ceux qui découvriront le problème le jour où ils auront perdu leur
+ * mot de passe ». Or le code de réinitialisation part maintenant sur le
+ * TÉLÉPHONE (`passwordResetService`) : une adresse non confirmée n'empêche plus
+ * rien, et relancer trois fois pour un geste devenu facultatif serait du
+ * harcèlement sans contrepartie.
+ *
+ * Le fichier est conservé — logique d'idempotence et garde horaire comprises —
+ * si la relance revient un jour sur un argument valable. Le texte poussé a été
+ * corrigé au passage : il affirmait littéralement l'inverse de la vérité.
  *
  * ─ Retenue ─
  * · 3 jours de grâce après l'inscription : le bandeau suffit au début, et

@@ -166,8 +166,15 @@ régénérer avec `/impeccable document`.
     `expire-challenges` (60 min — `isExpired` n'était calculé qu'à la LECTURE, les lignes
     restaient `pending` et faussaient le compteur de défis actifs),
     `tournament-lifecycle` (15 min — ouvre `scheduled → open` ; ne DÉMARRE jamais un
-    tournoi, décision produit), `email-verify-nudge` (18 h — push, 3 j de grâce, 7 j
-    d'espacement, plafond 3 à vie, migration `027`).
+    tournoi, décision produit).
+  · **`email-verify-nudge` : DÉSACTIVÉE** (08-2026). Le fichier
+    `jobs/tasks/emailVerifyNudge.js` et ses tests restent, mais la tâche n'est plus dans
+    `JOBS` — donc ni ordonnancée, ni listée par `GET /admin/jobs`, ni lançable à la main.
+    Elle relançait (push, 3 j de grâce, 7 j d'espacement, plafond 3 à vie, migration `027`)
+    pour faire confirmer une adresse au motif que sans elle « impossible de récupérer ton
+    compte » — faux depuis que le code de réinitialisation part sur le téléphone.
+    `tests/jobs.test.js` porte une assertion **en négatif** (`not.toContain`) : sans elle,
+    la réinscrire dans `JOBS` ne casserait rien et les relances repartiraient toutes seules.
   · **Observation obligatoire** : chaque exécution écrit `jobs:last:<nom>` (30 j),
     `GET /admin/jobs` (perm `jobs:read`) l'expose, `POST /admin/jobs/:name/run`
     (`jobs:run`, super_admin) relance. Un ordonnanceur muet est pire que pas
@@ -240,9 +247,8 @@ régénérer avec `/impeccable document`.
     réinitialisation est passé sur le téléphone. Un rappel dont l'argument est faux ne se
     reformule pas, il se retire. La vérification d'adresse reste accessible depuis la
     **ligne Email du Profil** (pastille « Non vérifié »), qui garde sa propre feuille.
-    ⚠️ La tâche serveur **`email-verify-nudge` tourne toujours** et pousse la même relance
-    (texte corrigé, il affirmait littéralement l'inverse). Son existence est à trancher :
-    voir l'en-tête de `jobs/tasks/emailVerifyNudge.js`.
+    La tâche serveur **`email-verify-nudge` a été DÉSACTIVÉE** dans la foulée (retirée du
+    registre `JOBS`) : elle poussait la même relance, avec le même argument mort.
 - **Mot de passe oublié** (`src/services/passwordResetService.js`) : code à **6 chiffres
   sur le TÉLÉPHONE**, via `otpChannel` (WhatsApp → SMS), Redis `pwdreset:<user_id>`, TTL
   15 min, 3 tentatives, 5 demandes/h par compte. `POST /auth/forgot-password` répond **204
