@@ -2097,20 +2097,20 @@
     "link": "Forgot password?",
     "eyebrow": "Account recovery",
     "headline": "Let’s get you back in.",
-    "heroSub": "A 6-digit code by email, a new password, and you’re back.",
+    "heroSub": "A 6-digit code on your phone, a new password, and you’re back.",
     "backToLogin": "← Back to sign in",
     "haveCode": "I already have a code",
     "request": {
       "title": "Forgot password",
-      "subtitle": "Enter your account address and we’ll send a code to set a new password.",
+      "subtitle": "Enter your account address and we’ll send a code to the linked phone.",
       "cta": "Send the code",
-      "hint": "The code can take a minute to arrive. Remember to check your spam folder."
+      "hint": "The code arrives on WhatsApp, or by SMS otherwise. Allow a minute."
     },
     "reset": {
       "title": "New password",
-      "subtitle": "Code sent to",
+      "subtitle": "Code sent to the phone on the account",
       "code": "6-digit code",
-      "codeRequired": "Enter the code you received by email.",
+      "codeRequired": "Enter the code you received on your phone.",
       "codeFormat": "The code is 6 digits.",
       "newPassword": "New password",
       "confirmPassword": "Confirm password",

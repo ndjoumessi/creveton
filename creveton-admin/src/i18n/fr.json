@@ -2097,20 +2097,20 @@
     "link": "Mot de passe oublié ?",
     "eyebrow": "Récupération d’accès",
     "headline": "On te renvoie dans la console.",
-    "heroSub": "Un code à 6 chiffres par email, un nouveau mot de passe, et c’est reparti.",
+    "heroSub": "Un code à 6 chiffres sur ton téléphone, un nouveau mot de passe, et c’est reparti.",
     "backToLogin": "← Retour à la connexion",
     "haveCode": "J’ai déjà un code",
     "request": {
       "title": "Mot de passe oublié",
-      "subtitle": "Indique l’adresse de ton compte : on t’envoie un code pour en définir un nouveau.",
+      "subtitle": "Indique l’adresse de ton compte : on envoie un code sur le téléphone associé.",
       "cta": "Envoyer le code",
-      "hint": "Le code peut mettre une minute à arriver. Pense à regarder les spams."
+      "hint": "Le code arrive par WhatsApp, ou par SMS à défaut. Compte une minute."
     },
     "reset": {
       "title": "Nouveau mot de passe",
-      "subtitle": "Code envoyé à",
+      "subtitle": "Code envoyé sur le téléphone du compte",
       "code": "Code à 6 chiffres",
-      "codeRequired": "Saisis le code reçu par email.",
+      "codeRequired": "Saisis le code reçu sur ton téléphone.",
       "codeFormat": "Le code fait 6 chiffres.",
       "newPassword": "Nouveau mot de passe",
       "confirmPassword": "Confirme le mot de passe",

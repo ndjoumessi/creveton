@@ -40,10 +40,12 @@ const OLD_PASSWORD = 'AncienMotDePasse1';
 const NEW_PASSWORD = 'NouveauMotDePasse1';
 
 /**
- * Crée un joueur connectable : email + hash + téléphone vérifié, et surtout
- * ADRESSE VÉRIFIÉE — depuis la migration 026, la récupération par email n'est
- * offerte qu'aux adresses dont le contrôle a été prouvé (le cas non vérifié est
- * couvert par emailVerification.test.js).
+ * Crée un joueur connectable : email + hash + TÉLÉPHONE VÉRIFIÉ.
+ *
+ * C'est `phone_verified` qui commande la récupération : le code part sur le
+ * numéro (WhatsApp, repli SMS), pas sur l'adresse. `email_verified` est laissé à
+ * vrai par habitude mais n'a plus d'effet ici — `emailVerification.test.js`
+ * garde une assertion en sens inverse pour le prouver.
  */
 async function createPlayer(over = {}) {
   const user = await H.createUser({ phone_verified: true, ...over });
@@ -294,7 +296,11 @@ t('admin reset-password émet un vrai code pour l\'utilisateur', async () => {
 
   expect(res.status).toBe(200);
   expect(res.body.reset_initiated).toBe(true);
-  expect(res.body.channel).toBe('email');
+  // `simulated` et non un vrai canal : ni WhatsApp ni Twilio ne sont configurés
+  // en test, et `otpChannel` journalise alors le code au lieu de l'envoyer.
+  // L'assertion vaut pour le CHAÎNAGE (le service passe bien par otpChannel et
+  // rapporte ce qu'il en revient), pas pour la délivrance.
+  expect(res.body.channel).toBe('simulated');
 
   // Le code émis est utilisable par l'utilisateur — c'est tout l'objet du
   // correctif : la route envoyait auparavant un OTP que rien ne consommait.
@@ -306,13 +312,55 @@ t('admin reset-password émet un vrai code pour l\'utilisateur', async () => {
     .expect(200);
 });
 
-t('admin reset-password refuse un compte sans email', async () => {
-  const target = await H.createUser(); // pas d'email
+t('admin reset-password refuse un numéro non vérifié, avec un motif clair', async () => {
+  const target = await createPlayer({ phone_verified: false });
   const admin = await H.createUser({ role: 'admin' });
 
   const res = await request(app)
     .post(`/api/v1/admin/users/${target.id}/reset-password`)
+    // En-tête EXPLICITE : le message existe en deux langues depuis l'i18n des
+    // erreurs serveur. Sans lui, l'assertion tiendrait par le seul hasard du
+    // défaut français.
+    .set('Accept-Language', 'fr')
     .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
+
   expect(res.status).toBe(400);
   expect(res.body.error.code).toBe('VALIDATION_ERROR');
+  // L'opérateur doit comprendre POURQUOI, pas croire à une panne.
+  expect(res.body.error.message).toMatch(/vérifié/i);
+});
+
+// ── Le verrou : c'est le TÉLÉPHONE qui commande ────────────────────────────
+
+t("forgot-password n'émet AUCUN code si le numéro n'est pas vérifié", async () => {
+  const user = await createPlayer({ phone_verified: false });
+
+  // Réponse identique au cas nominal (anti-énumération)…
+  await request(app)
+    .post('/api/v1/auth/forgot-password')
+    .send({ email: EMAIL })
+    .expect(204);
+
+  // …mais rien n'a été émis.
+  const data = await H.redis.hgetall(`pwdreset:${user.id}`);
+  expect(data.code).toBeUndefined();
+});
+
+t("reset-password refuse un code si le numéro a cessé d'être vérifié", async () => {
+  // Cas tordu mais réel : code émis sur un numéro prouvé, puis vérification
+  // retirée (changement de numéro) avant la validation.
+  const user = await createPlayer();
+  await request(app).post('/api/v1/auth/forgot-password').send({ email: EMAIL }).expect(204);
+  const { rows } = await H.db.query(
+    'UPDATE users SET phone_verified = false WHERE id = $1 RETURNING id',
+    [user.id]
+  );
+  expect(rows).toHaveLength(1);
+
+  const code = await storedCode(user.id);
+  const res = await request(app)
+    .post('/api/v1/auth/reset-password')
+    .send({ email: EMAIL, code, new_password: 'ToutAutreChose1' });
+  expect(res.status).toBe(400);
+  expect(res.body.error.code).toBe('RESET_CODE_INVALID');
 });

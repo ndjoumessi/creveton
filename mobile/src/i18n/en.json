@@ -92,10 +92,10 @@
     "forgot": {
       "link": "Forgot password?",
       "title": "Forgot password",
-      "subtitle": "Enter your email address and we’ll send you a 6-digit code to choose a new one.",
+      "subtitle": "Enter your email address and we’ll send a 6-digit code to your account’s phone.",
       "submit": "Send the code",
       "invalidEmail": "Invalid email address.",
-      "hint": "The code can take a minute to arrive. Remember to check your spam folder.",
+      "hint": "The code arrives on WhatsApp, or by SMS if you don’t use WhatsApp. Allow a minute.",
       "haveCode": "I already have a code",
       "notify": {
         "sent": "If an account exists for this address, a code has just been sent.",
@@ -104,7 +104,7 @@
     },
     "reset": {
       "title": "New password",
-      "subtitle": "Enter the code sent to",
+      "subtitle": "Enter the code sent to the phone on the account",
       "codeLabel": "6-digit code",
       "codeRequired": "Enter all 6 digits of the code.",
       "newPassword": "New password",
@@ -172,7 +172,7 @@
     },
     "emailNudge": {
       "title": "Confirm your email address",
-      "body": "Without a confirmed address, we cannot get you back into your account if you forget your password.",
+      "body": "A confirmed address lets us reach you about your account — and it is your chance to fix a typo.",
       "cta": "Confirm now →",
       "dismiss": "Hide this reminder"
     }
@@ -565,7 +565,7 @@
     "email": {
       "unverified": "Unverified",
       "sheetTitle": "Email address",
-      "why": "Confirm your address: it is what lets you recover your account if you forget your password. Without confirmation, recovery is refused.",
+      "why": "Confirm your address: it is how we reach you about your account. You can also correct it here if you mistyped it at sign-up.",
       "current": "Current address",
       "newAddress": "New address",
       "send": "Send me a code",

@@ -175,64 +175,42 @@ t('un code demandé pour une adresse ne peut pas en valider une autre', async ()
   expect(res.body.email).toBe('b@example.cm');
 });
 
-// ── La conséquence : récupération réservée aux adresses prouvées ───────────
+// ── Ce que la vérification d'adresse NE conditionne PAS ────────────────────
 
-t('forgot-password n\'émet AUCUN code pour une adresse non vérifiée', async () => {
+/**
+ * Cette section affirmait l'inverse : « récupération réservée aux adresses
+ * prouvées ». Le code de réinitialisation part désormais sur le TÉLÉPHONE, via
+ * `otpChannel`, et c'est `phone_verified` qui commande (cf.
+ * `passwordResetService` et `passwordReset.test.js`).
+ *
+ * On garde une assertion ici, en sens inverse, parce que le lien entre les deux
+ * sous-systèmes est exactement ce qui avait été mal placé : adosser la
+ * récupération de compte à un identifiant FACULTATIF et rarement confirmé
+ * privait de fait la majorité des joueurs de tout recours. Si quelqu'un
+ * remettait un jour un `email_verified` sur ce chemin, ce test doit tomber.
+ */
+t("une adresse non vérifiée ne bloque PLUS la récupération de mot de passe", async () => {
   const user = await createPlayer({ email_verified: false });
 
-  // Réponse identique au cas nominal (anti-énumération)…
   await request(app)
     .post('/api/v1/auth/forgot-password')
     .send({ email: EMAIL })
     .expect(204);
 
-  // …mais rien n'a été émis.
-  const data = await H.redis.hgetall(`pwdreset:${user.id}`);
-  expect(data.code).toBeUndefined();
-});
-
-t('forgot-password fonctionne dès que l\'adresse est vérifiée', async () => {
-  const user = await createPlayer({ email_verified: true });
-  await request(app).post('/api/v1/auth/forgot-password').send({ email: EMAIL }).expect(204);
   const data = await H.redis.hgetall(`pwdreset:${user.id}`);
   expect(data.code).toMatch(/^\d{6}$/);
 });
 
-t('reset-password refuse un code sur une adresse non vérifiée', async () => {
-  // Cas tordu mais réel : l'adresse a été vérifiée, un code émis, puis
-  // l'adresse changée (donc de nouveau à prouver) avant la validation.
-  const user = await createPlayer({ email_verified: true });
-  await request(app).post('/api/v1/auth/forgot-password').send({ email: EMAIL }).expect(204);
-  const { rows } = await H.db.query(
-    'UPDATE users SET email_verified = false WHERE id = $1 RETURNING id',
-    [user.id]
-  );
-  expect(rows).toHaveLength(1);
-
-  const data = await H.redis.hgetall(`pwdreset:${user.id}`);
-  const res = await request(app)
-    .post('/api/v1/auth/reset-password')
-    .send({ email: EMAIL, code: data.code, new_password: 'ToutAutreChose1' });
-  expect(res.status).toBe(400);
-  expect(res.body.error.code).toBe('RESET_CODE_INVALID');
-});
-
-t('admin reset-password refuse une adresse non vérifiée, avec un motif clair', async () => {
+t("l'admin peut réinitialiser un compte à l'adresse non vérifiée", async () => {
   const target = await createPlayer({ email_verified: false });
   const admin = await H.createUser({ role: 'admin' });
 
   const res = await request(app)
     .post(`/api/v1/admin/users/${target.id}/reset-password`)
-    // En-tête EXPLICITE : depuis l'i18n des erreurs serveur, ce message existe
-    // en deux langues. Sans lui, l'assertion tiendrait par le seul hasard du
-    // défaut français.
-    .set('Accept-Language', 'fr')
     .set('Authorization', `Bearer ${H.tokenFor(admin)}`);
 
-  expect(res.status).toBe(400);
-  expect(res.body.error.code).toBe('VALIDATION_ERROR');
-  // L'opérateur doit comprendre POURQUOI, pas croire à une panne.
-  expect(res.body.error.message).toMatch(/vérifiée/i);
+  expect(res.status).toBe(200);
+  expect(res.body.reset_initiated).toBe(true);
 });
 
 // ── Profil ─────────────────────────────────────────────────────────────────

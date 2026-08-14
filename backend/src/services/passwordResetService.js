@@ -8,34 +8,46 @@ const env = require('../config/env');
 const logger = require('../config/logger');
 const ApiError = require('../utils/ApiError');
 const userModel = require('../models/user.model');
-const emailService = require('./emailService');
+const otpChannel = require('./otpChannel');
 const smsService = require('./smsService');
 const authService = require('./authService');
 
 /**
- * Mot de passe oublié — code à 6 chiffres envoyé par EMAIL.
+ * Mot de passe oublié — code à 6 chiffres envoyé sur le TÉLÉPHONE, par
+ * `otpChannel` (WhatsApp, repli SMS).
  *
- * Pourquoi l'email et pas le SMS : l'email est déjà l'identifiant de connexion
- * (c'est celui que l'utilisateur vient de taper sur l'écran de login), alors que
- * demander le téléphone ajouterait une seconde chose à retrouver, dans un format
- * international. Et chaque tentative sur un endpoint PUBLIC coûterait un SMS.
+ * L'identifiant reste l'email : c'est celui que l'utilisateur vient de taper sur
+ * l'écran de connexion, lui redemander son numéro dans un format international
+ * ajouterait une chose à retrouver. Ce qui change, c'est la DESTINATION du code.
+ *
+ * ─ Pourquoi le téléphone plutôt que l'email ─
+ * Le numéro est le seul identifiant dont le contrôle est prouvé à l'inscription
+ * (OTP obligatoire). L'adresse, elle, n'est vérifiée que si le joueur en prend
+ * l'initiative depuis son profil. Adosser la récupération de compte à l'email
+ * revenait donc à l'adosser au maillon FAIBLE, et le service se contredisait
+ * lui-même : il exigeait `email_verified` pour envoyer le code tout en
+ * justifiant l'envoi de la notification par SMS au motif que c'est « le canal
+ * vérifié ». C'est maintenant le même canal pour les deux.
+ *
+ * Conséquence pratique : un joueur dont l'adresse n'est pas confirmée peut
+ * désormais récupérer son compte. C'était l'immense majorité d'entre eux — la
+ * vérification d'adresse est facultative et le code de vérification lui-même
+ * suppose un envoi d'email qui fonctionne.
+ *
+ * ─ L'email n'est PAS un repli ici ─
+ * `otpChannel` sait retomber sur l'email, mais on ne lui passe volontairement
+ * pas `email` : son canal email se désactive alors seul (`canReach`). Livrer un
+ * code de réinitialisation à une adresse non prouvée rouvrirait exactement le
+ * trou que `email_verified` fermait — une faute de frappe à l'inscription
+ * offrirait le compte à qui relève cette adresse.
  *
  * Pourquoi un code et pas un lien : un lien exige une page d'atterrissage et des
  * liens universels iOS/Android qui ne sont pas configurés. Un code se recopie
- * dans l'app, sans quitter le flux, et fonctionne même si l'email est lu depuis
- * un autre appareil.
+ * dans l'app, sans quitter le flux.
  *
- * ─ Adresse vérifiée EXIGÉE ─
- * On n'envoie un code qu'à une adresse dont le contrôle a été prouvé
- * (`email_verified`, cf. emailVerificationService). Sans cette condition, une
- * adresse mal saisie à l'inscription rendait le compte récupérable par un
- * inconnu — c'est précisément le trou que ce service ouvrait. Les comptes non
- * vérifiés ne sont pas bloqués pour autant : ils se connectent normalement et
- * confirment leur adresse depuis le profil (ou la corrigent, si c'était une
- * faute de frappe).
- *
- * La notification de changement part par SMS, sur le canal vérifié — un email
- * de confirmation irait à l'attaquant dans le cas d'usurpation.
+ * La notification de changement, elle, reste un SMS : le modèle WhatsApp de
+ * catégorie AUTHENTICATION ne transporte QU'UN CODE. Faire passer une phrase
+ * par là demanderait un second modèle, de catégorie utility, approuvé par Meta.
  *
  * Stockage : Redis, clé `pwdreset:<user_id>` — l'ID et pas l'email, pour qu'un
  * changement d'adresse en cours de route ne puisse pas être exploité.
@@ -55,10 +67,11 @@ function generateCode() {
 }
 
 /**
- * Génère un code, le stocke et l'envoie par email. Usage interne : les appelants
- * publics (forgot-password) ne doivent JAMAIS révéler si le compte existe.
+ * Génère un code, le stocke et l'envoie sur le téléphone. Usage interne : les
+ * appelants publics (forgot-password) ne doivent JAMAIS révéler si le compte
+ * existe.
  *
- * @returns {Promise<{ sent: boolean, channel: string, expires_at: string }>}
+ * @returns {Promise<{ sent: boolean|null, channel: string|null, expires_at: string }>}
  */
 async function issueFor(user, { awaitDelivery = true } = {}) {
   // Plafond par compte, en plus du rate limit HTTP (qui porte sur l'email brut
@@ -76,29 +89,29 @@ async function issueFor(user, { awaitDelivery = true } = {}) {
   await redis.hset(resetKey(user.id), { code, attempts: 0 });
   await redis.expire(resetKey(user.id), ttlSec);
 
-  // L'envoi ne jette jamais (règle d'emailService) : un échec de délivrance ne
-  // doit pas révéler l'existence du compte via un 503 différencié.
-  const send = emailService
-    .sendPasswordResetCode({
-      to: user.email,
-      name: user.name,
-      code,
-      expiresMinutes: env.passwordReset.expiresMinutes,
-      lang: user.lang || 'fr',
-    })
-    .then((result) => {
-      if (!result.sent) {
-        logger.warn('Code de réinitialisation non délivré par email', {
-          user_id: user.id,
-          skipped: !!result.skipped,
-          error: result.error || null,
-        });
-      }
-      return result;
+  // `email` n'est PAS passé (cf. en-tête) : le canal email d'`otpChannel` se
+  // déclare alors injoignable et la chaîne se réduit à WhatsApp puis SMS.
+  //
+  // ⚠️ Contrairement à `emailService`, qui renvoyait toujours `{ sent: false }`,
+  // `otpChannel.sendCode` JETTE quand aucun canal n'aboutit. Sur le chemin
+  // public on ne l'attend pas : sans ce `.catch()`, le rejet remonterait en
+  // `unhandledRejection` — soit un plantage du processus, pour un échec d'envoi
+  // que ce service traite justement comme non fatal.
+  const send = otpChannel
+    .sendCode(
+      { phone: user.phone, name: user.name, lang: user.lang || 'fr' },
+      code
+    )
+    .then((res) => ({ sent: true, channel: res.channel }))
+    .catch((err) => {
+      logger.warn('Code de réinitialisation non délivré', {
+        user_id: user.id,
+        error: err.message,
+      });
+      return { sent: false, channel: null };
     });
 
   const base = {
-    channel: 'email',
     expires_at: new Date(Date.now() + ttlSec * 1000).toISOString(),
   };
 
@@ -111,10 +124,10 @@ async function issueFor(user, { awaitDelivery = true } = {}) {
   //    l'aller-retour Resend — le chronomètre trahissait ce que le corps de la
   //    réponse taisait. En rendant la main tout de suite dans les deux cas, les
   //    deux chemins deviennent indistinguables.
-  if (!awaitDelivery) return { ...base, sent: null };
+  if (!awaitDelivery) return { ...base, sent: null, channel: null };
 
   const result = await send;
-  return { ...base, sent: !!result.sent };
+  return { ...base, sent: result.sent, channel: result.channel };
 }
 
 /**
@@ -129,15 +142,15 @@ async function issueFor(user, { awaitDelivery = true } = {}) {
 async function requestReset(email) {
   const user = await userModel.findByEmail(String(email).trim().toLowerCase());
 
-  // Trois refus, une seule réponse. `email_verified` en fait partie : envoyer un
-  // code à une adresse non prouvée reviendrait à offrir le compte à qui la
-  // relève. Le silence est ici le comportement correct — l'app dit ailleurs (au
-  // profil, dans l'email de vérification) qu'une adresse non confirmée n'ouvre
-  // pas de récupération.
-  if (!user || !user.password_hash || !user.email_verified) {
+  // Trois refus, une seule réponse. `phone_verified` en fait partie : le code
+  // part sur le numéro, l'envoyer vers un numéro non prouvé n'aurait aucune
+  // valeur de preuve. En pratique la condition est presque toujours remplie —
+  // l'OTP d'inscription la pose — et elle ne peut être fausse que pour un compte
+  // resté bloqué avant sa vérification.
+  if (!user || !user.password_hash || !user.phone_verified) {
     logger.info('Demande de réinitialisation sans destinataire', {
       email_known: !!user,
-      email_verified: user ? !!user.email_verified : null,
+      phone_verified: user ? !!user.phone_verified : null,
     });
     return { requested: true };
   }
@@ -170,10 +183,10 @@ async function requestReset(email) {
 async function confirmReset({ email, code, newPassword }) {
   const user = await userModel.findByEmail(String(email).trim().toLowerCase());
 
-  // Compte inconnu, sans mot de passe, ou adresse non vérifiée : même erreur que
+  // Compte inconnu, sans mot de passe, ou numéro non vérifié : même erreur que
   // « code faux ». Sinon l'écran de saisie du code devient à son tour un oracle,
-  // sur l'existence du compte comme sur l'état de son adresse.
-  if (!user || !user.password_hash || !user.email_verified) {
+  // sur l'existence du compte comme sur son état de vérification.
+  if (!user || !user.password_hash || !user.phone_verified) {
     throw new ApiError('RESET_CODE_INVALID');
   }
 
@@ -229,7 +242,16 @@ async function confirmReset({ email, code, newPassword }) {
   return authService.issueTokens(fresh || user);
 }
 
-/** SMS « ton mot de passe a changé ». Jamais bloquant, jamais propagé. */
+/**
+ * SMS « ton mot de passe a changé ». Jamais bloquant, jamais propagé.
+ *
+ * Reste un SMS alors que le CODE est passé sur WhatsApp : le modèle WhatsApp de
+ * catégorie AUTHENTICATION ne porte qu'un code à six chiffres, pas une phrase.
+ * Router cette alerte par WhatsApp exigerait un second modèle, de catégorie
+ * utility, soumis à l'approbation de Meta — un chantier à part, pas un
+ * paramètre. Sans Twilio configuré, `smsService` simule : l'alerte n'existe
+ * donc pas aujourd'hui, ce qui était déjà le cas avant ce changement.
+ */
 function notifyPasswordChanged(user) {
   if (!user.phone || !user.phone_verified) return;
   const isFr = (user.lang || 'fr') !== 'en';
@@ -255,19 +277,19 @@ function notifyPasswordChanged(user) {
  * authentifié et a déjà l'utilisateur sous les yeux).
  */
 async function issueForUser(user) {
-  if (!user.email) {
+  if (!user.phone) {
     throw new ApiError('VALIDATION_ERROR', {
-      message: { fr: "Ce compte n'a pas d'adresse email : impossible d'envoyer un code.", en: 'This account has no email address: a code cannot be sent.' },
+      message: { fr: "Ce compte n'a pas de numéro : impossible d'envoyer un code.", en: 'This account has no phone number: a code cannot be sent.' },
     });
   }
   // Pas d'anti-énumération à tenir ici (l'appelant est authentifié et a la fiche
   // sous les yeux) : on dit franchement pourquoi c'est refusé, sinon l'opérateur
   // croirait à une panne.
-  if (!user.email_verified) {
+  if (!user.phone_verified) {
     throw new ApiError('VALIDATION_ERROR', {
       message: {
-        fr: "L'adresse de ce compte n'est pas vérifiée : lui envoyer un code de réinitialisation la rendrait exploitable par un tiers.",
-        en: "This account's address is not verified: sending it a reset code would make the account exploitable by a third party.",
+        fr: "Le numéro de ce compte n'est pas vérifié : lui envoyer un code de réinitialisation n'aurait aucune valeur de preuve.",
+        en: "This account's phone number is not verified: sending it a reset code would prove nothing.",
       },
     });
   }

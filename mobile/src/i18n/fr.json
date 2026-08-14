@@ -92,10 +92,10 @@
     "forgot": {
       "link": "Mot de passe oublié ?",
       "title": "Mot de passe oublié",
-      "subtitle": "Indique ton adresse email : on t’envoie un code à 6 chiffres pour en choisir un nouveau.",
+      "subtitle": "Indique ton adresse email : on envoie un code à 6 chiffres sur le téléphone de ton compte.",
       "submit": "Envoyer le code",
       "invalidEmail": "Adresse email invalide.",
-      "hint": "Le code peut mettre une minute à arriver. Pense à regarder les spams.",
+      "hint": "Le code arrive par WhatsApp, ou par SMS si tu n’as pas WhatsApp. Compte une minute.",
       "haveCode": "J’ai déjà un code",
       "notify": {
         "sent": "Si un compte existe pour cette adresse, un code vient d’être envoyé.",
@@ -104,7 +104,7 @@
     },
     "reset": {
       "title": "Nouveau mot de passe",
-      "subtitle": "Saisis le code reçu à",
+      "subtitle": "Saisis le code envoyé sur le téléphone du compte",
       "codeLabel": "Code à 6 chiffres",
       "codeRequired": "Saisis les 6 chiffres du code.",
       "newPassword": "Nouveau mot de passe",
@@ -172,7 +172,7 @@
     },
     "emailNudge": {
       "title": "Confirme ton adresse email",
-      "body": "Sans adresse confirmée, impossible de récupérer ton compte si tu oublies ton mot de passe.",
+      "body": "Une adresse confirmée nous permet de te joindre au sujet de ton compte — et c’est l’occasion de corriger une faute de frappe.",
       "cta": "Confirmer maintenant →",
       "dismiss": "Masquer ce rappel"
     }
@@ -565,7 +565,7 @@
     "email": {
       "unverified": "Non vérifié",
       "sheetTitle": "Adresse email",
-      "why": "Confirme ton adresse : c’est elle qui te permettra de récupérer ton compte si tu oublies ton mot de passe. Sans confirmation, la récupération est refusée.",
+      "why": "Confirme ton adresse : c’est par elle qu’on te joint au sujet de ton compte. Tu peux aussi la corriger ici si tu t’es trompé à l’inscription.",
       "current": "Adresse actuelle",
       "newAddress": "Nouvelle adresse",
       "send": "M’envoyer un code",

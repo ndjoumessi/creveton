@@ -217,9 +217,11 @@ régénérer avec `/impeccable document`.
   **authentifiées** : `POST /users/me/email/verify/request` (adresse courante),
   `POST /users/me/email` (changement — code envoyé à la **nouvelle**, rien n'est écrit
   avant confirmation), `POST /users/me/email/verify`. `toPublic` expose `email_verified`.
-  · **Non bloquant** : l'email part en parallèle de l'OTP à l'inscription
-    (`issueOnRegister`, fire-and-forget) ; le compte est jouable sans. Ce qui est refusé
-    sans vérification, c'est la **récupération de mot de passe**, pas l'usage. Les comptes
+  · **Non bloquant, et ne conditionne plus RIEN** : l'email part en parallèle de l'OTP à
+    l'inscription (`issueOnRegister`, fire-and-forget) ; le compte est jouable sans. La
+    vérification commandait auparavant la **récupération de mot de passe** — ce n'est plus
+    le cas depuis que le code part sur le téléphone (voir ci-dessus). `emailVerification.test.js`
+    porte une assertion **en sens inverse** pour empêcher que ce couplage revienne. Les comptes
     existants sont à `false` (les marquer vrais perpétuerait le trou) ; les invitations
     admin acceptées sont backfillées à `true` (le lien prouvait déjà la boîte).
   · **Le changement d'adresse fait partie du lot** : `PATCH /users/me` n'accepte pas
@@ -234,20 +236,40 @@ régénérer avec `/impeccable document`.
   · **Relance** : `components/EmailNudge.js`, bandeau en tête du corps de l'Accueil.
     Canal choisi faute d'ordonnanceur serveur (le push en exigerait un) et parce qu'une
     relance PAR EMAIL irait à l'adresse justement non prouvée. Fermable, mais revient
-    après **7 jours** (`crv.email_nudge_dismissed_at`) : la conséquence, elle, ne
-    disparaît pas. Disparaît seul quand `email_verified` passe à vrai.
+    après **7 jours** (`crv.email_nudge_dismissed_at`). Disparaît seul quand
+    `email_verified` passe à vrai.
+    ⚠️ **Sa raison d'être est à réexaminer.** Le bandeau disait « sans adresse confirmée,
+    impossible de récupérer ton compte » — c'était SA justification, et elle est devenue
+    fausse. Le texte a été corrigé (joignabilité + correction d'une faute de frappe), mais
+    la question « ce rappel mérite-t-il encore d'exister ? » est une décision produit, non
+    tranchée ici.
 - **Mot de passe oublié** (`src/services/passwordResetService.js`) : code à **6 chiffres
-  par EMAIL** (Resend), Redis `pwdreset:<user_id>`, TTL 15 min, 3 tentatives, 5 demandes/h
-  par compte. `POST /auth/forgot-password` répond **204 systématiquement** (anti-énumération,
-  même règle que `login`) ; `POST /auth/reset-password { email, code, new_password }` renvoie
-  les **mêmes tokens que `/auth/login`** après avoir coupé **TOUTES** les sessions
-  (`authService.revokeAllSessions` — un reset veut dire « peut-être compromis », à la
-  différence de `changePassword` qui préserve la session courante). Codes dédiés
-  `RESET_CODE_INVALID` / `RESET_CODE_EXPIRED` / `RESET_TOO_MANY_ATTEMPTS`.
-  · **Adresse vérifiée EXIGÉE** (`email_verified`) : sans elle, aucun code n'est émis —
-    la réponse reste 204 (anti-énumération), et l'admin, lui, reçoit un motif explicite.
-    La notification « mot de passe modifié » part par **SMS**, seul canal vérifié
-    (`phone_verified`) : un email de confirmation irait à l'attaquant en cas d'usurpation.
+  sur le TÉLÉPHONE**, via `otpChannel` (WhatsApp → SMS), Redis `pwdreset:<user_id>`, TTL
+  15 min, 3 tentatives, 5 demandes/h par compte. `POST /auth/forgot-password` répond **204
+  systématiquement** (anti-énumération, même règle que `login`) ; `POST /auth/reset-password
+  { email, code, new_password }` renvoie les **mêmes tokens que `/auth/login`** après avoir
+  coupé **TOUTES** les sessions (`authService.revokeAllSessions` — un reset veut dire
+  « peut-être compromis », à la différence de `changePassword` qui préserve la session
+  courante). Codes dédiés `RESET_CODE_INVALID` / `RESET_CODE_EXPIRED` /
+  `RESET_TOO_MANY_ATTEMPTS`.
+  · **L'identifiant reste l'email** (celui de l'écran de connexion) ; seule la DESTINATION
+    du code est le numéro. Le verrou est donc **`phone_verified`**, plus `email_verified`.
+    Le service se contredisait : il exigeait une adresse vérifiée pour envoyer le code tout
+    en justifiant la notification par SMS au motif que c'est « le canal vérifié ». Or le
+    numéro est le seul identifiant prouvé à l'inscription (OTP obligatoire), l'adresse ne
+    l'étant que sur initiative du joueur — la récupération de compte était adossée au
+    maillon faible, et de fait refusée à la majorité des comptes.
+  · **L'email n'est PAS un repli ici** : on ne passe volontairement pas `email` à
+    `otpChannel`, dont le canal email se désactive alors seul (`canReach`). Livrer un code
+    de réinitialisation à une adresse non prouvée rouvrirait le trou que `email_verified`
+    fermait (faute de frappe à l'inscription → compte offert à qui relève l'adresse).
+  · ⚠️ `otpChannel.sendCode` **jette** quand aucun canal n'aboutit, là où `emailService`
+    renvoyait toujours `{ sent:false }`. Sur le chemin public l'envoi n'est pas attendu :
+    le `.catch()` est donc obligatoire, sans quoi un échec d'envoi devient un
+    `unhandledRejection`.
+  · La notification « mot de passe modifié » reste un **SMS** : le modèle WhatsApp de
+    catégorie `AUTHENTICATION` ne transporte qu'un code, pas une phrase. La router par
+    WhatsApp demanderait un second modèle (catégorie utility) approuvé par Meta.
   · Sur le chemin PUBLIC l'envoi est **fire-and-forget** : l'attendre créait un oracle
     temporel (mesuré 16,4 s pour un compte connu contre 3 ms pour un inconnu) qui annulait
     l'anti-énumération. L'admin, lui, attend (il veut savoir si c'est parti).
