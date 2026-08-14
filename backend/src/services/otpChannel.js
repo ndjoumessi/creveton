@@ -42,7 +42,9 @@ const CHANNELS = {
   whatsapp: {
     isConfigured: () => whatsappService.isConfigured(),
     canReach: (target) => Boolean(target.phone),
-    send: (target, code) => whatsappService.sendAuthCode(target.phone, code),
+    // `target.lang` transite jusqu'ici : le modèle WhatsApp est choisi dans la
+    // langue du compte quand une traduction approuvée existe.
+    send: (target, code) => whatsappService.sendAuthCode(target.phone, code, target.lang),
   },
   sms: {
     // `smsService` simule quand Twilio manque ; on veut que le canal se déclare

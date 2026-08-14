@@ -199,7 +199,17 @@ régénérer avec `/impeccable document`.
     message DOIT être un template de catégorie `AUTHENTICATION` approuvé par Meta (corps
     à un paramètre + bouton « copier le code ») — hors fenêtre de 24 h, le texte libre est
     refusé. Variables : `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
-    `WHATSAPP_TEMPLATE_NAME`, `WHATSAPP_TEMPLATE_LANG`, `WHATSAPP_API_VERSION`.
+    `WHATSAPP_TEMPLATE_NAME`, `WHATSAPP_TEMPLATE_LANG`, `WHATSAPP_TEMPLATE_LANGS`,
+    `WHATSAPP_API_VERSION`. Seules les deux premières décident de `isConfigured()`.
+  · **Langue du modèle** (`whatsappService.resolveTemplateLang`) : le code suit la langue
+    du COMPTE, mais **uniquement** si elle figure dans `WHATSAPP_TEMPLATE_LANGS` (liste des
+    traductions réellement approuvées) ; sinon repli sur `WHATSAPP_TEMPLATE_LANG`. La
+    prudence est délibérée — Meta REFUSE un modèle dans une langue non approuvée, et
+    `otpChannel` basculerait alors sur le canal suivant : un OTP dans la mauvaise langue
+    reste lisible, un OTP jamais reçu non. La comparaison porte sur la langue nue, donc une
+    traduction « en_US » couvre un compte « en ». Liste vide = comportement d'origine (une
+    seule langue). Tests : `backend/tests/whatsappLang.test.js` (unitaire pur, tourne même
+    sans infra).
   · **L'email est un SECOURS, jamais le canal principal** : l'adresse est facultative à
     l'inscription et non vérifiée à ce stade — elle ne peut pas porter un code qui prouve
     un NUMÉRO. Le rate-limit, le stockage Redis et la vérification restent indexés sur le

@@ -71,7 +71,24 @@ const env = {
     phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
     // Modèle de catégorie AUTHENTICATION, approuvé côté Meta.
     templateName: process.env.WHATSAPP_TEMPLATE_NAME || 'creveton_otp',
+    // Langue de REPLI : celle utilisée quand la langue du joueur n'a pas de
+    // traduction approuvée.
     templateLang: process.env.WHATSAPP_TEMPLATE_LANG || 'fr',
+    // Traductions RÉELLEMENT approuvées, séparées par des virgules.
+    //
+    // Cette liste existe parce qu'envoyer un modèle dans une langue non
+    // approuvée n'est pas une dégradation douce : Meta REFUSE le message
+    // (« template name does not exist in the translation »), `otpChannel`
+    // bascule alors sur le canal suivant, et un joueur anglophone se retrouve
+    // sans code. Le défaut vaut la langue de repli seule — donc, tant que
+    // personne ne renseigne cette variable, le comportement est exactement
+    // celui d'avant : un seul modèle, une seule langue.
+    templateLangs: String(
+      process.env.WHATSAPP_TEMPLATE_LANGS || process.env.WHATSAPP_TEMPLATE_LANG || 'fr'
+    )
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
     apiVersion: process.env.WHATSAPP_API_VERSION || 'v21.0',
   },
 

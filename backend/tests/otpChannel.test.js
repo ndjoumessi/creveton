@@ -23,7 +23,9 @@ const smsService = require('../src/services/smsService');
 const emailService = require('../src/services/emailService');
 const otpChannel = require('../src/services/otpChannel');
 
-const TARGET = { phone: '+237690000000', email: 'awa@example.cm', name: 'Awa' };
+// `lang: 'en'` et non 'fr' : avec le repli par défaut ('fr'), une cible
+// francophone rendrait le test vert même si la langue n'était pas transmise.
+const TARGET = { phone: '+237690000000', email: 'awa@example.cm', name: 'Awa', lang: 'en' };
 
 /**
  * Rend un canal « configuré » en posant ce qu'inspecte `isConfigured`.
@@ -78,7 +80,13 @@ describe('otpChannel.sendCode', () => {
     const res = await otpChannel.sendCode(TARGET, '123456');
 
     expect(res.channel).toBe('whatsapp');
-    expect(whatsappService.sendAuthCode).toHaveBeenCalledWith('+237690000000', '123456');
+    // 3e argument : la langue du compte, que le service traduit en traduction
+    // de modèle. Sans elle, tout OTP partait dans la langue de repli.
+    expect(whatsappService.sendAuthCode).toHaveBeenCalledWith(
+      '+237690000000',
+      '123456',
+      TARGET.lang
+    );
     // Le repli ne doit PAS partir en parallèle : un code, un canal.
     expect(smsService.sendSms).not.toHaveBeenCalled();
     expect(emailService.sendOtpCode).not.toHaveBeenCalled();
